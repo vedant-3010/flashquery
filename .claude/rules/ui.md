@@ -1,0 +1,46 @@
+---
+paths:
+  - "src/app/**"
+  - "src/features/**"
+  - "src/components/**"
+  - "src/charts/**"
+---
+# UI rules (React, charts, grid, dashboard)
+
+## General
+- Build from shadcn/ui primitives in `src/components/ui/` (add with `npx shadcn@latest add <name>`).
+- Every async surface has loading (skeleton), empty and error states. Errors: one-line message + "Show details".
+- Dark mode via the `dark` class on `<html>`; ECharts gets a matching theme from `src/charts/theme.ts`.
+- Accessibility: keyboard reachable, visible focus, `aria-label` on icon buttons, charts have an
+  `aria-label` summary plus a "View as table" toggle, honour `prefers-reduced-motion` (no chart animation).
+- Shortcuts: `/` focuses the ask box, `Ctrl/Cmd+Enter` runs the SQL editor, `Esc` cancels a running question,
+  `?` opens the shortcuts dialog.
+
+## Charts
+- `src/charts/select.ts` is the single source of truth: `selectChart(columns, rows, question, hint) →
+  ChartSpec` with a human-readable `reason`. Rules table in `docs/PRD.md` §6. Pure; table-driven unit tests.
+- An LLM `chartHint` is used only if it is compatible with the result shape; otherwise fall back to the rules.
+- `src/charts/toOption.ts`: `(spec, rows, theme, locale) → EChartsOption`. Pure; snapshot tests.
+- `<EChart>`: `echarts.init` once per mount (canvas renderer), `setOption(option, { notMerge: true })` on
+  change, `ResizeObserver` → `resize()`, `dispose()` on unmount. Register only the chart types and
+  components we use via `echarts/core`.
+- Above 5,000 points: aggregate in SQL first; lines use `sampling: 'lttb'`; scatter uses `large: true`.
+- Numbers via `src/lib/format.ts`: Intl, compact notation, user-selectable locale (incl. `en-IN`
+  lakh/crore grouping), currency from column metadata or settings.
+- Colour-blind-safe categorical palette; never encode meaning by colour alone.
+
+## Grid
+- TanStack Table in manual mode (`manualSorting`, `manualFiltering`, `manualPagination`) + TanStack Virtual
+  for rows and columns. The row model is a windowed cache fed by `engine/query.ts`; unloaded rows render
+  as skeleton rows.
+- Header: type icon, name, sort indicator, profile popover (nulls, distinct, min/max, mini histogram).
+- Numbers right-aligned and locale-formatted; nulls shown as muted `null`.
+
+## Dashboard
+- react-grid-layout v2: `useContainerWidth()` + `<ReactGridLayout width gridConfig dragConfig resizeConfig>`,
+  12 columns, drag only by `.tile-handle`. Defaults: KPI 3×2, chart 6×4, table 6×5, text 4×2.
+- `DashboardTile` (Zod): id, type ('chart' | 'kpi' | 'table' | 'text'), title, sql, chartSpec, text,
+  layout { x, y, w, h }, datasetRefs [{ table, schemaHash }], snapshot (last result ≤ 5,000 rows + timestamp).
+- Tiles render their snapshot instantly, then refresh from DuckDB if referenced tables exist with a matching
+  `schemaHash`; otherwise show "Re-upload <file> to refresh".
+- Persist to IndexedDB, debounced 500 ms on change. Export/import as JSON validated by Zod.
