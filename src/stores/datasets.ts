@@ -48,7 +48,9 @@ const excelParseMs = new Map<string, number>()
 const controllers = new Map<string, AbortController>()
 
 let counter = 0
-const newId = () => `ds_${Date.now().toString(36)}_${(counter += 1)}`
+/** Ids are ordered: the catalog lists datasets in the order they were added, not finished. */
+const newId = () => `ds_${Date.now().toString(36)}_${String((counter += 1)).padStart(6, '0')}`
+const byAddedOrder = (a: DatasetProfile, b: DatasetProfile) => a.id.localeCompare(b.id)
 
 export const useDatasetsStore = create<DatasetsState>()((set, get) => {
   const findJob = (id: string) => get().jobs.find((job) => job.id === id)
@@ -105,7 +107,9 @@ export const useDatasetsStore = create<DatasetsState>()((set, get) => {
         timings: { ...loaded.timings, loadMs: loaded.timings.loadMs + parseMs },
       }
       set((state) => ({
-        datasets: [...state.datasets.filter((d) => d.table !== dataset.table), dataset],
+        datasets: [...state.datasets.filter((d) => d.table !== dataset.table), dataset].sort(
+          byAddedOrder,
+        ),
         jobs: state.jobs.filter((j) => j.id !== id),
       }))
     } catch (error) {
