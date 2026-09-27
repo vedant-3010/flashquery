@@ -43,10 +43,11 @@ paths:
   In JS: BigInt → number when `Number.isSafeInteger`, otherwise string.
 - Large results: `CREATE OR REPLACE TEMP VIEW "result_<id>" AS <sql>` and page it in 200-row windows
   (LIMIT/OFFSET, LRU page cache, prefetch the next window). Grid sort/filter = new SQL over the view.
-  Base tables page ordered by `rowid`.
+  Unsorted base tables page by `rowid` range (dense rowids; O(1) at any depth); sorted ones add
+  `rowid` as a tie-breaker. All of this lives in `src/engine/paging.ts` + `pageCache.ts`.
 - Cancellation: honour `AbortSignal`, cancel the pending DuckDB query, default timeout 30 s (setting).
-- Export: `COPY (<sql>) TO 'export.<ext>' (FORMAT csv | parquet)` → `copyFileToBuffer` → Blob download →
-  drop the virtual file.
+- Export: `engine.createFile(name)` → `COPY (<sql>) TO '<name>' (FORMAT csv | parquet, USE_TMP_FILE false)`
+  → `readFile` → Blob download → drop the virtual file (`src/engine/export.ts`).
 
 ## Synthetic demo data (src/engine/samples.ts)
 - Generates the "Global Sales" table (`global_sales`) in pure SQL from `range(n)` for n = 10k / 100k / 1M.

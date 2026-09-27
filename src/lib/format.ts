@@ -1,3 +1,5 @@
+import type { LogicalType } from '@/engine/types'
+
 // Every number, date, duration and size shown in the UI goes through this module (Intl, locale-aware).
 // Pure: callers pass the locale from the settings store. Missing values (null, undefined, NaN) render
 // as EMPTY; grid cells render SQL NULL themselves.
@@ -142,4 +144,34 @@ export function formatBytes(bytes: MaybeNumber, locale: string): string {
   }
   const digits = unit === 0 ? 0 : 1
   return `${numberFormat(locale, { maximumFractionDigits: digits }).format(value)} ${BYTE_UNITS[unit]}`
+}
+
+export type DateDisplay = 'iso' | 'locale'
+
+export interface CellFormat {
+  logicalType: LogicalType
+  /** Integers such as ids and years: no digit grouping. */
+  plainInteger?: boolean
+  dates?: DateDisplay
+}
+
+/** Text for one grid cell (F-GRID-03). The grid renders SQL NULL itself. */
+export function formatCell(
+  value: string | number | boolean,
+  { logicalType, plainInteger = false, dates = 'iso' }: CellFormat,
+  locale: string,
+): string {
+  if (typeof value === 'boolean') return value ? 'true' : 'false'
+  if (typeof value === 'number') {
+    if (logicalType === 'integer') {
+      return plainInteger ? String(value) : formatNumber(value, locale, { maxFractionDigits: 0 })
+    }
+    return formatNumber(value, locale, { maxFractionDigits: 4 })
+  }
+  if (logicalType === 'date' && dates === 'locale') return formatDate(value, locale)
+  if (logicalType === 'timestamp') {
+    return dates === 'locale' ? formatDateTime(value, locale) : value.replace('T', ' ')
+  }
+  // Integers beyond 2^53 arrive as strings to keep their precision.
+  return value
 }

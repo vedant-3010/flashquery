@@ -1,7 +1,7 @@
 import { History, ScanEye, Table2, X } from 'lucide-react'
 import { EmptyState } from '@/components/EmptyState'
 import { IconButton } from '@/components/IconButton'
-import { TablePreview } from '@/features/grid/TablePreview'
+import { TableGrid } from '@/features/grid/TableGrid'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { SidePanelTabSchema, useUiStore } from '@/stores/ui'
 
@@ -29,7 +29,7 @@ export function SidePanel() {
       </div>
       <TabsContent value="preview" className="flex min-h-0 flex-col">
         {previewTable ? (
-          <TablePreview key={previewTable} table={previewTable} />
+          <TableGrid key={previewTable} table={previewTable} />
         ) : (
           <EmptyState
             icon={Table2}

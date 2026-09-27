@@ -16,7 +16,14 @@ export function IconButton({
 }: IconButtonProps) {
   return (
     <Tooltip>
-      <TooltipTrigger asChild>
+      <TooltipTrigger
+        asChild
+        // Show on hover and keyboard focus only: not when a menu or dialog hands focus back after a
+        // click (the tooltip would then sit over whatever the user is doing next).
+        onFocus={(event) => {
+          if (!event.currentTarget.matches(':focus-visible')) event.preventDefault()
+        }}
+      >
         <Button variant={variant} size={size} aria-label={label} {...props} />
       </TooltipTrigger>
       <TooltipContent>{label}</TooltipContent>

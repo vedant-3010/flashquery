@@ -13,7 +13,21 @@ export default defineConfig({
   // Module workers (Comlink) with code-splitting inside workers
   worker: { format: 'es' },
   // Ship wasm + worker assets as-is; pre-bundling breaks their asset URLs
-  optimizeDeps: { exclude: ['@duckdb/duckdb-wasm', 'pyodide'] },
+  optimizeDeps: {
+    exclude: ['@duckdb/duckdb-wasm', 'pyodide'],
+    // Pre-bundle deps that are only reached through lazy imports, so a cold dev server doesn't
+    // discover them mid-session and reload the page (it broke e2e runs on a fresh server).
+    include: [
+      'apache-arrow',
+      'comlink',
+      '@tanstack/react-table',
+      '@tanstack/react-virtual',
+      '@uiw/react-codemirror',
+      '@codemirror/lang-sql',
+      'sql-formatter',
+      'xlsx', // imported by the Excel worker
+    ],
+  },
   build: { target: 'es2022', chunkSizeWarningLimit: 1500 },
   // NOTE: no COOP/COEP headers in v1 (see docs/PRD.md decision D5)
   test: {

@@ -31,8 +31,9 @@ paths:
 
 ## Grid
 - TanStack Table in manual mode (`manualSorting`, `manualFiltering`, `manualPagination`) + TanStack Virtual
-  for rows and columns. The row model is a windowed cache fed by `engine/query.ts`; unloaded rows render
-  as skeleton rows.
+  for rows and columns. The row model is a windowed cache fed by `engine/paging.ts` (`PageCache`);
+  unloaded rows render as skeleton rows. Fixed 28 px rows; grids taller than 15M px scale the scroll
+  offset (`src/features/grid/DataGrid.tsx`).
 - Header: type icon, name, sort indicator, profile popover (nulls, distinct, min/max, mini histogram).
 - Numbers right-aligned and locale-formatted; nulls shown as muted `null`.
 

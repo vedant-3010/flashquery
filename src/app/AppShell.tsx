@@ -8,6 +8,7 @@ import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
 import { Tabs, TabsContent } from '@/components/ui/tabs'
 import { DatasetsPanel } from '@/features/datasets/DatasetsPanel'
 import { FileDropZone } from '@/features/datasets/FileDropZone'
+import { SqlView } from '@/features/sql/SqlView'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { useUiStore, ViewSchema } from '@/stores/ui'
 
@@ -62,6 +63,11 @@ export function AppShell() {
           <TabsContent value="workspace" className="flex min-h-0 flex-col">
             <PanelErrorBoundary name="the workspace">
               <WorkspaceView />
+            </PanelErrorBoundary>
+          </TabsContent>
+          <TabsContent value="sql" className="flex min-h-0 flex-col">
+            <PanelErrorBoundary name="the SQL editor">
+              <SqlView />
             </PanelErrorBoundary>
           </TabsContent>
           <TabsContent value="dashboard" className="flex min-h-0 flex-col">

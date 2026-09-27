@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   EMPTY,
   formatBytes,
+  formatCell,
   formatCompact,
   formatCurrency,
   formatDate,
@@ -120,5 +121,30 @@ describe('formatBytes', () => {
     [2.5e9, '2.5 GB'],
   ])('%d → %s', (bytes, expected) => {
     expect(formatBytes(bytes, 'en-US')).toBe(expected)
+  })
+})
+
+describe('formatCell (F-GRID-03)', () => {
+  it('formats numbers by locale; ids and years stay plain', () => {
+    expect(formatCell(1234567, { logicalType: 'integer' }, 'en-IN')).toBe('12,34,567')
+    expect(formatCell(2024, { logicalType: 'integer', plainInteger: true }, 'en-US')).toBe('2024')
+    expect(formatCell(1234.56789, { logicalType: 'number' }, 'de-DE')).toBe('1.234,5679')
+  })
+
+  it('shows dates as ISO by default, or in the locale on request', () => {
+    expect(formatCell('2025-03-01', { logicalType: 'date' }, 'en-US')).toBe('2025-03-01')
+    expect(formatCell('2025-03-01T14:05:00', { logicalType: 'timestamp' }, 'en-US')).toBe(
+      '2025-03-01 14:05:00',
+    )
+    expect(formatCell('2025-03-01', { logicalType: 'date', dates: 'locale' }, 'en-US')).toBe(
+      'Mar 1, 2025',
+    )
+  })
+
+  it('shows booleans and text as they are', () => {
+    expect(formatCell(true, { logicalType: 'boolean' }, 'en-US')).toBe('true')
+    expect(formatCell('9007199254740993', { logicalType: 'integer' }, 'en-US')).toBe(
+      '9007199254740993',
+    )
   })
 })

@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { create } from 'zustand'
 
-export const ViewSchema = z.enum(['workspace', 'dashboard'])
+export const ViewSchema = z.enum(['workspace', 'sql', 'dashboard'])
 export type View = z.infer<typeof ViewSchema>
 
 export const SidePanelTabSchema = z.enum(['preview', 'inspector', 'history'])

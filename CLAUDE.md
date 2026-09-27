@@ -67,7 +67,7 @@ src/
   app/          shell, layout, providers, view switching (no router; hash for #/bench)
   components/   shared app components (EmptyState, IconButton); ui/ = shadcn/ui primitives (generated)
   hooks/        shared React hooks (useMediaQuery, useResolvedTheme)
-  features/     datasets/ grid/ ask/ explain/ charts/ dashboard/ python/ settings/  (React only)
+  features/     datasets/ grid/ sql/ ask/ explain/ charts/ dashboard/ python/ settings/  (React only)
   engine/       duckdb init, ingest, catalog, profile, query, normalize, sql-guard, samples, export
   ai/           models, providers, prompts/, schemas, context, pipeline, fixtures/  (no React/DOM)
   charts/       select.ts (chart choice), toOption.ts (spec → ECharts option), theme.ts  (pure)
@@ -142,6 +142,13 @@ docs/PRD.md     evals/ (M7)     e2e/ (Playwright)
 - DuckDB's Node runtime (tests, scripts) writes `COPY ... TO` to the real disk and doesn't overwrite
   existing files: always COPY into a fresh temp dir.
 - Unit tests are typechecked by `tsconfig.test.json` (adds Node types); app code by `tsconfig.app.json`.
+- TanStack Table is v9: `useTable({ features: tableFeatures({...}) })`, features are opt-in (no
+  `getVisibleLeafColumns` without the visibility feature). With `manualSorting` the table holds no
+  rows, so set `sortDescFirst` per column explicitly.
+- `COPY … TO` needs `USE_TMP_FILE false` (see PRD D26). DuckDB errors can arrive as JSON in the
+  browser: always wrap them with `duckdbError`.
+- A dependency only reached through a lazy import or a worker must be listed in
+  `optimizeDeps.include` in vite.config.ts, or the dev server reloads open pages when it finds it.
 - Workers: `new Worker(new URL('./x.worker.ts', import.meta.url), { type: 'module' })`.
 - Model IDs live only in `src/ai/models.ts` (default `claude-sonnet-5`, fast `claude-haiku-4-5-20251001`).
   Check provider docs before changing them.
