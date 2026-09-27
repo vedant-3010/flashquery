@@ -7,9 +7,12 @@ describe('toTableName', () => {
     ['monthlySales.xlsx', 'monthly_sales'],
     ['Café Orders (final).tsv', 'cafe_orders_final'],
     ['2025-q3.parquet', 't_2025_q3'],
-    ['...csv', 'table'],
+    ['...csv', 'dataset'],
     ['données—été.json', 'donnees_ete'],
     ['UPPER.CSV', 'upper'],
+    ['order.csv', 't_order'],
+    ['Left.xlsx', 't_left'],
+    ['users.csv', 'users'],
   ])('%s → %s', (input, expected) => {
     expect(toTableName(input)).toBe(expected)
   })
@@ -31,9 +34,12 @@ describe('isValidTableName', () => {
     expect(isValidTableName(name)).toBe(true)
   })
 
-  it.each(['', '2025', 'Sales', 'my table', 'x-y', 'a'.repeat(64)])('rejects %s', (name) => {
-    expect(isValidTableName(name)).toBe(false)
-  })
+  it.each(['', '2025', 'Sales', 'my table', 'x-y', 'a'.repeat(64), 'select', 'order'])(
+    'rejects %s',
+    (name) => {
+      expect(isValidTableName(name)).toBe(false)
+    },
+  )
 })
 
 describe('quoting', () => {

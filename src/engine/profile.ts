@@ -83,6 +83,35 @@ async function topValues(
   return result
 }
 
+/** Below this approximate count, distinct values are counted exactly (cheap, and visible to users). */
+export const EXACT_DISTINCT_LIMIT = 2 * CATEGORY_MAX_DISTINCT
+
+/**
+ * approx_unique (HyperLogLog) is visibly wrong for small counts ("≈ 4" regions next to 5 top values),
+ * so low-cardinality columns get an exact count(DISTINCT) in one extra scan. Mutates `summary`.
+ */
+async function exactSmallCounts(
+  runner: SqlRunner,
+  table: string,
+  summary: SummarizeRow[],
+  signal?: AbortSignal,
+): Promise<void> {
+  const small = summary.filter(
+    (row) =>
+      row.approx_unique <= EXACT_DISTINCT_LIMIT && toLogicalType(row.column_type) !== 'other',
+  )
+  if (small.length === 0) return
+  const counts = small.map((row, i) => `count(DISTINCT ${quoteIdent(row.column_name)}) AS c${i}`)
+  const [exact] = tableToObjects(
+    await runner.run(`SELECT ${counts.join(', ')} FROM ${quoteIdent(table)}`, signal),
+    z.record(z.string(), numberLike),
+  )
+  small.forEach((row, i) => {
+    const value = exact?.[`c${i}`]
+    if (value !== undefined) row.approx_unique = value
+  })
+}
+
 function toColumnProfile(
   row: SummarizeRow,
   rowCount: number,
@@ -134,6 +163,7 @@ export async function profileTable(
     ),
     SummarizeRowSchema,
   )
+  await exactSmallCounts(runner, table, summary, signal)
   const lowCardinality = summary
     .filter(
       (row) =>

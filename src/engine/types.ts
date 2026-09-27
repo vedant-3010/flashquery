@@ -52,6 +52,7 @@ export const ColumnProfileSchema = z.object({
   type: z.string(),
   role: ColumnRoleSchema,
   nullPct: z.number(),
+  /** Distinct non-null values: exact up to 100, a HyperLogLog estimate above. */
   approxDistinct: z.number(),
   /** Numbers for numeric columns, ISO strings for dates, text otherwise. */
   min: z.union([z.string(), z.number()]).nullable(),

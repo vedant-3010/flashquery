@@ -61,6 +61,9 @@ describe('profileTable', () => {
       cost: 'measure',
       returned: 'boolean',
     })
+    // Small counts are exact (approx_unique alone reports 4 regions).
+    expect(profile.columns.find((c) => c.name === 'region')?.approxDistinct).toBe(5)
+    expect(profile.columns.find((c) => c.name === 'country')?.approxDistinct).toBe(19)
     const orderDate = profile.columns.find((c) => c.name === 'order_date')
     expect(orderDate).toMatchObject({ min: '2022-01-01', max: '2025-12-31', mean: null })
   })
