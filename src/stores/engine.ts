@@ -1,15 +1,17 @@
 import { create } from 'zustand'
+import { getEngineState, subscribeEngine, type EngineState } from '@/engine/duckdb'
 
-export type EngineStatus = 'idle' | 'loading' | 'ready' | 'error'
+export type { EngineStatus } from '@/engine/duckdb'
+export type PythonStatus = 'not-loaded' | 'loading' | 'ready' | 'error'
 
-interface EngineState {
-  status: EngineStatus
-  /** DuckDB version once the engine is ready. */
-  version: string | null
+interface EngineStoreState extends EngineState {
+  /** Pyodide runtime; driven by the Python worker from M6 (F-PY-02). */
+  python: PythonStatus
 }
 
-// Driven by src/engine/duckdb.ts from M1 (F-SHELL-03).
-export const useEngineStore = create<EngineState>()(() => ({
-  status: 'idle',
-  version: null,
+export const useEngineStore = create<EngineStoreState>()(() => ({
+  ...getEngineState(),
+  python: 'not-loaded',
 }))
+
+subscribeEngine((state) => useEngineStore.setState(state))

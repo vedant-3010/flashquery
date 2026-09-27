@@ -1,6 +1,7 @@
 import { History, ScanEye, Table2, X } from 'lucide-react'
 import { EmptyState } from '@/components/EmptyState'
 import { IconButton } from '@/components/IconButton'
+import { TablePreview } from '@/features/grid/TablePreview'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { SidePanelTabSchema, useUiStore } from '@/stores/ui'
 
@@ -8,6 +9,7 @@ export function SidePanel() {
   const tab = useUiStore((state) => state.sidePanelTab)
   const setTab = useUiStore((state) => state.setSidePanelTab)
   const setOpen = useUiStore((state) => state.setSidePanelOpen)
+  const previewTable = useUiStore((state) => state.previewTable)
 
   return (
     <Tabs
@@ -26,11 +28,15 @@ export function SidePanel() {
         </IconButton>
       </div>
       <TabsContent value="preview" className="flex min-h-0 flex-col">
-        <EmptyState
-          icon={Table2}
-          title="Nothing to preview"
-          description="Select a table in the sidebar to see its rows."
-        />
+        {previewTable ? (
+          <TablePreview key={previewTable} table={previewTable} />
+        ) : (
+          <EmptyState
+            icon={Table2}
+            title="Nothing to preview"
+            description="Select a table in the sidebar to see its rows."
+          />
+        )}
       </TabsContent>
       <TabsContent value="inspector" className="flex min-h-0 flex-col">
         <EmptyState

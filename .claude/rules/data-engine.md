@@ -12,9 +12,10 @@ paths:
 - One `AsyncDuckDB` per tab, created lazily by `getDb()` in `src/engine/duckdb.ts` (memoized promise).
   Expose engine status (`idle | loading | ready | error`, version) to the UI. Start loading in an idle
   callback after first paint, or immediately on the first dataset action.
-- On init: explicitly `LOAD` the extensions we need (parquet, json; check which are built in for the
-  installed version), then `SET autoinstall_known_extensions = false; SET autoload_known_extensions = false;`
-  so generated SQL can never pull in httpfs or anything else.
+- On init: `SET autoinstall_known_extensions = false; SET autoload_known_extensions = false;` (plus
+  `allow_community_extensions = false`) so generated SQL can never pull in httpfs or anything else.
+  parquet and json are not built in (DuckDB 1.5.x WASM): load them with `ensureExtension()` right
+  before first use (PRD D13), never eagerly.
 - "Restart engine": terminate, re-instantiate, re-ingest from retained `File` handles, restore views.
 
 ## Ingest
@@ -52,6 +53,12 @@ paths:
 - Deterministic: derive every pseudo-random value from `hash(i, '<salt>')`, never `random()`.
 - Spec in `docs/PRD.md` §9 (columns, growth rates per region, seasonality). The headline demo question
   must have an unambiguous answer (APAC grows fastest). Put the generation SQL in the file header comment.
+
+## Tests
+- Engine code takes a `SqlRunner`/`Engine`, never the browser DuckDB directly, so it runs in Node:
+  `createTestEngine()` (src/test/duckdb.ts) in files marked `// @vitest-environment node`.
+- Normalize odd Arrow types in SQL (e.g. `CAST(null_percentage AS DOUBLE)`); DECIMAL arrives as an object.
+- `approx_unique` is off by up to ~25%: don't infer uniqueness from it; small counts are made exact.
 
 ## Workers & Comlink
 - `*.worker.ts` files only `expose()` logic modules; the logic stays importable and testable outside workers.

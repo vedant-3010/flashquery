@@ -1,0 +1,10 @@
+{
+  // Unit tests and their helpers: app settings plus Node APIs (fs, os, path) for fixtures.
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.test.tsbuildinfo",
+    "types": ["vite/client", "node"]
+  },
+  "include": ["src"],
+  "exclude": []
+}

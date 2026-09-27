@@ -2,11 +2,12 @@ import { useEffect } from 'react'
 import { DashboardView } from '@/app/DashboardView'
 import { PanelErrorBoundary } from '@/app/PanelErrorBoundary'
 import { SidePanel } from '@/app/SidePanel'
-import { Sidebar } from '@/app/Sidebar'
 import { TopBar } from '@/app/TopBar'
 import { WorkspaceView } from '@/app/WorkspaceView'
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
 import { Tabs, TabsContent } from '@/components/ui/tabs'
+import { DatasetsPanel } from '@/features/datasets/DatasetsPanel'
+import { FileDropZone } from '@/features/datasets/FileDropZone'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { useUiStore, ViewSchema } from '@/stores/ui'
 
@@ -26,9 +27,9 @@ export function AppShell() {
     if (wide) setSidebarOpen(false)
   }, [wide, setSidebarOpen])
 
-  const datasetsPanel = (
+  const datasetsPanel = (onClose?: () => void) => (
     <PanelErrorBoundary name="the datasets panel">
-      <Sidebar />
+      <DatasetsPanel onClose={onClose} />
     </PanelErrorBoundary>
   )
 
@@ -42,7 +43,7 @@ export function AppShell() {
       <div className="flex min-h-0 flex-1">
         {wide ? (
           <aside aria-label="Datasets" className="flex w-65 shrink-0 flex-col border-r bg-sidebar">
-            {datasetsPanel}
+            {datasetsPanel()}
           </aside>
         ) : (
           <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
@@ -50,9 +51,10 @@ export function AppShell() {
               side="left"
               className="gap-0 bg-sidebar p-0 data-[side=left]:w-72"
               aria-describedby={undefined}
+              showCloseButton={false}
             >
               <SheetTitle className="sr-only">Datasets</SheetTitle>
-              {datasetsPanel}
+              {datasetsPanel(() => setSidebarOpen(false))}
             </SheetContent>
           </Sheet>
         )}
@@ -76,6 +78,7 @@ export function AppShell() {
           </aside>
         )}
       </div>
+      <FileDropZone />
     </Tabs>
   )
 }

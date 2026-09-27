@@ -34,6 +34,10 @@ test.describe('app shell (F-SHELL-01)', () => {
     await expect(overlay.getByText('No datasets yet')).toBeVisible()
     await page.keyboard.press('Escape')
     await expect(overlay).toBeHidden()
+
+    await page.getByRole('button', { name: 'Show datasets' }).click()
+    await overlay.getByRole('button', { name: 'Close datasets' }).click()
+    await expect(overlay).toBeHidden()
   })
 
   test('switches between workspace and dashboard', async ({ page }) => {

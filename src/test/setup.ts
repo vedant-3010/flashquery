@@ -6,7 +6,8 @@ import { afterEach } from 'vitest'
 afterEach(cleanup)
 
 // jsdom has no matchMedia; queries report "no match" (light theme, narrow layout).
-if (!window.matchMedia) {
+// (Engine tests run in the node environment, which has no window at all.)
+if (typeof window !== 'undefined' && !window.matchMedia) {
   window.matchMedia = (query: string): MediaQueryList => ({
     matches: false,
     media: query,
