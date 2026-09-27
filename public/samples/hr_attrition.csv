@@ -1,0 +1,1471 @@
+employee_id,department,job_level,age,gender,education,work_mode,hire_date,years_at_company,monthly_income,overtime,job_satisfaction,performance_rating,attrition
+1000,Sales,1,30,Male,Bachelor,Hybrid,2024-10-12,0,5270,No,4,2,No
+1001,Engineering,3,47,Male,Bachelor,Hybrid,2005-11-01,19,12240,No,3,3,No
+1002,Sales,1,35,Female,Master,Office,2011-01-28,14,4750,No,2,3,No
+1003,Engineering,1,29,Male,Master,Office,2016-12-18,8,6280,No,4,2,Yes
+1004,Engineering,4,48,Female,High School,Hybrid,2017-01-16,8,14580,No,2,3,No
+1005,Sales,4,54,Male,Master,Office,2025-06-22,0,11390,No,4,2,No
+1006,Engineering,2,45,Male,Doctorate,Office,2016-01-10,9,9810,Yes,2,3,No
+1007,Finance,1,32,Male,Master,Remote,2018-05-19,7,6150,No,4,3,No
+1008,Sales,3,40,Female,High School,Remote,2023-09-21,1,10630,No,3,3,No
+1009,HR,5,57,Female,Bachelor,Office,2016-04-16,9,15210,Yes,1,4,No
+1010,Engineering,3,36,Female,Master,Hybrid,2009-12-22,15,12380,No,4,3,No
+1011,Finance,2,37,Male,High School,Hybrid,2008-12-23,16,9590,No,2,4,No
+1012,HR,1,38,Female,Bachelor,Remote,2016-05-28,9,7690,Yes,1,3,Yes
+1013,Operations,2,40,Female,Bachelor,Office,2008-11-03,16,9210,No,1,3,No
+1014,Engineering,1,41,Female,Bachelor,Hybrid,2024-10-23,0,8100,Yes,1,4,Yes
+1015,Marketing,1,38,Female,Bachelor,Remote,2012-06-14,13,6330,No,4,3,Yes
+1016,Engineering,1,37,Female,High School,Hybrid,2014-07-21,10,7200,Yes,3,3,No
+1017,Support,3,45,Female,Bachelor,Remote,2021-03-09,4,11310,No,4,3,No
+1018,Operations,2,47,Female,Master,Remote,2008-07-31,16,8400,No,1,2,Yes
+1019,Engineering,4,50,Male,Bachelor,Hybrid,2022-07-13,2,13570,No,1,2,Yes
+1020,Engineering,2,38,Female,Bachelor,Office,2007-08-19,17,10750,No,4,3,No
+1021,HR,2,41,Female,Bachelor,Office,2025-01-27,0,7250,No,2,3,Yes
+1022,Support,5,48,Female,High School,Remote,2020-06-25,5,15520,No,1,3,No
+1023,Sales,2,30,Male,Bachelor,Hybrid,2015-12-15,9,8280,No,2,3,No
+1024,Engineering,1,37,Male,Doctorate,Office,2016-02-26,9,6660,No,2,3,Yes
+1025,Sales,3,51,Male,Bachelor,Remote,2014-10-04,10,11810,No,4,2,No
+1026,Engineering,2,37,Female,High School,Office,2020-07-20,4,8100,No,3,3,Yes
+1027,Finance,2,33,Female,Master,Office,2022-09-22,2,9730,No,4,2,No
+1028,Engineering,2,42,Male,Bachelor,Office,2022-12-11,2,9140,Yes,3,3,No
+1029,Sales,2,45,Male,Master,Hybrid,2025-05-19,0,9110,No,4,4,No
+1030,Sales,1,34,Male,Bachelor,Remote,2024-01-14,1,4720,Yes,4,3,No
+1031,Support,5,48,Female,Bachelor,Office,2008-08-21,16,14870,No,1,3,No
+1032,Sales,1,41,Male,Master,Remote,2016-10-24,8,6810,No,4,3,No
+1033,Sales,1,39,Male,Master,Hybrid,2014-08-10,10,5050,Yes,2,3,Yes
+1034,Operations,4,48,Male,Doctorate,Office,2012-05-31,13,12620,No,4,3,No
+1035,Engineering,2,47,Female,Master,Office,2023-11-27,1,9510,Yes,3,4,No
+1036,Support,2,41,Female,Bachelor,Office,2025-02-25,0,8280,No,1,4,No
+1037,Operations,2,30,Female,Master,Hybrid,2015-07-12,9,7260,No,3,3,No
+1038,Sales,3,41,Male,Master,Office,2013-03-09,12,9450,Yes,3,3,Yes
+1039,Operations,3,38,Male,Bachelor,Office,2007-08-22,17,10540,Yes,4,3,Yes
+1040,HR,1,30,Male,Master,Office,2016-06-01,9,6200,No,3,3,No
+1041,Sales,1,32,Male,Master,Remote,2016-08-27,8,7020,No,1,2,Yes
+1042,Finance,1,33,Female,High School,Office,2025-02-18,0,7710,No,4,3,No
+1043,Sales,1,38,Female,High School,Remote,2022-05-14,3,7170,No,2,3,No
+1044,Sales,5,47,Female,Master,Office,2011-08-05,13,16070,Yes,1,3,No
+1045,Support,2,43,Male,High School,Hybrid,2024-02-20,1,7940,No,1,4,No
+1046,HR,2,43,Male,Bachelor,Remote,2013-07-21,11,8370,No,4,3,No
+1047,Support,2,33,Female,Bachelor,Office,2020-09-05,4,9650,Yes,1,2,No
+1048,Marketing,1,37,Male,Bachelor,Remote,2018-03-22,7,7230,No,2,3,No
+1049,Engineering,1,38,Female,Doctorate,Remote,2008-04-06,17,6890,No,1,3,No
+1050,Engineering,1,39,Female,Bachelor,Hybrid,2006-07-15,18,6350,No,4,3,No
+1051,Operations,2,34,Female,Master,Remote,2021-05-11,4,8030,No,3,3,No
+1052,Engineering,1,38,Male,Bachelor,Hybrid,2018-07-14,6,8350,No,4,4,No
+1053,Marketing,2,32,Male,Master,Office,2024-05-23,1,9540,No,3,3,No
+1054,Sales,3,46,Male,Doctorate,Remote,2022-05-13,3,9930,Yes,3,3,No
+1055,Engineering,1,28,Female,High School,Office,2018-08-19,6,7340,No,3,3,No
+1056,Sales,3,43,Female,Master,Office,2007-09-28,17,10280,Yes,2,2,Yes
+1057,Operations,3,47,Male,Bachelor,Office,2011-01-03,14,10280,No,1,2,No
+1058,Sales,1,32,Male,Bachelor,Remote,2021-02-22,4,7130,No,2,3,No
+1059,Engineering,2,34,Male,Bachelor,Remote,2016-08-27,8,10720,No,2,3,No
+1060,Support,3,48,Male,Bachelor,Office,2020-05-05,5,10430,No,3,3,No
+1061,Sales,2,38,Female,Master,Office,2007-11-26,17,7410,Yes,1,3,Yes
+1062,Marketing,2,31,Female,Master,Hybrid,2014-08-14,10,9110,No,1,3,No
+1063,Finance,3,46,Female,Bachelor,Office,2025-04-24,0,9960,Yes,2,2,No
+1064,Sales,1,39,Male,Master,Remote,2020-05-30,5,6700,Yes,3,2,No
+1065,Support,1,28,Non-binary,Bachelor,Remote,2018-02-26,7,6170,No,4,3,No
+1066,Support,2,44,Female,Master,Office,2014-12-19,10,7970,No,2,2,No
+1067,Sales,4,40,Male,Bachelor,Hybrid,2022-06-25,3,11470,Yes,3,3,Yes
+1068,Engineering,5,52,Female,Bachelor,Remote,2023-05-03,2,15290,No,1,3,No
+1069,Engineering,2,38,Male,Bachelor,Office,2008-06-12,17,8790,No,1,4,Yes
+1070,Support,1,36,Male,Master,Office,2012-07-06,12,5680,No,4,3,No
+1071,Marketing,2,47,Female,Doctorate,Office,2019-11-13,5,8380,No,2,3,Yes
+1072,Engineering,1,27,Female,Bachelor,Hybrid,2019-04-20,6,7000,Yes,2,4,No
+1073,Engineering,2,45,Male,Bachelor,Remote,2005-10-30,19,8160,Yes,3,2,No
+1074,Engineering,1,26,Female,Master,Office,2022-09-01,2,6280,No,4,3,No
+1075,Support,1,32,Female,Bachelor,Remote,2014-01-25,11,6030,No,3,3,Yes
+1076,Sales,2,45,Female,Bachelor,Office,2021-07-16,3,8570,No,1,3,No
+1077,HR,3,41,Male,Bachelor,Remote,2022-08-13,2,9280,No,1,3,No
+1078,Operations,1,31,Male,Bachelor,Office,2015-05-20,10,7500,Yes,4,3,No
+1079,Support,1,35,Male,Master,Hybrid,2011-06-13,14,6920,Yes,4,3,No
+1080,Support,2,32,Female,Master,Remote,2014-04-14,11,8700,No,4,3,No
+1081,Sales,3,38,Male,High School,Hybrid,2025-03-01,0,9380,No,1,3,No
+1082,Sales,4,47,Male,Bachelor,Office,2015-01-06,10,12930,No,1,3,No
+1083,Sales,1,40,Female,Bachelor,Office,2021-05-11,4,6380,No,4,4,Yes
+1084,Sales,2,44,Male,High School,Hybrid,2016-09-05,8,8640,No,1,4,No
+1085,Engineering,2,46,Male,Bachelor,Office,2008-06-04,17,8040,No,3,3,No
+1086,Operations,1,26,Male,Doctorate,Office,2023-10-31,1,4710,No,3,3,No
+1087,Sales,5,55,Male,Bachelor,Remote,2020-12-26,4,14620,No,4,2,No
+1088,HR,4,45,Male,Bachelor,Hybrid,2025-04-20,0,12560,No,3,3,No
+1089,Sales,4,53,Male,Doctorate,Hybrid,2025-03-29,0,13510,No,1,3,No
+1090,Operations,2,34,Male,High School,Hybrid,2021-11-20,3,6910,No,1,4,No
+1091,Support,2,33,Male,Master,Hybrid,2020-11-18,4,9520,No,2,3,No
+1092,Engineering,2,31,Female,Bachelor,Hybrid,2015-05-31,10,10720,No,1,3,No
+1093,Engineering,3,48,Male,Doctorate,Remote,2019-07-10,5,11920,Yes,1,2,No
+1094,Engineering,1,41,Male,Master,Office,2010-12-29,14,6890,Yes,3,3,No
+1095,Engineering,2,30,Male,Bachelor,Office,2016-02-24,9,9730,No,2,3,No
+1096,Engineering,2,37,Male,Master,Hybrid,2009-05-19,16,8180,No,1,3,No
+1097,Engineering,5,53,Female,Master,Remote,2005-10-31,19,14890,No,1,3,No
+1098,Sales,4,49,Female,Bachelor,Remote,2016-01-11,9,11430,No,1,3,No
+1099,Engineering,2,34,Female,Master,Office,2025-02-05,0,8090,No,3,3,No
+1100,Engineering,4,38,Male,Bachelor,Office,2022-01-12,3,14080,No,4,4,No
+1101,Operations,2,40,Female,Bachelor,Hybrid,2015-12-29,9,7730,No,3,3,No
+1102,Support,1,36,Male,Bachelor,Remote,2019-06-27,6,5890,No,3,4,No
+1103,HR,2,38,Male,Master,Remote,2012-05-31,13,6970,No,4,3,No
+1104,Finance,1,30,Female,Master,Hybrid,2024-09-15,0,6570,No,2,2,No
+1105,Sales,4,50,Male,Master,Remote,2024-04-15,1,13530,No,2,2,No
+1106,Engineering,2,33,Female,Bachelor,Office,2023-06-01,2,10010,Yes,3,3,Yes
+1107,Engineering,2,43,Non-binary,Master,Hybrid,2021-02-16,4,10210,Yes,1,3,Yes
+1108,Sales,2,34,Female,High School,Office,2025-05-15,0,9560,No,3,3,No
+1109,Engineering,1,40,Female,High School,Office,2017-01-04,8,6920,No,2,3,No
+1110,HR,3,42,Female,Bachelor,Office,2025-04-03,0,11780,No,4,3,No
+1111,Marketing,1,32,Female,Master,Office,2023-02-27,2,7240,No,3,4,Yes
+1112,Engineering,1,28,Male,Bachelor,Office,2017-12-31,7,6580,No,2,2,No
+1113,Support,4,40,Male,Master,Remote,2016-10-05,8,14250,Yes,2,2,No
+1114,Engineering,2,43,Male,Master,Office,2023-11-04,1,8510,No,1,3,No
+1115,Operations,3,43,Female,Bachelor,Hybrid,2019-01-02,6,12050,Yes,3,3,No
+1116,Marketing,2,46,Male,High School,Office,2024-10-30,0,7250,Yes,1,4,No
+1117,Marketing,3,43,Male,Bachelor,Hybrid,2021-05-19,4,11050,Yes,2,3,No
+1118,Support,1,29,Female,Bachelor,Office,2016-09-20,8,6760,Yes,2,3,No
+1119,Sales,3,48,Female,High School,Hybrid,2025-06-26,0,12020,No,3,3,No
+1120,Support,3,42,Female,Bachelor,Hybrid,2021-10-20,3,10200,Yes,4,3,No
+1121,Operations,5,56,Male,Bachelor,Remote,2011-06-21,14,14670,No,1,4,No
+1122,HR,3,37,Male,Bachelor,Office,2010-07-14,14,11440,No,4,3,No
+1123,Marketing,1,38,Male,Master,Office,2021-04-24,4,5960,No,3,3,No
+1124,Sales,3,48,Female,Bachelor,Remote,2016-10-11,8,10410,No,4,4,No
+1125,Sales,3,44,Male,Master,Remote,2016-09-05,8,10950,Yes,2,4,No
+1126,Support,2,34,Female,Master,Hybrid,2011-11-12,13,9030,Yes,1,4,Yes
+1127,Sales,1,35,Male,High School,Remote,2013-05-30,12,7510,No,4,2,No
+1128,Sales,2,46,Non-binary,Bachelor,Office,2011-12-08,13,7670,No,2,3,No
+1129,HR,1,32,Non-binary,Master,Hybrid,2020-08-02,4,5390,No,3,3,No
+1130,Finance,1,41,Female,Bachelor,Hybrid,2013-08-22,11,6750,No,1,3,No
+1131,Sales,1,39,Male,Doctorate,Office,2017-06-25,8,7510,Yes,1,3,No
+1132,Support,1,41,Female,Doctorate,Remote,2021-10-01,3,6570,Yes,4,3,No
+1133,Support,2,31,Female,Master,Remote,2019-09-19,5,7280,No,4,3,No
+1134,Engineering,1,37,Female,Bachelor,Hybrid,2021-09-17,3,7810,No,4,4,Yes
+1135,Engineering,2,31,Male,Bachelor,Hybrid,2018-09-04,6,9260,Yes,3,4,No
+1136,Operations,5,51,Male,Bachelor,Hybrid,2021-04-06,4,15600,No,3,4,No
+1137,Engineering,3,41,Female,Doctorate,Remote,2017-05-01,8,12450,No,4,3,No
+1138,Sales,5,53,Female,Doctorate,Remote,2022-01-20,3,15400,No,3,2,No
+1139,Finance,3,43,Non-binary,Doctorate,Remote,2022-08-16,2,11310,Yes,1,4,Yes
+1140,Marketing,1,32,Male,Master,Remote,2017-01-21,8,6910,No,2,3,No
+1141,Engineering,3,42,Female,Bachelor,Hybrid,2025-02-18,0,12220,No,3,3,No
+1142,Marketing,2,47,Male,High School,Remote,2006-10-13,18,9480,No,2,3,No
+1143,Sales,1,40,Male,Bachelor,Remote,2023-06-17,2,4880,No,2,2,No
+1144,Marketing,2,30,Male,Master,Remote,2015-07-06,9,7170,No,4,3,No
+1145,Engineering,1,37,Female,High School,Office,2008-07-26,16,7760,No,1,2,No
+1146,Support,3,48,Female,High School,Office,2021-05-01,4,9990,Yes,4,2,No
+1147,Engineering,1,40,Female,Bachelor,Hybrid,2014-09-19,10,7880,No,1,3,No
+1148,Sales,1,40,Male,Bachelor,Remote,2023-11-25,1,6680,No,2,3,No
+1149,Support,3,43,Male,Bachelor,Office,2022-05-26,3,11530,Yes,2,3,No
+1150,Sales,1,33,Female,Bachelor,Remote,2023-08-18,1,6400,No,1,3,No
+1151,Sales,2,43,Male,Bachelor,Hybrid,2019-03-01,6,9520,Yes,1,3,No
+1152,Support,2,32,Female,Bachelor,Office,2015-08-01,9,8570,No,2,4,No
+1153,Support,4,47,Female,Master,Hybrid,2019-12-04,5,11630,No,1,3,No
+1154,HR,4,49,Female,Bachelor,Office,2020-08-07,4,11990,Yes,4,4,No
+1155,Engineering,2,39,Male,Bachelor,Remote,2015-11-16,9,8190,No,1,3,No
+1156,Engineering,2,46,Female,High School,Office,2022-01-31,3,8220,No,1,4,No
+1157,Engineering,2,43,Female,Doctorate,Office,2023-08-18,1,8750,Yes,2,2,Yes
+1158,Operations,1,38,Female,Bachelor,Hybrid,2017-10-02,7,6370,No,4,3,No
+1159,Marketing,2,36,Male,Master,Office,2016-03-03,9,7530,No,4,3,No
+1160,Support,1,38,Male,Doctorate,Remote,2011-10-04,13,5490,No,3,2,No
+1161,Support,3,42,Female,Master,Remote,2016-08-08,8,11880,Yes,1,3,No
+1162,Marketing,1,41,Female,Bachelor,Hybrid,2019-11-23,5,6680,No,2,3,No
+1163,Marketing,3,44,Male,Bachelor,Hybrid,2015-10-03,9,9900,No,1,2,No
+1164,Engineering,1,41,Female,Bachelor,Remote,2024-09-20,0,5650,Yes,1,4,Yes
+1165,HR,1,29,Male,Master,Remote,2020-10-20,4,7030,Yes,4,2,No
+1166,Operations,1,43,Male,Master,Office,2025-01-14,0,4780,No,1,3,No
+1167,Support,3,40,Male,Bachelor,Office,2006-02-01,19,10980,No,1,3,No
+1168,Operations,4,39,Male,Bachelor,Remote,2020-09-25,4,11640,No,4,3,No
+1169,Engineering,1,26,Male,Bachelor,Hybrid,2019-10-24,5,7470,No,4,2,No
+1170,Operations,1,39,Female,Master,Hybrid,2016-02-16,9,4930,No,2,3,No
+1171,Engineering,1,35,Female,Master,Remote,2018-01-29,7,5690,No,3,3,No
+1172,Marketing,2,35,Male,Master,Office,2024-06-29,1,9250,No,3,3,No
+1173,Marketing,2,47,Female,High School,Hybrid,2025-04-08,0,9660,Yes,1,3,No
+1174,Operations,5,43,Male,High School,Remote,2024-08-01,0,13940,Yes,4,3,No
+1175,Sales,1,28,Female,Bachelor,Office,2017-09-21,7,5320,No,4,3,No
+1176,Sales,3,38,Female,Bachelor,Office,2024-08-22,0,10350,No,4,4,No
+1177,Support,2,36,Female,Master,Office,2025-01-15,0,7850,Yes,1,4,No
+1178,Engineering,5,59,Female,Bachelor,Remote,2017-03-30,8,15020,No,3,3,No
+1179,Support,3,35,Female,Master,Office,2011-05-20,14,9380,No,3,3,No
+1180,Finance,4,39,Male,Master,Office,2021-12-31,3,13670,No,4,2,No
+1181,Engineering,2,47,Female,Master,Office,2024-11-21,0,9400,No,4,4,No
+1182,Engineering,1,39,Female,Bachelor,Hybrid,2021-12-26,3,7960,No,3,3,No
+1183,Support,1,27,Female,Bachelor,Hybrid,2018-12-04,6,6630,No,4,4,Yes
+1184,Marketing,2,32,Female,Bachelor,Office,2014-03-23,11,9560,No,3,3,No
+1185,Sales,1,26,Female,High School,Office,2020-01-26,5,7100,No,4,3,No
+1186,HR,3,47,Male,Master,Remote,2016-08-16,8,11560,Yes,2,4,No
+1187,Marketing,2,42,Male,Bachelor,Remote,2023-05-24,2,7660,Yes,1,3,No
+1188,Finance,1,41,Male,Master,Remote,2022-09-21,2,6390,No,2,3,No
+1189,Support,2,37,Male,Bachelor,Hybrid,2023-12-01,1,7970,Yes,3,3,No
+1190,Support,4,39,Male,Bachelor,Hybrid,2013-05-27,12,11810,No,4,3,No
+1191,Support,1,37,Male,Master,Remote,2021-07-19,3,5100,Yes,2,3,Yes
+1192,Sales,4,41,Female,Bachelor,Office,2023-09-03,1,13120,Yes,4,4,Yes
+1193,Support,3,41,Female,Bachelor,Remote,2015-11-22,9,11790,No,2,2,No
+1194,Operations,4,54,Male,Master,Office,2020-06-23,5,12580,No,3,3,No
+1195,Engineering,1,37,Female,Master,Hybrid,2023-01-09,2,6100,No,1,3,No
+1196,Sales,5,48,Male,Bachelor,Remote,2024-12-03,0,13960,No,1,3,No
+1197,Marketing,2,31,Female,High School,Office,2015-03-04,10,7990,Yes,4,2,No
+1198,Engineering,1,28,Female,Bachelor,Remote,2023-01-27,2,7320,No,4,3,No
+1199,Finance,3,43,Male,Bachelor,Office,2023-07-09,1,9910,Yes,2,4,No
+1200,Sales,1,41,Male,Bachelor,Hybrid,2022-11-12,2,7510,No,1,2,No
+1201,Sales,2,34,Male,Bachelor,Remote,2025-02-10,0,7570,No,2,2,No
+1202,Engineering,1,38,Female,Bachelor,Hybrid,2023-04-25,2,5760,No,2,4,Yes
+1203,Operations,4,49,Male,Master,Remote,2021-11-05,3,13690,No,1,3,Yes
+1204,Sales,1,43,Male,Master,Office,2024-10-12,0,7400,Yes,4,2,No
+1205,Operations,3,40,Female,Bachelor,Remote,2024-04-06,1,11090,Yes,1,2,Yes
+1206,Operations,4,39,Male,Master,Office,2019-01-20,6,13850,No,3,3,No
+1207,Engineering,2,31,Female,Master,Remote,2022-04-03,3,8030,Yes,2,3,Yes
+1208,Marketing,1,31,Female,Bachelor,Remote,2014-07-14,10,7310,No,3,3,No
+1209,Finance,3,42,Female,High School,Remote,2011-04-29,14,11850,No,2,3,No
+1210,Finance,2,44,Male,Bachelor,Remote,2025-03-01,0,9830,Yes,4,3,No
+1211,Marketing,1,32,Female,Master,Office,2014-06-30,11,6700,Yes,2,3,No
+1212,Support,2,30,Female,Bachelor,Remote,2025-06-22,0,8920,No,1,2,No
+1213,Sales,1,41,Female,Master,Hybrid,2009-11-19,15,4900,No,1,4,No
+1214,Operations,3,45,Female,Bachelor,Office,2012-05-06,13,10260,Yes,2,3,No
+1215,Engineering,1,32,Male,Bachelor,Office,2018-06-11,7,6540,No,2,2,No
+1216,Engineering,4,44,Female,Bachelor,Office,2018-10-09,6,14860,No,4,4,No
+1217,HR,1,42,Non-binary,Doctorate,Office,2017-09-12,7,5780,No,3,2,No
+1218,Marketing,2,40,Male,Bachelor,Remote,2012-11-13,12,7470,No,1,3,No
+1219,Operations,3,37,Male,Bachelor,Hybrid,2014-02-14,11,10970,No,3,3,No
+1220,Support,1,35,Male,Master,Remote,2025-06-20,0,6990,No,3,2,No
+1221,Sales,1,29,Male,Master,Hybrid,2016-09-13,8,7550,No,2,2,No
+1222,Sales,4,50,Male,Bachelor,Hybrid,2023-04-23,2,11860,No,3,3,No
+1223,Sales,3,39,Male,Bachelor,Hybrid,2020-07-13,4,11480,No,3,3,No
+1224,Engineering,1,31,Male,Master,Remote,2015-04-18,10,8280,Yes,1,3,No
+1225,HR,3,46,Female,Master,Office,2023-12-15,1,11420,No,1,2,Yes
+1226,Sales,1,38,Male,Bachelor,Hybrid,2020-04-17,5,7440,No,1,3,No
+1227,Engineering,3,43,Male,Bachelor,Remote,2024-10-22,0,12800,Yes,2,3,No
+1228,Support,4,43,Female,Bachelor,Office,2023-01-22,2,13720,No,2,3,No
+1229,Sales,2,37,Female,Doctorate,Hybrid,2023-01-27,2,9210,No,3,2,No
+1230,Operations,2,33,Male,Master,Office,2021-08-16,3,7720,No,2,3,No
+1231,Marketing,2,37,Male,Bachelor,Office,2015-03-10,10,9370,Yes,3,2,No
+1232,Support,1,42,Female,Bachelor,Hybrid,2023-10-12,1,5670,No,2,4,No
+1233,Support,5,53,Male,Master,Hybrid,2025-03-09,0,15040,Yes,3,4,No
+1234,Operations,1,28,Male,Bachelor,Office,2017-11-30,7,7450,No,2,4,No
+1235,Sales,1,42,Male,Master,Remote,2010-09-25,14,5000,No,4,3,No
+1236,Operations,2,47,Female,Master,Hybrid,2012-03-09,13,9510,No,2,3,No
+1237,Engineering,4,40,Female,High School,Office,2014-02-17,11,13290,Yes,1,3,No
+1238,Engineering,5,42,Female,Bachelor,Office,2010-02-11,15,17200,No,1,4,No
+1239,Operations,1,33,Male,Bachelor,Hybrid,2024-07-23,0,7380,No,2,3,No
+1240,Sales,1,38,Female,Doctorate,Remote,2024-08-30,0,6900,No,3,3,No
+1241,Operations,3,42,Female,Master,Remote,2020-01-30,5,11720,No,2,3,No
+1242,Marketing,2,47,Male,Bachelor,Office,2021-02-19,4,8460,No,2,3,No
+1243,Operations,2,47,Male,High School,Hybrid,2012-03-29,13,8820,Yes,2,3,No
+1244,Support,3,51,Male,Bachelor,Office,2007-06-27,18,11430,Yes,2,3,No
+1245,Operations,1,33,Male,Master,Hybrid,2013-11-06,11,4710,No,4,3,No
+1246,Engineering,2,37,Male,Doctorate,Remote,2013-06-03,12,10470,No,4,2,No
+1247,Sales,2,31,Male,Bachelor,Office,2014-07-13,10,8180,No,3,3,No
+1248,Sales,1,38,Female,Bachelor,Hybrid,2011-06-16,14,6650,No,4,4,No
+1249,Engineering,2,36,Female,Bachelor,Office,2010-04-12,15,8660,No,3,3,No
+1250,Finance,5,44,Female,Bachelor,Remote,2020-02-18,5,14110,Yes,1,3,No
+1251,Finance,1,42,Male,High School,Remote,2024-10-15,0,7270,No,2,2,No
+1252,Sales,3,41,Male,Bachelor,Office,2006-04-29,19,9420,No,1,3,No
+1253,Marketing,2,46,Male,Bachelor,Office,2019-03-25,6,9550,No,2,3,No
+1254,Sales,1,26,Male,Bachelor,Office,2019-11-20,5,5740,No,4,4,No
+1255,Operations,1,27,Male,Bachelor,Hybrid,2021-03-22,4,7520,No,4,3,No
+1256,Support,2,40,Female,Master,Hybrid,2013-06-14,12,7330,No,3,4,No
+1257,Support,3,37,Male,Doctorate,Remote,2025-03-23,0,10310,No,2,3,No
+1258,Support,1,34,Male,Master,Office,2025-05-22,0,7070,No,3,3,No
+1259,Engineering,2,39,Male,Bachelor,Remote,2008-09-02,16,10250,No,1,4,No
+1260,Sales,3,38,Male,Master,Hybrid,2014-05-27,11,10640,Yes,3,2,No
+1261,Sales,1,41,Male,Bachelor,Remote,2014-09-15,10,6450,No,4,4,No
+1262,Support,2,32,Male,High School,Hybrid,2014-03-01,11,7540,No,4,3,No
+1263,Operations,2,44,Female,Master,Remote,2016-09-17,8,8620,No,1,3,No
+1264,Engineering,2,31,Male,Bachelor,Office,2014-08-29,10,8080,No,4,3,No
+1265,Sales,2,33,Female,Bachelor,Hybrid,2013-01-15,12,9490,No,1,3,No
+1266,Finance,1,40,Female,Doctorate,Hybrid,2019-12-09,5,8070,No,2,3,No
+1267,Engineering,4,52,Female,Bachelor,Remote,2013-04-13,12,12860,Yes,2,3,No
+1268,Support,3,45,Female,High School,Office,2022-06-08,3,11810,Yes,1,4,No
+1269,Engineering,4,47,Male,Master,Office,2023-02-10,2,12420,No,2,2,No
+1270,Sales,2,36,Female,Bachelor,Office,2018-09-03,6,7470,No,4,3,No
+1271,Sales,4,41,Female,Bachelor,Office,2006-04-21,19,12750,No,4,3,No
+1272,Engineering,1,38,Male,Bachelor,Hybrid,2009-03-19,16,6670,No,3,3,No
+1273,Sales,1,41,Male,Bachelor,Office,2018-08-27,6,5980,Yes,3,4,No
+1274,Engineering,2,33,Female,Master,Remote,2018-04-17,7,9050,No,3,2,No
+1275,Support,2,41,Female,Bachelor,Remote,2024-06-27,1,7100,No,1,3,No
+1276,Engineering,3,40,Male,Master,Office,2022-10-22,2,11080,Yes,4,3,No
+1277,Operations,3,49,Female,Master,Remote,2024-06-03,1,9110,No,1,2,No
+1278,Marketing,2,39,Male,Master,Office,2011-03-25,14,7370,No,3,4,No
+1279,HR,3,39,Female,Master,Office,2017-01-29,8,10710,No,4,4,No
+1280,HR,1,29,Female,Bachelor,Remote,2021-08-10,3,5470,No,3,3,No
+1281,Engineering,4,50,Male,Bachelor,Remote,2020-10-08,4,14060,No,4,3,No
+1282,Engineering,2,35,Male,High School,Remote,2011-02-28,14,10490,No,2,2,Yes
+1283,Sales,1,30,Male,Master,Office,2020-02-24,5,6170,No,4,3,No
+1284,Support,2,33,Non-binary,Bachelor,Remote,2013-01-24,12,9610,No,3,2,No
+1285,Sales,4,41,Female,Master,Hybrid,2019-01-27,6,13320,No,4,3,No
+1286,Engineering,1,41,Female,Master,Remote,2018-04-06,7,6270,Yes,1,3,No
+1287,Sales,3,36,Male,Bachelor,Remote,2024-07-18,0,9610,No,3,4,No
+1288,Sales,1,31,Male,Bachelor,Remote,2023-11-27,1,6370,No,2,3,No
+1289,Support,1,39,Female,Bachelor,Hybrid,2008-07-27,16,5440,No,4,3,No
+1290,Operations,2,32,Male,High School,Hybrid,2014-03-11,11,9890,Yes,1,3,No
+1291,Engineering,5,48,Male,Master,Hybrid,2008-11-21,16,16600,No,3,3,No
+1292,Support,1,27,Non-binary,Master,Remote,2019-03-22,6,5100,No,2,2,No
+1293,Marketing,1,39,Female,Bachelor,Hybrid,2025-01-09,0,7440,No,4,4,No
+1294,HR,1,39,Female,Master,Remote,2021-02-13,4,7390,No,3,3,No
+1295,HR,1,40,Male,Bachelor,Remote,2011-01-02,14,6650,No,2,3,No
+1296,Marketing,3,49,Male,Bachelor,Remote,2007-12-31,17,11330,No,2,3,No
+1297,Sales,2,38,Non-binary,Master,Remote,2013-10-19,11,8410,No,3,3,No
+1298,Sales,1,36,Female,Master,Remote,2014-03-29,11,7120,No,2,2,No
+1299,Support,4,41,Male,Bachelor,Hybrid,2006-03-29,19,13610,No,1,3,No
+1300,HR,1,31,Male,Doctorate,Hybrid,2018-09-22,6,7070,No,2,3,No
+1301,Sales,3,39,Male,Bachelor,Remote,2019-12-11,5,9230,Yes,4,3,No
+1302,Sales,4,42,Female,Bachelor,Hybrid,2013-06-11,12,11760,No,3,3,No
+1303,Sales,1,30,Female,Bachelor,Hybrid,2015-10-03,9,6740,No,4,3,No
+1304,Engineering,4,53,Female,Master,Remote,2019-07-14,5,13440,No,4,3,Yes
+1305,Engineering,4,55,Male,Bachelor,Hybrid,2014-02-01,11,12530,No,2,2,No
+1306,Support,2,37,Male,Master,Office,2025-01-21,0,8220,Yes,4,3,Yes
+1307,Support,2,32,Male,Bachelor,Hybrid,2023-11-07,1,7040,Yes,4,3,Yes
+1308,Support,2,35,Male,Bachelor,Hybrid,2010-09-26,14,9070,Yes,1,3,No
+1309,Operations,3,41,Female,Master,Remote,2023-11-07,1,9760,No,3,3,No
+1310,HR,1,33,Female,Bachelor,Hybrid,2013-10-18,11,7410,No,4,3,No
+1311,Support,3,49,Male,Master,Office,2025-04-23,0,9410,Yes,1,3,No
+1312,Engineering,2,42,Non-binary,Bachelor,Office,2008-12-20,16,8300,Yes,1,3,No
+1313,HR,4,48,Non-binary,Bachelor,Office,2017-08-19,7,13730,No,2,3,No
+1314,Finance,2,41,Male,Bachelor,Remote,2023-07-23,1,9620,Yes,3,3,No
+1315,Support,2,37,Male,Bachelor,Remote,2024-06-27,1,9430,No,4,3,No
+1316,Support,2,40,Male,High School,Office,2019-12-10,5,8200,No,4,3,No
+1317,Finance,1,43,Male,Master,Hybrid,2013-06-24,12,6830,Yes,4,3,No
+1318,Operations,2,43,Female,Master,Remote,2012-11-22,12,9010,No,1,3,No
+1319,Support,4,50,Female,Master,Hybrid,2017-01-04,8,12270,No,2,3,No
+1320,Engineering,1,29,Male,Master,Hybrid,2017-01-04,8,7260,No,4,4,No
+1321,Support,5,48,Female,Doctorate,Office,2007-11-25,17,15630,No,2,3,No
+1322,Support,1,42,Male,Master,Office,2011-08-21,13,7640,No,1,3,Yes
+1323,HR,5,51,Female,Bachelor,Hybrid,2025-03-19,0,16230,Yes,3,3,No
+1324,Operations,1,39,Male,Bachelor,Hybrid,2020-01-30,5,6440,No,4,3,No
+1325,Operations,4,54,Male,Master,Hybrid,2018-07-05,6,12400,No,2,3,No
+1326,Finance,3,46,Male,Master,Remote,2025-02-08,0,11280,Yes,1,3,Yes
+1327,Marketing,4,50,Male,High School,Office,2020-09-01,4,12190,No,4,3,No
+1328,Support,2,40,Male,Bachelor,Office,2007-04-06,18,7170,No,1,4,Yes
+1329,Sales,1,26,Female,Bachelor,Remote,2020-05-28,5,6690,No,2,4,Yes
+1330,Engineering,3,46,Female,Bachelor,Hybrid,2015-12-23,9,10540,Yes,2,3,No
+1331,Operations,1,36,Female,Bachelor,Hybrid,2009-10-29,15,4820,No,4,3,No
+1332,Sales,1,40,Female,Bachelor,Remote,2022-10-31,2,5340,No,1,3,No
+1333,Support,1,28,Male,Master,Office,2024-05-12,1,6170,No,1,2,Yes
+1334,Finance,4,39,Female,Bachelor,Office,2022-05-25,3,12280,No,2,2,No
+1335,Engineering,2,45,Female,Master,Remote,2024-04-16,1,9700,No,2,3,No
+1336,Operations,2,38,Female,Bachelor,Office,2023-08-07,1,7780,No,1,2,No
+1337,Engineering,4,39,Female,Bachelor,Remote,2024-10-31,0,12530,No,2,2,No
+1338,Marketing,1,43,Female,Bachelor,Hybrid,2010-01-23,15,7400,No,2,3,No
+1339,Engineering,3,39,Male,Master,Remote,2017-10-21,7,10870,No,4,4,No
+1340,Engineering,2,40,Female,Master,Office,2021-07-21,3,8880,No,3,2,No
+1341,Operations,1,28,Female,Bachelor,Office,2017-11-02,7,7040,No,2,3,No
+1342,Engineering,1,38,Non-binary,Bachelor,Remote,2008-07-02,17,6870,No,3,2,No
+1343,Marketing,1,36,Male,Bachelor,Office,2021-05-28,4,5720,No,2,2,No
+1344,Sales,1,33,Female,Master,Remote,2017-04-16,8,5450,No,4,3,No
+1345,Engineering,1,33,Female,Bachelor,Office,2019-03-02,6,5700,No,1,3,No
+1346,Sales,2,32,Male,Master,Remote,2021-12-13,3,6950,Yes,2,3,No
+1347,Support,1,41,Non-binary,Bachelor,Remote,2024-08-02,0,5390,No,3,4,No
+1348,Engineering,2,34,Male,Master,Office,2020-02-19,5,8190,No,2,3,No
+1349,Support,3,50,Male,Master,Remote,2017-08-06,7,11020,No,2,3,No
+1350,Support,5,43,Male,Bachelor,Hybrid,2020-09-06,4,15960,No,2,4,No
+1351,Finance,2,41,Female,Master,Office,2015-06-22,10,8810,No,3,4,No
+1352,Engineering,4,39,Male,Bachelor,Hybrid,2025-06-18,0,12640,Yes,2,3,No
+1353,Support,2,35,Female,High School,Office,2025-03-12,0,8290,No,1,4,No
+1354,Operations,1,30,Male,Bachelor,Hybrid,2023-03-10,2,4880,No,3,2,No
+1355,Support,2,30,Female,Bachelor,Office,2015-11-23,9,8050,No,1,3,Yes
+1356,Engineering,2,39,Female,Bachelor,Remote,2007-09-30,17,8800,No,2,4,No
+1357,Sales,4,52,Male,Bachelor,Hybrid,2011-11-18,13,11970,Yes,1,3,No
+1358,Engineering,1,42,Male,Bachelor,Office,2019-04-16,6,8210,No,3,3,No
+1359,Marketing,1,34,Female,Master,Office,2016-07-02,9,7630,No,2,2,Yes
+1360,Support,1,34,Male,Master,Remote,2023-11-01,1,6560,No,1,4,No
+1361,Finance,1,31,Non-binary,High School,Remote,2023-12-03,1,5690,No,2,3,No
+1362,Support,1,28,Male,Bachelor,Office,2024-03-08,1,7100,No,3,3,Yes
+1363,Operations,1,40,Female,Bachelor,Office,2015-08-15,9,5620,No,2,3,No
+1364,Engineering,1,40,Male,Master,Office,2018-01-23,7,8580,No,4,4,No
+1365,Support,2,36,Female,Bachelor,Hybrid,2010-10-06,14,9210,No,4,2,Yes
+1366,Sales,2,42,Female,Bachelor,Hybrid,2012-08-28,12,9330,No,2,2,No
+1367,Marketing,1,34,Female,Bachelor,Office,2022-12-12,2,5240,No,3,3,No
+1368,Sales,4,47,Male,Bachelor,Hybrid,2020-05-01,5,13960,No,4,4,No
+1369,Engineering,1,27,Male,Master,Hybrid,2019-05-02,6,7480,No,1,2,Yes
+1370,Engineering,1,35,Female,Bachelor,Office,2014-09-12,10,7550,No,2,2,No
+1371,Sales,1,33,Female,Bachelor,Hybrid,2017-10-03,7,6800,Yes,3,3,No
+1372,HR,3,46,Female,Bachelor,Hybrid,2015-06-25,10,9920,Yes,1,3,No
+1373,Support,1,39,Female,Bachelor,Office,2024-06-24,1,7690,Yes,3,3,No
+1374,Operations,4,43,Male,High School,Remote,2006-07-04,19,11620,No,3,2,Yes
+1375,Engineering,1,31,Male,Master,Hybrid,2022-12-01,2,8060,No,3,4,No
+1376,Sales,2,35,Non-binary,Bachelor,Hybrid,2023-09-13,1,8910,No,4,3,No
+1377,HR,1,26,Male,Bachelor,Remote,2023-01-13,2,7150,No,2,3,No
+1378,Sales,1,37,Male,Master,Hybrid,2022-02-11,3,5210,No,4,3,Yes
+1379,Engineering,1,31,Female,High School,Office,2025-06-08,0,7240,No,4,3,Yes
+1380,Support,1,31,Female,Bachelor,Remote,2015-04-04,10,5060,No,4,4,No
+1381,Operations,3,34,Male,High School,Remote,2012-10-09,12,10230,Yes,1,3,No
+1382,Engineering,5,54,Male,Doctorate,Office,2025-06-08,0,17190,Yes,3,4,Yes
+1383,Finance,2,39,Female,Bachelor,Office,2025-04-10,0,8180,No,4,3,No
+1384,Sales,1,34,Male,Bachelor,Remote,2024-11-29,0,5220,No,4,2,No
+1385,Support,2,47,Female,Bachelor,Hybrid,2019-08-04,5,7350,Yes,1,3,Yes
+1386,Support,3,34,Female,Bachelor,Remote,2018-03-10,7,9270,Yes,2,3,No
+1387,Operations,1,28,Male,Bachelor,Office,2024-10-19,0,4920,No,4,3,Yes
+1388,HR,3,48,Male,Bachelor,Hybrid,2024-01-24,1,9270,Yes,2,3,No
+1389,Sales,4,38,Female,Bachelor,Remote,2008-03-18,17,11400,No,1,3,No
+1390,Support,1,43,Female,Master,Hybrid,2007-02-25,18,6720,No,3,3,No
+1391,Sales,2,35,Male,Bachelor,Office,2020-05-05,5,7120,No,3,3,No
+1392,Operations,1,31,Female,Bachelor,Office,2015-05-24,10,5620,No,3,3,No
+1393,Engineering,2,40,Male,Bachelor,Remote,2019-01-23,6,8550,No,3,3,No
+1394,Engineering,2,47,Female,High School,Hybrid,2014-05-24,11,8650,No,1,3,Yes
+1395,HR,1,28,Male,Bachelor,Remote,2018-05-27,7,5220,No,3,3,No
+1396,Marketing,2,30,Male,Bachelor,Remote,2015-09-06,9,9010,Yes,3,3,No
+1397,Finance,3,43,Male,Bachelor,Office,2016-05-08,9,12470,No,4,3,No
+1398,Sales,3,43,Female,Master,Hybrid,2009-03-08,16,12090,Yes,2,2,No
+1399,Engineering,3,35,Female,Bachelor,Remote,2019-03-18,6,12670,No,4,4,Yes
+1400,Sales,5,59,Male,High School,Hybrid,2022-09-01,2,13540,No,3,4,No
+1401,Support,2,46,Male,Bachelor,Remote,2024-09-23,0,8160,No,1,3,No
+1402,Support,3,38,Female,Bachelor,Remote,2024-11-30,0,10210,No,3,3,No
+1403,Marketing,3,38,Female,Bachelor,Remote,2011-08-16,13,10940,No,3,2,No
+1404,Operations,2,36,Female,Bachelor,Hybrid,2021-07-25,3,8170,No,4,2,No
+1405,Sales,1,34,Female,Doctorate,Remote,2011-11-18,13,6560,No,3,2,No
+1406,Operations,4,52,Male,Master,Hybrid,2022-05-03,3,12910,No,1,2,No
+1407,Engineering,1,38,Male,Bachelor,Remote,2023-07-06,1,7030,No,1,2,No
+1408,Engineering,2,37,Male,High School,Remote,2023-01-11,2,8190,No,3,4,No
+1409,Marketing,2,34,Male,High School,Remote,2024-11-18,0,7950,Yes,4,3,No
+1410,Engineering,4,51,Male,Master,Office,2018-12-05,6,14730,No,3,3,No
+1411,Marketing,1,38,Female,Master,Office,2024-12-19,0,7070,No,4,3,Yes
+1412,HR,1,28,Female,Master,Hybrid,2024-09-21,0,5400,Yes,3,3,Yes
+1413,Engineering,1,27,Male,Bachelor,Remote,2025-04-22,0,7630,No,3,2,No
+1414,Sales,1,31,Male,Master,Office,2021-11-15,3,7680,No,2,3,No
+1415,Sales,5,45,Female,Master,Remote,2022-10-17,2,15280,No,4,3,No
+1416,Operations,2,43,Female,High School,Hybrid,2005-11-27,19,9260,No,1,3,No
+1417,Engineering,3,51,Non-binary,Doctorate,Remote,2019-09-19,5,12320,No,4,3,No
+1418,Sales,4,55,Male,Bachelor,Hybrid,2023-05-04,2,11520,No,3,4,No
+1419,Operations,2,47,Male,Master,Remote,2010-03-30,15,8970,No,4,3,No
+1420,Sales,1,29,Female,Master,Hybrid,2019-07-28,5,7610,No,1,3,No
+1421,Support,4,42,Female,Bachelor,Remote,2007-03-04,18,11540,No,3,4,No
+1422,Marketing,4,43,Female,Bachelor,Remote,2007-02-21,18,12110,No,3,2,No
+1423,Sales,2,39,Male,Doctorate,Remote,2012-03-23,13,6980,Yes,2,3,No
+1424,Marketing,4,41,Male,High School,Remote,2010-09-07,14,12300,Yes,4,3,No
+1425,Engineering,2,31,Male,Master,Remote,2024-02-28,1,8020,No,4,3,No
+1426,Sales,2,32,Male,High School,Remote,2019-05-31,6,7760,No,2,2,No
+1427,Engineering,2,41,Male,Master,Remote,2012-12-03,12,10480,No,2,3,No
+1428,Support,3,45,Male,Master,Hybrid,2006-12-22,18,10620,No,1,3,No
+1429,Marketing,2,38,Female,Bachelor,Office,2021-10-24,3,9740,No,4,3,No
+1430,Finance,5,45,Male,Doctorate,Hybrid,2025-01-21,0,14880,No,4,4,No
+1431,Sales,3,46,Female,Master,Hybrid,2008-07-04,17,11710,No,4,4,No
+1432,Finance,2,36,Non-binary,Bachelor,Remote,2020-12-31,4,10260,No,4,3,No
+1433,Support,2,42,Female,Bachelor,Remote,2016-01-30,9,8390,No,3,3,Yes
+1434,Sales,3,51,Male,Bachelor,Hybrid,2022-12-17,2,11640,No,3,3,No
+1435,Sales,5,44,Male,Bachelor,Remote,2011-12-27,13,15500,No,4,3,No
+1436,Support,2,30,Male,Master,Office,2024-08-03,0,8600,No,1,4,Yes
+1437,Operations,2,47,Male,Master,Remote,2009-12-09,15,9140,No,1,3,No
+1438,Support,1,35,Male,Bachelor,Office,2022-07-01,3,5630,No,3,2,Yes
+1439,Marketing,2,33,Female,Bachelor,Office,2012-10-23,12,7710,No,1,3,Yes
+1440,Marketing,1,28,Male,Bachelor,Hybrid,2018-02-07,7,4780,No,2,4,Yes
+1441,Support,4,47,Female,High School,Office,2019-06-24,6,14050,No,4,2,No
+1442,Finance,2,32,Female,Bachelor,Hybrid,2013-11-01,11,10360,No,1,4,No
+1443,Marketing,1,37,Female,Bachelor,Remote,2009-03-09,16,6210,Yes,1,3,Yes
+1444,Engineering,1,27,Female,Bachelor,Remote,2018-10-31,6,7260,Yes,4,3,No
+1445,Engineering,1,43,Male,Master,Hybrid,2025-01-27,0,6830,No,3,4,No
+1446,Operations,1,37,Female,Master,Hybrid,2015-10-03,9,7060,Yes,2,3,No
+1447,Sales,1,29,Male,Bachelor,Office,2024-08-26,0,6230,No,1,3,No
+1448,Sales,1,37,Male,Bachelor,Remote,2018-07-30,6,5240,No,1,3,No
+1449,Marketing,1,42,Male,Bachelor,Hybrid,2012-10-19,12,5670,No,3,3,No
+1450,Finance,2,30,Female,Master,Office,2016-06-30,9,8270,No,3,3,No
+1451,Engineering,4,44,Male,Bachelor,Office,2013-12-30,11,14720,Yes,1,3,Yes
+1452,Sales,1,35,Male,Bachelor,Office,2025-06-24,0,6690,No,3,3,No
+1453,Sales,3,41,Female,Bachelor,Office,2020-04-08,5,9670,No,3,3,No
+1454,Operations,1,30,Female,Master,Hybrid,2018-11-13,6,6150,No,3,3,Yes
+1455,Sales,1,39,Female,High School,Office,2006-11-26,18,4870,Yes,2,4,Yes
+1456,Support,4,38,Female,Bachelor,Hybrid,2008-12-31,16,11850,No,2,2,No
+1457,Finance,3,47,Male,Bachelor,Office,2023-07-23,1,11220,Yes,1,3,No
+1458,Marketing,1,32,Female,Bachelor,Hybrid,2023-12-24,1,6170,No,4,3,No
+1459,HR,2,47,Female,Master,Remote,2017-03-27,8,7930,No,4,3,Yes
+1460,Sales,3,39,Male,Master,Remote,2023-10-08,1,11390,No,4,4,No
+1461,Engineering,2,45,Male,Master,Remote,2020-03-02,5,7910,No,2,3,No
+1462,Support,1,36,Female,Master,Office,2023-07-10,1,6580,No,2,4,No
+1463,Operations,2,39,Female,Bachelor,Hybrid,2024-12-24,0,8790,No,4,3,No
+1464,Engineering,3,36,Male,Bachelor,Hybrid,2010-05-03,15,12200,No,4,3,No
+1465,HR,2,40,Male,Bachelor,Remote,2018-12-26,6,7510,No,4,3,No
+1466,Operations,1,36,Male,Bachelor,Remote,2019-04-13,6,5680,No,2,3,No
+1467,Sales,1,43,Female,Bachelor,Office,2013-02-03,12,7630,Yes,4,3,No
+1468,Support,1,35,Male,High School,Remote,2016-09-16,8,7260,No,4,4,No
+1469,Sales,1,32,Male,Bachelor,Remote,2023-08-08,1,6240,No,4,3,No
+1470,Engineering,1,31,Female,Bachelor,Remote,2023-04-04,2,6800,No,2,2,No
+1471,Marketing,3,39,Female,Bachelor,Remote,2014-10-25,10,9130,No,3,3,No
+1472,Operations,1,26,Male,Master,Hybrid,2023-02-21,2,7200,No,4,2,Yes
+1473,Engineering,2,37,Male,Master,Office,2014-12-27,10,9280,Yes,1,3,No
+1474,Sales,2,33,Female,Bachelor,Hybrid,2014-03-27,11,7390,Yes,1,3,No
+1475,Support,1,38,Male,Bachelor,Office,2022-01-23,3,6690,Yes,4,4,Yes
+1476,Engineering,5,43,Male,Bachelor,Remote,2008-12-10,16,17050,No,3,4,No
+1477,Engineering,1,27,Male,Bachelor,Office,2025-02-01,0,6320,No,2,3,No
+1478,Engineering,1,38,Male,Bachelor,Office,2023-05-29,2,5780,No,1,3,No
+1479,Support,2,30,Non-binary,Bachelor,Remote,2021-05-10,4,8230,No,2,3,Yes
+1480,Sales,1,34,Female,Bachelor,Remote,2014-06-23,11,5680,Yes,3,3,No
+1481,Engineering,2,44,Male,Bachelor,Hybrid,2019-06-29,6,10240,No,3,3,No
+1482,Sales,2,45,Female,Bachelor,Office,2018-08-05,6,7500,No,3,4,No
+1483,Engineering,1,30,Female,Bachelor,Office,2023-11-08,1,5720,No,3,3,Yes
+1484,Engineering,1,29,Male,Bachelor,Office,2016-12-12,8,5800,No,3,3,Yes
+1485,HR,2,35,Male,Bachelor,Office,2010-11-20,14,7250,No,2,3,No
+1486,Support,2,33,Male,Bachelor,Office,2023-03-13,2,7860,Yes,1,3,Yes
+1487,Operations,1,38,Male,Master,Office,2022-03-05,3,7330,No,1,3,No
+1488,Sales,3,39,Female,Bachelor,Remote,2019-08-19,5,11250,No,1,4,No
+1489,Sales,1,32,Male,Bachelor,Remote,2024-05-17,1,6180,No,4,3,No
+1490,Operations,1,27,Female,Bachelor,Remote,2019-06-24,6,4750,No,1,4,No
+1491,Engineering,2,43,Male,Bachelor,Office,2020-05-02,5,8550,Yes,1,3,No
+1492,Engineering,2,46,Male,Master,Office,2017-11-29,7,9020,No,1,2,No
+1493,Sales,2,45,Male,Bachelor,Office,2024-06-28,1,9420,No,1,3,No
+1494,Sales,3,38,Female,Bachelor,Office,2019-05-06,6,10830,No,1,2,No
+1495,Engineering,5,52,Male,Master,Office,2007-10-19,17,14910,No,1,2,No
+1496,Engineering,4,45,Male,Master,Remote,2023-08-20,1,13550,No,3,2,No
+1497,Sales,1,42,Male,Bachelor,Office,2014-12-04,10,5190,No,1,3,Yes
+1498,Sales,3,44,Male,Bachelor,Remote,2021-03-07,4,10370,No,4,3,No
+1499,Finance,4,51,Female,Bachelor,Remote,2014-12-10,10,14320,Yes,3,3,No
+1500,Engineering,4,47,Male,Bachelor,Office,2018-06-24,7,13530,No,4,4,No
+1501,Sales,1,34,Male,Bachelor,Office,2019-04-09,6,6020,Yes,3,3,No
+1502,Support,5,51,Male,High School,Hybrid,2014-03-23,11,13720,Yes,1,3,No
+1503,Engineering,4,41,Female,Doctorate,Hybrid,2005-11-16,19,12430,Yes,2,3,No
+1504,Support,1,30,Male,High School,Office,2024-03-09,1,7570,No,3,3,No
+1505,Engineering,2,46,Female,Master,Remote,2006-05-02,19,9690,Yes,3,3,Yes
+1506,HR,1,38,Male,Master,Office,2014-09-29,10,6530,No,4,3,Yes
+1507,Sales,3,42,Male,High School,Office,2009-01-02,16,11150,Yes,4,4,No
+1508,Sales,3,46,Male,Bachelor,Office,2025-02-02,0,9850,No,3,2,No
+1509,HR,1,33,Male,Bachelor,Hybrid,2012-11-14,12,6370,No,4,3,No
+1510,Engineering,1,32,Male,High School,Remote,2024-05-19,1,6630,No,4,4,No
+1511,HR,4,55,Male,Bachelor,Office,2024-07-17,0,13930,No,4,4,No
+1512,Operations,2,41,Female,Bachelor,Hybrid,2024-12-07,0,7710,No,1,2,No
+1513,Support,1,30,Male,Master,Remote,2023-12-24,1,6650,No,1,3,No
+1514,Operations,1,38,Female,Bachelor,Remote,2012-09-19,12,7530,Yes,1,4,No
+1515,Engineering,1,36,Female,High School,Hybrid,2010-12-05,14,7930,Yes,4,4,Yes
+1516,Operations,3,50,Female,High School,Office,2012-04-28,13,9680,Yes,2,4,No
+1517,Sales,1,42,Female,Master,Remote,2018-11-03,6,5150,No,2,3,No
+1518,Engineering,4,46,Male,Master,Remote,2020-12-02,4,13990,Yes,1,4,Yes
+1519,Engineering,2,44,Male,Bachelor,Remote,2024-10-10,0,8210,Yes,4,3,No
+1520,Sales,3,50,Female,Bachelor,Remote,2009-11-11,15,11890,No,4,3,No
+1521,Sales,5,58,Male,Bachelor,Remote,2011-03-28,14,13580,No,3,3,No
+1522,Engineering,2,36,Male,Bachelor,Office,2024-03-29,1,8820,No,2,4,No
+1523,Finance,2,31,Female,Bachelor,Hybrid,2021-03-12,4,9340,No,3,3,No
+1524,Sales,1,29,Female,Bachelor,Remote,2025-06-12,0,5140,No,1,2,No
+1525,Support,4,41,Male,Bachelor,Office,2019-09-25,5,11590,No,4,4,No
+1526,Engineering,2,38,Male,Master,Hybrid,2023-04-14,2,8500,No,2,4,No
+1527,Operations,2,33,Male,High School,Office,2025-04-21,0,9600,Yes,2,3,No
+1528,Engineering,1,40,Non-binary,Bachelor,Remote,2024-08-04,0,8200,Yes,2,4,Yes
+1529,Support,1,34,Male,Master,Hybrid,2022-07-03,2,5420,No,1,4,No
+1530,Support,2,45,Female,Master,Hybrid,2025-05-17,0,8690,No,1,3,No
+1531,Support,1,28,Female,Master,Hybrid,2020-07-27,4,7120,Yes,4,4,Yes
+1532,Sales,1,41,Male,Bachelor,Hybrid,2021-06-30,4,7410,Yes,3,3,No
+1533,Finance,1,42,Male,Master,Office,2024-10-27,0,7340,No,2,3,No
+1534,Support,1,26,Female,Bachelor,Office,2023-04-24,2,5610,No,1,4,No
+1535,Marketing,1,41,Female,Bachelor,Office,2023-08-13,1,5050,Yes,4,3,No
+1536,Sales,1,26,Female,Bachelor,Remote,2020-11-15,4,6350,No,1,3,No
+1537,Engineering,3,51,Female,High School,Hybrid,2021-03-28,4,11890,No,3,3,Yes
+1538,Finance,3,51,Male,Bachelor,Office,2024-06-13,1,11070,No,1,3,No
+1539,Sales,3,42,Male,Master,Remote,2023-07-03,1,9780,No,1,3,No
+1540,Sales,4,50,Male,Bachelor,Remote,2012-09-02,12,11550,No,4,3,No
+1541,Engineering,1,28,Male,Bachelor,Office,2022-05-05,3,7030,Yes,1,3,Yes
+1542,Marketing,2,34,Female,Bachelor,Remote,2019-03-31,6,7590,No,3,3,No
+1543,Sales,1,42,Female,High School,Remote,2013-12-13,11,5490,No,3,3,No
+1544,Operations,3,48,Male,Bachelor,Hybrid,2018-05-27,7,11760,Yes,3,3,No
+1545,Engineering,5,48,Female,Bachelor,Office,2014-05-14,11,15730,No,1,3,No
+1546,Finance,1,28,Male,Bachelor,Remote,2021-06-15,4,7980,No,4,4,No
+1547,Operations,1,29,Non-binary,Master,Remote,2024-11-05,0,6500,No,4,2,Yes
+1548,Finance,1,28,Male,Bachelor,Office,2024-10-30,0,7040,No,4,3,No
+1549,HR,3,37,Male,Bachelor,Remote,2023-12-31,1,11470,No,1,3,No
+1550,Support,2,40,Female,Doctorate,Remote,2019-12-26,5,7870,Yes,3,3,No
+1551,Sales,2,32,Male,Master,Remote,2024-05-08,1,9100,No,1,3,No
+1552,Sales,4,51,Female,High School,Remote,2024-04-05,1,14030,No,2,3,No
+1553,Marketing,1,40,Female,Bachelor,Office,2024-07-25,0,5630,No,4,3,No
+1554,Support,2,41,Male,Bachelor,Office,2025-03-03,0,8510,Yes,1,3,No
+1555,Finance,5,42,Female,Bachelor,Remote,2023-04-16,2,15200,Yes,3,3,No
+1556,Engineering,1,34,Female,High School,Remote,2023-12-27,1,5850,No,4,3,No
+1557,Engineering,4,54,Male,Master,Office,2014-03-07,11,12710,No,2,3,No
+1558,Support,1,29,Male,Master,Remote,2025-03-19,0,7070,Yes,2,2,No
+1559,Support,2,30,Female,Doctorate,Office,2025-06-02,0,8770,No,3,3,No
+1560,Engineering,1,26,Female,Master,Office,2024-07-03,0,6130,No,1,2,No
+1561,Sales,1,33,Male,Bachelor,Hybrid,2019-12-13,5,6560,No,1,3,No
+1562,Sales,2,38,Female,Bachelor,Hybrid,2025-03-02,0,8560,No,2,3,No
+1563,Sales,2,35,Male,Bachelor,Remote,2021-04-11,4,9560,Yes,2,3,No
+1564,Support,2,34,Female,Bachelor,Remote,2021-05-05,4,8910,No,4,3,No
+1565,Engineering,4,47,Male,Bachelor,Office,2021-06-26,4,12600,Yes,3,4,No
+1566,Operations,1,42,Female,Bachelor,Office,2023-05-28,2,5860,No,1,3,Yes
+1567,Finance,3,50,Male,Bachelor,Remote,2011-11-23,13,9970,No,1,2,No
+1568,Support,3,37,Male,Master,Office,2015-10-06,9,11930,Yes,4,3,No
+1569,Marketing,1,41,Female,Bachelor,Office,2022-04-12,3,4950,No,2,3,No
+1570,Sales,4,54,Female,Bachelor,Remote,2021-05-23,4,11960,No,2,3,No
+1571,Support,4,53,Female,Bachelor,Remote,2022-01-05,3,14190,No,3,3,No
+1572,Support,1,35,Non-binary,Bachelor,Office,2020-10-22,4,5470,No,4,3,No
+1573,Engineering,3,40,Male,Bachelor,Hybrid,2021-11-21,3,11220,No,4,3,No
+1574,Support,1,28,Male,Bachelor,Office,2021-08-10,3,6420,No,1,3,Yes
+1575,Engineering,4,51,Female,Bachelor,Remote,2012-11-10,12,12980,No,3,3,No
+1576,Engineering,1,32,Male,Bachelor,Office,2025-01-28,0,7920,Yes,4,3,No
+1577,Sales,1,31,Female,Bachelor,Hybrid,2025-02-05,0,7210,No,1,3,Yes
+1578,Support,4,43,Male,Master,Remote,2017-04-30,8,12070,No,3,3,No
+1579,Engineering,5,55,Male,Master,Office,2012-01-24,13,15200,Yes,2,3,No
+1580,Engineering,2,42,Male,Master,Office,2016-06-07,9,9980,No,4,3,Yes
+1581,Finance,2,43,Male,Master,Remote,2025-01-09,0,9170,Yes,1,3,Yes
+1582,Engineering,1,27,Male,Master,Remote,2019-05-27,6,6070,Yes,4,2,No
+1583,Engineering,1,29,Female,Bachelor,Hybrid,2017-05-15,8,8480,No,4,4,No
+1584,Finance,5,56,Female,Master,Office,2006-07-20,18,15600,No,3,3,No
+1585,Sales,4,44,Male,Bachelor,Hybrid,2025-04-09,0,11480,Yes,2,3,No
+1586,Support,1,34,Female,Bachelor,Remote,2023-12-06,1,5710,Yes,4,4,Yes
+1587,HR,4,47,Male,Doctorate,Hybrid,2021-12-29,3,13450,Yes,2,3,No
+1588,Sales,3,50,Male,High School,Remote,2020-12-18,4,9990,Yes,3,4,No
+1589,Finance,3,39,Male,Bachelor,Office,2016-06-30,9,10660,No,1,3,No
+1590,Sales,2,32,Female,Master,Remote,2020-06-18,5,9640,Yes,1,3,No
+1591,Operations,3,34,Male,Bachelor,Office,2012-03-29,13,11920,Yes,3,2,No
+1592,Engineering,1,26,Female,Bachelor,Remote,2019-08-20,5,6960,No,1,4,No
+1593,Finance,1,41,Female,Master,Remote,2021-01-07,4,7950,No,4,2,Yes
+1594,HR,1,30,Non-binary,Bachelor,Hybrid,2015-07-23,9,7250,No,3,3,No
+1595,Engineering,3,47,Male,Bachelor,Remote,2025-01-15,0,11920,Yes,4,3,No
+1596,Finance,2,35,Male,Bachelor,Office,2018-09-20,6,8110,Yes,2,4,No
+1597,Finance,2,45,Female,Bachelor,Office,2013-04-19,12,9620,Yes,2,3,No
+1598,Engineering,4,53,Male,Doctorate,Hybrid,2021-02-26,4,14890,Yes,1,3,Yes
+1599,Marketing,3,35,Female,Bachelor,Office,2010-07-29,14,9720,No,3,3,No
+1600,Support,1,38,Male,Bachelor,Office,2024-04-05,1,6130,No,4,3,Yes
+1601,Engineering,1,39,Male,Master,Remote,2012-06-29,13,6610,No,2,3,No
+1602,Engineering,4,46,Male,Bachelor,Office,2022-09-24,2,12990,No,1,4,No
+1603,Operations,1,27,Female,Master,Office,2018-09-26,6,5300,No,3,3,No
+1604,Sales,1,42,Female,High School,Office,2005-07-31,19,5450,No,1,3,No
+1605,Support,1,31,Female,Bachelor,Hybrid,2022-12-22,2,6880,No,4,2,No
+1606,Marketing,4,54,Male,Bachelor,Remote,2012-10-06,12,11450,Yes,1,3,No
+1607,Support,4,40,Female,Master,Remote,2025-05-31,0,14140,No,4,3,No
+1608,HR,3,38,Male,Master,Office,2021-03-06,4,9720,Yes,4,4,Yes
+1609,Engineering,3,49,Male,Master,Office,2022-04-07,3,11280,No,1,3,Yes
+1610,Support,2,46,Female,High School,Hybrid,2019-07-07,5,7720,No,3,2,No
+1611,Engineering,3,41,Female,High School,Office,2020-02-28,5,10370,No,4,3,No
+1612,Sales,4,42,Male,Bachelor,Office,2018-02-15,7,12440,Yes,1,4,Yes
+1613,Engineering,2,42,Female,Bachelor,Hybrid,2016-11-18,8,9420,No,3,4,Yes
+1614,Support,3,43,Female,Bachelor,Hybrid,2025-05-06,0,10440,No,3,2,No
+1615,Engineering,3,36,Male,Master,Remote,2010-07-16,14,11620,Yes,3,3,Yes
+1616,Support,3,49,Female,Bachelor,Office,2010-07-24,14,10880,Yes,3,3,No
+1617,Sales,1,40,Female,Bachelor,Hybrid,2015-08-08,9,6030,Yes,4,3,No
+1618,Engineering,3,40,Male,Bachelor,Hybrid,2013-10-25,11,12800,No,1,3,No
+1619,Engineering,2,42,Female,High School,Office,2023-06-30,2,8650,No,4,3,No
+1620,Engineering,4,38,Male,Master,Hybrid,2021-06-30,4,13110,No,1,3,No
+1621,Finance,2,33,Non-binary,Master,Remote,2013-06-10,12,7590,No,4,3,No
+1622,Marketing,1,40,Male,Bachelor,Hybrid,2017-08-28,7,5830,No,2,3,Yes
+1623,Operations,2,36,Male,Doctorate,Hybrid,2025-06-27,0,7920,No,4,4,No
+1624,HR,3,41,Male,Master,Office,2013-12-07,11,10660,No,1,3,Yes
+1625,Engineering,2,45,Female,High School,Office,2023-07-12,1,8390,No,2,2,No
+1626,Support,5,53,Male,Master,Remote,2008-09-20,16,14310,No,3,4,No
+1627,Support,3,38,Female,Bachelor,Remote,2021-06-12,4,12070,No,3,2,No
+1628,Engineering,2,31,Male,Bachelor,Office,2024-08-26,0,7980,No,4,2,No
+1629,Operations,5,43,Male,Doctorate,Office,2013-01-25,12,14430,No,4,3,No
+1630,Support,4,49,Male,Bachelor,Remote,2019-06-17,6,13460,No,2,4,No
+1631,Engineering,2,46,Male,Master,Hybrid,2018-05-23,7,9750,No,3,3,No
+1632,Marketing,2,44,Female,Bachelor,Remote,2020-03-09,5,8060,Yes,2,3,Yes
+1633,Engineering,2,34,Male,Master,Hybrid,2012-01-11,13,7970,Yes,3,3,No
+1634,Engineering,3,36,Non-binary,Bachelor,Hybrid,2020-10-02,4,12300,Yes,1,3,Yes
+1635,Engineering,1,34,Female,Bachelor,Remote,2018-12-06,6,7690,No,1,3,Yes
+1636,Engineering,1,41,Female,Bachelor,Remote,2024-10-30,0,6170,No,2,4,No
+1637,Finance,2,47,Female,Master,Hybrid,2010-05-17,15,10280,No,1,4,No
+1638,Engineering,1,38,Male,High School,Hybrid,2022-03-02,3,5620,Yes,3,4,No
+1639,Engineering,1,35,Female,Bachelor,Remote,2011-01-19,14,5940,No,2,3,No
+1640,Engineering,1,27,Male,Master,Hybrid,2025-04-26,0,7040,No,4,3,Yes
+1641,Engineering,2,39,Female,Master,Hybrid,2022-07-08,2,10110,No,1,3,Yes
+1642,Sales,1,35,Male,Master,Remote,2024-07-21,0,4960,No,4,3,No
+1643,Operations,2,30,Female,Master,Hybrid,2016-01-13,9,9320,No,1,4,No
+1644,Sales,3,41,Male,Master,Remote,2019-01-19,6,10170,No,3,3,No
+1645,Operations,1,34,Male,High School,Office,2014-11-13,10,7540,No,2,3,No
+1646,Sales,2,33,Female,Bachelor,Office,2019-12-05,5,6910,No,1,2,No
+1647,Sales,4,42,Female,Bachelor,Remote,2021-11-21,3,12970,No,3,3,No
+1648,Support,3,40,Male,Bachelor,Hybrid,2012-01-18,13,11430,No,3,4,No
+1649,Support,1,41,Male,Bachelor,Hybrid,2019-11-30,5,6560,No,3,4,No
+1650,Engineering,1,42,Female,Master,Hybrid,2013-07-18,11,7720,Yes,1,3,No
+1651,Marketing,2,44,Male,Master,Hybrid,2010-04-30,15,7110,No,4,3,No
+1652,Engineering,3,36,Female,Bachelor,Hybrid,2010-10-26,14,11660,No,3,2,No
+1653,Operations,2,39,Male,Master,Hybrid,2018-08-03,6,7690,No,4,3,No
+1654,HR,1,39,Male,Doctorate,Hybrid,2006-10-13,18,5480,No,4,2,No
+1655,Engineering,3,36,Male,Bachelor,Office,2010-12-01,14,12790,No,2,3,No
+1656,Support,2,47,Male,High School,Hybrid,2011-01-10,14,7790,No,3,3,No
+1657,Engineering,3,36,Female,Bachelor,Office,2018-09-01,6,10040,No,2,2,No
+1658,Engineering,2,34,Female,Bachelor,Remote,2022-07-23,2,10170,No,2,3,No
+1659,Engineering,2,35,Male,Master,Hybrid,2025-04-01,0,10340,No,4,3,No
+1660,Operations,2,39,Male,Master,Hybrid,2016-10-03,8,9160,No,1,2,No
+1661,Support,4,40,Female,Master,Office,2019-12-17,5,12740,Yes,4,3,No
+1662,Engineering,2,35,Female,Master,Remote,2022-01-24,3,10340,No,4,3,No
+1663,Engineering,1,37,Female,Bachelor,Hybrid,2023-10-08,1,8280,No,4,3,Yes
+1664,Finance,2,41,Female,Master,Office,2017-06-24,8,9790,No,2,3,No
+1665,Sales,1,41,Male,Bachelor,Remote,2019-12-25,5,4710,No,4,4,No
+1666,Engineering,1,38,Female,Bachelor,Remote,2020-03-26,5,6380,No,4,3,No
+1667,Finance,1,26,Female,High School,Hybrid,2022-07-08,2,6050,No,2,3,No
+1668,Support,1,35,Male,Bachelor,Office,2014-04-03,11,6610,No,2,3,No
+1669,Engineering,2,37,Male,Bachelor,Hybrid,2020-08-12,4,8120,No,1,4,Yes
+1670,Support,1,38,Male,Master,Remote,2017-04-26,8,5890,Yes,3,4,No
+1671,Sales,2,35,Male,Master,Office,2022-04-25,3,8190,No,4,3,No
+1672,Operations,1,34,Male,High School,Office,2017-03-16,8,4830,No,4,3,No
+1673,Marketing,2,32,Female,Master,Remote,2025-04-26,0,9470,Yes,3,3,No
+1674,HR,3,34,Male,High School,Office,2016-04-19,9,9470,No,2,4,Yes
+1675,Support,5,54,Male,High School,Office,2025-04-09,0,16240,No,1,3,No
+1676,Marketing,1,42,Female,Bachelor,Office,2018-09-04,6,6470,No,1,3,No
+1677,Engineering,3,39,Female,Bachelor,Remote,2016-10-22,8,11980,No,2,4,No
+1678,Engineering,1,28,Male,High School,Hybrid,2025-01-06,0,8270,No,2,4,No
+1679,Sales,4,39,Female,High School,Office,2006-12-06,18,13830,No,2,3,No
+1680,HR,3,38,Male,Bachelor,Remote,2019-10-12,5,11020,No,4,3,Yes
+1681,Engineering,1,39,Female,Bachelor,Hybrid,2025-06-13,0,7210,Yes,3,3,No
+1682,Marketing,1,31,Male,Bachelor,Remote,2024-05-18,1,5260,Yes,4,3,No
+1683,Sales,1,28,Male,Master,Hybrid,2020-04-21,5,5430,No,3,4,No
+1684,Engineering,1,31,Female,Bachelor,Office,2025-01-05,0,7640,Yes,1,3,Yes
+1685,Support,1,29,Female,Bachelor,Office,2021-07-31,3,5400,Yes,2,3,No
+1686,Sales,2,47,Non-binary,Bachelor,Remote,2015-07-01,10,7920,No,3,3,No
+1687,Engineering,1,41,Female,Bachelor,Remote,2025-02-24,0,6690,No,2,3,No
+1688,Operations,3,35,Male,Master,Hybrid,2017-01-21,8,11080,No,1,3,No
+1689,HR,3,40,Male,Master,Hybrid,2025-06-04,0,10040,No,2,3,No
+1690,HR,2,30,Female,Bachelor,Office,2023-06-21,2,8440,Yes,1,3,Yes
+1691,Engineering,2,39,Male,Bachelor,Office,2021-10-26,3,7920,Yes,2,3,Yes
+1692,HR,2,39,Female,Bachelor,Office,2023-03-07,2,8610,Yes,4,3,No
+1693,Support,2,34,Male,Bachelor,Remote,2015-02-22,10,7500,No,2,3,No
+1694,Engineering,2,38,Male,Master,Remote,2011-06-19,14,9200,No,3,3,No
+1695,Operations,2,45,Male,Doctorate,Hybrid,2025-02-17,0,8960,No,2,3,No
+1696,Engineering,1,39,Female,Bachelor,Office,2016-08-27,8,7010,Yes,4,3,No
+1697,Engineering,3,47,Male,Bachelor,Office,2021-09-06,3,11720,No,3,2,No
+1698,Support,3,46,Female,Bachelor,Hybrid,2021-01-25,4,10860,No,4,4,No
+1699,Marketing,2,46,Female,Master,Office,2019-08-29,5,6920,No,1,3,No
+1700,Sales,1,33,Female,Doctorate,Office,2024-01-07,1,6360,Yes,1,4,Yes
+1701,Engineering,4,42,Male,Bachelor,Hybrid,2016-10-15,8,13560,No,3,3,No
+1702,Engineering,2,40,Male,Bachelor,Hybrid,2023-11-14,1,9070,No,4,3,No
+1703,Marketing,1,33,Female,Bachelor,Office,2025-03-15,0,6170,No,2,3,No
+1704,Sales,5,55,Male,Bachelor,Remote,2020-05-24,5,15550,No,1,3,No
+1705,Support,1,37,Female,Master,Hybrid,2017-11-03,7,5730,No,1,3,No
+1706,Sales,1,34,Female,Bachelor,Office,2012-11-18,12,5320,Yes,2,2,No
+1707,Finance,3,37,Male,Doctorate,Remote,2014-07-05,10,11010,No,3,4,No
+1708,Marketing,2,39,Female,Bachelor,Office,2025-04-26,0,8330,Yes,1,3,No
+1709,Sales,1,31,Male,High School,Office,2024-07-15,0,7110,No,3,3,No
+1710,Operations,5,48,Male,Master,Office,2024-11-06,0,14480,No,4,3,No
+1711,Operations,2,34,Female,Master,Hybrid,2014-09-15,10,7460,No,1,4,No
+1712,Engineering,4,43,Female,Bachelor,Hybrid,2024-09-12,0,13620,Yes,2,3,No
+1713,Finance,4,50,Female,Bachelor,Hybrid,2006-11-17,18,14660,No,2,4,No
+1714,HR,2,46,Female,Bachelor,Office,2020-12-03,4,8680,No,2,4,No
+1715,Operations,3,41,Male,Master,Remote,2024-04-21,1,10850,No,3,3,No
+1716,Operations,1,33,Male,High School,Remote,2020-07-05,4,7200,No,2,3,Yes
+1717,Marketing,1,28,Female,Bachelor,Office,2017-07-21,7,7410,Yes,3,3,No
+1718,HR,3,42,Female,High School,Office,2009-05-14,16,9450,No,3,3,No
+1719,Sales,1,31,Male,Master,Hybrid,2023-11-06,1,7390,No,1,2,No
+1720,Marketing,1,39,Male,Bachelor,Office,2016-08-04,8,5840,No,3,2,No
+1721,Engineering,5,46,Male,Bachelor,Remote,2024-06-04,1,15610,No,1,3,Yes
+1722,Support,1,28,Male,Bachelor,Office,2020-07-11,4,5850,No,2,3,No
+1723,Marketing,2,35,Female,High School,Remote,2016-01-03,9,7060,No,2,3,No
+1724,Sales,3,37,Male,Master,Hybrid,2011-01-01,14,11230,Yes,1,4,No
+1725,Sales,1,38,Male,High School,Office,2023-06-04,2,6700,Yes,1,3,Yes
+1726,Engineering,3,40,Male,Bachelor,Office,2012-11-09,12,11000,No,2,2,No
+1727,Support,4,42,Male,Bachelor,Office,2006-09-14,18,13350,No,2,3,No
+1728,Engineering,1,29,Male,High School,Remote,2025-02-01,0,6780,No,2,3,No
+1729,Engineering,2,47,Female,Master,Remote,2005-08-04,19,8720,Yes,1,3,No
+1730,Sales,4,51,Male,Bachelor,Remote,2018-06-21,7,14270,No,3,2,No
+1731,Sales,2,38,Male,High School,Hybrid,2022-11-27,2,7440,Yes,2,3,No
+1732,Engineering,5,53,Male,High School,Remote,2012-11-05,12,15640,No,4,4,No
+1733,Sales,3,45,Male,Bachelor,Hybrid,2015-01-19,10,11300,No,4,3,No
+1734,Engineering,2,41,Female,Bachelor,Remote,2024-04-12,1,7990,No,2,4,No
+1735,Engineering,2,35,Female,Bachelor,Office,2023-12-13,1,10540,Yes,2,3,Yes
+1736,Engineering,1,33,Male,Bachelor,Office,2023-08-15,1,6670,No,2,2,No
+1737,Operations,2,45,Female,Bachelor,Remote,2009-04-14,16,7140,Yes,4,4,No
+1738,Operations,3,47,Female,Master,Hybrid,2012-09-01,12,9470,No,4,2,No
+1739,Sales,3,40,Female,Master,Office,2012-01-09,13,9100,No,2,3,No
+1740,Marketing,1,32,Female,Master,Office,2023-09-12,1,5520,Yes,4,4,No
+1741,Operations,3,38,Male,Bachelor,Office,2023-09-03,1,10820,No,4,3,No
+1742,Sales,1,29,Male,Bachelor,Remote,2019-10-05,5,5580,No,3,3,No
+1743,HR,1,40,Female,Doctorate,Hybrid,2006-08-07,18,7200,Yes,1,3,Yes
+1744,Engineering,4,54,Female,Bachelor,Hybrid,2023-03-13,2,12650,Yes,3,3,No
+1745,Engineering,5,50,Male,Master,Hybrid,2024-06-16,1,15020,No,2,4,No
+1746,Marketing,3,40,Female,Bachelor,Hybrid,2008-04-02,17,9340,Yes,2,4,Yes
+1747,Engineering,2,38,Male,High School,Hybrid,2024-11-24,0,9990,No,4,3,No
+1748,Operations,1,37,Female,Bachelor,Office,2014-09-27,10,5450,No,3,3,No
+1749,Support,3,42,Male,Bachelor,Office,2025-03-24,0,11460,Yes,1,3,No
+1750,Engineering,3,45,Male,Bachelor,Office,2011-07-04,14,10290,No,1,3,No
+1751,Support,1,26,Female,Bachelor,Office,2020-06-14,5,6700,No,1,3,No
+1752,Sales,1,38,Female,Master,Office,2021-08-06,3,6760,No,3,3,Yes
+1753,HR,2,36,Female,Master,Hybrid,2019-03-13,6,8300,No,1,4,No
+1754,Operations,3,47,Female,Bachelor,Office,2025-01-24,0,9940,Yes,1,3,No
+1755,Operations,5,57,Female,Master,Office,2018-01-07,7,16480,No,3,3,No
+1756,HR,1,36,Non-binary,Bachelor,Remote,2016-12-23,8,6530,No,4,3,No
+1757,Marketing,1,43,Male,Master,Remote,2016-07-30,8,7280,No,3,3,No
+1758,Sales,1,38,Female,Master,Office,2017-11-06,7,5750,No,4,3,No
+1759,Operations,3,35,Male,High School,Office,2024-08-04,0,10900,Yes,4,3,No
+1760,Engineering,2,46,Male,Bachelor,Remote,2024-09-27,0,8070,No,4,4,No
+1761,Sales,3,51,Male,Master,Remote,2025-02-24,0,10900,No,3,3,No
+1762,Engineering,1,30,Female,Bachelor,Office,2015-12-24,9,6500,No,2,3,No
+1763,Operations,3,37,Female,Bachelor,Hybrid,2014-04-10,11,9650,No,1,3,No
+1764,Operations,2,30,Female,Bachelor,Office,2024-02-25,1,9680,No,1,3,No
+1765,Sales,1,31,Female,High School,Remote,2015-06-27,10,6770,No,2,2,No
+1766,Engineering,3,42,Male,Master,Office,2015-12-08,9,12330,No,4,3,No
+1767,Marketing,1,43,Male,Bachelor,Hybrid,2018-08-15,6,7450,No,3,3,Yes
+1768,Engineering,2,34,Male,Bachelor,Office,2016-07-04,8,10520,No,4,3,No
+1769,Sales,2,38,Female,Master,Hybrid,2007-08-16,17,8760,No,2,2,Yes
+1770,Support,2,45,Male,Bachelor,Office,2017-06-09,8,9080,No,1,2,Yes
+1771,Engineering,3,44,Male,High School,Office,2021-02-13,4,12150,No,4,4,No
+1772,Engineering,1,32,Female,Bachelor,Remote,2024-11-02,0,6240,No,2,3,No
+1773,Support,1,29,Male,Bachelor,Office,2017-06-06,8,5330,No,4,3,No
+1774,Support,4,43,Male,Doctorate,Office,2023-01-08,2,14050,No,2,4,No
+1775,Operations,2,45,Female,Bachelor,Remote,2006-02-26,19,9790,No,2,2,No
+1776,Sales,4,40,Female,Bachelor,Office,2023-10-26,1,13050,No,1,3,Yes
+1777,Engineering,2,31,Female,Bachelor,Remote,2022-07-27,2,9600,Yes,1,3,No
+1778,Engineering,2,44,Female,Master,Hybrid,2022-08-06,2,8870,No,1,3,No
+1779,Engineering,3,47,Male,Bachelor,Remote,2011-08-28,13,11060,No,1,3,No
+1780,Operations,3,40,Male,Bachelor,Office,2025-02-15,0,11230,Yes,1,3,Yes
+1781,Finance,1,36,Male,Bachelor,Remote,2019-08-11,5,5600,No,2,3,No
+1782,Marketing,1,33,Male,Bachelor,Office,2020-04-05,5,6300,No,2,3,No
+1783,Support,2,33,Male,Master,Office,2016-04-25,9,8580,Yes,4,3,Yes
+1784,Operations,2,34,Female,Bachelor,Remote,2014-07-08,10,9800,No,3,2,No
+1785,Sales,3,46,Female,Doctorate,Remote,2012-07-18,12,11100,No,1,3,No
+1786,Support,1,28,Male,High School,Hybrid,2023-11-30,1,5810,No,1,3,No
+1787,Operations,1,34,Female,Doctorate,Hybrid,2022-12-15,2,4720,No,1,3,No
+1788,Operations,3,45,Female,Bachelor,Office,2024-09-13,0,11350,No,2,3,No
+1789,Support,3,44,Female,Bachelor,Hybrid,2023-05-07,2,10000,No,3,2,No
+1790,Operations,1,33,Male,Bachelor,Remote,2019-12-27,5,7110,No,4,4,No
+1791,Marketing,1,37,Female,Doctorate,Office,2011-10-22,13,6430,Yes,3,3,Yes
+1792,Engineering,5,42,Female,Bachelor,Office,2005-12-25,19,15060,Yes,3,2,No
+1793,Sales,2,37,Male,Bachelor,Office,2025-06-22,0,7330,No,2,3,No
+1794,HR,1,31,Female,Doctorate,Office,2014-07-11,10,5960,No,2,3,No
+1795,Engineering,1,30,Male,High School,Remote,2016-07-01,9,8240,Yes,3,2,No
+1796,Engineering,1,43,Female,Master,Hybrid,2022-07-15,2,7440,No,2,4,No
+1797,Marketing,3,48,Female,Bachelor,Remote,2019-10-30,5,11640,Yes,3,3,No
+1798,Sales,5,57,Female,Bachelor,Hybrid,2020-03-17,5,15980,No,4,4,No
+1799,Support,1,40,Male,High School,Hybrid,2017-05-27,8,6170,Yes,4,2,No
+1800,Marketing,3,47,Male,Bachelor,Office,2025-01-13,0,10210,No,1,3,No
+1801,Operations,1,39,Female,Bachelor,Office,2024-07-10,0,7540,Yes,3,3,Yes
+1802,Operations,3,46,Male,Bachelor,Remote,2016-11-19,8,9340,No,2,2,No
+1803,Sales,3,46,Female,Doctorate,Remote,2022-08-15,2,11480,No,3,3,No
+1804,Engineering,1,36,Non-binary,Master,Remote,2009-09-23,15,6160,Yes,1,3,Yes
+1805,HR,4,54,Male,Master,Hybrid,2020-01-26,5,12040,No,1,3,Yes
+1806,Support,1,35,Female,Master,Hybrid,2015-03-24,10,5590,Yes,1,3,No
+1807,Support,3,37,Female,Bachelor,Remote,2024-01-18,1,11380,No,2,4,No
+1808,HR,2,32,Male,Bachelor,Office,2020-11-24,4,7140,Yes,1,3,No
+1809,Marketing,1,42,Female,Master,Hybrid,2019-03-10,6,7680,No,1,3,No
+1810,Support,3,42,Male,High School,Remote,2020-04-20,5,9920,No,3,3,No
+1811,Sales,1,28,Female,Bachelor,Hybrid,2017-09-16,7,5620,No,1,4,Yes
+1812,Support,1,42,Non-binary,Doctorate,Office,2008-07-10,16,6450,Yes,3,2,No
+1813,Engineering,4,38,Female,Bachelor,Remote,2014-05-23,11,14580,No,2,2,No
+1814,Engineering,1,38,Male,Bachelor,Hybrid,2012-04-27,13,6150,Yes,3,2,No
+1815,Marketing,5,42,Male,High School,Office,2022-07-12,2,15790,No,4,4,No
+1816,Finance,2,30,Male,Bachelor,Office,2024-10-17,0,9470,No,4,4,No
+1817,Operations,2,44,Female,High School,Hybrid,2023-07-25,1,8770,No,4,3,No
+1818,Support,2,35,Female,Bachelor,Office,2024-01-26,1,8170,No,4,3,Yes
+1819,Operations,1,26,Female,Master,Hybrid,2019-11-07,5,5780,No,4,3,No
+1820,Support,1,30,Female,Bachelor,Office,2025-04-11,0,6280,No,1,3,No
+1821,Engineering,1,29,Male,Bachelor,Office,2018-12-10,6,6260,Yes,3,3,Yes
+1822,Marketing,4,46,Female,Master,Remote,2010-02-14,15,12550,No,3,3,No
+1823,Engineering,2,44,Male,Bachelor,Hybrid,2007-04-27,18,10600,No,3,4,No
+1824,Sales,1,42,Female,Master,Office,2023-02-12,2,6570,Yes,1,3,No
+1825,Sales,1,30,Female,Master,Remote,2022-04-22,3,7070,Yes,4,3,No
+1826,HR,2,46,Female,Bachelor,Office,2025-01-09,0,7460,Yes,4,4,No
+1827,Marketing,5,44,Male,Bachelor,Remote,2019-04-15,6,14650,No,2,2,No
+1828,Support,2,42,Female,Doctorate,Hybrid,2025-04-27,0,6930,No,2,4,Yes
+1829,Support,5,48,Female,Master,Office,2008-05-29,17,16270,No,4,4,No
+1830,Operations,2,45,Female,Master,Remote,2025-01-11,0,9050,No,3,2,No
+1831,Sales,3,38,Male,Master,Hybrid,2022-03-28,3,9990,No,2,4,No
+1832,HR,4,53,Female,Master,Remote,2025-02-17,0,13750,No,1,2,Yes
+1833,Engineering,3,48,Female,Bachelor,Office,2019-08-31,5,11520,No,1,3,No
+1834,Operations,1,33,Female,Master,Hybrid,2013-01-13,12,5870,Yes,2,2,No
+1835,Finance,2,41,Female,Bachelor,Office,2020-01-20,5,9500,No,4,3,No
+1836,Sales,3,48,Female,Bachelor,Remote,2014-12-16,10,10820,Yes,4,3,No
+1837,Finance,4,39,Male,Master,Hybrid,2015-12-05,9,12080,Yes,2,3,No
+1838,Support,2,34,Female,Master,Hybrid,2011-12-03,13,8420,Yes,4,3,No
+1839,Support,2,31,Female,Master,Hybrid,2020-09-13,4,9710,Yes,1,4,Yes
+1840,Support,2,39,Female,Bachelor,Office,2007-01-18,18,8150,No,3,3,No
+1841,Support,2,32,Female,Master,Remote,2013-10-18,11,8640,No,4,3,Yes
+1842,Engineering,2,32,Male,Master,Remote,2017-02-04,8,10500,No,1,2,No
+1843,Marketing,3,37,Female,Master,Office,2010-03-17,15,9440,No,2,3,No
+1844,HR,3,34,Male,High School,Remote,2024-12-07,0,10250,Yes,1,3,No
+1845,Engineering,2,32,Non-binary,High School,Hybrid,2024-12-26,0,10500,Yes,3,4,Yes
+1846,Support,2,30,Female,Master,Hybrid,2024-11-01,0,9260,No,4,3,No
+1847,Engineering,2,44,Male,Master,Office,2022-10-05,2,9140,Yes,4,3,No
+1848,Operations,4,41,Male,Bachelor,Remote,2024-05-15,1,13550,Yes,4,4,No
+1849,Operations,1,42,Female,Master,Office,2025-05-17,0,5590,No,4,4,No
+1850,Engineering,1,30,Male,High School,Remote,2020-06-16,5,5800,No,1,3,No
+1851,Operations,3,45,Male,Bachelor,Office,2024-03-28,1,11900,No,4,3,No
+1852,Finance,2,32,Male,Master,Hybrid,2021-01-18,4,9760,No,3,4,No
+1853,Engineering,5,53,Male,Bachelor,Remote,2025-02-28,0,15000,Yes,1,4,Yes
+1854,Support,1,28,Male,Bachelor,Office,2024-07-09,0,7140,Yes,1,3,No
+1855,Support,1,35,Female,Bachelor,Office,2015-06-17,10,7560,No,1,3,Yes
+1856,Sales,3,41,Female,High School,Office,2022-05-11,3,11790,No,2,3,No
+1857,Engineering,5,44,Female,Bachelor,Remote,2016-04-23,9,15650,No,4,3,No
+1858,Sales,2,43,Male,Bachelor,Remote,2023-12-13,1,8360,No,4,3,No
+1859,Finance,1,28,Male,Bachelor,Office,2018-06-30,7,6670,No,1,3,Yes
+1860,HR,1,40,Female,Doctorate,Remote,2008-10-24,16,6630,Yes,1,2,No
+1861,Marketing,1,26,Female,Bachelor,Hybrid,2019-11-20,5,7120,No,4,3,Yes
+1862,Operations,4,40,Male,Bachelor,Office,2015-07-04,9,11340,No,3,3,No
+1863,Engineering,4,54,Male,Doctorate,Office,2010-12-01,14,14100,No,4,3,No
+1864,Support,2,35,Female,Bachelor,Office,2011-04-09,14,8390,No,4,2,Yes
+1865,Marketing,1,41,Female,Bachelor,Office,2014-11-24,10,5060,No,3,3,No
+1866,Engineering,1,39,Female,Master,Hybrid,2021-11-30,3,6490,No,2,3,No
+1867,Sales,3,46,Male,Master,Hybrid,2022-06-17,3,11080,No,1,3,Yes
+1868,Support,2,38,Male,Bachelor,Remote,2007-07-26,17,8680,Yes,1,3,Yes
+1869,Engineering,2,46,Male,High School,Office,2019-03-07,6,9480,Yes,2,4,No
+1870,Engineering,1,29,Male,Bachelor,Remote,2016-08-13,8,7030,No,2,3,No
+1871,Marketing,4,47,Male,Bachelor,Hybrid,2024-05-09,1,12430,No,2,3,No
+1872,Finance,4,39,Male,Bachelor,Remote,2009-07-01,16,12160,No,1,3,No
+1873,Finance,3,40,Male,Bachelor,Hybrid,2012-09-16,12,10620,No,4,3,Yes
+1874,Sales,4,40,Female,Bachelor,Remote,2016-05-16,9,13770,No,4,4,No
+1875,Support,3,43,Male,Master,Office,2006-10-18,18,9540,No,4,4,No
+1876,Engineering,2,46,Male,Bachelor,Hybrid,2025-06-04,0,8350,Yes,1,3,No
+1877,Engineering,3,39,Male,Bachelor,Remote,2022-11-05,2,10250,Yes,4,4,No
+1878,Marketing,4,40,Female,Bachelor,Office,2024-01-16,1,13220,No,3,3,Yes
+1879,Marketing,3,41,Female,Bachelor,Hybrid,2024-12-22,0,10130,No,2,3,No
+1880,Sales,2,33,Female,Master,Hybrid,2015-07-28,9,6930,No,2,3,No
+1881,Engineering,3,48,Male,Bachelor,Remote,2024-11-12,0,12100,No,2,2,No
+1882,Operations,2,45,Male,Bachelor,Office,2009-10-24,15,7490,No,3,3,No
+1883,Support,1,34,Male,Bachelor,Remote,2014-12-06,10,7020,Yes,3,3,No
+1884,Engineering,1,39,Male,Bachelor,Office,2018-05-15,7,6900,Yes,4,3,No
+1885,Support,1,29,Male,Master,Remote,2023-09-13,1,5870,Yes,2,4,No
+1886,Marketing,2,40,Female,Bachelor,Remote,2024-11-05,0,9020,No,3,3,No
+1887,Support,3,34,Female,Bachelor,Office,2012-01-22,13,11030,No,2,3,No
+1888,Sales,4,53,Female,Master,Office,2018-01-06,7,11320,No,4,3,No
+1889,Engineering,3,39,Male,High School,Remote,2025-01-18,0,12910,No,2,2,No
+1890,Engineering,2,46,Female,Bachelor,Hybrid,2006-12-01,18,8900,No,1,3,No
+1891,Sales,2,40,Male,Master,Office,2024-11-02,0,7690,Yes,4,3,No
+1892,Support,3,49,Male,Bachelor,Remote,2021-05-17,4,9800,No,4,3,No
+1893,Operations,3,41,Female,Bachelor,Hybrid,2023-12-14,1,11150,No,1,2,No
+1894,Operations,3,40,Female,Master,Remote,2022-12-11,2,10540,Yes,3,3,Yes
+1895,Support,3,48,Male,Master,Office,2009-07-29,15,10830,No,2,3,No
+1896,Support,1,37,Female,Bachelor,Office,2024-05-09,1,7190,No,3,3,No
+1897,Engineering,2,30,Female,Master,Office,2015-10-21,9,8130,No,2,2,No
+1898,Support,2,42,Male,Bachelor,Hybrid,2017-08-16,7,9010,No,2,4,No
+1899,Sales,2,43,Female,High School,Remote,2011-10-21,13,9820,No,4,3,No
+1900,Engineering,4,40,Female,High School,Remote,2012-11-03,12,12230,No,4,2,No
+1901,Engineering,1,42,Female,Bachelor,Office,2008-08-02,16,6150,No,2,2,No
+1902,Engineering,1,29,Female,Bachelor,Remote,2017-01-18,8,6190,No,1,3,Yes
+1903,Engineering,3,35,Female,Bachelor,Office,2025-03-23,0,12080,No,2,3,No
+1904,Finance,2,34,Female,High School,Office,2012-12-07,12,10080,Yes,2,3,No
+1905,Finance,4,39,Male,Bachelor,Hybrid,2020-05-08,5,12110,Yes,1,2,No
+1906,Marketing,1,42,Female,Bachelor,Office,2011-12-30,13,7340,No,1,3,Yes
+1907,HR,1,41,Male,Bachelor,Remote,2022-12-07,2,7130,Yes,4,2,No
+1908,Finance,1,27,Female,Bachelor,Office,2018-07-07,6,6540,No,3,3,No
+1909,Engineering,2,44,Female,High School,Remote,2012-02-20,13,10750,No,3,3,No
+1910,Engineering,3,45,Male,Bachelor,Remote,2017-02-19,8,10490,No,2,3,No
+1911,Engineering,4,39,Female,Bachelor,Remote,2025-03-19,0,12340,No,3,4,No
+1912,Support,1,34,Female,Bachelor,Office,2024-10-22,0,6300,Yes,1,3,No
+1913,HR,1,40,Female,Master,Office,2008-08-09,16,5250,Yes,2,3,Yes
+1914,Support,4,42,Male,Bachelor,Office,2011-09-09,13,11910,No,3,3,No
+1915,Operations,1,29,Female,Bachelor,Remote,2016-08-06,8,6090,No,4,4,No
+1916,Sales,1,28,Female,Bachelor,Remote,2024-07-27,0,6490,No,4,2,No
+1917,Engineering,1,39,Male,Bachelor,Hybrid,2024-10-04,0,7370,No,4,3,No
+1918,Sales,2,36,Female,Master,Hybrid,2022-12-27,2,9820,No,2,4,No
+1919,Finance,3,46,Male,Bachelor,Remote,2012-05-16,13,12030,Yes,2,3,Yes
+1920,HR,2,42,Male,Bachelor,Remote,2015-05-19,10,7750,Yes,1,3,No
+1921,Finance,5,49,Female,Bachelor,Hybrid,2011-03-31,14,16810,No,2,3,No
+1922,Engineering,1,28,Female,Bachelor,Remote,2017-12-14,7,7690,No,1,3,No
+1923,Engineering,1,41,Female,Bachelor,Remote,2014-02-15,11,7300,No,4,3,No
+1924,Support,1,34,Female,Bachelor,Remote,2019-10-04,5,5130,No,2,3,No
+1925,Sales,1,37,Non-binary,Bachelor,Hybrid,2008-07-05,16,4870,No,2,2,No
+1926,Support,1,41,Male,Master,Office,2023-07-09,1,4870,No,4,2,Yes
+1927,Engineering,2,34,Male,Bachelor,Remote,2022-09-30,2,10540,Yes,3,4,No
+1928,Engineering,3,40,Male,Bachelor,Office,2023-03-24,2,11970,No,2,3,No
+1929,Finance,4,45,Male,Master,Remote,2022-03-14,3,12980,No,2,2,No
+1930,Engineering,2,44,Female,Master,Office,2024-02-11,1,10630,No,4,3,No
+1931,Engineering,2,33,Female,Master,Remote,2016-11-23,8,9870,No,4,3,No
+1932,Finance,1,36,Female,Master,Hybrid,2024-02-06,1,6700,No,4,3,Yes
+1933,HR,1,29,Male,Bachelor,Remote,2022-05-29,3,5970,No,1,4,No
+1934,Engineering,2,39,Female,Master,Office,2009-03-27,16,9330,Yes,1,2,Yes
+1935,Sales,3,44,Female,Master,Remote,2017-05-04,8,9190,No,4,4,No
+1936,Engineering,2,44,Male,Bachelor,Office,2018-10-22,6,8070,No,3,4,No
+1937,Sales,3,39,Male,Master,Office,2023-12-29,1,11400,No,3,3,No
+1938,Engineering,2,33,Female,Bachelor,Office,2025-02-18,0,8180,No,4,3,No
+1939,Sales,2,41,Female,Bachelor,Remote,2010-08-11,14,9820,No,2,2,No
+1940,Sales,2,30,Male,Bachelor,Remote,2019-05-02,6,8570,Yes,2,2,No
+1941,Engineering,3,36,Male,High School,Remote,2023-07-22,1,11950,Yes,3,4,No
+1942,Support,3,34,Male,Bachelor,Hybrid,2024-08-12,0,10880,Yes,2,3,No
+1943,Engineering,2,45,Male,High School,Remote,2024-12-01,0,9480,No,1,3,Yes
+1944,Engineering,1,37,Male,Master,Remote,2025-03-15,0,7610,No,2,4,Yes
+1945,Support,2,37,Female,Bachelor,Office,2009-03-29,16,9710,No,2,4,No
+1946,Sales,1,31,Male,Bachelor,Hybrid,2018-10-12,6,7500,No,4,3,No
+1947,Engineering,2,31,Male,Master,Office,2016-07-04,8,9570,No,1,3,No
+1948,Engineering,3,35,Female,Bachelor,Remote,2011-01-23,14,10170,No,4,4,No
+1949,Engineering,5,44,Male,Bachelor,Hybrid,2022-04-22,3,15850,No,4,3,No
+1950,Sales,2,34,Male,Bachelor,Remote,2021-01-07,4,7480,No,3,2,No
+1951,Engineering,3,35,Male,Master,Office,2023-02-17,2,12670,No,3,3,No
+1952,Marketing,2,45,Female,Master,Hybrid,2016-08-27,8,8920,Yes,1,4,No
+1953,Engineering,3,36,Male,High School,Office,2023-09-20,1,11080,No,1,3,Yes
+1954,Engineering,2,38,Female,Bachelor,Office,2020-04-10,5,7810,No,1,3,Yes
+1955,Sales,3,51,Male,Bachelor,Hybrid,2008-12-12,16,10340,Yes,2,3,No
+1956,Finance,3,41,Male,Bachelor,Hybrid,2009-11-26,15,9820,No,4,3,Yes
+1957,Sales,3,35,Male,Master,Office,2013-03-15,12,10230,No,1,3,No
+1958,Sales,1,31,Female,Master,Remote,2019-11-05,5,5650,Yes,1,3,No
+1959,Operations,3,51,Female,Bachelor,Office,2008-07-06,16,9500,No,3,3,No
+1960,Engineering,3,41,Female,Bachelor,Remote,2019-10-12,5,10200,No,3,3,No
+1961,Marketing,3,43,Female,Bachelor,Remote,2021-04-09,4,9430,No,1,4,No
+1962,Engineering,2,36,Female,Bachelor,Hybrid,2013-09-09,11,10790,No,2,3,No
+1963,Sales,1,27,Male,High School,Office,2025-03-18,0,6150,No,1,3,No
+1964,Sales,4,49,Female,Master,Office,2013-08-29,11,13210,No,2,3,No
+1965,HR,2,32,Female,Master,Hybrid,2022-02-27,3,8850,No,2,3,No
+1966,Engineering,3,45,Male,Bachelor,Hybrid,2023-02-11,2,12860,No,3,2,No
+1967,Engineering,2,34,Female,Bachelor,Office,2023-03-24,2,10730,Yes,4,3,No
+1968,Sales,2,46,Male,Bachelor,Office,2025-04-02,0,6930,Yes,4,3,No
+1969,Support,2,42,Female,Master,Office,2019-01-29,6,7180,No,2,3,No
+1970,Sales,1,36,Female,Bachelor,Remote,2025-05-10,0,7540,Yes,2,3,No
+1971,Finance,2,40,Male,Bachelor,Remote,2022-11-16,2,8650,No,1,4,No
+1972,Engineering,2,30,Male,Master,Remote,2015-10-21,9,10030,Yes,2,3,No
+1973,Engineering,2,45,Male,High School,Hybrid,2018-07-03,6,9800,Yes,4,3,No
+1974,Engineering,1,37,Male,Doctorate,Office,2022-08-04,2,6040,No,2,3,No
+1975,Sales,1,42,Male,Bachelor,Remote,2025-04-26,0,6410,No,3,4,No
+1976,Finance,1,34,Male,Master,Remote,2012-03-10,13,7270,Yes,3,2,No
+1977,Support,1,31,Female,Master,Hybrid,2023-10-30,1,5250,Yes,1,3,No
+1978,Engineering,2,32,Female,Master,Office,2014-04-23,11,10550,Yes,4,3,No
+1979,Finance,2,47,Female,Bachelor,Remote,2014-08-30,10,7550,Yes,4,3,No
+1980,Sales,1,30,Male,High School,Office,2018-06-03,7,6460,Yes,3,3,Yes
+1981,Operations,1,41,Non-binary,Bachelor,Office,2014-11-15,10,5160,Yes,4,2,No
+1982,Support,4,46,Female,Master,Remote,2024-09-27,0,12900,No,2,3,No
+1983,Support,1,27,Male,Master,Hybrid,2022-03-18,3,5410,Yes,2,3,No
+1984,Engineering,1,36,Female,Master,Office,2011-04-26,14,8510,Yes,1,3,No
+1985,Operations,1,27,Male,Master,Hybrid,2019-02-11,6,7060,Yes,4,4,No
+1986,Finance,4,46,Female,High School,Office,2023-07-07,1,13600,No,1,4,No
+1987,Sales,2,30,Female,High School,Office,2016-02-26,9,7280,No,4,3,No
+1988,Support,2,39,Male,Master,Remote,2008-07-09,16,9300,No,1,3,Yes
+1989,Engineering,4,54,Female,Bachelor,Office,2023-11-24,1,14850,No,4,3,No
+1990,Sales,1,39,Male,Bachelor,Office,2009-04-14,16,5370,No,4,3,No
+1991,Sales,1,34,Female,High School,Remote,2019-07-05,5,5580,Yes,2,3,No
+1992,Operations,4,43,Female,High School,Remote,2016-04-05,9,11950,No,3,3,No
+1993,Engineering,1,42,Female,Master,Remote,2016-08-12,8,7850,No,1,4,No
+1994,Support,2,32,Male,Master,Hybrid,2013-10-15,11,9310,No,2,3,No
+1995,Sales,1,34,Male,Master,Hybrid,2023-07-13,1,5610,Yes,1,3,No
+1996,Sales,1,34,Male,Bachelor,Remote,2017-06-19,8,6820,Yes,1,3,Yes
+1997,Engineering,2,38,Female,Bachelor,Office,2025-05-12,0,9830,No,2,3,No
+1998,Support,5,53,Female,Bachelor,Office,2016-02-18,9,15180,No,2,3,No
+1999,HR,1,34,Male,Bachelor,Office,2019-02-26,6,5180,No,3,3,No
+2000,Support,2,44,Male,High School,Hybrid,2008-06-15,17,7360,No,1,3,Yes
+2001,Sales,3,50,Female,Bachelor,Hybrid,2013-07-29,11,11850,No,3,3,No
+2002,Operations,2,31,Non-binary,Master,Hybrid,2025-06-24,0,8100,No,4,3,No
+2003,Engineering,1,28,Female,Bachelor,Office,2018-06-24,7,7950,Yes,1,3,No
+2004,Engineering,2,45,Female,Bachelor,Hybrid,2023-07-10,1,9190,No,2,3,No
+2005,Operations,2,45,Male,Bachelor,Remote,2009-07-27,15,8210,No,1,3,No
+2006,Sales,1,30,Female,Master,Remote,2015-09-16,9,7410,No,1,3,No
+2007,Sales,1,34,Male,Bachelor,Remote,2012-05-02,13,6860,Yes,4,2,Yes
+2008,Sales,5,44,Female,Bachelor,Hybrid,2025-01-18,0,14140,No,2,4,No
+2009,Sales,2,32,Female,Bachelor,Office,2021-01-17,4,8810,No,2,2,No
+2010,Operations,3,37,Female,Bachelor,Remote,2024-01-09,1,11000,No,1,3,Yes
+2011,Marketing,3,49,Male,Bachelor,Remote,2024-10-22,0,11330,No,4,4,No
+2012,Operations,2,33,Female,High School,Hybrid,2012-12-20,12,8930,No,3,3,No
+2013,Support,1,30,Female,High School,Hybrid,2025-05-23,0,7160,Yes,3,4,No
+2014,Engineering,4,45,Female,Master,Office,2019-07-30,5,14990,No,1,3,No
+2015,Operations,1,36,Male,Bachelor,Hybrid,2022-02-27,3,5360,No,3,4,No
+2016,Engineering,4,40,Male,Master,Remote,2025-06-03,0,14390,No,3,3,No
+2017,Operations,2,45,Female,Bachelor,Office,2007-04-15,18,8370,No,2,4,No
+2018,Engineering,1,37,Male,Bachelor,Office,2020-11-26,4,5820,No,3,4,No
+2019,Sales,1,35,Male,Master,Remote,2021-10-23,3,6350,No,1,3,No
+2020,Support,3,49,Female,Master,Remote,2025-03-03,0,9760,No,4,2,No
+2021,Finance,4,52,Female,High School,Hybrid,2006-05-21,19,13260,Yes,2,4,No
+2022,Operations,4,38,Male,High School,Remote,2012-09-06,12,12820,No,4,4,No
+2023,Operations,1,35,Female,High School,Hybrid,2025-06-18,0,5400,No,1,3,Yes
+2024,Engineering,2,46,Female,Bachelor,Hybrid,2022-08-15,2,8450,No,1,4,No
+2025,Operations,2,41,Female,Bachelor,Hybrid,2011-03-08,14,8450,No,2,3,No
+2026,Support,2,34,Female,Bachelor,Office,2015-08-03,9,7610,No,3,3,No
+2027,Support,3,48,Male,Bachelor,Remote,2024-07-19,0,9540,No,1,3,No
+2028,Operations,2,45,Non-binary,Doctorate,Hybrid,2025-01-28,0,9890,No,3,3,No
+2029,Engineering,1,28,Male,Bachelor,Office,2017-10-04,7,6990,No,1,3,No
+2030,Sales,2,46,Male,Master,Hybrid,2010-07-24,14,9720,No,1,3,No
+2031,Engineering,1,30,Male,Bachelor,Hybrid,2015-12-02,9,7920,No,3,3,No
+2032,Support,1,26,Male,Bachelor,Hybrid,2020-05-28,5,7260,No,1,2,No
+2033,Sales,1,36,Female,Master,Office,2018-08-09,6,5610,No,3,2,No
+2034,Sales,4,43,Male,Master,Remote,2023-10-04,1,12410,Yes,2,3,Yes
+2035,Engineering,1,40,Male,Bachelor,Remote,2021-01-07,4,8390,Yes,2,3,No
+2036,Support,2,38,Male,Bachelor,Remote,2024-04-22,1,7730,Yes,1,3,No
+2037,Support,1,26,Female,Bachelor,Hybrid,2019-10-21,5,6540,Yes,1,3,Yes
+2038,Support,3,38,Male,Master,Remote,2017-08-07,7,11100,No,3,4,No
+2039,HR,4,44,Female,Bachelor,Office,2020-09-18,4,12950,No,4,3,No
+2040,Support,3,50,Male,Bachelor,Hybrid,2021-06-21,4,11320,No,3,3,No
+2041,Sales,5,56,Male,Bachelor,Office,2016-09-14,8,16430,No,4,3,No
+2042,Engineering,1,26,Male,Bachelor,Hybrid,2019-11-10,5,7150,No,1,4,No
+2043,Sales,1,34,Female,Bachelor,Hybrid,2021-05-22,4,7320,No,3,3,No
+2044,Sales,4,39,Female,Bachelor,Remote,2023-08-05,1,13520,No,2,3,No
+2045,Engineering,3,45,Male,Doctorate,Hybrid,2015-09-05,9,12670,Yes,4,3,Yes
+2046,Finance,3,49,Female,High School,Remote,2024-03-06,1,12470,No,4,4,No
+2047,Support,1,32,Male,Bachelor,Remote,2022-09-11,2,6710,No,4,4,Yes
+2048,HR,3,46,Male,Bachelor,Remote,2009-12-25,15,10510,Yes,1,2,No
+2049,Support,1,40,Male,Bachelor,Remote,2022-07-13,2,6710,No,4,3,No
+2050,Sales,1,28,Female,High School,Remote,2023-04-03,2,6050,Yes,3,3,Yes
+2051,Operations,1,31,Female,Bachelor,Remote,2024-07-17,0,5590,No,3,3,No
+2052,Sales,1,37,Female,Bachelor,Hybrid,2012-05-27,13,6070,No,2,3,No
+2053,Marketing,3,49,Female,Master,Hybrid,2024-04-22,1,11360,No,2,3,Yes
+2054,Support,1,41,Female,Master,Office,2021-07-12,3,5040,No,4,4,No
+2055,Support,3,40,Female,Doctorate,Remote,2009-05-13,16,10320,No,1,3,No
+2056,HR,3,39,Male,Master,Office,2011-02-02,14,11650,No,1,3,No
+2057,HR,2,35,Male,Doctorate,Hybrid,2025-03-11,0,8020,No,2,2,No
+2058,Engineering,2,45,Male,Bachelor,Hybrid,2021-12-07,3,10610,Yes,1,2,No
+2059,Engineering,3,49,Female,Doctorate,Office,2013-11-18,11,10230,Yes,1,3,No
+2060,Finance,1,26,Female,Bachelor,Hybrid,2019-07-28,5,8120,No,3,4,No
+2061,Support,3,42,Female,Bachelor,Hybrid,2021-09-05,3,11280,No,3,4,No
+2062,Engineering,2,47,Male,High School,Office,2009-04-16,16,10400,No,1,3,No
+2063,Engineering,1,39,Female,Bachelor,Office,2017-01-24,8,6970,No,3,3,No
+2064,Marketing,2,33,Male,High School,Hybrid,2020-04-04,5,7870,Yes,4,2,No
+2065,Support,3,49,Female,Bachelor,Office,2024-04-16,1,10110,No,1,4,No
+2066,Operations,1,40,Male,Bachelor,Remote,2024-11-21,0,5420,No,1,2,No
+2067,Support,4,50,Male,Bachelor,Hybrid,2019-08-03,5,12990,No,4,4,No
+2068,Support,1,39,Male,High School,Remote,2025-04-28,0,4980,Yes,3,4,No
+2069,Engineering,2,40,Female,Master,Office,2006-02-18,19,8480,Yes,3,3,No
+2070,Operations,2,36,Male,Bachelor,Office,2010-10-13,14,9730,Yes,2,4,No
+2071,Engineering,5,58,Female,Master,Office,2017-08-23,7,15930,No,4,3,No
+2072,Operations,1,37,Female,Bachelor,Hybrid,2023-06-28,2,7570,No,3,2,No
+2073,Engineering,3,38,Male,Bachelor,Hybrid,2021-02-18,4,11840,Yes,2,3,No
+2074,Operations,3,47,Female,Bachelor,Office,2008-07-06,16,10140,No,4,3,No
+2075,Engineering,2,41,Female,Bachelor,Office,2010-04-22,15,9040,No,4,4,No
+2076,Support,1,30,Male,Bachelor,Office,2020-12-24,4,5490,Yes,4,3,Yes
+2077,Engineering,2,45,Male,Bachelor,Hybrid,2020-02-06,5,9320,No,4,3,No
+2078,Marketing,2,41,Female,Master,Office,2023-10-25,1,8810,No,1,4,No
+2079,Marketing,5,58,Female,Doctorate,Office,2021-05-20,4,15270,No,1,3,No
+2080,Engineering,2,38,Male,High School,Remote,2016-05-15,9,10710,No,1,4,No
+2081,Sales,3,40,Male,Bachelor,Office,2024-08-16,0,11300,No,1,2,Yes
+2082,Sales,2,30,Male,Doctorate,Office,2015-07-18,9,9340,No,1,3,No
+2083,Support,4,45,Female,Master,Office,2021-12-26,3,11890,No,3,3,No
+2084,Sales,2,37,Male,Master,Office,2014-08-14,10,9630,No,2,2,No
+2085,Operations,1,29,Female,Master,Remote,2017-06-06,8,5420,No,3,3,Yes
+2086,Engineering,4,50,Male,Bachelor,Hybrid,2018-04-04,7,13590,Yes,4,2,No
+2087,Engineering,2,39,Female,High School,Office,2007-04-03,18,9660,No,3,3,No
+2088,Engineering,4,39,Female,Master,Remote,2019-01-15,6,13790,No,1,4,Yes
+2089,Engineering,3,37,Female,Bachelor,Remote,2016-10-17,8,11580,Yes,3,3,No
+2090,Engineering,4,54,Female,Master,Office,2010-02-19,15,12370,No,1,4,No
+2091,Marketing,2,31,Female,Bachelor,Office,2015-06-02,10,6920,No,3,2,No
+2092,Sales,2,40,Male,Bachelor,Hybrid,2021-03-23,4,9430,No,3,2,No
+2093,Support,3,37,Female,Master,Remote,2011-09-27,13,10320,No,2,3,No
+2094,Operations,2,35,Female,Bachelor,Office,2020-01-03,5,7540,Yes,1,3,No
+2095,Support,1,43,Male,Bachelor,Office,2015-06-14,10,7020,No,4,3,No
+2096,Operations,4,45,Male,Bachelor,Hybrid,2022-02-17,3,12590,No,4,2,No
+2097,Sales,2,30,Male,High School,Office,2022-11-12,2,6910,No,1,3,No
+2098,Operations,1,31,Male,Bachelor,Hybrid,2014-08-22,10,5820,No,3,3,No
+2099,Finance,2,32,Female,Master,Hybrid,2013-09-24,11,7920,No,4,3,No
+2100,Sales,3,43,Female,High School,Hybrid,2011-03-03,14,11350,No,2,3,No
+2101,Marketing,1,31,Female,Master,Office,2014-12-12,10,5800,No,4,3,No
+2102,Sales,1,40,Non-binary,Master,Hybrid,2008-04-06,17,5600,No,4,3,Yes
+2103,Operations,1,43,Female,Doctorate,Office,2014-11-01,10,5110,Yes,1,3,No
+2104,Operations,4,48,Male,Bachelor,Hybrid,2025-01-06,0,11810,No,4,3,Yes
+2105,Engineering,2,35,Male,Bachelor,Office,2011-04-26,14,8890,Yes,4,3,No
+2106,Operations,1,29,Male,Master,Remote,2017-07-01,8,7300,No,2,3,No
+2107,Operations,1,38,Female,Bachelor,Hybrid,2022-10-05,2,7080,No,1,2,No
+2108,Engineering,4,50,Female,Bachelor,Office,2014-06-25,11,14280,No,2,3,No
+2109,Engineering,1,36,Female,Bachelor,Office,2010-01-20,15,7100,No,3,3,No
+2110,Operations,3,44,Male,Master,Office,2009-12-20,15,11560,No,1,4,No
+2111,Marketing,1,27,Female,Bachelor,Hybrid,2018-07-14,6,5140,No,1,4,No
+2112,Marketing,3,48,Male,Master,Hybrid,2022-05-09,3,9500,No,3,3,No
+2113,Support,2,40,Male,Bachelor,Hybrid,2014-05-19,11,8820,No,2,2,Yes
+2114,Support,4,55,Female,Bachelor,Office,2018-06-10,7,11480,Yes,1,3,No
+2115,Engineering,2,31,Male,Bachelor,Remote,2022-09-20,2,10250,No,3,3,No
+2116,Sales,2,45,Male,High School,Remote,2011-01-05,14,7480,Yes,2,3,No
+2117,Finance,3,49,Female,Bachelor,Remote,2013-02-19,12,9800,No,4,2,No
+2118,Sales,2,36,Female,Master,Office,2024-05-26,1,7770,No,1,2,No
+2119,Operations,2,47,Male,Bachelor,Hybrid,2024-10-04,0,7870,Yes,2,2,No
+2120,Engineering,2,40,Male,Bachelor,Remote,2024-11-12,0,8410,No,1,4,No
+2121,Engineering,2,32,Male,Master,Office,2025-05-20,0,8260,No,3,2,No
+2122,Engineering,2,42,Male,Bachelor,Office,2015-05-13,10,9020,Yes,3,2,No
+2123,Engineering,1,37,Male,Master,Remote,2024-10-08,0,6580,No,1,4,No
+2124,Support,2,32,Male,Bachelor,Office,2013-08-15,11,7180,Yes,1,3,Yes
+2125,Support,1,34,Male,Bachelor,Office,2025-04-29,0,6400,Yes,3,3,No
+2126,Engineering,4,43,Female,Bachelor,Remote,2012-04-23,13,14550,Yes,2,4,No
+2127,Engineering,3,34,Female,Master,Office,2023-12-22,1,10150,Yes,4,3,Yes
+2128,Sales,2,40,Female,Bachelor,Office,2019-12-04,5,9330,Yes,2,4,No
+2129,Support,1,35,Male,Bachelor,Remote,2018-08-17,6,6660,Yes,2,2,No
+2130,Support,1,42,Male,Bachelor,Office,2024-09-30,0,6310,Yes,1,3,Yes
+2131,Engineering,4,50,Female,Bachelor,Remote,2021-11-25,3,12990,No,3,3,No
+2132,Marketing,2,30,Female,Bachelor,Remote,2019-09-04,5,7730,Yes,1,2,No
+2133,Engineering,1,35,Male,Bachelor,Office,2011-05-28,14,7920,No,2,3,No
+2134,Operations,1,35,Male,Bachelor,Remote,2019-04-07,6,7320,Yes,3,4,No
+2135,Sales,2,40,Male,Bachelor,Hybrid,2006-06-19,19,9570,No,2,3,No
+2136,Engineering,1,43,Male,High School,Hybrid,2022-05-09,3,8450,No,4,3,Yes
+2137,Marketing,2,35,Male,Bachelor,Office,2011-11-28,13,7500,No,3,4,No
+2138,Sales,3,39,Male,High School,Office,2018-07-12,6,10500,No,2,3,No
+2139,Support,1,34,Male,Doctorate,Hybrid,2011-12-27,13,7310,No,4,2,No
+2140,Operations,3,44,Female,Bachelor,Office,2005-07-28,19,10650,No,3,4,No
+2141,Engineering,1,36,Female,Master,Hybrid,2024-12-17,0,6040,No,2,3,No
+2142,Engineering,5,54,Female,High School,Hybrid,2024-09-26,0,15860,No,4,3,No
+2143,Support,2,38,Male,Bachelor,Hybrid,2015-10-07,9,7090,No,3,3,No
+2144,Support,2,46,Female,Master,Hybrid,2005-12-28,19,8820,No,2,2,Yes
+2145,Support,1,33,Female,Bachelor,Hybrid,2024-10-09,0,6680,No,3,4,No
+2146,Sales,1,28,Male,Master,Remote,2017-08-07,7,5350,No,1,2,No
+2147,Operations,2,44,Female,High School,Remote,2016-01-01,9,9790,Yes,2,3,No
+2148,Operations,3,36,Male,High School,Office,2024-12-18,0,11390,Yes,2,2,Yes
+2149,Finance,2,31,Female,Bachelor,Remote,2014-10-06,10,8800,No,2,3,No
+2150,Sales,1,35,Male,High School,Office,2011-02-10,14,6930,Yes,2,3,Yes
+2151,Engineering,3,40,Female,Bachelor,Remote,2025-04-08,0,11570,Yes,2,3,No
+2152,Sales,1,37,Male,Bachelor,Hybrid,2015-03-25,10,7680,No,1,3,No
+2153,Sales,1,40,Female,High School,Office,2025-03-05,0,6730,No,2,3,No
+2154,Sales,1,38,Female,High School,Remote,2022-08-26,2,6480,No,1,2,Yes
+2155,Support,3,50,Female,Doctorate,Office,2017-03-08,8,10570,No,2,3,No
+2156,Marketing,2,41,Female,High School,Office,2020-02-06,5,7530,Yes,1,3,No
+2157,Engineering,5,55,Female,Bachelor,Hybrid,2006-01-31,19,15370,Yes,3,3,Yes
+2158,Engineering,2,39,Female,Master,Office,2022-04-05,3,8220,No,2,4,No
+2159,Sales,2,36,Male,Bachelor,Office,2010-10-08,14,8660,Yes,4,3,No
+2160,Engineering,1,26,Female,Bachelor,Office,2025-01-21,0,6640,No,3,2,No
+2161,Operations,4,54,Male,Bachelor,Hybrid,2024-08-13,0,12090,Yes,2,3,No
+2162,Engineering,4,52,Female,High School,Office,2025-04-29,0,13010,No,2,3,No
+2163,Engineering,2,39,Male,High School,Hybrid,2013-08-20,11,8920,No,2,4,No
+2164,Engineering,1,36,Male,Bachelor,Remote,2024-09-08,0,6250,No,1,4,No
+2165,Operations,1,35,Male,High School,Hybrid,2021-03-27,4,4810,No,4,3,No
+2166,Sales,1,27,Male,Bachelor,Hybrid,2018-10-23,6,6050,No,3,3,No
+2167,Support,1,35,Female,Bachelor,Hybrid,2019-01-24,6,7490,No,4,2,Yes
+2168,Operations,1,32,Male,High School,Remote,2020-12-27,4,7130,Yes,4,3,Yes
+2169,Engineering,1,28,Female,Bachelor,Office,2017-09-09,7,6480,No,4,3,No
+2170,Sales,1,34,Male,Bachelor,Office,2022-07-19,2,4860,No,2,3,No
+2171,Support,5,59,Male,Doctorate,Remote,2009-07-18,15,16270,No,3,4,No
+2172,Support,3,46,Female,Bachelor,Hybrid,2022-03-29,3,10520,No,4,4,No
+2173,Finance,1,30,Male,Bachelor,Office,2024-08-10,0,6270,No,2,3,No
+2174,Support,4,39,Male,Bachelor,Hybrid,2023-07-28,1,13710,No,1,3,No
+2175,Support,1,36,Female,Master,Office,2019-02-22,6,5780,No,4,2,No
+2176,Marketing,2,42,Female,High School,Office,2008-09-22,16,7510,No,2,3,No
+2177,Operations,3,38,Female,Bachelor,Hybrid,2022-05-06,3,10400,Yes,3,3,No
+2178,Operations,1,34,Female,High School,Office,2015-02-10,10,6030,No,4,3,No
+2179,Support,1,26,Male,High School,Remote,2020-02-03,5,5670,No,2,4,No
+2180,Engineering,1,34,Male,Bachelor,Office,2023-02-25,2,8540,No,2,3,No
+2181,Support,2,44,Female,Master,Hybrid,2010-04-27,15,8020,No,2,3,No
+2182,Operations,2,46,Female,Master,Hybrid,2012-05-31,13,7430,No,1,3,No
+2183,Engineering,3,34,Male,High School,Office,2012-04-01,13,12230,No,1,4,No
+2184,Engineering,2,31,Male,Bachelor,Remote,2019-08-19,5,10560,No,3,3,No
+2185,Sales,4,53,Male,Bachelor,Office,2024-11-09,0,13330,No,2,4,No
+2186,Marketing,1,40,Male,High School,Remote,2022-06-21,3,5740,No,2,4,Yes
+2187,Marketing,3,50,Male,High School,Hybrid,2022-10-18,2,10690,Yes,4,2,No
+2188,Sales,2,30,Female,Master,Remote,2019-04-01,6,8290,Yes,2,3,No
+2189,Sales,1,29,Male,Bachelor,Remote,2018-01-28,7,5490,No,3,4,No
+2190,Operations,1,33,Female,Master,Remote,2012-11-16,12,5690,Yes,3,3,No
+2191,Operations,4,49,Non-binary,Master,Hybrid,2014-08-08,10,12380,No,2,3,No
+2192,Engineering,1,43,Female,Master,Remote,2025-01-10,0,7660,No,4,2,Yes
+2193,HR,2,30,Male,Bachelor,Remote,2018-12-02,6,9030,Yes,3,3,No
+2194,Sales,1,26,Female,Bachelor,Office,2020-03-24,5,6440,No,4,3,No
+2195,Support,3,51,Male,Master,Office,2023-07-02,1,9200,Yes,1,3,No
+2196,Operations,1,31,Female,Bachelor,Remote,2024-10-23,0,5230,No,1,2,No
+2197,Engineering,2,31,Female,Bachelor,Remote,2016-02-16,9,8990,No,1,3,No
+2198,Operations,1,35,Female,Bachelor,Office,2011-06-27,14,5380,No,3,3,No
+2199,Engineering,2,40,Female,Bachelor,Office,2006-08-28,18,10300,No,1,4,No
+2200,Finance,2,46,Male,Master,Hybrid,2017-04-07,8,9500,No,4,3,No
+2201,Operations,1,28,Male,Bachelor,Hybrid,2017-11-07,7,5570,Yes,1,3,Yes
+2202,Engineering,2,33,Male,Master,Remote,2023-09-20,1,9100,Yes,2,3,Yes
+2203,Engineering,3,42,Male,Bachelor,Hybrid,2008-12-30,16,12540,No,3,3,No
+2204,Sales,2,40,Male,Master,Office,2011-07-23,13,9790,No,1,3,No
+2205,HR,4,42,Male,Master,Remote,2020-06-16,5,12390,Yes,2,4,No
+2206,Operations,3,38,Female,Bachelor,Remote,2022-07-22,2,9120,Yes,4,2,No
+2207,Sales,2,39,Female,Master,Remote,2012-02-21,13,7160,No,3,3,No
+2208,Engineering,2,30,Female,Master,Hybrid,2024-05-11,1,8670,Yes,3,4,No
+2209,Engineering,2,35,Male,Master,Office,2024-10-12,0,9330,No,2,2,No
+2210,Engineering,2,31,Male,Bachelor,Remote,2015-06-26,10,8550,No,2,4,No
+2211,Engineering,2,42,Female,Bachelor,Hybrid,2012-01-20,13,9250,Yes,4,3,No
+2212,Engineering,4,52,Female,Bachelor,Remote,2016-09-22,8,14480,No,4,3,No
+2213,Support,1,32,Male,Bachelor,Hybrid,2016-10-02,8,4870,No,2,4,No
+2214,Engineering,2,31,Non-binary,Bachelor,Office,2024-03-19,1,9840,No,2,4,No
+2215,Sales,3,51,Male,Bachelor,Hybrid,2019-09-08,5,9570,No,2,3,No
+2216,Operations,1,27,Male,Master,Remote,2022-03-25,3,5040,No,4,4,No
+2217,Operations,1,41,Male,Bachelor,Remote,2024-09-04,0,5210,No,3,3,Yes
+2218,Engineering,3,51,Non-binary,Master,Hybrid,2024-12-10,0,10910,No,2,3,No
+2219,Operations,3,36,Male,Bachelor,Remote,2024-03-22,1,11880,No,1,4,No
+2220,Operations,2,37,Female,Master,Office,2024-10-08,0,7780,No,1,3,No
+2221,Engineering,2,44,Male,Master,Office,2025-01-17,0,8390,Yes,1,3,Yes
+2222,Operations,2,44,Male,Master,Hybrid,2024-01-13,1,7940,Yes,3,3,No
+2223,Engineering,1,27,Female,Bachelor,Hybrid,2019-05-02,6,8060,No,3,3,No
+2224,HR,1,41,Female,Master,Remote,2017-01-24,8,7690,No,4,3,No
+2225,Engineering,1,29,Male,Bachelor,Remote,2025-02-22,0,6790,No,1,4,No
+2226,Sales,3,50,Female,High School,Remote,2024-03-30,1,11590,No,1,4,No
+2227,Engineering,3,38,Male,High School,Remote,2016-09-10,8,10010,No,4,3,No
+2228,Marketing,1,38,Female,Bachelor,Remote,2008-03-17,17,6470,Yes,2,3,No
+2229,Sales,1,34,Female,Bachelor,Office,2024-07-30,0,5630,Yes,3,4,No
+2230,Sales,3,37,Non-binary,Master,Remote,2013-12-11,11,11620,No,4,3,No
+2231,Engineering,1,27,Male,Bachelor,Hybrid,2023-08-20,1,6200,Yes,3,3,No
+2232,Sales,2,38,Female,Bachelor,Office,2008-08-10,16,7770,No,2,4,No
+2233,Operations,2,43,Male,Bachelor,Remote,2025-04-30,0,9110,No,3,2,No
+2234,Support,1,26,Male,Bachelor,Remote,2019-08-08,5,6280,No,3,3,No
+2235,Sales,3,36,Female,High School,Office,2017-07-09,7,9770,No,4,4,No
+2236,Engineering,2,38,Male,Master,Remote,2021-07-21,3,8650,No,3,3,No
+2237,Engineering,2,32,Female,Bachelor,Remote,2021-03-02,4,9700,No,4,2,No
+2238,Marketing,3,46,Male,Bachelor,Remote,2020-05-11,5,10270,No,4,3,No
+2239,Marketing,4,43,Female,Bachelor,Office,2023-10-16,1,12540,No,2,4,No
+2240,Operations,1,37,Male,Bachelor,Remote,2024-11-15,0,7080,No,1,3,No
+2241,Sales,2,38,Male,Bachelor,Remote,2014-01-02,11,8820,Yes,2,3,No
+2242,Sales,3,48,Male,Bachelor,Hybrid,2024-07-22,0,10190,Yes,1,4,Yes
+2243,Support,4,38,Non-binary,Bachelor,Remote,2014-11-09,10,12010,No,3,3,Yes
+2244,Support,5,54,Female,Bachelor,Office,2013-03-25,12,13770,No,3,3,No
+2245,Engineering,2,31,Female,High School,Office,2018-12-14,6,10550,No,4,3,No
+2246,Sales,2,40,Male,Bachelor,Remote,2025-02-02,0,7610,No,1,3,No
+2247,Support,2,45,Male,Bachelor,Office,2021-09-28,3,9280,No,4,3,No
+2248,Engineering,2,34,Male,Bachelor,Remote,2014-09-26,10,10250,No,2,3,No
+2249,Marketing,3,48,Male,Bachelor,Office,2007-09-25,17,10020,Yes,3,3,Yes
+2250,Operations,3,35,Male,Bachelor,Remote,2011-03-04,14,10330,No,1,2,No
+2251,Operations,1,42,Female,Doctorate,Office,2014-01-11,11,6450,No,1,4,No
+2252,Sales,1,31,Male,Bachelor,Hybrid,2014-09-03,10,6290,No,2,4,No
+2253,Marketing,1,43,Female,Bachelor,Remote,2015-12-20,9,6610,No,4,3,No
+2254,Engineering,2,41,Female,Bachelor,Office,2024-11-12,0,7820,No,2,2,No
+2255,Support,1,26,Male,Master,Office,2019-07-19,5,4730,Yes,3,3,No
+2256,Engineering,2,44,Male,Bachelor,Remote,2025-04-25,0,8220,No,3,3,No
+2257,Engineering,4,47,Female,Bachelor,Office,2021-01-27,4,13800,Yes,4,3,Yes
+2258,Sales,2,38,Male,Bachelor,Office,2016-04-24,9,9100,Yes,3,3,No
+2259,Operations,3,39,Male,Bachelor,Remote,2010-09-01,14,10730,No,2,3,No
+2260,Sales,4,53,Male,Doctorate,Hybrid,2007-01-22,18,12150,No,3,2,No
+2261,Finance,1,30,Female,Bachelor,Remote,2025-05-21,0,5470,Yes,4,3,No
+2262,Sales,3,48,Male,Bachelor,Office,2024-03-07,1,10660,Yes,2,2,No
+2263,Sales,2,38,Female,Bachelor,Remote,2014-02-08,11,9260,No,3,4,No
+2264,Support,2,41,Male,Bachelor,Hybrid,2023-07-31,1,8540,No,3,4,No
+2265,Operations,1,34,Male,Bachelor,Remote,2024-06-22,1,7200,Yes,4,3,Yes
+2266,Engineering,2,37,Male,Bachelor,Office,2023-04-26,2,10610,Yes,3,3,No
+2267,Engineering,3,42,Male,Master,Office,2011-01-30,14,11600,No,4,3,No
+2268,Finance,3,38,Female,High School,Hybrid,2010-01-16,15,9810,No,4,3,No
+2269,Operations,2,45,Male,Bachelor,Hybrid,2023-11-24,1,7000,Yes,3,3,No
+2270,Sales,1,26,Female,Master,Office,2019-09-26,5,7040,Yes,4,2,Yes
+2271,Support,4,41,Male,Bachelor,Hybrid,2020-04-24,5,11360,Yes,1,3,Yes
+2272,Engineering,5,48,Female,Bachelor,Remote,2024-12-11,0,17130,No,3,3,No
+2273,Engineering,1,34,Non-binary,Bachelor,Hybrid,2022-05-27,3,6370,No,3,2,No
+2274,Support,1,40,Female,Master,Remote,2013-09-22,11,5090,No,3,3,No
+2275,Support,3,44,Female,Master,Office,2022-10-18,2,10010,Yes,1,2,Yes
+2276,Support,2,44,Female,Master,Hybrid,2007-03-16,18,7830,No,4,4,No
+2277,Support,3,39,Female,Bachelor,Remote,2009-01-30,16,10430,No,2,2,No
+2278,Finance,2,34,Female,Bachelor,Remote,2018-04-10,7,8120,No,3,3,No
+2279,Engineering,5,43,Female,High School,Remote,2008-07-08,16,15960,No,2,3,No
+2280,Sales,4,50,Male,Bachelor,Remote,2023-08-11,1,13760,No,3,3,No
+2281,Operations,3,48,Male,Master,Hybrid,2012-07-24,12,11490,No,2,3,No
+2282,Engineering,1,33,Male,Master,Remote,2012-12-18,12,6030,No,2,2,No
+2283,Engineering,1,34,Male,Bachelor,Remote,2025-04-16,0,6650,No,2,3,No
+2284,Marketing,1,33,Female,Master,Office,2019-10-23,5,6180,Yes,3,3,No
+2285,HR,3,39,Male,Bachelor,Hybrid,2021-06-18,4,11650,No,3,3,No
+2286,Sales,3,50,Female,Bachelor,Hybrid,2018-12-15,6,11770,No,2,3,No
+2287,Engineering,2,32,Female,Master,Office,2014-05-11,11,9560,No,4,3,No
+2288,Marketing,5,45,Male,Bachelor,Office,2024-09-22,0,13550,No,2,2,No
+2289,Engineering,3,42,Male,Bachelor,Hybrid,2021-10-11,3,11770,No,1,3,No
+2290,Support,3,51,Male,Bachelor,Hybrid,2005-07-14,19,10510,No,4,3,No
+2291,Sales,1,37,Female,Bachelor,Office,2012-08-12,12,7430,No,1,3,Yes
+2292,Sales,1,33,Female,Master,Office,2013-03-09,12,7400,No,1,3,Yes
+2293,Engineering,2,44,Male,Bachelor,Office,2021-02-18,4,8310,Yes,1,3,No
+2294,HR,1,32,Male,Bachelor,Office,2023-01-04,2,7440,No,2,2,No
+2295,Marketing,3,35,Male,Master,Remote,2010-11-20,14,10390,No,2,3,Yes
+2296,Sales,1,29,Female,High School,Office,2017-02-20,8,5790,No,4,4,No
+2297,Operations,2,44,Female,Bachelor,Hybrid,2025-03-19,0,7000,Yes,2,3,Yes
+2298,Finance,5,53,Male,Bachelor,Office,2015-05-05,10,16370,No,3,3,No
+2299,Sales,5,50,Female,Doctorate,Remote,2015-04-17,10,14080,No,3,2,No
+2300,Engineering,1,27,Male,Bachelor,Remote,2018-10-03,6,7930,No,2,4,No
+2301,Sales,2,43,Female,Bachelor,Remote,2024-10-13,0,7820,Yes,4,4,No
+2302,Support,1,42,Male,Bachelor,Office,2020-12-01,4,6920,No,3,3,No
+2303,Sales,2,38,Male,Bachelor,Remote,2024-12-24,0,7170,Yes,4,3,No
+2304,Sales,1,39,Male,Bachelor,Hybrid,2020-08-13,4,6500,No,4,3,No
+2305,Operations,1,33,Female,Master,Remote,2025-03-09,0,7550,No,4,2,No
+2306,Sales,2,47,Male,Bachelor,Hybrid,2010-08-20,14,9030,No,3,3,Yes
+2307,Engineering,3,42,Male,Bachelor,Hybrid,2012-08-11,12,11480,Yes,4,3,No
+2308,Engineering,5,59,Male,High School,Remote,2025-04-09,0,15260,No,4,3,No
+2309,Engineering,1,27,Male,Bachelor,Remote,2019-03-03,6,5950,No,3,4,No
+2310,Engineering,2,30,Male,Bachelor,Remote,2020-01-30,5,9300,No,2,3,No
+2311,Engineering,1,32,Male,Bachelor,Remote,2022-06-08,3,8380,Yes,3,3,No
+2312,Support,2,46,Female,Bachelor,Office,2020-06-29,5,8100,No,1,2,No
+2313,Operations,2,41,Female,Bachelor,Office,2023-09-17,1,8800,No,1,3,Yes
+2314,Sales,1,26,Male,Doctorate,Office,2020-01-25,5,5940,No,1,3,Yes
+2315,Sales,1,41,Male,Bachelor,Office,2007-12-03,17,7580,No,1,3,No
+2316,Operations,4,45,Female,Bachelor,Office,2014-03-16,11,12130,No,4,3,No
+2317,Engineering,3,40,Male,Master,Hybrid,2018-11-27,6,10990,Yes,3,3,No
+2318,Engineering,3,42,Female,Bachelor,Hybrid,2020-12-01,4,10480,Yes,3,3,No
+2319,Support,4,39,Female,Bachelor,Office,2009-06-01,16,13670,No,1,3,No
+2320,Engineering,3,48,Male,Master,Hybrid,2017-05-01,8,12210,No,1,3,No
+2321,Engineering,3,48,Female,Bachelor,Remote,2024-06-05,1,10370,No,4,3,No
+2322,Sales,3,47,Female,High School,Office,2014-09-04,10,10730,No,4,4,No
+2323,Sales,1,42,Male,Bachelor,Remote,2020-09-15,4,7390,No,1,3,No
+2324,Sales,2,36,Female,Bachelor,Remote,2011-02-22,14,8190,No,4,3,No
+2325,Engineering,1,34,Female,Bachelor,Remote,2015-12-31,9,7650,Yes,2,3,No
+2326,Engineering,5,56,Female,Bachelor,Hybrid,2006-03-12,19,15670,No,4,3,No
+2327,Support,1,42,Male,Master,Hybrid,2015-06-25,10,6390,No,3,4,No
+2328,Marketing,2,31,Female,Bachelor,Hybrid,2018-01-27,7,9510,No,4,2,No
+2329,Operations,3,35,Female,Master,Remote,2024-08-26,0,9710,No,2,3,No
+2330,Finance,5,54,Female,Doctorate,Remote,2018-05-01,7,15540,No,2,3,No
+2331,Operations,1,36,Male,Bachelor,Hybrid,2009-12-24,15,7620,No,1,3,No
+2332,Operations,2,45,Female,Bachelor,Remote,2022-08-01,2,7210,Yes,4,3,No
+2333,Sales,1,27,Female,Bachelor,Hybrid,2024-03-16,1,5430,No,4,2,No
+2334,HR,1,36,Male,Bachelor,Office,2011-12-04,13,6290,Yes,3,3,No
+2335,Engineering,2,41,Non-binary,Bachelor,Office,2011-01-14,14,10170,No,4,3,No
+2336,HR,5,58,Male,Bachelor,Hybrid,2016-09-14,8,13720,No,3,3,No
+2337,Sales,1,40,Male,Doctorate,Office,2017-10-22,7,6010,Yes,1,3,No
+2338,Marketing,1,34,Male,Bachelor,Remote,2013-01-14,12,7600,No,4,3,No
+2339,HR,1,41,Female,Master,Office,2024-02-07,1,5400,No,4,3,No
+2340,Finance,2,40,Female,High School,Remote,2013-04-17,12,10080,Yes,4,3,Yes
+2341,Sales,1,36,Female,Bachelor,Office,2018-07-24,6,5890,Yes,3,3,No
+2342,Operations,1,28,Male,Doctorate,Office,2017-09-26,7,6490,Yes,4,3,Yes
+2343,Operations,3,38,Male,Bachelor,Remote,2013-04-07,12,12070,No,1,3,No
+2344,Marketing,4,42,Female,Master,Office,2011-11-17,13,11960,Yes,3,3,Yes
+2345,Operations,1,40,Female,Bachelor,Office,2019-09-19,5,6140,No,2,3,No
+2346,Support,2,31,Male,Bachelor,Remote,2017-01-27,8,8350,Yes,3,3,Yes
+2347,Support,3,43,Female,Master,Remote,2008-11-16,16,11850,No,4,4,No
+2348,Sales,2,34,Male,Bachelor,Hybrid,2013-06-25,12,8070,No,1,3,No
+2349,Engineering,1,30,Female,Master,Office,2017-11-10,7,7000,No,3,2,No
+2350,Finance,1,34,Female,Bachelor,Hybrid,2022-07-23,2,8050,Yes,2,3,Yes
+2351,Engineering,2,33,Male,Bachelor,Office,2016-10-15,8,8210,No,4,3,No
+2352,Support,2,37,Male,Master,Office,2019-07-10,5,7890,No,3,4,No
+2353,Engineering,5,42,Female,High School,Office,2023-08-13,1,16410,No,1,2,No
+2354,HR,2,37,Female,Bachelor,Hybrid,2021-11-10,3,7060,No,3,3,No
+2355,Operations,1,26,Male,Bachelor,Office,2020-11-13,4,6320,No,3,4,No
+2356,Support,2,43,Non-binary,Bachelor,Remote,2014-10-25,10,8100,Yes,2,3,No
+2357,Sales,2,30,Male,Bachelor,Office,2024-07-19,0,7510,No,4,2,No
+2358,Operations,2,46,Female,Master,Office,2014-06-03,11,7850,No,2,4,No
+2359,Sales,2,44,Male,Bachelor,Hybrid,2019-07-30,5,7910,No,3,4,No
+2360,Engineering,2,43,Non-binary,Master,Hybrid,2024-11-20,0,10290,No,3,2,No
+2361,Sales,2,37,Male,Bachelor,Hybrid,2009-06-10,16,9470,Yes,3,2,Yes
+2362,Sales,5,52,Female,Bachelor,Hybrid,2009-11-07,15,16290,No,1,3,No
+2363,Engineering,1,35,Female,Master,Office,2024-06-15,1,6640,No,3,3,No
+2364,Engineering,1,31,Female,Bachelor,Office,2019-08-18,5,6790,No,3,3,No
+2365,Sales,2,42,Male,Master,Hybrid,2023-12-26,1,9240,No,1,3,No
+2366,Support,2,47,Male,High School,Remote,2011-02-10,14,7560,No,4,3,No
+2367,Sales,2,37,Male,Bachelor,Hybrid,2012-05-20,13,9630,Yes,2,3,No
+2368,Sales,2,36,Male,Bachelor,Office,2010-02-01,15,7980,No,4,2,No
+2369,Support,2,40,Female,Bachelor,Office,2006-12-02,18,9480,No,1,3,No
+2370,Engineering,1,37,Male,Bachelor,Hybrid,2016-03-26,9,6530,No,1,3,No
+2371,Sales,2,31,Non-binary,Bachelor,Remote,2021-12-08,3,7580,No,4,3,No
+2372,Sales,2,36,Male,Bachelor,Office,2020-07-21,4,9770,Yes,3,3,No
+2373,Sales,2,45,Male,Bachelor,Office,2022-01-17,3,8470,No,4,3,No
+2374,Operations,2,44,Female,Bachelor,Hybrid,2015-08-29,9,8260,No,1,4,No
+2375,Marketing,5,50,Female,Bachelor,Hybrid,2008-01-25,17,15770,No,4,4,No
+2376,HR,2,42,Female,Bachelor,Remote,2015-01-15,10,7240,No,3,3,No
+2377,Engineering,2,34,Female,Bachelor,Hybrid,2016-09-30,8,8680,No,2,4,No
+2378,Sales,2,40,Female,Master,Office,2009-12-30,15,8800,No,1,3,Yes
+2379,Marketing,4,55,Male,Bachelor,Office,2005-10-23,19,12660,No,2,3,No
+2380,Engineering,1,30,Female,High School,Remote,2016-03-08,9,6580,No,1,3,No
+2381,Engineering,2,46,Female,High School,Office,2024-09-01,0,8180,Yes,3,4,Yes
+2382,HR,5,57,Male,Bachelor,Remote,2011-09-12,13,15630,No,1,4,No
+2383,Support,1,33,Female,Bachelor,Remote,2013-05-28,12,5050,No,1,3,No
+2384,Sales,1,31,Male,Master,Hybrid,2014-09-07,10,6180,No,1,3,No
+2385,Engineering,2,37,Male,Master,Remote,2018-05-26,7,9290,No,4,3,Yes
+2386,Sales,2,30,Male,Master,Office,2024-12-16,0,8880,Yes,4,2,No
+2387,Finance,2,47,Female,High School,Remote,2024-09-24,0,7530,Yes,1,4,No
+2388,Engineering,2,32,Male,Bachelor,Office,2017-07-31,7,9810,Yes,3,4,Yes
+2389,Engineering,2,33,Male,High School,Remote,2013-01-18,12,8900,Yes,3,3,No
+2390,Sales,5,54,Male,Bachelor,Office,2010-03-21,15,15910,No,3,3,No
+2391,Engineering,1,36,Female,Bachelor,Office,2024-10-05,0,6740,No,2,3,No
+2392,Support,1,38,Male,Bachelor,Hybrid,2016-06-28,9,5170,Yes,3,3,No
+2393,Sales,1,36,Male,Bachelor,Remote,2018-03-13,7,7060,No,3,3,No
+2394,Operations,1,27,Male,Doctorate,Hybrid,2018-11-24,6,6290,No,2,3,No
+2395,Sales,1,30,Male,Bachelor,Remote,2024-08-31,0,7290,No,2,4,Yes
+2396,Sales,3,51,Female,Bachelor,Office,2014-03-24,11,9600,No,2,3,No
+2397,HR,1,40,Male,Bachelor,Office,2014-01-05,11,5280,No,1,3,Yes
+2398,Engineering,3,36,Female,Bachelor,Remote,2010-01-18,15,12020,No,4,3,No
+2399,Sales,4,38,Male,Bachelor,Hybrid,2025-01-27,0,14290,No,4,2,No
+2400,Engineering,4,52,Female,High School,Remote,2011-02-16,14,14620,No,3,3,No
+2401,Support,1,42,Male,Bachelor,Remote,2011-08-05,13,5660,No,1,2,No
+2402,Engineering,1,26,Male,Bachelor,Remote,2020-06-01,5,6950,No,1,3,No
+2403,Support,1,34,Male,Master,Remote,2019-05-03,6,6410,Yes,1,4,No
+2404,Marketing,3,40,Male,Bachelor,Remote,2022-03-31,3,11120,Yes,4,4,Yes
+2405,Sales,1,35,Female,Bachelor,Office,2016-05-04,9,7320,No,3,3,No
+2406,Support,3,44,Male,High School,Hybrid,2022-06-26,3,10480,No,3,3,No
+2407,HR,3,48,Female,Bachelor,Office,2006-03-10,19,11310,Yes,4,2,Yes
+2408,HR,1,28,Female,Bachelor,Remote,2017-09-20,7,6300,Yes,4,2,Yes
+2409,Operations,1,41,Non-binary,Bachelor,Office,2023-11-13,1,6080,Yes,4,3,No
+2410,Engineering,2,43,Female,Master,Hybrid,2012-10-08,12,9000,Yes,2,3,No
+2411,Engineering,1,33,Male,Bachelor,Office,2013-02-06,12,7320,Yes,4,3,No
+2412,Engineering,1,26,Female,Bachelor,Hybrid,2020-03-29,5,8100,No,1,3,No
+2413,Engineering,2,42,Female,Bachelor,Hybrid,2017-10-04,7,8580,Yes,4,3,No
+2414,Finance,5,55,Female,Bachelor,Office,2014-03-21,11,15200,No,2,3,No
+2415,Sales,2,45,Female,Master,Remote,2013-01-08,12,7720,No,1,3,No
+2416,Operations,1,39,Non-binary,Bachelor,Office,2011-09-05,13,7530,No,4,3,No
+2417,HR,1,35,Female,Bachelor,Remote,2010-12-12,14,4790,No,3,3,No
+2418,Support,2,38,Female,Doctorate,Office,2014-06-06,11,8010,No,2,3,No
+2419,Operations,3,51,Male,Bachelor,Office,2007-09-08,17,10410,No,2,3,No
+2420,Support,1,38,Non-binary,Master,Remote,2023-11-22,1,5590,No,4,3,No
+2421,Sales,1,30,Male,Bachelor,Office,2022-09-03,2,7310,No,2,3,No
+2422,Engineering,2,41,Female,Master,Hybrid,2023-06-19,2,9450,No,1,3,Yes
+2423,Finance,1,43,Female,Bachelor,Office,2024-12-12,0,7210,Yes,2,3,No
+2424,Engineering,3,48,Female,Master,Remote,2023-01-25,2,12040,Yes,1,3,No
+2425,Sales,3,35,Female,Bachelor,Remote,2010-08-28,14,10910,No,3,3,No
+2426,Marketing,1,33,Male,Bachelor,Office,2024-08-11,0,7320,No,4,3,Yes
+2427,Sales,1,42,Male,Bachelor,Office,2016-12-07,8,4890,No,2,3,No
+2428,Finance,1,37,Female,Doctorate,Hybrid,2017-03-05,8,5360,Yes,2,4,No
+2429,Operations,4,48,Male,Bachelor,Office,2021-10-29,3,13410,Yes,3,3,No
+2430,HR,2,39,Female,High School,Hybrid,2022-09-29,2,6980,No,1,3,No
+2431,Sales,1,27,Female,Bachelor,Remote,2019-03-22,6,6690,No,2,3,No
+2432,Engineering,1,40,Female,Bachelor,Hybrid,2010-08-18,14,6530,Yes,2,3,No
+2433,Engineering,3,40,Female,Bachelor,Remote,2010-05-22,15,10990,No,1,3,No
+2434,Support,1,34,Female,Bachelor,Office,2024-03-12,1,6130,No,2,3,No
+2435,Engineering,3,41,Male,Bachelor,Hybrid,2023-12-27,1,11480,Yes,1,4,Yes
+2436,Operations,3,39,Female,Bachelor,Hybrid,2007-01-10,18,11930,No,3,4,No
+2437,Support,1,35,Female,Master,Office,2015-04-23,10,5650,No,4,3,No
+2438,Engineering,2,43,Male,Bachelor,Office,2020-11-09,4,8670,Yes,2,3,No
+2439,Engineering,2,31,Male,Master,Office,2020-09-28,4,9040,No,2,4,No
+2440,Support,2,35,Female,Master,Remote,2023-10-15,1,9180,No,4,3,No
+2441,Finance,2,42,Male,High School,Hybrid,2005-08-15,19,9350,Yes,1,4,No
+2442,Support,1,34,Female,Master,Office,2024-12-29,0,7160,Yes,2,3,No
+2443,Sales,2,37,Male,Bachelor,Hybrid,2020-09-21,4,8930,No,3,3,No
+2444,Operations,3,50,Male,Bachelor,Hybrid,2005-10-20,19,10070,No,3,3,No
+2445,Support,4,52,Male,Master,Office,2014-06-11,11,13540,No,3,3,No
+2446,Engineering,3,36,Female,Master,Office,2017-04-06,8,11830,No,1,2,No
+2447,Marketing,1,37,Male,Bachelor,Office,2011-08-03,13,4820,No,4,3,Yes
+2448,Finance,1,36,Male,Bachelor,Office,2010-01-26,15,5680,No,4,3,No
+2449,Sales,2,34,Male,High School,Remote,2012-04-12,13,8080,No,1,3,No
+2450,Operations,3,40,Male,High School,Hybrid,2012-11-13,12,9170,Yes,1,3,No
+2451,Marketing,4,39,Female,High School,Remote,2024-09-03,0,14040,No,1,4,No
+2452,Finance,3,37,Female,Master,Hybrid,2010-08-26,14,9670,No,2,4,No
+2453,Sales,2,44,Male,Master,Hybrid,2018-11-15,6,8850,No,1,3,No
+2454,Support,1,31,Male,Doctorate,Office,2022-11-27,2,6690,No,2,3,No
+2455,Operations,2,40,Female,Bachelor,Remote,2024-09-25,0,8350,No,3,3,No
+2456,Engineering,1,35,Female,Master,Remote,2023-02-02,2,7330,No,4,3,No
+2457,Support,3,36,Male,Bachelor,Remote,2017-10-11,7,11540,No,4,3,No
+2458,HR,1,34,Male,Bachelor,Office,2020-03-30,5,5500,Yes,2,4,Yes
+2459,Sales,2,41,Female,Bachelor,Office,2016-08-22,8,7090,No,2,2,No
+2460,Finance,1,26,Male,Bachelor,Office,2020-02-20,5,5230,Yes,1,4,No
+2461,Finance,3,50,Male,Master,Hybrid,2008-07-31,16,11360,No,1,2,No
+2462,Engineering,3,39,Female,Bachelor,Hybrid,2021-08-19,3,11390,No,4,3,No
+2463,Sales,2,33,Male,Master,Office,2015-06-22,10,7940,No,4,3,No
+2464,Operations,3,35,Female,Bachelor,Office,2012-03-31,13,10080,No,2,3,No
+2465,Engineering,3,38,Female,Doctorate,Office,2025-05-05,0,12290,No,1,4,No
+2466,Engineering,1,42,Female,Bachelor,Office,2025-05-21,0,8470,Yes,3,3,Yes
+2467,Operations,1,37,Male,Master,Office,2013-05-07,12,4880,No,4,2,No
+2468,Engineering,1,39,Male,Master,Office,2013-07-17,11,7390,No,3,4,No
+2469,Sales,3,37,Male,Bachelor,Hybrid,2009-03-31,16,11770,Yes,1,4,No
