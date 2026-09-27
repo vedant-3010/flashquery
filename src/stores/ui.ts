@@ -13,10 +13,14 @@ interface UiState {
   sidebarOpen: boolean
   sidePanelOpen: boolean
   sidePanelTab: SidePanelTab
+  /** Table shown in the side panel's Preview tab. */
+  previewTable: string | null
   setView: (view: View) => void
   setSidebarOpen: (open: boolean) => void
   setSidePanelOpen: (open: boolean) => void
   setSidePanelTab: (tab: SidePanelTab) => void
+  /** Opens the side panel on a table's preview; null clears it. */
+  showPreview: (table: string | null) => void
 }
 
 export const useUiStore = create<UiState>()((set) => ({
@@ -24,8 +28,15 @@ export const useUiStore = create<UiState>()((set) => ({
   sidebarOpen: false,
   sidePanelOpen: false,
   sidePanelTab: 'preview',
+  previewTable: null,
   setView: (view) => set({ view }),
   setSidebarOpen: (sidebarOpen) => set({ sidebarOpen }),
   setSidePanelOpen: (sidePanelOpen) => set({ sidePanelOpen }),
   setSidePanelTab: (sidePanelTab) => set({ sidePanelTab }),
+  showPreview: (previewTable) =>
+    set(
+      previewTable === null
+        ? { previewTable }
+        : { previewTable, sidePanelOpen: true, sidePanelTab: 'preview' },
+    ),
 }))

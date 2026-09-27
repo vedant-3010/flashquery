@@ -2,11 +2,12 @@ import { useEffect } from 'react'
 import { DashboardView } from '@/app/DashboardView'
 import { PanelErrorBoundary } from '@/app/PanelErrorBoundary'
 import { SidePanel } from '@/app/SidePanel'
-import { Sidebar } from '@/app/Sidebar'
 import { TopBar } from '@/app/TopBar'
 import { WorkspaceView } from '@/app/WorkspaceView'
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
 import { Tabs, TabsContent } from '@/components/ui/tabs'
+import { DatasetsPanel } from '@/features/datasets/DatasetsPanel'
+import { FileDropZone } from '@/features/datasets/FileDropZone'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { useUiStore, ViewSchema } from '@/stores/ui'
 
@@ -28,7 +29,7 @@ export function AppShell() {
 
   const datasetsPanel = (
     <PanelErrorBoundary name="the datasets panel">
-      <Sidebar />
+      <DatasetsPanel />
     </PanelErrorBoundary>
   )
 
@@ -76,6 +77,7 @@ export function AppShell() {
           </aside>
         )}
       </div>
+      <FileDropZone />
     </Tabs>
   )
 }
