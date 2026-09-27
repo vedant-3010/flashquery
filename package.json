@@ -12,6 +12,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "e2e": "playwright test",
+    "size": "node scripts/check-bundle-size.mjs",
+    "check": "npm run typecheck && npm run lint && npm test && npm run build && npm run size",
     "format": "prettier --write ."
   },
   "dependencies": {
