@@ -114,7 +114,8 @@ describe('Global Sales generator', () => {
     expect(apparel).toBeGreaterThan(0.07)
   })
 
-  it('generates 1M rows quickly', async () => {
+  // Timing is logged, not asserted (see profile.test.ts).
+  it('generates 1M rows', { timeout: 60_000 }, async () => {
     const started = performance.now()
     await engine.run(createGlobalSalesSql(1_000_000))
     const elapsed = performance.now() - started
