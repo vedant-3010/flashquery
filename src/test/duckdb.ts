@@ -37,6 +37,7 @@ export async function createTestEngine(): Promise<Engine> {
     registerFile: async (name, file) =>
       db.registerFileBuffer(name, new Uint8Array(await file.arrayBuffer())),
     registerBuffer: async (name, bytes) => db.registerFileBuffer(name, bytes),
+    readFile: async (name) => db.copyFileToBuffer(name),
     dropFile: async (name) => db.dropFile(name),
     terminate: async () => {
       conn.close()

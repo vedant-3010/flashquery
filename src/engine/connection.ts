@@ -14,6 +14,8 @@ export interface Engine extends SqlRunner {
   registerFile(name: string, file: File): Promise<void>
   /** Makes bytes readable by name. The buffer is transferred, not copied. */
   registerBuffer(name: string, bytes: Uint8Array): Promise<void>
+  /** Contents of a DuckDB virtual file, e.g. one written by COPY ... TO. */
+  readFile(name: string): Promise<Uint8Array>
   dropFile(name: string): Promise<void>
   terminate(): Promise<void>
 }

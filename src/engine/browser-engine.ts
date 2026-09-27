@@ -61,6 +61,7 @@ export async function createBrowserEngine(): Promise<Engine> {
           db.registerFileHandle(name, file, DuckDBDataProtocol.BROWSER_FILEREADER, true),
         ),
       registerBuffer: (name, bytes) => enqueue(() => db.registerFileBuffer(name, bytes)),
+      readFile: (name) => enqueue(() => db.copyFileToBuffer(name)),
       dropFile: (name) =>
         enqueue(async () => {
           await db.dropFile(name)
