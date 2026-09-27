@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { DashboardView } from '@/app/DashboardView'
+import { PanelErrorBoundary } from '@/app/PanelErrorBoundary'
 import { SidePanel } from '@/app/SidePanel'
 import { Sidebar } from '@/app/Sidebar'
 import { TopBar } from '@/app/TopBar'
@@ -25,6 +26,12 @@ export function AppShell() {
     if (wide) setSidebarOpen(false)
   }, [wide, setSidebarOpen])
 
+  const datasetsPanel = (
+    <PanelErrorBoundary name="the datasets panel">
+      <Sidebar />
+    </PanelErrorBoundary>
+  )
+
   return (
     <Tabs
       value={view}
@@ -35,7 +42,7 @@ export function AppShell() {
       <div className="flex min-h-0 flex-1">
         {wide ? (
           <aside aria-label="Datasets" className="flex w-65 shrink-0 flex-col border-r bg-sidebar">
-            <Sidebar />
+            {datasetsPanel}
           </aside>
         ) : (
           <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
@@ -45,21 +52,27 @@ export function AppShell() {
               aria-describedby={undefined}
             >
               <SheetTitle className="sr-only">Datasets</SheetTitle>
-              <Sidebar />
+              {datasetsPanel}
             </SheetContent>
           </Sheet>
         )}
         <main className="flex min-w-0 flex-1 flex-col">
           <TabsContent value="workspace" className="flex min-h-0 flex-col">
-            <WorkspaceView />
+            <PanelErrorBoundary name="the workspace">
+              <WorkspaceView />
+            </PanelErrorBoundary>
           </TabsContent>
           <TabsContent value="dashboard" className="flex min-h-0 flex-col">
-            <DashboardView />
+            <PanelErrorBoundary name="the dashboard">
+              <DashboardView />
+            </PanelErrorBoundary>
           </TabsContent>
         </main>
         {sidePanelOpen && (
           <aside aria-label="Side panel" className="flex w-90 shrink-0 flex-col border-l">
-            <SidePanel />
+            <PanelErrorBoundary name="the side panel">
+              <SidePanel />
+            </PanelErrorBoundary>
           </aside>
         )}
       </div>
