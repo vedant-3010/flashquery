@@ -89,6 +89,8 @@ function describeSource(input: DatasetInput, result: IngestResult): DatasetSourc
         sizeBytes: input.file.size,
         sheet: input.sheet,
         ...result,
+        // The dialect is that of our own sheet-to-CSV conversion, not something the user chose.
+        csv: null,
       }
     case 'sample':
       return {

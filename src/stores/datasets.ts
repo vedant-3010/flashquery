@@ -43,6 +43,8 @@ interface DatasetsState {
 const inputs = new Map<string, { input: DatasetInput; ignoreErrors: boolean }>()
 const excelFiles = new Map<string, File>()
 const workbooks = new Map<string, string>()
+/** Time spent parsing a workbook for the sheet picker, added to the dataset's load time. */
+const excelParseMs = new Map<string, number>()
 const controllers = new Map<string, AbortController>()
 
 let counter = 0
@@ -87,7 +89,7 @@ export const useDatasetsStore = create<DatasetsState>()((set, get) => {
     patchJob(id, { status: 'loading', error: null, startedAt: Date.now() })
     try {
       const engine = await getDb()
-      const dataset = await loadDataset(engine, {
+      const loaded = await loadDataset(engine, {
         id,
         table: job.table,
         label: job.label,
@@ -96,6 +98,12 @@ export const useDatasetsStore = create<DatasetsState>()((set, get) => {
         signal: controller.signal,
         onProfiling: () => patchJob(id, { status: 'profiling' }),
       })
+      const parseMs =
+        stored.input.kind === 'excel' && stored.input.workbookId ? (excelParseMs.get(id) ?? 0) : 0
+      const dataset = {
+        ...loaded,
+        timings: { ...loaded.timings, loadMs: loaded.timings.loadMs + parseMs },
+      }
       set((state) => ({
         datasets: [...state.datasets.filter((d) => d.table !== dataset.table), dataset],
         jobs: state.jobs.filter((j) => j.id !== id),
@@ -118,8 +126,10 @@ export const useDatasetsStore = create<DatasetsState>()((set, get) => {
 
   async function prepareExcel(id: string, file: File) {
     patchJob(id, { status: 'loading', error: null, startedAt: Date.now() })
+    const started = performance.now()
     try {
       const workbook = await openWorkbook(file)
+      excelParseMs.set(id, performance.now() - started)
       if (!findJob(id)) return void closeWorkbook(workbook.id) // cancelled while parsing
       const sheets = workbook.sheets.filter((sheet) => sheet.rows > 0)
       const [only] = sheets
@@ -236,7 +246,7 @@ export const useDatasetsStore = create<DatasetsState>()((set, get) => {
       if (!controllers.has(jobId)) {
         // Not running (choosing a sheet, parsing Excel, or failed): just drop it.
         removeJob(jobId)
-        for (const map of [inputs, excelFiles, workbooks]) map.delete(jobId)
+        for (const map of [inputs, excelFiles, workbooks, excelParseMs]) map.delete(jobId)
       }
     },
 

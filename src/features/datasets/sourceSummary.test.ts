@@ -45,10 +45,10 @@ describe('sourceSummary', () => {
   it('describes Excel sheets and generated samples', () => {
     expect(
       sourceSummary(
-        dataset({ format: 'excel', fileName: 'q.xlsx', sheet: 'Q1', sizeBytes: 5_000 }),
+        dataset({ format: 'excel', fileName: 'q.xlsx', sheet: 'Q1', sizeBytes: 5_000, csv: null }),
         'en-US',
       ),
-    ).toBe('q.xlsx · sheet “Q1” · 5 KB · semicolon-separated · header row · loaded in 2.1 s')
+    ).toBe('q.xlsx · sheet “Q1” · 5 KB · loaded in 2.1 s')
     expect(
       sourceSummary(
         dataset({

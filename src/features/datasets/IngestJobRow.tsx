@@ -72,7 +72,8 @@ export function IngestJobRow({ job }: { job: IngestJob }) {
               >
                 <span className="truncate">{sheet.name}</span>
                 <span className="text-xs text-muted-foreground tabular-nums">
-                  {formatNumber(sheet.rows, locale)} rows
+                  {/* rows counts the header row */}
+                  {formatNumber(Math.max(0, sheet.rows - 1), locale)} rows
                 </span>
               </Button>
             </li>

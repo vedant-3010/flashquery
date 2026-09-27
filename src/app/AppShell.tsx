@@ -27,9 +27,9 @@ export function AppShell() {
     if (wide) setSidebarOpen(false)
   }, [wide, setSidebarOpen])
 
-  const datasetsPanel = (
+  const datasetsPanel = (onClose?: () => void) => (
     <PanelErrorBoundary name="the datasets panel">
-      <DatasetsPanel />
+      <DatasetsPanel onClose={onClose} />
     </PanelErrorBoundary>
   )
 
@@ -43,7 +43,7 @@ export function AppShell() {
       <div className="flex min-h-0 flex-1">
         {wide ? (
           <aside aria-label="Datasets" className="flex w-65 shrink-0 flex-col border-r bg-sidebar">
-            {datasetsPanel}
+            {datasetsPanel()}
           </aside>
         ) : (
           <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
@@ -51,9 +51,10 @@ export function AppShell() {
               side="left"
               className="gap-0 bg-sidebar p-0 data-[side=left]:w-72"
               aria-describedby={undefined}
+              showCloseButton={false}
             >
               <SheetTitle className="sr-only">Datasets</SheetTitle>
-              {datasetsPanel}
+              {datasetsPanel(() => setSidebarOpen(false))}
             </SheetContent>
           </Sheet>
         )}
