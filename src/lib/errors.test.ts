@@ -3,12 +3,20 @@ import { AppError, toAppError } from './errors'
 
 describe('toAppError', () => {
   it('returns an AppError unchanged', () => {
-    const error = new AppError({ code: 'engine_init', message: 'Engine failed to start.', detail: null })
+    const error = new AppError({
+      code: 'engine_init',
+      message: 'Engine failed to start.',
+      detail: null,
+    })
     expect(toAppError(error)).toBe(error)
   })
 
   it('revives plain AppError data (e.g. from a worker)', () => {
-    const revived = toAppError({ code: 'query_timeout', message: 'Query timed out.', detail: '30 s' })
+    const revived = toAppError({
+      code: 'query_timeout',
+      message: 'Query timed out.',
+      detail: '30 s',
+    })
     expect(revived).toBeInstanceOf(AppError)
     expect(revived.toJSON()).toEqual({
       code: 'query_timeout',

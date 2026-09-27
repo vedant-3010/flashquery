@@ -78,9 +78,10 @@ export function formatPercent(
   { maxFractionDigits = 1 }: NumberOptions = {},
 ): string {
   if (!present(value)) return EMPTY
-  return numberFormat(locale, { style: 'percent', maximumFractionDigits: maxFractionDigits }).format(
-    value,
-  )
+  return numberFormat(locale, {
+    style: 'percent',
+    maximumFractionDigits: maxFractionDigits,
+  }).format(value)
 }
 
 // DATE/TIMESTAMP values arrive from engine/normalize.ts as ISO-8601 strings. They are wall-clock values,

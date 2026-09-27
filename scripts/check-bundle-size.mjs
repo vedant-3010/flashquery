@@ -30,5 +30,7 @@ for (const file of files) {
 }
 
 const verdict = total <= BUDGET_BYTES ? 'OK' : 'OVER BUDGET'
-console.log(`${kb(total).padStart(10)}  total initial JS (gzip), budget ${kb(BUDGET_BYTES)}: ${verdict}`)
+console.log(
+  `${kb(total).padStart(10)}  total initial JS (gzip), budget ${kb(BUDGET_BYTES)}: ${verdict}`,
+)
 process.exit(total <= BUDGET_BYTES ? 0 : 1)
