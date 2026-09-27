@@ -1,5 +1,8 @@
 // @vitest-environment node
-import { beforeAll, describe, expect, it } from 'vitest'
+import { mkdtempSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { createTestEngine } from '@/test/duckdb'
 import type { Engine } from './connection'
 import { ensureExtension } from './extensions'
@@ -11,9 +14,14 @@ let engine: Engine
 const csvFile = (name: string, text: string) => new File([text], name, { type: 'text/csv' })
 const rows = async (sql: string) => (await runQuery(engine, sql)).rows
 
+// DuckDB's Node runtime writes COPY output to the real disk, so fixtures go to a temp dir.
+const scratch = mkdtempSync(join(tmpdir(), 'askdata-ingest-'))
+
 beforeAll(async () => {
   engine = await createTestEngine()
 })
+
+afterAll(() => rmSync(scratch, { recursive: true, force: true }))
 
 describe('detectFormat', () => {
   it.each([
@@ -128,11 +136,11 @@ describe('Parquet ingest', () => {
   it('creates a table from a Parquet file', async () => {
     // Autoload is off (F-SEC-02), so even COPY needs the extension loaded explicitly.
     await ensureExtension(engine, 'parquet')
+    const path = join(scratch, 'fixture.parquet')
     await engine.run(
-      `COPY (SELECT range AS id, range * 1.5 AS amount FROM range(5)) TO 'fixture.parquet' (FORMAT parquet)`,
+      `COPY (SELECT range AS id, range * 1.5 AS amount FROM range(5)) TO '${path}' (FORMAT parquet)`,
     )
-    const bytes = await engine.readFile('fixture.parquet')
-    await engine.dropFile('fixture.parquet')
+    const bytes = await engine.readFile(path)
     await ingestFile(engine, 'from_parquet', new File([bytes.slice()], 'x.parquet'), 'parquet')
     expect(await rows('SELECT count(*), sum(amount) FROM from_parquet')).toEqual([[5, 15]])
   })

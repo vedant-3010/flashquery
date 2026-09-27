@@ -2,7 +2,9 @@
 // Deterministic (hash-based, no random()), so re-running produces identical files.
 // Usage: node scripts/generate-samples.mjs
 import { createRequire } from 'node:module'
-import { writeFileSync } from 'node:fs'
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const require = createRequire(import.meta.url)
@@ -117,14 +119,18 @@ await db.instantiate()
 db.open({})
 const conn = db.connect()
 
+// DuckDB's Node runtime writes COPY output to the real disk: use a temp dir, then copy the result.
+const scratch = mkdtempSync(join(tmpdir(), 'askdata-samples-'))
 for (const [file, sql] of [
   ['hr_attrition.csv', HR_ATTRITION],
   ['web_traffic.csv', WEB_TRAFFIC],
 ]) {
-  conn.query(`COPY (${sql}) TO '${file}' (FORMAT csv, HEADER)`)
-  const bytes = db.copyFileToBuffer(file)
+  const path = join(scratch, file)
+  conn.query(`COPY (${sql}) TO '${path}' (FORMAT csv, HEADER)`)
+  const bytes = readFileSync(path)
   writeFileSync(out(file), bytes)
   const rows = conn.query(`SELECT count(*) AS n FROM (${sql})`).toArray()[0].toJSON().n
   console.log(`${file}: ${rows} rows, ${(bytes.length / 1024).toFixed(0)} KB`)
 }
+rmSync(scratch, { recursive: true, force: true })
 conn.close()
