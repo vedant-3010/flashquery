@@ -28,7 +28,10 @@ the LLM provider the user picks with their own API key.
 - `npm run typecheck` / `npm run lint` / `npm run format`
 - `npm test`: Vitest (one file: `npx vitest run src/engine/sql-guard.test.ts`)
 - `npm run e2e`: Playwright; runs in demo mode, no API key needed
-- `npx shadcn@latest add <component>`: add a shadcn/ui primitive
+- `npx shadcn@latest add <component>`: add a shadcn/ui primitive (files in `src/components/ui/` stay
+  as generated; they're in `.prettierignore`)
+- `node scripts/generate-samples.mjs` / `node scripts/generate-e2e-fixtures.mjs`: regenerate
+  `public/samples/*.csv` / `e2e/fixtures/*` (deterministic)
 
 ## Stack (decided; ask before adding, removing or swapping a library)
 - React + TypeScript (strict) + Vite; Tailwind CSS v4 + shadcn/ui (`src/components/ui/`, generated) + lucide-react
@@ -136,6 +139,9 @@ docs/PRD.md     evals/ (M7)     e2e/ (Playwright)
 - LangChain in the browser: `ChatAnthropic` needs `clientOptions: { dangerouslyAllowBrowser: true }`,
   `ChatOpenAI` needs `configuration: { dangerouslyAllowBrowser: true }`. Intentional (BYOK), not a bug.
 - Structured-output schemas: use required fields with `.nullable()` rather than `.optional()`.
+- DuckDB's Node runtime (tests, scripts) writes `COPY ... TO` to the real disk and doesn't overwrite
+  existing files: always COPY into a fresh temp dir.
+- Unit tests are typechecked by `tsconfig.test.json` (adds Node types); app code by `tsconfig.app.json`.
 - Workers: `new Worker(new URL('./x.worker.ts', import.meta.url), { type: 'module' })`.
 - Model IDs live only in `src/ai/models.ts` (default `claude-sonnet-5`, fast `claude-haiku-4-5-20251001`).
   Check provider docs before changing them.

@@ -89,7 +89,7 @@ Format: `ID (priority) Title: description. AC: acceptance criteria.`
   right panel (data preview / AI inspector / history). AC: usable at ≥ 1024 px; sidebar collapses < 1280 px.
 - [ ] **F-SHELL-02 (P0) First-run state**: one-line privacy promise, buttons "Try sample data (1M rows)",
   "Upload a file", "Add API key", and a "How it works" link. AC: J1 completes with no key.
-- [ ] **F-SHELL-03 (P0) Engine status**: DuckDB idle/loading/ready/error with version; Pyodide not
+- [x] **F-SHELL-03 (P0) Engine status**: DuckDB idle/loading/ready/error with version; Pyodide not
   loaded/loading/ready. AC: errors show a "Restart engine" action.
 - [ ] **F-SHELL-04 (P1) Theme**: light/dark/system, persisted. AC: charts switch theme without re-creating data.
 - [ ] **F-SHELL-05 (P1) Guided tour**: 3 dismissible steps on first run; remembered.
@@ -97,19 +97,19 @@ Format: `ID (priority) Title: description. AC: acceptance criteria.`
 - [ ] **F-SHELL-07 (P2) Command palette** (Ctrl/Cmd+K): datasets, questions, dashboards, settings.
 
 ### 4.2 Data ingestion (F-DATA)
-- [ ] **F-DATA-01 (P0) Upload**: drag-and-drop anywhere + file picker; multiple files; .csv .tsv .txt
+- [x] **F-DATA-01 (P0) Upload**: drag-and-drop anywhere + file picker; multiple files; .csv .tsv .txt
   .xlsx .xls .parquet .json .jsonl. AC: 3 files dropped → 3 tables; unsupported type → clear error.
-- [ ] **F-DATA-02 (P0) CSV/TSV** via DuckDB `read_csv` auto-detect; show detected delimiter, header and
+- [x] **F-DATA-02 (P0) CSV/TSV** via DuckDB `read_csv` auto-detect; show detected delimiter, header and
   types. AC: a 1M × 12 CSV (~110 MB) ingests in ≤ 15 s in Chrome on a mid-range laptop; UI stays responsive.
-- [ ] **F-DATA-03 (P0) Excel** via SheetJS in a worker; sheet picker for multi-sheet files. AC: 100k-row
+- [x] **F-DATA-03 (P0) Excel** via SheetJS in a worker; sheet picker for multi-sheet files. AC: 100k-row
   xlsx ingests without freezing the UI.
-- [ ] **F-DATA-04 (P0) Parquet, JSON, JSONL**. AC: nested JSON fields appear as VARCHAR (JSON text).
-- [ ] **F-DATA-05 (P0) Sample data**: in-browser "Global Sales" generator (10k / 100k / 1M rows, §9) and
+- [x] **F-DATA-04 (P0) Parquet, JSON, JSONL**. AC: nested JSON fields appear as VARCHAR (JSON text).
+- [x] **F-DATA-05 (P0) Sample data**: in-browser "Global Sales" generator (10k / 100k / 1M rows, §9) and
   1–2 small bundled CSVs in `public/samples/` (e.g. synthetic HR attrition, web traffic). AC: 1M rows
   generated in < 5 s; identical output on every run.
-- [ ] **F-DATA-06 (P0) Manage tables**: rename (label + SQL name), remove (warn if dashboards use it),
+- [x] **F-DATA-06 (P0) Manage tables**: rename (label + SQL name), remove (warn if dashboards use it),
   show row count and source file.
-- [ ] **F-DATA-07 (P0) Ingest progress, cancel & errors**: progress state with elapsed time; cancel; parse
+- [x] **F-DATA-07 (P0) Ingest progress, cancel & errors**: progress state with elapsed time; cancel; parse
   errors show DuckDB's line context and offer "skip bad rows".
 - [ ] **F-DATA-08 (P1) Import options dialog**: delimiter, header, skip rows, date format, all-as-text; re-import.
 - [ ] **F-DATA-09 (P1) Column type override** (e.g. VARCHAR → DATE with format) via `TRY_CAST`, reporting
@@ -119,9 +119,9 @@ Format: `ID (priority) Title: description. AC: acceptance criteria.`
 - [ ] **F-DATA-12 (P2) Persist datasets across reloads** via OPFS (opt-in).
 
 ### 4.3 Catalog & profiling (F-PROF)
-- [ ] **F-PROF-01 (P0) Sidebar catalog**: tables (rows, source), columns (type icon, name); click a column
+- [x] **F-PROF-01 (P0) Sidebar catalog**: tables (rows, source), columns (type icon, name); click a column
   → profile popover; click a table → preview grid.
-- [ ] **F-PROF-02 (P0) Profiling** via `SUMMARIZE` + top values: type, null %, approx distinct,
+- [x] **F-PROF-02 (P0) Profiling** via `SUMMARIZE` + top values: type, null %, approx distinct,
   min/max/avg/quartiles, top-5 values, inferred role (id, time, measure, category, geo, boolean, text).
   AC: profile of the 1M-row sample ready in < 3 s after ingest.
 - [ ] **F-PROF-03 (P0) Suggested questions (heuristic)**: 5 chips from templates using roles ("Total
@@ -260,7 +260,7 @@ Format: `ID (priority) Title: description. AC: acceptance criteria.`
 - [ ] **F-SEC-01 (P0) SQL guard** with unit tests for: INSERT/UPDATE/DELETE/DROP/CREATE, ATTACH, COPY,
   INSTALL/LOAD, PRAGMA/SET/CALL, multiple statements, comment tricks, `read_csv`/`read_parquet`/URLs,
   unknown tables, allowed CTE names, allowed table functions.
-- [ ] **F-SEC-02 (P0) Extension lockdown** after init (no autoinstall/autoload).
+- [x] **F-SEC-02 (P0) Extension lockdown** after init (no autoinstall/autoload).
 - [ ] **F-SEC-03 (P0) Strict-mode test**: automated test asserts no sample values, top values, min/max or
   result rows appear in any request payload in Strict mode.
 - [ ] **F-SEC-04 (P0) Key hygiene**: never logged, redacted in the inspector, excluded from exports.
@@ -495,6 +495,27 @@ Build in order. A milestone is done when its features are ticked and the DoD in 
 - **D11** "Initial JS" for the 350 KB budget = gzip of every `.js` file referenced by `dist/index.html`
   (entry, modulepreloads, theme-init), checked by `npm run size`. CI runs e2e against `vite preview`
   (the production build). M0 baseline: 139.5 KB, mostly react-dom and zod.
+- **D13** Extension lockdown (F-SEC-02): autoinstall/autoload are switched off right after init, and
+  `parquet`/`json` are loaded explicitly on first use instead of at init. Both come from
+  extensions.duckdb.org and are multi-MB; loading them eagerly would delay "DuckDB ready" for every
+  visitor. The SQL guard (M3) rejects INSTALL/LOAD, so generated SQL still can't load anything.
+  (duckdb-wasm can read http(s) URLs without httpfs; the M3 guard's table-function allowlist and
+  the M7 CSP's `connect-src` are what stop that.)
+- **D14** Global Sales rows are ordered by `order_date` and `order_id` follows that order (PRD §9 said
+  `i + 1`), so previews read like a real order log. Everything else is as specified.
+- **D15** Table names never collide with DuckDB keywords: `toTableName` prefixes them like leading
+  digits (`order.csv` → `t_order`), since LLM-generated SQL often leaves table names unquoted.
+- **D16** Excel datasets don't show a CSV dialect (it's our internal conversion); dates in sheets are
+  rewritten as ISO text before conversion so DuckDB types them as DATE/TIMESTAMP.
+- **D17** F-DATA-06's "warn if dashboards use it" lands with dashboards (M5); removal works now.
+- **D18** Engine unit tests run the same DuckDB-WASM build through its blocking Node bindings
+  (`src/test/duckdb.ts`), so ingest, profiling, samples and the store are tested against real SQL.
+  Its Node runtime writes `COPY ... TO` to the real disk, so tests/scripts write to a temp dir.
+- **D19** M1 measurements (production build, headless Chromium, Apple-silicon laptop, localhost):
+  DuckDB ready 0.36 s after navigation; Global Sales 1M generated in 0.81 s, profiled in 1.06 s;
+  1M × 12 CSV (116 MB) loaded in 0.64 s + profiled in 0.76 s; 100k-row xlsx (9.6 MB) in 1.0 s;
+  no main-thread long tasks (> 50 ms) during any of these. Remeasure on a mid-range machine and
+  over the network before quoting numbers (F-PERF-04 bench panel, M7).
 - **D12** Shared hooks live in `src/hooks/` and shared app components in `src/components/` (outside the
   generated `ui/`), matching the shadcn aliases in `components.json`.
 
