@@ -49,8 +49,8 @@ describe('runQuery', () => {
     expect(result.rowCount).toBe(10)
   })
 
-  it('handles duplicate column names and trailing comments', async () => {
-    const result = await runQuery(engine, 'SELECT 1 AS a, 2 AS a -- two columns')
+  it('handles duplicate column names and trailing semicolons or comments', async () => {
+    const result = await runQuery(engine, 'SELECT 1 AS a, 2 AS a; -- two columns')
     expect(result.columns.map((c) => c.name)).toEqual(['a', 'a_1'])
     expect(result.rows).toEqual([[1, 2]])
   })

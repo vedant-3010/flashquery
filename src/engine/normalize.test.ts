@@ -3,7 +3,7 @@ import {
   buildNormalizedSelect,
   normalizeCell,
   normalizeExpression,
-  stripTrailingSemicolons,
+  trimStatement,
   toLogicalType,
 } from './normalize'
 
@@ -56,17 +56,24 @@ describe('normalizeExpression', () => {
 })
 
 describe('buildNormalizedSelect', () => {
-  it('wraps the query so trailing comments and semicolons are harmless', () => {
-    const sql = buildNormalizedSelect(
-      'SELECT 1 AS a; -- done',
-      [{ name: 'a', duckType: 'INTEGER' }],
-      10,
-    )
-    expect(sql).toBe('SELECT "a" AS "a" FROM (\nSELECT 1 AS a; -- done\n) AS q\nLIMIT 10')
+  it('wraps the query and applies the row cap', () => {
+    const sql = buildNormalizedSelect('SELECT 1 AS a;', [{ name: 'a', duckType: 'INTEGER' }], 10)
+    expect(sql).toBe('SELECT "a" AS "a" FROM (\nSELECT 1 AS a\n) AS q\nLIMIT 10')
   })
+})
 
-  it('strips trailing semicolons and whitespace', () => {
-    expect(stripTrailingSemicolons('SELECT 1 ;\n ; \n')).toBe('SELECT 1')
+describe('trimStatement', () => {
+  it.each([
+    ['SELECT 1 ;\n ; \n', 'SELECT 1'],
+    ['SELECT 1; -- done', 'SELECT 1'],
+    ['SELECT 1 /* trailing */ ;', 'SELECT 1'],
+    ['SELECT 1 -- note\nFROM t;', 'SELECT 1 -- note\nFROM t'],
+    ["SELECT 'a;b -- not a comment'", "SELECT 'a;b -- not a comment'"],
+    ["SELECT 'it''s';", "SELECT 'it''s'"],
+    ['SELECT "odd;name" FROM t', 'SELECT "odd;name" FROM t'],
+    ['-- only a comment', ''],
+  ])('%j → %j', (input, expected) => {
+    expect(trimStatement(input)).toBe(expected)
   })
 })
 

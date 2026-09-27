@@ -63,15 +63,38 @@ export function normalizeExpression(column: { name: string; duckType: string }):
   return `${expression} AS ${id}`
 }
 
-/** Removes trailing semicolons and whitespace so the SQL can be wrapped in a subquery. */
-export function stripTrailingSemicolons(sql: string): string {
-  return sql.replace(/[\s;]+$/, '')
+/**
+ * `sql` without trailing semicolons, whitespace and comments, so it can be wrapped in a subquery.
+ * Scans strings and quoted identifiers so a `;` or `--` inside them is kept.
+ */
+export function trimStatement(sql: string): string {
+  let end = 0
+  let i = 0
+  while (i < sql.length) {
+    const char = sql[i]
+    const next = sql[i + 1]
+    if (char === '-' && next === '-') {
+      const newline = sql.indexOf('\n', i)
+      i = newline === -1 ? sql.length : newline
+    } else if (char === '/' && next === '*') {
+      const close = sql.indexOf('*/', i + 2)
+      i = close === -1 ? sql.length : close + 2
+    } else if (char === "'" || char === '"') {
+      let j = i + 1
+      while (j < sql.length && !(sql[j] === char && sql[j + 1] !== char)) {
+        j += sql[j] === char ? 2 : 1
+      }
+      i = Math.min(j + 1, sql.length)
+      end = i
+    } else {
+      if (char !== ';' && !/\s/.test(char ?? '')) end = i + 1
+      i += 1
+    }
+  }
+  return sql.slice(0, end)
 }
 
-/**
- * Wraps `sql` in a normalizing SELECT. Newlines around the subquery keep a trailing `-- comment` in
- * `sql` from swallowing the closing parenthesis.
- */
+/** Wraps `sql` in a normalizing SELECT, optionally capped at `limit` rows. */
 export function buildNormalizedSelect(
   sql: string,
   columns: { name: string; duckType: string }[],
@@ -79,7 +102,7 @@ export function buildNormalizedSelect(
 ): string {
   const expressions = columns.length > 0 ? columns.map(normalizeExpression).join(', ') : '*'
   const limitClause = limit === undefined ? '' : `\nLIMIT ${Math.max(0, Math.floor(limit))}`
-  return `SELECT ${expressions} FROM (\n${stripTrailingSemicolons(sql)}\n) AS q${limitClause}`
+  return `SELECT ${expressions} FROM (\n${trimStatement(sql)}\n) AS q${limitClause}`
 }
 
 export function normalizeCell(value: unknown): CellValue {

@@ -3,7 +3,7 @@ import type { SqlRunner } from '@/engine/connection'
 import {
   buildNormalizedSelect,
   numberLike,
-  stripTrailingSemicolons,
+  trimStatement,
   tableToObjects,
   tableToRows,
   toColumnMeta,
@@ -31,10 +31,7 @@ export async function describeQuery(
   sql: string,
   signal?: AbortSignal,
 ): Promise<ColumnMeta[]> {
-  const table = await runner.run(
-    `DESCRIBE SELECT * FROM (\n${stripTrailingSemicolons(sql)}\n) AS q`,
-    signal,
-  )
+  const table = await runner.run(`DESCRIBE SELECT * FROM (\n${trimStatement(sql)}\n) AS q`, signal)
   return tableToObjects(table, DescribeRowSchema).map((row) =>
     toColumnMeta(row.column_name, row.column_type),
   )
@@ -46,7 +43,7 @@ export async function countRows(
   signal?: AbortSignal,
 ): Promise<number> {
   const table = await runner.run(
-    `SELECT count(*) AS n FROM (\n${stripTrailingSemicolons(sql)}\n) AS q`,
+    `SELECT count(*) AS n FROM (\n${trimStatement(sql)}\n) AS q`,
     signal,
   )
   const [row] = tableToObjects(table, z.object({ n: numberLike }))
