@@ -84,7 +84,7 @@ their own API key) and to CDNs that serve runtime assets (Pyodide, DuckDB extens
 Format: `ID (priority) Title: description. AC: acceptance criteria.`
 
 ### 4.1 App shell & onboarding (F-SHELL)
-- [ ] **F-SHELL-01 (P0) Layout**: top bar (logo, Workspace/Dashboard tabs, privacy-mode badge, engine
+- [x] **F-SHELL-01 (P0) Layout**: top bar (logo, Workspace/Dashboard tabs, privacy-mode badge, engine
   status, settings), left sidebar (datasets and columns), main area (answer feed + composer), collapsible
   right panel (data preview / AI inspector / history). AC: usable at ≥ 1024 px; sidebar collapses < 1280 px.
 - [ ] **F-SHELL-02 (P0) First-run state**: one-line privacy promise, buttons "Try sample data (1M rows)",
@@ -284,7 +284,7 @@ Format: `ID (priority) Title: description. AC: acceptance criteria.`
   prompt snapshots, format, table naming, fixture matching.
 - [ ] **F-QA-02 (P0) E2E (demo mode)**: J1; upload a CSV fixture → profile visible; demo question → chart +
   SQL tab; pin → tile persists after reload.
-- [ ] **F-QA-03 (P0) CI** (GitHub Actions): install, typecheck, lint, unit, build, bundle-size check, e2e (Chromium).
+- [x] **F-QA-03 (P0) CI** (GitHub Actions): install, typecheck, lint, unit, build, bundle-size check, e2e (Chromium).
 - [ ] **F-QA-04 (P1) NL→SQL evals**: ≥ 40 questions over Global Sales + one other dataset; runner + report;
   accuracy in the README.
 
@@ -483,6 +483,20 @@ Build in order. A milestone is done when its features are ticked and the DoD in 
 - **D6** LangChain.js for provider abstraction + Zod structured output, hidden behind `LLMProvider` so it
   can be swapped.
 - **D7** Package manager: npm.
+- **D8** Theme preference lives in `localStorage` (`askdata:theme`), not IndexedDB: `public/theme-init.js`
+  must read it synchronously in `<head>` to avoid a light flash before first paint. The script is an
+  external file, not inline, so the F-SEC-06 CSP can keep `script-src 'self'`. Everything else still
+  persists to IndexedDB (F-EXP-02).
+- **D9** Error boundaries: our own `PanelErrorBoundary` class (React has no hook for this) instead of
+  adding `react-error-boundary`.
+- **D10** F-SHELL-04 is built in M0 (`useResolvedTheme()`), but its AC is about charts, so it is ticked
+  in M4 once `<EChart>` switches theme without re-creating data. F-PERF-03 stays open until the
+  "Restart engine" half lands in M7.
+- **D11** "Initial JS" for the 350 KB budget = gzip of every `.js` file referenced by `dist/index.html`
+  (entry, modulepreloads, theme-init), checked by `npm run size`. CI runs e2e against `vite preview`
+  (the production build). M0 baseline: 139.5 KB, mostly react-dom and zod.
+- **D12** Shared hooks live in `src/hooks/` and shared app components in `src/components/` (outside the
+  generated `ui/`), matching the shadcn aliases in `components.json`.
 
 ---
 

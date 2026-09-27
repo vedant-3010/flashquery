@@ -24,6 +24,7 @@ the LLM provider the user picks with their own API key.
 ## Commands
 - `npm run dev`: dev server at http://localhost:5173
 - `npm run build`: `tsc -b` + production build
+- `npm run check`: typecheck + lint + unit + build + `npm run size` (initial JS ≤ 350 KB gzip), same as CI
 - `npm run typecheck` / `npm run lint` / `npm run format`
 - `npm test`: Vitest (one file: `npx vitest run src/engine/sql-guard.test.ts`)
 - `npm run e2e`: Playwright; runs in demo mode, no API key needed
@@ -61,13 +62,14 @@ summarize (LLM or local template, per privacy mode)`
 ```
 src/
   app/          shell, layout, providers, view switching (no router; hash for #/bench)
-  components/ui/ shadcn/ui primitives (generated)
+  components/   shared app components (EmptyState, IconButton); ui/ = shadcn/ui primitives (generated)
+  hooks/        shared React hooks (useMediaQuery, useResolvedTheme)
   features/     datasets/ grid/ ask/ explain/ charts/ dashboard/ python/ settings/  (React only)
   engine/       duckdb init, ingest, catalog, profile, query, normalize, sql-guard, samples, export
   ai/           models, providers, prompts/, schemas, context, pipeline, fixtures/  (no React/DOM)
   charts/       select.ts (chart choice), toOption.ts (spec → ECharts option), theme.ts  (pure)
   workers/      *.worker.ts (Comlink wiring only) + clients.ts (typed main-thread clients)
-  stores/       zustand stores      lib/  format, errors, ids, idb      types/  shared types
+  stores/       zustand stores      lib/  format, errors, theme, ids, idb      types/  shared types
   test/         setup, fixtures
 docs/PRD.md     evals/ (M7)     e2e/ (Playwright)
 ```
