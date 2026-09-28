@@ -37,9 +37,10 @@ test.describe('sample data (F-DATA-05)', () => {
 
     await sales.getByRole('button', { name: 'Preview Global Sales · 10k rows' }).click()
     const panel = page.getByRole('complementary', { name: 'Side panel' })
-    await expect(panel).toContainText('first 100 of 10,000 rows')
-    await expect(panel.getByRole('columnheader', { name: 'order_date' })).toBeVisible()
-    await expect(panel.getByRole('cell', { name: '2022-01-01' }).first()).toBeVisible()
+    const grid = panel.getByRole('grid', { name: 'Rows of global_sales' })
+    await expect(panel).toContainText('10,000 rows · 14 columns')
+    await expect(grid.getByRole('columnheader', { name: /order_date/ })).toBeVisible()
+    await expect(grid.getByRole('gridcell', { name: '2022-01-01' }).first()).toBeVisible()
   })
 
   test('loads a bundled CSV sample', async ({ page }) => {
@@ -175,9 +176,9 @@ test.describe('managing tables (F-DATA-06)', () => {
     const renamed = dataset(page, 'Sales by month')
     await expect(renamed).toContainText('sales_by_month · 2 rows')
     await renamed.getByRole('button', { name: 'Preview Sales by month' }).click()
-    await expect(page.getByRole('complementary', { name: 'Side panel' })).toContainText(
-      'sales_by_month · first 2 of 2 rows',
-    )
+    const panel = page.getByRole('complementary', { name: 'Side panel' })
+    await expect(panel.getByRole('grid', { name: 'Rows of sales_by_month' })).toBeVisible()
+    await expect(panel).toContainText('2 rows · 2 columns')
 
     await renamed.getByRole('button', { name: 'Actions for Sales by month' }).click()
     await page.getByRole('menuitem', { name: 'Remove…' }).click()

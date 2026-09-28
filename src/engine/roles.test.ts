@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { inferRole, type RoleInput } from './roles'
+import { inferRole, isIdentifierLike, type RoleInput } from './roles'
 
 const column = (
   name: string,
@@ -47,5 +47,18 @@ describe('inferRole', () => {
 
   it('treats a low-cardinality *_id column as a category', () => {
     expect(inferRole(column('region_id', 'INTEGER', 5))).toBe('category')
+  })
+})
+
+describe('isIdentifierLike', () => {
+  it.each([
+    ['order_id', true],
+    ['customerId', true],
+    ['year', true],
+    ['zip', true],
+    ['revenue', false],
+    ['units', false],
+  ])('%s → %s', (name, expected) => {
+    expect(isIdentifierLike(name)).toBe(expected)
   })
 })

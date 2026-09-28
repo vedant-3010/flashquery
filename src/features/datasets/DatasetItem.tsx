@@ -1,4 +1,4 @@
-import { ChevronRight, Eye, MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
+import { ChevronRight, Eye, MoreHorizontal, Pencil, SquareTerminal, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { IconButton } from '@/components/IconButton'
 import {
@@ -15,12 +15,14 @@ import { sourceSummary } from '@/features/datasets/sourceSummary'
 import { formatCompact } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { useSettingsStore } from '@/stores/settings'
+import { useSqlStore } from '@/stores/sql'
 import { useUiStore } from '@/stores/ui'
 
 export function DatasetItem({ dataset }: { dataset: DatasetProfile }) {
   const locale = useSettingsStore((state) => state.locale)
   const previewTable = useUiStore((state) => state.previewTable)
   const showPreview = useUiStore((state) => state.showPreview)
+  const openInSql = useSqlStore((state) => state.openTable)
   const [expanded, setExpanded] = useState(true)
   const [dialog, setDialog] = useState<'rename' | 'remove' | null>(null)
   const selected = previewTable === dataset.table
@@ -64,6 +66,10 @@ export function DatasetItem({ dataset }: { dataset: DatasetProfile }) {
             <DropdownMenuItem onSelect={() => showPreview(dataset.table)}>
               <Eye aria-hidden />
               Preview rows
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => openInSql(dataset.table)}>
+              <SquareTerminal aria-hidden />
+              Open in SQL
             </DropdownMenuItem>
             <DropdownMenuItem onSelect={() => setDialog('rename')}>
               <Pencil aria-hidden />

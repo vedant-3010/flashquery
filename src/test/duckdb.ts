@@ -1,4 +1,13 @@
-import { createDuckDB, NODE_RUNTIME, VoidLogger } from '@duckdb/duckdb-wasm/blocking'
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { isAbsolute, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import {
+  createDuckDB,
+  DuckDBDataProtocol,
+  NODE_RUNTIME,
+  VoidLogger,
+} from '@duckdb/duckdb-wasm/blocking'
 import { duckdbError, type Engine } from '@/engine/connection'
 import { lockDown } from '@/engine/extensions'
 import { abortError } from '@/lib/errors'
@@ -7,9 +16,7 @@ import { abortError } from '@/lib/errors'
 // Use it from files marked `// @vitest-environment node`.
 
 const dist = (file: string) =>
-  decodeURIComponent(
-    new URL(`../../node_modules/@duckdb/duckdb-wasm/dist/${file}`, import.meta.url).pathname,
-  )
+  fileURLToPath(new URL(`../../node_modules/@duckdb/duckdb-wasm/dist/${file}`, import.meta.url))
 
 export async function createTestEngine(): Promise<Engine> {
   const db = await createDuckDB(
@@ -24,6 +31,11 @@ export async function createTestEngine(): Promise<Engine> {
   db.open({})
   const conn = db.connect()
 
+  // The Node runtime writes COPY output to the real disk (there are no in-memory files), so
+  // createFile() maps each name to a temp dir and readFile() reads it back from there.
+  const scratch = mkdtempSync(join(tmpdir(), 'askdata-engine-'))
+  const files = new Map<string, string>()
+
   const engine: Engine = {
     version: db.getVersion(),
     run: async (sql, signal) => {
@@ -37,11 +49,27 @@ export async function createTestEngine(): Promise<Engine> {
     registerFile: async (name, file) =>
       db.registerFileBuffer(name, new Uint8Array(await file.arrayBuffer())),
     registerBuffer: async (name, bytes) => db.registerFileBuffer(name, bytes),
-    readFile: async (name) => db.copyFileToBuffer(name),
-    dropFile: async (name) => db.dropFile(name),
+    createFile: async (name) => {
+      const path = join(scratch, name)
+      files.set(name, path)
+      db.registerFileURL(name, path, DuckDBDataProtocol.NODE_FS, false)
+    },
+    readFile: async (name) => {
+      const path = files.get(name) ?? (isAbsolute(name) ? name : null)
+      // Relative names would be resolved against the working directory (the repo): refuse them.
+      if (!path) throw new Error(`No such file: ${name}`)
+      return new Uint8Array(readFileSync(path))
+    },
+    dropFile: async (name) => {
+      db.dropFile(name)
+      const path = files.get(name)
+      if (path) rmSync(path, { force: true })
+      files.delete(name)
+    },
     terminate: async () => {
       conn.close()
       db.reset()
+      rmSync(scratch, { recursive: true, force: true })
     },
   }
   await lockDown(engine)

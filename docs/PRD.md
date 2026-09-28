@@ -134,10 +134,10 @@ Format: `ID (priority) Title: description. AC: acceptance criteria.`
   joins shown to the user and included in the prompt.
 
 ### 4.4 Data grid (F-GRID)
-- [ ] **F-GRID-01 (P0) Virtualized grid** for any table or result, paged from DuckDB in 200-row windows;
+- [x] **F-GRID-01 (P0) Virtualized grid** for any table or result, paged from DuckDB in 200-row windows;
   sticky header; column resize; total row count. AC: scrolling 1M rows has no long task > 50 ms.
-- [ ] **F-GRID-02 (P0) Sorting** pushed down as ORDER BY (shift-click multi-sort).
-- [ ] **F-GRID-03 (P0) Type-aware formatting**: numbers right-aligned + locale-formatted; dates ISO or
+- [x] **F-GRID-02 (P0) Sorting** pushed down as ORDER BY (shift-click multi-sort).
+- [x] **F-GRID-03 (P0) Type-aware formatting**: numbers right-aligned + locale-formatted; dates ISO or
   locale; muted `null`.
 - [ ] **F-GRID-04 (P1) Column filters** (text contains, numeric range, date range, value list) pushed down
   as WHERE; active-filter chips.
@@ -191,7 +191,7 @@ Format: `ID (priority) Title: description. AC: acceptance criteria.`
 - [ ] **F-EXPL-05 (P0) History**: every question and manual query with time, re-run, pin, delete; persisted.
 - [ ] **F-EXPL-06 (P1) Trace tab**: every attempt (SQL, error, fix), stage timings, tokens.
 - [ ] **F-EXPL-07 (P0) SQL scratchpad**: standalone editor to query tables directly; results in grid + chart.
-- [ ] **F-EXPL-08 (P1) Schema-aware autocomplete** in the SQL editor (tables, columns).
+- [x] **F-EXPL-08 (P1) Schema-aware autocomplete** in the SQL editor (tables, columns).
 - [ ] **F-EXPL-09 (P2) Query plan view**: `EXPLAIN ANALYZE` rendered as a tree with timings.
 
 ### 4.8 Visualization (F-VIZ)
@@ -238,7 +238,7 @@ Format: `ID (priority) Title: description. AC: acceptance criteria.`
 - [ ] **F-PY-06 (P2) Notebook-style Python cells** in the scratchpad; matplotlib figures captured as PNG.
 
 ### 4.11 Export & persistence (F-EXP)
-- [ ] **F-EXP-01 (P0) Export results** as CSV or Parquet (DuckDB COPY); copy as TSV (≤ 10k rows).
+- [x] **F-EXP-01 (P0) Export results** as CSV or Parquet (DuckDB COPY); copy as TSV (≤ 10k rows).
 - [ ] **F-EXP-02 (P0) Local persistence** (IndexedDB): settings, history, dashboards, feedback, eval cases.
   Versioned records, Zod-validated on load, migrations; corrupt data → reset with a backup download.
 - [ ] **F-EXP-03 (P1) Workspace export/import**: JSON bundle of history, dashboards and notes (no data
@@ -516,6 +516,27 @@ Build in order. A milestone is done when its features are ticked and the DoD in 
   1M × 12 CSV (116 MB) loaded in 0.64 s + profiled in 0.76 s; 100k-row xlsx (9.6 MB) in 1.0 s;
   no main-thread long tasks (> 50 ms) during any of these. Remeasure on a mid-range machine and
   over the network before quoting numbers (F-PERF-04 bench panel, M7).
+- **D20** Grid paging (F-GRID-01/02): query results become temp views; unsorted base tables page by
+  `rowid` range (rowids are dense because tables are never modified after load), ~1 ms per 200-row
+  page at any depth; sorted tables and results use `ORDER BY … LIMIT/OFFSET`, ~50–220 ms per page
+  on 1M rows, in the DuckDB worker. No sorted copies are materialized (they would double memory).
+  M2 measurement (production build): scrolling, dragging and sorted scrolling over 1M rows produced
+  no main-thread long tasks; visible rows were filled within 300 ms of each stop.
+- **D21** Browsers cap element height (Firefox ~17.9M px) and 1M rows × 28 px is 28M px, so grids
+  taller than 15M px use a 15M px spacer and scale the scroll offset; every row stays reachable.
+- **D22** The SQL scratchpad is a third top-level view, "SQL", next to Workspace and Dashboard.
+- **D23** F-EXPL-07 is ticked in M4: results show in the grid now; the chart half needs M4's charts.
+- **D24** F-EXPL-08 (P1) is done early: CodeMirror's SQL mode completes table names, qualified
+  columns, and bare columns of the table in FROM.
+- **D25** Grid display: numeric columns sort high-to-low on first click, others A→Z; integer ids,
+  codes and years are shown without digit grouping; dates are ISO by default with a locale toggle.
+- **D26** Exports run `COPY … TO` an in-memory file with `USE_TMP_FILE false` (otherwise DuckDB
+  writes `tmp_<name>` and renames it, escaping the in-memory file). Parquet keeps DuckDB types;
+  "Copy as TSV" is limited to 10,000 rows.
+- **D27** DuckDB-WASM reports some errors as JSON in the browser (`{"exception_type": …}`);
+  `duckdbError` turns them into the usual "Parser Error: …" text.
+- **D28** Vite pre-bundles dependencies that are only reached through lazy imports or workers
+  (`optimizeDeps.include`); otherwise a cold dev server reloads open pages when it discovers them.
 - **D12** Shared hooks live in `src/hooks/` and shared app components in `src/components/` (outside the
   generated `ui/`), matching the shadcn aliases in `components.json`.
 

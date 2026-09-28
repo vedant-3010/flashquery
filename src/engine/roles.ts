@@ -11,6 +11,18 @@ const TIME_NAME = /(^|_)(year|yr|month|quarter|week|fiscal_year|fy)$/
 const MEASURE_NAME =
   /(amount|price|revenue|cost|sales|qty|quantity|units|count|total|profit|income|salary|spend|value|score|balance)/
 
+/**
+ * Integers that name things rather than measure them (ids, codes, years): shown without digit
+ * grouping ("2024", not "2,024").
+ */
+export function isIdentifierLike(name: string): boolean {
+  const snake = name
+    .replace(/([a-z0-9])([A-Z])/g, '$1_$2')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+  return snake === 'id' || ID_NAME.test(snake) || TIME_NAME.test(snake) || GEO_NAME.test(snake)
+}
+
 /** Text/integer columns with at most this many distinct values are categories. */
 export const CATEGORY_MAX_DISTINCT = 50
 

@@ -5,6 +5,7 @@ import {
   PanelRight,
   Settings,
   Sparkles,
+  SquareTerminal,
 } from 'lucide-react'
 import { EngineStatusBadge } from '@/app/EngineStatusBadge'
 import { PrivacyBadge } from '@/app/PrivacyBadge'
@@ -37,6 +38,10 @@ export function TopBar({ showSidebarToggle }: TopBarProps) {
         <TabsTrigger value="workspace" className="px-2.5">
           <MessageSquareText aria-hidden />
           Workspace
+        </TabsTrigger>
+        <TabsTrigger value="sql" className="px-2.5">
+          <SquareTerminal aria-hidden />
+          SQL
         </TabsTrigger>
         <TabsTrigger value="dashboard" className="px-2.5">
           <LayoutDashboard aria-hidden />
