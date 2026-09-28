@@ -5,7 +5,7 @@ import { expect, test, type Page } from '@playwright/test'
 
 async function loadSample(page: Page, label: string) {
   await page.goto('/')
-  await page.getByRole('button', { name: 'Try sample data' }).click()
+  await page.getByRole('button', { name: 'Try sample data', exact: true }).click()
   await page.getByRole('menuitem', { name: label }).click()
   await expect(page.getByRole('region', { name: label })).toBeVisible({ timeout: 60_000 })
 }

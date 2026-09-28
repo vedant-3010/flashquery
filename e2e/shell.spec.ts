@@ -43,10 +43,10 @@ test.describe('app shell (F-SHELL-01)', () => {
   test('switches between workspace and dashboard', async ({ page }) => {
     await page.goto('/')
 
-    await expect(page.getByText('Ask a question about your data')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Ask your data anything' })).toBeVisible()
     await page.getByRole('tab', { name: 'Dashboard' }).click()
     await expect(page.getByText('No tiles yet')).toBeVisible()
-    await expect(page.getByText('Ask a question about your data')).toBeHidden()
+    await expect(page.getByRole('heading', { name: 'Ask your data anything' })).toBeHidden()
   })
 
   test('toggles the side panel and its tabs', async ({ page }) => {

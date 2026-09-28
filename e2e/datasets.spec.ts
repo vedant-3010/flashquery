@@ -20,7 +20,7 @@ const dataset = (page: Page, label: string) => page.getByRole('region', { name: 
 test.describe('sample data (F-DATA-05)', () => {
   test('generates Global Sales, profiles it and previews rows', async ({ page }) => {
     await page.goto('/')
-    await page.getByRole('button', { name: 'Try sample data' }).click()
+    await page.getByRole('button', { name: 'Try sample data', exact: true }).click()
     await page.getByRole('menuitem', { name: 'Global Sales · 10k rows' }).click()
 
     const sales = dataset(page, 'Global Sales · 10k rows')
@@ -45,7 +45,7 @@ test.describe('sample data (F-DATA-05)', () => {
 
   test('loads a bundled CSV sample', async ({ page }) => {
     await page.goto('/')
-    await page.getByRole('button', { name: 'Try sample data' }).click()
+    await page.getByRole('button', { name: 'Try sample data', exact: true }).click()
     await page.getByRole('menuitem', { name: /HR attrition/ }).click()
     await expect(dataset(page, 'HR attrition (CSV)')).toContainText('hr_attrition · 1.5K rows')
     await expect(dataset(page, 'HR attrition (CSV)')).toContainText('comma-separated')
@@ -53,7 +53,7 @@ test.describe('sample data (F-DATA-05)', () => {
 
   test('cancels a running load', async ({ page }) => {
     await page.goto('/')
-    const menu = page.getByRole('button', { name: 'Try sample data' })
+    const menu = page.getByRole('button', { name: 'Try sample data', exact: true })
     await menu.click()
     await page.getByRole('menuitem', { name: 'Global Sales · 1M rows' }).click()
     await page.getByRole('button', { name: 'Cancel loading Global Sales · 1M rows' }).click()
