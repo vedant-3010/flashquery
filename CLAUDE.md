@@ -26,7 +26,7 @@ the LLM provider the user picks with their own API key.
 - `npm run build`: `tsc -b` + production build
 - `npm run check`: typecheck + lint + unit + build + `npm run size` (initial JS ≤ 350 KB gzip), same as CI
 - `npm run typecheck` / `npm run lint` / `npm run format`
-- `npm test`: Vitest (one file: `npx vitest run src/engine/sql-guard.test.ts`)
+- `npm test`: Vitest (one file: `npx vitest run src/engine/sqlGuard.test.ts`)
 - `npm run e2e`: Playwright; runs in demo mode, no API key needed
 - `npx shadcn@latest add <component>`: add a shadcn/ui primitive (files in `src/components/ui/` stay
   as generated; they're in `.prettierignore`)
@@ -68,7 +68,7 @@ src/
   components/   shared app components (EmptyState, IconButton); ui/ = shadcn/ui primitives (generated)
   hooks/        shared React hooks (useMediaQuery, useResolvedTheme)
   features/     datasets/ grid/ sql/ ask/ explain/ charts/ dashboard/ python/ settings/  (React only)
-  engine/       duckdb init, ingest, catalog, profile, query, normalize, sql-guard, samples, export
+  engine/       duckdb init, ingest, catalog, profile, query, normalize, sqlGuard, samples, export
   ai/           models, providers, prompts/, schemas, context, pipeline, fixtures/  (no React/DOM)
   charts/       select.ts (chart choice), toOption.ts (spec → ECharts option), theme.ts  (pure)
   workers/      *.worker.ts (Comlink wiring only) + clients.ts (typed main-thread clients)
@@ -92,7 +92,7 @@ docs/PRD.md     evals/ (M7)     e2e/ (Playwright)
 ## Privacy & security (hard rules)
 - Only `src/ai/context.ts` builds what is sent to an LLM, per privacy mode. Every request/response is
   logged to the AI payload inspector (API keys redacted).
-- Every LLM-generated SQL passes `src/engine/sql-guard.ts` before execution: exactly one SELECT/WITH
+- Every LLM-generated SQL passes `src/engine/sqlGuard.ts` before execution: exactly one SELECT/WITH
   statement, only known tables/CTEs, table functions from an allowlist, no ATTACH/COPY/INSTALL/LOAD/SET/PRAGMA.
 - Generated Python never runs without explicit user approval (unless the user enabled auto-run), and
   only inside the Python worker.
@@ -150,5 +150,10 @@ docs/PRD.md     evals/ (M7)     e2e/ (Playwright)
 - A dependency only reached through a lazy import or a worker must be listed in
   `optimizeDeps.include` in vite.config.ts, or the dev server reloads open pages when it finds it.
 - Workers: `new Worker(new URL('./x.worker.ts', import.meta.url), { type: 'module' })`.
+- LangChain retries in its own caller (the SDK clients run with `maxRetries: 0`): set `maxRetries` on
+  `ChatAnthropic`/`ChatOpenAI` (2), or failures back off for minutes. Structured output uses
+  `method: 'jsonSchema'` (tool calling conflicts with adaptive thinking); see PRD D29–D30.
+- e2e never needs a key: provider flows mock `https://api.anthropic.com` with `page.route`
+  (`e2e/ai-provider.spec.ts`), which runs the real LangChain + SDK code in the browser.
 - Model IDs live only in `src/ai/models.ts` (default `claude-sonnet-5`, fast `claude-haiku-4-5-20251001`).
   Check provider docs before changing them.
