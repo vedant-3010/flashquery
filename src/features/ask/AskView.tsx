@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react'
 import { EmptyState } from '@/components/EmptyState'
 import { AnswerCard } from '@/features/ask/AnswerCard'
 import { Composer } from '@/features/ask/Composer'
+import { prefetchCharts } from '@/features/charts/prefetch'
 import { FirstRun } from '@/features/ask/FirstRun'
 import { useAskStore } from '@/stores/ask'
 import { useDatasetsStore } from '@/stores/datasets'
@@ -45,6 +46,11 @@ export function AskView() {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [active, running, cancel])
 
+  // The first answer's chart shouldn't wait for the chart code.
+  useEffect(() => {
+    if (running) prefetchCharts()
+  }, [running])
+
   // Bring each new question into view, and again once its answer has grown.
   useEffect(() => {
     if (!lastId) return
@@ -60,7 +66,9 @@ export function AskView() {
       <section
         ref={feed}
         aria-label="Answers"
-        className="flex min-h-0 flex-1 flex-col overflow-y-auto"
+        // relative: absolutely positioned children (sr-only text) scroll with the feed instead of
+        // stretching the page.
+        className="relative flex min-h-0 flex-1 flex-col overflow-y-auto"
       >
         {answers.length === 0 ? (
           <EmptyState

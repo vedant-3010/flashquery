@@ -49,6 +49,17 @@ test.describe('J1: first run without a key (F-SHELL-02, F-AI-03)', () => {
       await expect(timeline).toContainText(stage)
     }
 
+    // Chart first (F-ASK-08, F-VIZ-01), with the reason for it (F-EXPL-03).
+    await expect(answer.getByRole('tab', { name: 'Chart', selected: true })).toBeVisible()
+    await expect(
+      answer.getByRole('img', {
+        name: /^Bar chart: Revenue growth by region, 2022 to 2025\. 5 categories\. Highest APAC/,
+      }),
+    ).toBeVisible()
+    await expect(answer).toContainText('Why this chart: The AI suggested a bar chart, and it fits')
+    await expect(timeline).toContainText('Choosing chart')
+
+    await answer.getByRole('tab', { name: 'Table' }).click()
     const grid = answer.getByRole('grid', { name: 'Result: Which region grew fastest?' })
     await expect(grid.getByRole('gridcell', { name: 'APAC' })).toBeVisible()
     await expect(answer.getByText('5 rows · 4 columns')).toBeVisible()
@@ -59,6 +70,7 @@ test.describe('J1: first run without a key (F-SHELL-02, F-AI-03)', () => {
 
     await answer.getByRole('tab', { name: 'Explanation' }).click()
     await expect(answer).toContainText('Assumptions')
+    await expect(answer).toContainText('Why this chart')
     await expect(answer).toContainText('2022')
     await answer.getByRole('button', { name: 'region', exact: true }).click()
 
@@ -76,7 +88,9 @@ test.describe('J1: first run without a key (F-SHELL-02, F-AI-03)', () => {
     ).toBeVisible()
     await answer.getByRole('button', { name: 'What is total revenue by year?' }).click()
 
-    await expect(card(page, 'What is total revenue by year?').getByRole('grid')).toBeVisible()
+    await expect(
+      card(page, 'What is total revenue by year?').getByRole('img', { name: /^Bar chart/ }),
+    ).toBeVisible()
   })
 
   test('without the sample loaded, demo mode says what to load', async ({ page }) => {
@@ -101,7 +115,7 @@ test.describe('answers (F-ASK-08, F-EXPL-01)', () => {
   test('edited SQL goes through the guard and marks the answer edited', async ({ page }) => {
     await loadSales(page)
     const answer = await ask(page, 'What is total revenue by year?')
-    await expect(answer.getByRole('grid')).toBeVisible()
+    await expect(answer.getByRole('tab', { name: 'Chart' })).toBeVisible()
     await answer.getByRole('tab', { name: 'SQL' }).click()
     const editor = answer.getByLabel('SQL query')
 
@@ -136,7 +150,7 @@ test.describe('answers (F-ASK-08, F-EXPL-01)', () => {
     await composer(page).fill('What is total revenue by year?')
     await composer(page).press('Enter')
     const answer = card(page, 'What is total revenue by year?')
-    await expect(answer.getByRole('grid')).toBeVisible()
+    await expect(answer.getByRole('tab', { name: 'Chart' })).toBeVisible()
     await expect(composer(page)).toHaveValue('')
     await answer.getByRole('button', { name: 'Remove answer' }).click()
     await expect(answer).toBeHidden()
@@ -147,7 +161,7 @@ test.describe('history (F-EXPL-05, F-EXP-02)', () => {
   test('lists questions and queries, re-runs them and survives a reload', async ({ page }) => {
     await loadSales(page)
     const answer = await ask(page, 'What is total revenue by year?')
-    await expect(answer.getByRole('grid')).toBeVisible()
+    await expect(answer.getByRole('tab', { name: 'Chart' })).toBeVisible()
 
     await page.getByRole('button', { name: 'Side panel' }).click()
     const panel = page.getByRole('complementary', { name: 'Side panel' })

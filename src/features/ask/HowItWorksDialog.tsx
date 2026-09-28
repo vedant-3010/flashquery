@@ -14,7 +14,7 @@ const STEPS = [
   },
   {
     title: 'The AI sees the shape of your data',
-    text: 'Table and column names, and, in Balanced mode, a few statistics and sample values. Strict mode sends no values at all.',
+    text: "Table and column names, and, in Balanced mode, a few statistics and sample values plus the answer's result (up to 50 rows) for its summary. Strict mode sends no values at all.",
   },
   {
     title: 'The AI writes SQL; your browser runs it',

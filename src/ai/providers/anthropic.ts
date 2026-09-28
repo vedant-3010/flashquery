@@ -1,16 +1,17 @@
 import { ChatAnthropic } from '@langchain/anthropic'
 import { HumanMessage } from '@langchain/core/messages'
-import { findModel } from '@/ai/models'
+import { FAST_MODEL, findModel } from '@/ai/models'
 import type { LLMProvider, ProviderSettings } from '@/ai/providers'
 import { TEST_PROMPT } from '@/ai/prompts/testConnection'
 import { providerError, toLangChainMessages, usageOf } from '@/ai/providers/langchain'
-import { SqlPlanSchema } from '@/ai/schemas'
+import { AnswerSummarySchema, SqlPlanSchema } from '@/ai/schemas'
 
 // Claude through LangChain (PRD D6), called from the browser with the user's own key (BYOK, D3).
 // Structured output uses native JSON outputs (output_config.format, `method: "jsonSchema"`): it
 // works with adaptive thinking, which Sonnet 5 runs by default, unlike forced tool calls (D29).
 
 const MAX_TOKENS = 16_000
+const SUMMARY_MAX_TOKENS = 2_000
 
 export function createAnthropicProvider({ apiKey, model, fetch }: ProviderSettings): LLMProvider {
   const effort = findModel(model)?.supportsEffort
@@ -32,6 +33,22 @@ export function createAnthropicProvider({ apiKey, model, fetch }: ProviderSettin
     method: 'jsonSchema',
     includeRaw: true,
   })
+  // Summaries use the fast model: a few sentences about ≤ 50 rows (F-ASK-12, PRD D41).
+  const summaryModel = FAST_MODEL.anthropic
+  const summarizer = new ChatAnthropic({
+    apiKey,
+    model: summaryModel,
+    maxTokens: SUMMARY_MAX_TOKENS,
+    maxRetries: 2,
+    clientOptions: { dangerouslyAllowBrowser: true, ...(fetch ? { fetch } : {}) },
+    ...(findModel(summaryModel)?.supportsEffort
+      ? { outputConfig: { effort: 'low' as const } }
+      : {}),
+  }).withStructuredOutput(AnswerSummarySchema, {
+    name: 'answer_summary',
+    method: 'jsonSchema',
+    includeRaw: true,
+  })
 
   return {
     id: 'anthropic',
@@ -45,6 +62,18 @@ export function createAnthropicProvider({ apiKey, model, fetch }: ProviderSettin
         return { plan: SqlPlanSchema.parse(result.parsed), usage: usageOf(result.raw) }
       } catch (error) {
         throw providerError(error, model, signal)
+      }
+    },
+    summaryModel,
+    async summarize({ messages, signal }) {
+      try {
+        const result = await summarizer.invoke(
+          toLangChainMessages(messages, { cacheControl: false }),
+          { signal },
+        )
+        return { summary: AnswerSummarySchema.parse(result.parsed), usage: usageOf(result.raw) }
+      } catch (error) {
+        throw providerError(error, summaryModel, signal)
       }
     },
     async testConnection(signal) {

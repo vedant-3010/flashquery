@@ -26,6 +26,10 @@ const SavedSettingsSchema = z.object({
   rememberKey: z.boolean(),
   /** Only filled while rememberKey is on. */
   apiKeys: KeysSchema,
+  /** Number and date format (BCP 47); null follows the browser (F-VIZ-04). */
+  numberLocale: z.string().nullable(),
+  /** ISO 4217 code for money columns in charts and summaries; null shows plain numbers. */
+  currency: z.string().nullable(),
 })
 type SavedSettings = z.infer<typeof SavedSettingsSchema>
 
@@ -33,8 +37,12 @@ const NO_KEYS: Keys = { anthropic: null, openai: null }
 
 export const SETTINGS_RECORD: RecordSpec<SavedSettings> = {
   key: 'settings',
-  version: 1,
+  version: 2,
   schema: SavedSettingsSchema,
+  migrations: {
+    // v2 (M4): number format and currency.
+    1: (data) => ({ ...(data as object), numberLocale: null, currency: null }),
+  },
   fallback: () => ({
     provider: 'anthropic',
     models: { ...DEFAULT_MODEL },
@@ -42,14 +50,18 @@ export const SETTINGS_RECORD: RecordSpec<SavedSettings> = {
     dateDisplay: 'iso',
     rememberKey: false,
     apiKeys: NO_KEYS,
+    numberLocale: null,
+    currency: null,
   }),
 }
 
 interface SettingsState {
   theme: ThemePreference
   privacyMode: PrivacyMode
-  /** BCP 47 locale passed to every src/lib/format.ts call. */
+  /** BCP 47 locale passed to every src/lib/format.ts call: numberLocale, else the browser's. */
   locale: string
+  numberLocale: string | null
+  currency: string | null
   /** How grids show DATE/TIMESTAMP values (F-GRID-03). */
   dateDisplay: DateDisplay
   provider: ProviderId
@@ -65,6 +77,8 @@ interface SettingsState {
   setModel: (provider: ProviderId, model: string) => void
   setApiKey: (provider: ProviderId, key: string | null) => void
   setRememberKey: (remember: boolean) => void
+  setNumberLocale: (locale: string | null) => void
+  setCurrency: (currency: string | null) => void
   /** Loads saved settings (once, at startup), then saves every change. */
   hydrate: () => Promise<void>
 }
@@ -73,6 +87,8 @@ export const useSettingsStore = create<SettingsState>()((set, get) => ({
   theme: readStoredTheme(),
   privacyMode: 'balanced',
   locale: navigator.language,
+  numberLocale: null,
+  currency: null,
   dateDisplay: 'iso',
   provider: 'anthropic',
   models: { ...DEFAULT_MODEL },
@@ -90,6 +106,9 @@ export const useSettingsStore = create<SettingsState>()((set, get) => ({
   setApiKey: (provider, key) =>
     set({ apiKeys: { ...get().apiKeys, [provider]: key?.trim() || null } }),
   setRememberKey: (rememberKey) => set({ rememberKey }),
+  setNumberLocale: (numberLocale) =>
+    set({ numberLocale, locale: numberLocale ?? navigator.language }),
+  setCurrency: (currency) => set({ currency }),
   hydrate: () => (hydrating ??= load()),
 }))
 
@@ -104,7 +123,11 @@ async function load() {
       return SETTINGS_RECORD.fallback()
     },
   )
-  useSettingsStore.setState({ ...saved, hydrated: true })
+  useSettingsStore.setState({
+    ...saved,
+    locale: saved.numberLocale ?? navigator.language,
+    hydrated: true,
+  })
   useSettingsStore.subscribe((state) => void persist(state))
 }
 
@@ -116,6 +139,8 @@ async function persist(state: SettingsState) {
     dateDisplay: state.dateDisplay,
     rememberKey: state.rememberKey,
     apiKeys: state.rememberKey ? state.apiKeys : NO_KEYS,
+    numberLocale: state.numberLocale,
+    currency: state.currency,
   }
   await saveRecord(SETTINGS_RECORD, record).catch((error: unknown) =>
     console.warn('AskData: settings could not be saved', error),

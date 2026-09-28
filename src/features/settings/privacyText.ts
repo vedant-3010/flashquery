@@ -14,13 +14,14 @@ export const PRIVACY_MODES: Record<
   },
   balanced: {
     label: 'Balanced',
-    summary: 'Adds a few example values so the AI writes better SQL.',
+    summary: 'Adds a few example values so the AI writes better SQL and summaries.',
     sends: [
       'Everything in Strict',
       'Per column: % empty, number of distinct values, min and max of numbers and dates',
       'Up to 5 common values of short text columns (cut to 40 characters)',
       '3 example rows per table (text cut to 40 characters)',
+      "For the answer's summary: the result if it has up to 50 rows, else its statistics and 20 of its rows (text cut to 40 characters)",
     ],
-    never: ['Full rows or files', 'Query results (answers are summarized on this device)'],
+    never: ['Your files or tables in full', 'Results beyond those 50 rows'],
   },
 }

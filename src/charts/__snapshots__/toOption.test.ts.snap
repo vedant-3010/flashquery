@@ -1,0 +1,447 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`toOption > draws a donut with percent labels (snapshot) 1`] = `
+{
+  "animation": false,
+  "aria": {
+    "decal": {
+      "show": true,
+    },
+    "enabled": true,
+    "label": {
+      "enabled": false,
+    },
+  },
+  "backgroundColor": "transparent",
+  "color": [
+    "#4477AA",
+    "#EE6677",
+    "#228833",
+    "#CCBB44",
+    "#66CCEE",
+    "#AA3377",
+    "#BBBBBB",
+  ],
+  "grid": {
+    "bottom": 44,
+    "left": 12,
+    "outerBoundsContain": "all",
+    "outerBoundsMode": "same",
+    "right": 24,
+    "top": 32,
+  },
+  "legend": {
+    "bottom": 0,
+    "formatter": [Function],
+    "icon": "roundRect",
+    "pageTextStyle": {
+      "color": "#737373",
+    },
+    "textStyle": {
+      "color": "#737373",
+    },
+    "type": "scroll",
+  },
+  "series": [
+    {
+      "avoidLabelOverlap": true,
+      "center": [
+        "50%",
+        "46%",
+      ],
+      "data": [
+        {
+          "itemStyle": undefined,
+          "name": "Consumer",
+          "value": 50,
+        },
+        {
+          "itemStyle": undefined,
+          "name": "SMB",
+          "value": 30,
+        },
+        {
+          "itemStyle": undefined,
+          "name": "Enterprise",
+          "value": 20,
+        },
+      ],
+      "itemStyle": {
+        "borderColor": "#ffffff",
+        "borderWidth": 2,
+      },
+      "label": {
+        "color": "#171717",
+        "formatter": [Function],
+      },
+      "labelLine": {
+        "lineStyle": {
+          "color": "#a3a3a3",
+        },
+      },
+      "name": "Revenue",
+      "radius": [
+        "45%",
+        "70%",
+      ],
+      "type": "pie",
+    },
+  ],
+  "textStyle": {
+    "color": "#171717",
+    "fontFamily": "'Geist Variable', ui-sans-serif, system-ui, sans-serif",
+    "fontSize": 12,
+  },
+  "tooltip": {
+    "backgroundColor": "#ffffff",
+    "borderColor": "#e5e5e5",
+    "confine": true,
+    "textStyle": {
+      "color": "#171717",
+      "fontFamily": "'Geist Variable', ui-sans-serif, system-ui, sans-serif",
+      "fontSize": 12,
+    },
+    "trigger": "item",
+    "valueFormatter": [Function],
+  },
+  "useUTC": true,
+}
+`;
+
+exports[`toOption > draws a time-axis line in UTC with lttb sampling 1`] = `
+{
+  "animation": false,
+  "aria": {
+    "decal": {
+      "show": false,
+    },
+    "enabled": false,
+    "label": {
+      "enabled": false,
+    },
+  },
+  "backgroundColor": "transparent",
+  "color": [
+    "#4477AA",
+    "#EE6677",
+    "#228833",
+    "#CCBB44",
+    "#66CCEE",
+    "#AA3377",
+    "#BBBBBB",
+  ],
+  "grid": {
+    "bottom": 12,
+    "left": 12,
+    "outerBoundsContain": "all",
+    "outerBoundsMode": "same",
+    "right": 24,
+    "top": 32,
+  },
+  "legend": {
+    "show": false,
+  },
+  "series": [
+    {
+      "areaStyle": undefined,
+      "connectNulls": false,
+      "data": [
+        [
+          1704067200000,
+          0,
+        ],
+        [
+          1706745600000,
+          1,
+        ],
+        [
+          1709251200000,
+          2,
+        ],
+        [
+          1711929600000,
+          3,
+        ],
+        [
+          1714521600000,
+          4,
+        ],
+        [
+          1717200000000,
+          5,
+        ],
+        [
+          1719792000000,
+          6,
+        ],
+        [
+          1722470400000,
+          7,
+        ],
+        [
+          1725148800000,
+          8,
+        ],
+        [
+          1727740800000,
+          9,
+        ],
+        [
+          1730419200000,
+          10,
+        ],
+        [
+          1733011200000,
+          11,
+        ],
+        [
+          1735689600000,
+          12,
+        ],
+        [
+          1738368000000,
+          13,
+        ],
+        [
+          1740787200000,
+          14,
+        ],
+        [
+          1743465600000,
+          15,
+        ],
+        [
+          1746057600000,
+          16,
+        ],
+        [
+          1748736000000,
+          17,
+        ],
+        [
+          1751328000000,
+          18,
+        ],
+        [
+          1754006400000,
+          19,
+        ],
+        [
+          1756684800000,
+          20,
+        ],
+        [
+          1759276800000,
+          21,
+        ],
+        [
+          1761955200000,
+          22,
+        ],
+        [
+          1764547200000,
+          23,
+        ],
+      ],
+      "emphasis": {
+        "focus": "series",
+      },
+      "itemStyle": undefined,
+      "label": {
+        "show": false,
+      },
+      "lineStyle": {
+        "type": "solid",
+        "width": 2,
+      },
+      "name": "Revenue",
+      "sampling": "lttb",
+      "showSymbol": true,
+      "stack": undefined,
+      "symbol": "circle",
+      "symbolSize": 6,
+      "type": "line",
+    },
+  ],
+  "textStyle": {
+    "color": "#171717",
+    "fontFamily": "'Geist Variable', ui-sans-serif, system-ui, sans-serif",
+    "fontSize": 12,
+  },
+  "tooltip": {
+    "backgroundColor": "#ffffff",
+    "borderColor": "#e5e5e5",
+    "confine": true,
+    "textStyle": {
+      "color": "#171717",
+      "fontFamily": "'Geist Variable', ui-sans-serif, system-ui, sans-serif",
+      "fontSize": 12,
+    },
+    "trigger": "axis",
+    "valueFormatter": [Function],
+  },
+  "useUTC": true,
+  "xAxis": {
+    "axisLabel": {
+      "color": "#737373",
+      "formatter": [Function],
+      "hideOverlap": true,
+    },
+    "axisLine": {
+      "lineStyle": {
+        "color": "#a3a3a3",
+      },
+    },
+    "name": "Month",
+    "nameGap": 28,
+    "nameLocation": "middle",
+    "nameTextStyle": {
+      "color": "#737373",
+    },
+    "splitLine": {
+      "show": false,
+    },
+    "type": "time",
+  },
+  "yAxis": {
+    "axisLabel": {
+      "color": "#737373",
+      "formatter": [Function],
+    },
+    "name": "Revenue",
+    "nameTextStyle": {
+      "align": "left",
+      "color": "#737373",
+    },
+    "splitLine": {
+      "lineStyle": {
+        "color": "#e5e5e5",
+      },
+    },
+    "type": "value",
+  },
+}
+`;
+
+exports[`toOption > draws bars with formatted axes (snapshot) 1`] = `
+{
+  "animation": false,
+  "aria": {
+    "decal": {
+      "show": false,
+    },
+    "enabled": false,
+    "label": {
+      "enabled": false,
+    },
+  },
+  "backgroundColor": "transparent",
+  "color": [
+    "#4477AA",
+    "#EE6677",
+    "#228833",
+    "#CCBB44",
+    "#66CCEE",
+    "#AA3377",
+    "#BBBBBB",
+  ],
+  "grid": {
+    "bottom": 12,
+    "left": 12,
+    "outerBoundsContain": "all",
+    "outerBoundsMode": "same",
+    "right": 24,
+    "top": 32,
+  },
+  "legend": {
+    "show": false,
+  },
+  "series": [
+    {
+      "barMaxWidth": 48,
+      "data": [
+        137900000,
+        80000000,
+        56000000,
+      ],
+      "emphasis": {
+        "focus": "series",
+      },
+      "itemStyle": undefined,
+      "label": {
+        "show": false,
+      },
+      "name": "Total revenue",
+      "stack": undefined,
+      "type": "bar",
+    },
+  ],
+  "textStyle": {
+    "color": "#171717",
+    "fontFamily": "'Geist Variable', ui-sans-serif, system-ui, sans-serif",
+    "fontSize": 12,
+  },
+  "tooltip": {
+    "axisPointer": {
+      "type": "shadow",
+    },
+    "backgroundColor": "#ffffff",
+    "borderColor": "#e5e5e5",
+    "confine": true,
+    "textStyle": {
+      "color": "#171717",
+      "fontFamily": "'Geist Variable', ui-sans-serif, system-ui, sans-serif",
+      "fontSize": 12,
+    },
+    "trigger": "axis",
+    "valueFormatter": [Function],
+  },
+  "useUTC": true,
+  "xAxis": {
+    "axisLabel": {
+      "color": "#737373",
+      "formatter": [Function],
+      "hideOverlap": true,
+      "interval": "auto",
+    },
+    "axisLine": {
+      "lineStyle": {
+        "color": "#a3a3a3",
+      },
+    },
+    "axisTick": {
+      "show": false,
+    },
+    "data": [
+      "APAC",
+      "EMEA",
+      "LATAM",
+    ],
+    "inverse": false,
+    "name": "Region",
+    "nameGap": 28,
+    "nameLocation": "middle",
+    "nameTextStyle": {
+      "color": "#737373",
+    },
+    "type": "category",
+  },
+  "yAxis": {
+    "axisLabel": {
+      "color": "#737373",
+      "formatter": [Function],
+    },
+    "name": "Total revenue",
+    "nameTextStyle": {
+      "align": "left",
+      "color": "#737373",
+    },
+    "splitLine": {
+      "lineStyle": {
+        "color": "#e5e5e5",
+      },
+    },
+    "type": "value",
+  },
+}
+`;

@@ -10,8 +10,8 @@ paths:
 
 ## Providers
 - `src/ai/providers.ts` defines `LLMProvider { id, model, remote, planSql({ question, messages, tables,
-  signal }), testConnection(signal) }`; `summarize` (M4) and `planDashboard` (M6) are added with their
-  features. Implementations: `src/ai/providers/anthropic.ts`, `openai.ts` (LangChain) and `fixture.ts`
+  signal }), summaryModel, summarize?({ messages, signal }), testConnection(signal) }`; `planDashboard`
+  (M6) is added with its feature. Summaries use the provider's fast model (PRD D41). Implementations: `src/ai/providers/anthropic.ts`, `openai.ts` (LangChain) and `fixture.ts`
   (demo mode + tests; replays JSON in `src/ai/fixtures/`, validated by the same schemas).
 - Use `model.withStructuredOutput(Schema, { name, method: 'jsonSchema', includeRaw: true })` so token
   usage can be logged from the raw message (PRD D29). Pass `{ signal }` to `invoke` for cancellation.
@@ -22,7 +22,7 @@ paths:
 | Mode | What is sent |
 |---|---|
 | Strict | table names, row counts, column names + types, user business notes. No values, no result rows. Answer text is templated locally. |
-| Balanced (default) | Strict + per column: null %, approx distinct, min/max for numeric/date, top-5 values for low-cardinality text (≤ 40 chars each), 3 sample rows (strings truncated to 40 chars). Summaries get result rows ≤ 50 (else aggregate stats of the result). |
+| Balanced (default) | Strict + per column: null %, approx distinct, min/max for numeric/date, top-5 values for low-cardinality text (≤ 40 chars each), 3 sample rows (strings truncated to 40 chars). The AI summary gets the result's rows ≤ 50, else column statistics plus the first 10 and 5 highest/lowest rows (`fetchResultDigest`, D41). |
 | Local (P2) | WebLLM on-device; nothing leaves the browser. |
 - Every request is appended to the AI payload log: time, mode, provider, model, exact messages (keys
   redacted), parsed output, token usage, latency. The inspector renders it verbatim.
@@ -50,8 +50,9 @@ paths:
 - Clarify only when interpretations give materially different answers and no sensible default exists;
   otherwise pick the default and state it in `assumptions`.
 - Follow-ups: include the last 3 turns as (question, sql, result column names, row count). Never past rows.
-- Wrap all data-derived text (column names, samples, top values, notes) in a `<data>` block and instruct
-  the model to treat it as data, never as instructions.
+- Wrap all data-derived text (column names, samples, top values, notes, result rows) in a `<data>` block
+  (`dataJson` escapes `<`/`>` so data can't close it, D42) and instruct the model to treat it as data,
+  never as instructions.
 
 ## Guard & execution (never skip, never reorder)
 1. Zod-parse the output (one repair retry on parse failure).

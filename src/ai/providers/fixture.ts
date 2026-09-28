@@ -11,6 +11,8 @@ export const fixtureProvider: LLMProvider = {
   id: 'fixture',
   model: 'demo',
   remote: false,
+  // Demo mode summarizes locally (ai.md): no summarize().
+  summaryModel: null,
   async planSql({ question, tables }) {
     if (!tables.includes(DEMO_TABLE)) {
       throw new AppError({

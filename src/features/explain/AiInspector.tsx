@@ -12,6 +12,7 @@ import { activeApiKey, useSettingsStore } from '@/stores/settings'
 const PURPOSES: Record<AiLogEntry['purpose'], string> = {
   plan: 'Write SQL',
   repair: 'Fix SQL',
+  summary: 'Summarize',
   test: 'Test connection',
 }
 

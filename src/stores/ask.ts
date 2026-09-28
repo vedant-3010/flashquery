@@ -1,20 +1,28 @@
 import { create } from 'zustand'
-import { executeSql, runPipeline } from '@/ai/pipeline'
-import type { Turn } from '@/ai/prompts/planSql'
-import { createProvider, type LLMProvider } from '@/ai/providers'
-import { fixtureProvider } from '@/ai/providers/fixture'
-import type { AnswerSummary, SqlPlan } from '@/ai/schemas'
+import {
+  canNarrate,
+  executeSql,
+  narrate,
+  runPipeline,
+  type AnswerChart,
+  type SqlResult,
+} from '@/ai/pipeline'
+import type { LLMProvider } from '@/ai/providers'
+import type { AnswerSummary, PrivacyMode, SqlPlan } from '@/ai/schemas'
 import { Trace, type TraceStep } from '@/ai/trace'
+import type { ChartSpec } from '@/charts/spec'
+import { loadChartData, needsNewData } from '@/engine/chartData'
 import { getDb } from '@/engine/duckdb'
-import { closeResult, type PagedResult } from '@/engine/paging'
+import type { PagedResult } from '@/engine/paging'
 import type { CellValue } from '@/engine/types'
 import { AppError, isCancellation, toAppError, type AppErrorData } from '@/lib/errors'
-import { useAiLogStore } from '@/stores/aiLog'
+import { currentProvider, logRequest, release, today, turns } from '@/stores/askSupport'
 import { useDatasetsStore } from '@/stores/datasets'
 import { useHistoryStore } from '@/stores/history'
 import { activeApiKey, useSettingsStore } from '@/stores/settings'
 
-// The answer feed (F-ASK-01…11): one question runs at a time; each becomes an answer card.
+// The answer feed (F-ASK-01…12): one question runs at a time; each becomes an answer card with a
+// chart (F-VIZ). In Balanced mode the AI summary replaces the local one once it arrives.
 
 export interface Answer {
   id: string
@@ -31,8 +39,15 @@ export interface Answer {
   /** The SQL was edited by the user (F-EXPL-01). */
   edited: boolean
   result: PagedResult | null
-  previewRows: CellValue[][]
+  /** The result's first rows (all of them up to 5,000). */
+  rows: CellValue[][]
+  chart: AnswerChart | null
+  /** The chart was picked or adjusted by the user (F-VIZ-03, F-VIZ-06). */
+  chartPicked: boolean
   summary: AnswerSummary | null
+  /** Who wrote the summary: this device, or the AI (and which model). */
+  summarySource: 'local' | 'ai'
+  summaryModel: string | null
   error: AppErrorData | null
 }
 
@@ -44,61 +59,74 @@ interface AskState {
   ask: (question: string) => Promise<void>
   cancel: () => void
   runEditedSql: (id: string, sql: string) => Promise<void>
+  /** Switches or adjusts an answer's chart; reads new chart data when the chart needs it. */
+  setChart: (id: string, spec: ChartSpec) => Promise<void>
   remove: (id: string) => void
   setScope: (scope: string[] | null) => void
 }
 
 let counter = 0
 let controller: AbortController | null = null
-let providerCache: { key: string; provider: Promise<LLMProvider> } | null = null
-
-/** The configured provider, or demo fixtures when there's no key (F-AI-03). */
-function currentProvider(): Promise<LLMProvider> {
-  const settings = useSettingsStore.getState()
-  const apiKey = activeApiKey(settings)
-  if (!apiKey) return Promise.resolve(fixtureProvider)
-  const model = settings.models[settings.provider]
-  const cacheKey = `${settings.provider}:${model}:${apiKey}`
-  if (providerCache?.key !== cacheKey) {
-    providerCache = {
-      key: cacheKey,
-      provider: createProvider({ provider: settings.provider, apiKey, model }),
-    }
-  }
-  return providerCache.provider
-}
-
-/** Follow-up context: the last answered turns (question, SQL, column names, row count). */
-function turns(answers: Answer[]): Turn[] {
-  return answers
-    .filter((answer) => answer.status === 'answered' && answer.result)
-    .slice(-3)
-    .map((answer) => ({
-      question: answer.question,
-      sql: answer.sql,
-      columns: answer.result?.columns.map((column) => column.name) ?? [],
-      rowCount: answer.result?.rowCount ?? null,
-    }))
-}
-
-/** The user's local date (not UTC), so "this month" means what they expect. */
-const today = () => {
-  const now = new Date()
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
-}
-
-/** Drops an answer's temp result view once nothing shows it any more. */
-function release(result: PagedResult | null) {
-  if (!result) return
-  getDb()
-    .then((engine) => closeResult(engine, result))
-    .catch((error: unknown) => console.warn('AskData: could not drop a result view', error))
-}
+/** In-flight AI summaries by answer id. */
+const summaries = new Map<string, AbortController>()
 
 export const useAskStore = create<AskState>()((set, get) => {
   const patch = (id: string, change: Partial<Answer>) =>
     set((state) => ({ answers: state.answers.map((a) => (a.id === id ? { ...a, ...change } : a)) }))
+  const find = (id: string) => get().answers.find((a) => a.id === id)
+
+  const answered = (executed: SqlResult): Partial<Answer> => ({
+    status: 'answered',
+    sql: executed.sql,
+    result: executed.result,
+    rows: executed.rows,
+    chart: executed.chart,
+    chartPicked: false,
+    summary: executed.summary,
+    summarySource: 'local',
+    summaryModel: null,
+  })
+
+  /** F-ASK-12: the AI summary, after the answer is on screen; the local one stays on failure. */
+  function summarize(id: string, provider: LLMProvider, mode: PrivacyMode) {
+    const answer = find(id)
+    if (!answer?.result || !answer.chart || !answer.sql || !canNarrate(provider, mode)) return
+    const { result, rows, chart, sql, plan, question, trace: steps } = answer
+    summaries.get(id)?.abort()
+    const current = new AbortController()
+    summaries.set(id, current)
+    const trace = new Trace((trace) => patch(id, { trace }), steps)
+    getDb()
+      .then((engine) =>
+        narrate({
+          answerId: id,
+          question,
+          plan,
+          sql,
+          result,
+          rows,
+          spec: chart.spec,
+          provider,
+          engine,
+          mode,
+          signal: current.signal,
+          trace,
+          onLog: logRequest,
+        }),
+      )
+      .then(({ summary, model }) => {
+        if (!current.signal.aborted) {
+          patch(id, { summary, summarySource: 'ai', summaryModel: model })
+        }
+      })
+      .catch((error: unknown) => {
+        // Shown in the timeline and trace; the local summary stays.
+        if (!isCancellation(error)) console.warn('AskData: the AI summary failed', error)
+      })
+      .finally(() => {
+        if (summaries.get(id) === current) summaries.delete(id)
+      })
+  }
 
   return {
     answers: [],
@@ -134,8 +162,12 @@ export const useAskStore = create<AskState>()((set, get) => {
             sql: null,
             edited: false,
             result: null,
-            previewRows: [],
+            rows: [],
+            chart: null,
+            chartPicked: false,
             summary: null,
+            summarySource: 'local',
+            summaryModel: null,
             error: null,
           },
         ],
@@ -159,19 +191,15 @@ export const useAskStore = create<AskState>()((set, get) => {
           mode: settings.privacyMode,
           history,
           locale: settings.locale,
+          currency: settings.currency,
           today: today(),
           signal: current.signal,
           onTrace: (trace) => patch(id, { trace }),
-          onLog: (entry) => {
-            const keys = Object.values(useSettingsStore.getState().apiKeys).filter(
-              (key): key is string => key !== null,
-            )
-            useAiLogStore.getState().add(entry, keys)
-          },
+          onLog: logRequest,
         })
         if (outcome.kind === 'answer') {
-          const { plan, sql, result, previewRows, summary, trace } = outcome
-          patch(id, { status: 'answered', plan, sql, result, previewRows, summary, trace })
+          patch(id, { ...answered(outcome), plan: outcome.plan, trace: outcome.trace })
+          summarize(id, provider, settings.privacyMode)
         } else if (outcome.kind === 'no-sql') {
           patch(id, { status: 'no-sql', plan: outcome.plan, trace: outcome.trace })
         } else {
@@ -183,7 +211,7 @@ export const useAskStore = create<AskState>()((set, get) => {
             trace: outcome.trace,
           })
         }
-        const answer = get().answers.find((a) => a.id === id)
+        const answer = find(id)
         useHistoryStore.getState().add({
           kind: 'question',
           text,
@@ -204,8 +232,9 @@ export const useAskStore = create<AskState>()((set, get) => {
     cancel: () => controller?.abort(),
 
     runEditedSql: async (id, sql) => {
-      const answer = get().answers.find((a) => a.id === id)
+      const answer = find(id)
       if (!answer) return
+      const settings = useSettingsStore.getState()
       const trace = new Trace()
       const record = (
         status: 'answered' | 'failed',
@@ -219,19 +248,21 @@ export const useAskStore = create<AskState>()((set, get) => {
         const executed = await executeSql(sql, {
           engine: await getDb(),
           tables: answer.tables,
-          locale: useSettingsStore.getState().locale,
+          locale: settings.locale,
           signal: new AbortController().signal,
           trace,
+          chartContext: {
+            question: answer.question,
+            hint: answer.plan?.chartHint ?? null,
+            title: answer.plan?.title,
+            currency: settings.currency,
+          },
         })
-        release(get().answers.find((a) => a.id === id)?.result ?? null)
-        patch(id, {
-          ...executed,
-          status: 'answered',
-          edited: true,
-          error: null,
-          trace: trace.steps,
-        })
+        summaries.get(id)?.abort()
+        release(find(id)?.result ?? null)
+        patch(id, { ...answered(executed), edited: true, error: null, trace: trace.steps })
         record('answered', executed.summary.headline, executed.result.rowCount)
+        summarize(id, await currentProvider(), settings.privacyMode)
       } catch (error) {
         // The edited SQL failed: keep the previous result; the SQL tab shows why.
         const failure = toAppError(error)
@@ -240,8 +271,20 @@ export const useAskStore = create<AskState>()((set, get) => {
       }
     },
 
+    setChart: async (id, spec) => {
+      const answer = find(id)
+      if (!answer?.result || !answer.chart) return
+      const current = answer.chart
+      const data = needsNewData(current, spec)
+        ? await loadChartData(await getDb(), answer.result, spec, answer.rows)
+        : current.data
+      if (find(id)?.result !== answer.result) return // The SQL was re-run meanwhile.
+      patch(id, { chart: { ...current, spec, data }, chartPicked: spec !== current.auto })
+    },
+
     remove: (id) => {
-      release(get().answers.find((a) => a.id === id)?.result ?? null)
+      summaries.get(id)?.abort()
+      release(find(id)?.result ?? null)
       set((state) => ({ answers: state.answers.filter((a) => a.id !== id) }))
     },
 

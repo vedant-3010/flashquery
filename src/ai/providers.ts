@@ -1,6 +1,6 @@
 import type { Usage } from '@/ai/log'
 import type { PromptMessage } from '@/ai/prompts/planSql'
-import type { ProviderId, SqlPlan } from '@/ai/schemas'
+import type { AnswerSummary, ProviderId, SqlPlan } from '@/ai/schemas'
 
 // LLMProvider hides LangChain (PRD D6): the pipeline only sees planSql(). Real providers load on
 // first use (dynamic import keeps LangChain out of the initial bundle, F-PERF-01).
@@ -18,12 +18,25 @@ export interface PlanResponse {
   usage: Usage | null
 }
 
+export interface SummaryRequest {
+  messages: PromptMessage[]
+  signal?: AbortSignal
+}
+
+export interface SummaryResponse {
+  summary: AnswerSummary
+  usage: Usage | null
+}
+
 export interface LLMProvider {
   id: ProviderId | 'fixture'
   model: string
   /** True when planSql sends `messages` to a remote API (and so should be logged). */
   remote: boolean
   planSql(request: PlanRequest): Promise<PlanResponse>
+  /** The model that writes AI summaries (F-ASK-12): the provider's fast one. Null without summaries. */
+  summaryModel: string | null
+  summarize?(request: SummaryRequest): Promise<SummaryResponse>
   /** A tiny request that proves the key and model work ("Test connection"). */
   testConnection(signal?: AbortSignal): Promise<void>
 }

@@ -88,7 +88,7 @@ export function formatPercent(
 
 // DATE/TIMESTAMP values arrive from engine/normalize.ts as ISO-8601 strings. They are wall-clock values,
 // so they are read and shown in UTC; converting to the viewer's zone would shift dates by a day.
-function parseIsoUtc(value: string): Date | null {
+export function parseIsoUtc(value: string): Date | null {
   let iso = value.trim().replace(' ', 'T')
   if (iso.includes('T') && !/(?:Z|[+-]\d{2}:?\d{2})$/i.test(iso)) iso += 'Z'
   const date = new Date(iso)
@@ -183,4 +183,86 @@ export function formatEventTime(epochMs: number, locale: string, now = Date.now(
   return sameDay
     ? dateFormat(locale, { timeStyle: 'medium' }).format(date)
     : dateFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(date)
+}
+
+/** How chart values and KPIs are shown (ChartSpec.format). */
+export interface ValueStyle {
+  y: 'number' | 'percent' | 'currency'
+  currency: string | null
+}
+
+/**
+ * A value in its chart format: percent for fractions, currency when known, else a number.
+ * `compact` for axes and KPIs ("1.2M"); full precision otherwise.
+ */
+export function formatValue(
+  value: MaybeNumber,
+  style: ValueStyle,
+  locale: string,
+  { compact = false }: { compact?: boolean } = {},
+): string {
+  if (!present(value)) return EMPTY
+  if (style.y === 'percent') {
+    return formatPercent(value, locale, { maxFractionDigits: Math.abs(value) < 0.1 ? 1 : 0 })
+  }
+  if (style.y === 'currency' && style.currency) {
+    return formatCurrency(value, style.currency, locale, {
+      compact: compact && Math.abs(value) >= 10_000,
+    })
+  }
+  if (compact && Math.abs(value) >= 10_000) return formatCompact(value, locale)
+  return formatNumber(value, locale, { maxFractionDigits: Math.abs(value) < 1 ? 3 : 2 })
+}
+
+/**
+ * Time-axis tick (epoch ms, UTC wall clock), by where it falls: a year start → "2025", a month start
+ * → "Jul" ("Jul 2025" on long axes), a day → "Jul 14", else a time.
+ */
+export function formatDateTick(epochMs: number, locale: string, spanMs: number): string {
+  const date = new Date(epochMs)
+  const midnight = date.getUTCHours() === 0 && date.getUTCMinutes() === 0
+  const firstOfMonth = midnight && date.getUTCDate() === 1
+  const options: Intl.DateTimeFormatOptions =
+    firstOfMonth && date.getUTCMonth() === 0
+      ? { year: 'numeric' }
+      : firstOfMonth
+        ? spanMs > 2 * 365 * 86_400_000
+          ? { month: 'short', year: 'numeric' }
+          : { month: 'short' }
+        : midnight
+          ? { month: 'short', day: 'numeric' }
+          : { hour: '2-digit', minute: '2-digit' }
+  return dateFormat(locale, { ...options, timeZone: 'UTC' }).format(date)
+}
+
+/** Column name → axis title: "total_revenue" → "Total revenue", "growth_pct" → "Growth". */
+export function humanizeName(name: string): string {
+  const words = name
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/_(pct|percent)$/i, '')
+    .replace(/[_\s]+/g, ' ')
+    .trim()
+    .toLowerCase()
+  return words.charAt(0).toUpperCase() + words.slice(1)
+}
+
+/** Naive English plural for column-name nouns: region → regions, country → countries. */
+export function pluralize(noun: string): string {
+  if (/s$/i.test(noun)) return noun
+  if (/[^aeiou]y$/i.test(noun)) return `${noun.slice(0, -1)}ies`
+  return `${noun}s`
+}
+
+/** A point in time (epoch ms, UTC wall clock) at the data's granularity: "2025", "Mar 2025", "Mar 1, 2025". */
+export function formatTimePoint(epochMs: number, locale: string, stepMs: number): string {
+  const day = 86_400_000
+  const options: Intl.DateTimeFormatOptions =
+    stepMs >= 360 * day
+      ? { year: 'numeric' }
+      : stepMs >= 28 * day
+        ? { month: 'short', year: 'numeric' }
+        : stepMs >= day
+          ? { dateStyle: 'medium' }
+          : { dateStyle: 'medium', timeStyle: 'short' }
+  return dateFormat(locale, { ...options, timeZone: 'UTC' }).format(new Date(epochMs))
 }

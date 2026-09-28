@@ -224,3 +224,79 @@ describe('OpenAI provider', () => {
     expect(body.reasoning_effort).toBe('medium')
   })
 })
+
+const summary = {
+  headline: 'APAC leads with 137.9M in revenue.',
+  bullets: ['LATAM is second.'],
+  caveats: [],
+}
+const summaryMessages: PromptMessage[] = [
+  { role: 'system', content: 'SUMMARY INSTRUCTIONS' },
+  { role: 'user', content: 'Question: q\n<data>\n{"rowCount":1}\n</data>' },
+]
+
+describe('AI summaries (F-ASK-12)', () => {
+  it('Anthropic: the fast model, a JSON schema, no effort for Haiku', async () => {
+    const { fetch, calls } = fakeFetch(() =>
+      json({
+        id: 'msg_s',
+        type: 'message',
+        role: 'assistant',
+        model: 'claude-haiku-4-5-20251001',
+        content: [{ type: 'text', text: JSON.stringify(summary) }],
+        stop_reason: 'end_turn',
+        stop_sequence: null,
+        usage: { input_tokens: 400, output_tokens: 60 },
+      }),
+    )
+    const provider = await createProvider({
+      provider: 'anthropic',
+      apiKey: KEY,
+      model: 'claude-opus-5',
+      fetch,
+    })
+    expect(provider.summaryModel).toBe('claude-haiku-4-5-20251001')
+    const response = await provider.summarize?.({ messages: summaryMessages })
+    expect(response?.summary).toEqual(summary)
+    const body = calls[0]?.body ?? {}
+    expect(body.model).toBe('claude-haiku-4-5-20251001')
+    expect(body.max_tokens).toBe(2_000)
+    expect(body.output_config).toEqual({ format: expect.objectContaining({ type: 'json_schema' }) })
+    expect(body.system).toBe('SUMMARY INSTRUCTIONS')
+    expect(JSON.stringify(body)).not.toContain(KEY)
+  })
+
+  it('OpenAI: the fast model with low reasoning effort and a strict schema', async () => {
+    const { fetch, calls } = fakeFetch(() =>
+      json({
+        id: 'chatcmpl-s',
+        object: 'chat.completion',
+        created: 0,
+        model: 'gpt-6-luna',
+        choices: [
+          {
+            index: 0,
+            message: { role: 'assistant', content: JSON.stringify(summary), refusal: null },
+            finish_reason: 'stop',
+          },
+        ],
+        usage: { prompt_tokens: 300, completion_tokens: 50, total_tokens: 350 },
+      }),
+    )
+    const provider = await createProvider({
+      provider: 'openai',
+      apiKey: 'sk-proj-test-1234567890abcdef',
+      model: 'gpt-6-sol',
+      fetch,
+    })
+    const response = await provider.summarize?.({ messages: summaryMessages })
+    expect(response?.summary).toEqual(summary)
+    const body = calls[0]?.body ?? {}
+    expect(body.model).toBe('gpt-6-luna')
+    expect(body.reasoning_effort).toBe('low')
+    expect(body.response_format).toMatchObject({
+      type: 'json_schema',
+      json_schema: { name: 'answer_summary', strict: true },
+    })
+  })
+})

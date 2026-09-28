@@ -3,6 +3,9 @@ import { lazy, Suspense, useMemo, useState } from 'react'
 import { EmptyState } from '@/components/EmptyState'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { prefetchCharts } from '@/features/charts/prefetch'
+import { useAutoChart } from '@/features/charts/useAutoChart'
 import { ResultGrid } from '@/features/grid/ResultGrid'
 import { useResolvedTheme } from '@/hooks/useResolvedTheme'
 import { formatDuration, formatNumber } from '@/lib/format'
@@ -14,9 +17,13 @@ const SqlEditor = lazy(() =>
   import('@/features/sql/SqlEditor').then((module) => ({ default: module.SqlEditor })),
 )
 
+const ChartPanel = lazy(() =>
+  import('@/features/charts/ChartPanel').then((module) => ({ default: module.ChartPanel })),
+)
+
 const RUN_SHORTCUT = /Mac|iPhone|iPad/.test(navigator.userAgent) ? '⌘↵' : 'Ctrl+↵'
 
-/** SQL scratchpad: query loaded tables directly; results in the grid (F-EXPL-07). */
+/** SQL scratchpad: query loaded tables directly; results in the grid or a chart (F-EXPL-07). */
 export function SqlView() {
   const { text, running, result, error, elapsedMs, setText, run, cancel } = useSqlStore()
   const datasets = useDatasetsStore((state) => state.datasets)
@@ -24,6 +31,8 @@ export function SqlView() {
   const dark = useResolvedTheme() === 'dark'
   const [showDetails, setShowDetails] = useState(false)
   const [formatError, setFormatError] = useState<string | null>(null)
+  const [resultView, setResultView] = useState<'grid' | 'chart'>('grid')
+  const auto = useAutoChart(result, resultView === 'chart')
 
   const schema = useMemo(
     () =>
@@ -118,12 +127,51 @@ export function SqlView() {
       )}
 
       {result ? (
-        <ResultGrid
-          key={result.relation}
-          result={result}
-          label="Query results"
-          exportName="query_result"
-        />
+        <Tabs
+          value={resultView}
+          onValueChange={(value) => setResultView(value === 'chart' ? 'chart' : 'grid')}
+          onPointerEnter={prefetchCharts}
+          className="min-h-0 flex-1 gap-0"
+        >
+          <div className="flex h-9 shrink-0 items-center border-b px-2">
+            <TabsList variant="line" aria-label="Show results as">
+              <TabsTrigger value="grid">Grid</TabsTrigger>
+              <TabsTrigger value="chart">Chart</TabsTrigger>
+            </TabsList>
+          </div>
+          <TabsContent value="grid" className="flex min-h-0 flex-col">
+            <ResultGrid
+              key={result.relation}
+              result={result}
+              label="Query results"
+              exportName="query_result"
+            />
+          </TabsContent>
+          <TabsContent value="chart" className="min-h-0 overflow-y-auto p-3">
+            {auto.chart ? (
+              <Suspense fallback={<Skeleton className="h-72 w-full" />}>
+                <ChartPanel
+                  key={result.relation}
+                  spec={auto.chart.spec}
+                  data={auto.chart.data}
+                  columns={result.columns}
+                  rows={auto.chart.rows}
+                  rowCount={result.rowCount}
+                  auto={auto.chart.auto}
+                  picked={auto.chart.spec !== auto.chart.auto}
+                  onChange={(spec) => void auto.setSpec(spec)}
+                  onViewTable={() => setResultView('grid')}
+                />
+              </Suspense>
+            ) : auto.error ? (
+              <p role="alert" className="text-sm text-destructive">
+                The chart couldn't be drawn: {auto.error}
+              </p>
+            ) : (
+              <Skeleton className="h-72 w-full" />
+            )}
+          </TabsContent>
+        </Tabs>
       ) : (
         <EmptyState
           icon={SquareTerminal}

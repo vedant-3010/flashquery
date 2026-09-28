@@ -1,8 +1,13 @@
+import { Info } from 'lucide-react'
 import type { SqlPlan } from '@/ai/schemas'
+import type { ChartSpec } from '@/charts/spec'
 import { useUiStore } from '@/stores/ui'
 
-/** Plain-English explanation, assumptions, and the tables and columns used (F-EXPL-02). */
-export function ExplanationTab({ plan }: { plan: SqlPlan }) {
+/**
+ * Plain-English explanation, assumptions, the tables and columns used (F-EXPL-02), and why this
+ * chart (F-EXPL-03).
+ */
+export function ExplanationTab({ plan, chart }: { plan: SqlPlan; chart?: ChartSpec | null }) {
   const highlightColumn = useUiStore((state) => state.highlightColumn)
   const columns = plan.columnsUsed.map((ref) => {
     const [table, column] = ref.includes('.') ? ref.split('.', 2) : [plan.tablesUsed[0] ?? '', ref]
@@ -50,6 +55,15 @@ export function ExplanationTab({ plan }: { plan: SqlPlan }) {
               </li>
             ))}
           </ul>
+        </div>
+      )}
+      {chart && (
+        <div>
+          <h4 className="mb-1 text-xs font-medium text-muted-foreground">Why this chart</h4>
+          <p className="flex items-start gap-1.5">
+            <Info className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
+            {chart.reason}
+          </p>
         </div>
       )}
     </div>

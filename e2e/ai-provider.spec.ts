@@ -18,14 +18,21 @@ interface Plan {
 }
 
 interface Call {
-  body: { system?: { text: string }[]; messages: { role: string; content: unknown }[] }
+  body: { system?: string | { text: string }[]; messages: { role: string; content: unknown }[] }
   headers: Record<string, string>
   raw: string
   /** Text of the last user message. */
   user: string
 }
 
-type Reply = { plan: Plan } | { text: string } | { delayMs: number; plan: Plan }
+interface Summary {
+  headline: string
+  bullets: string[]
+  caveats: string[]
+}
+
+type Reply =
+  { plan: Plan } | { text: string } | { delayMs: number; plan: Plan } | { summary: Summary }
 
 const textOf = (content: unknown): string =>
   typeof content === 'string'
@@ -83,7 +90,12 @@ async function mockAnthropic(page: Page, reply: (call: Call) => Reply) {
     calls.push(call)
     const answer = reply(call)
     if ('delayMs' in answer) await new Promise((resolve) => setTimeout(resolve, answer.delayMs))
-    const text = 'text' in answer ? answer.text : JSON.stringify(sqlPlan(answer.plan))
+    const text =
+      'text' in answer
+        ? answer.text
+        : 'summary' in answer
+          ? JSON.stringify(answer.summary)
+          : JSON.stringify(sqlPlan(answer.plan))
     await route
       .fulfill({
         status: 200,
@@ -98,8 +110,21 @@ async function mockAnthropic(page: Page, reply: (call: Call) => Reply) {
 const TOP_COUNTRIES =
   'SELECT country, round(sum(revenue), 2) AS revenue FROM global_sales GROUP BY ALL ORDER BY revenue DESC LIMIT 5'
 
+/** Which request this is: the connection test, an answer summary (F-ASK-12) or a SQL plan. */
+function kindOf(call: Call): 'test' | 'summary' | 'plan' {
+  if (call.user === 'Reply with the word OK.') return 'test'
+  return textOf(call.body.system).includes('short summary') ? 'summary' : 'plan'
+}
+const plansOf = (calls: Call[]) => calls.filter((call) => kindOf(call) === 'plan')
+const summariesOf = (calls: Call[]) => calls.filter((call) => kindOf(call) === 'summary')
+
+const AI_HEADLINE = 'Revenue is concentrated in a handful of countries.'
+
 function salesAnalyst(call: Call): Reply {
-  if (call.user === 'Reply with the word OK.') return { text: 'OK' }
+  if (kindOf(call) === 'test') return { text: 'OK' }
+  if (kindOf(call) === 'summary') {
+    return { summary: { headline: AI_HEADLINE, bullets: ['From the AI.'], caveats: [] } }
+  }
   if (call.user.includes('That SQL failed')) {
     return { plan: { title: 'Top 5 countries by revenue', sql: TOP_COUNTRIES } }
   }
@@ -164,12 +189,13 @@ test.describe('J2: own key (F-AI-01, F-ASK-03…09)', () => {
     await loadSales(page)
     const first = await ask(page, 'Top 5 countries by revenue')
     await expect(first.getByRole('heading', { name: 'Top 5 countries by revenue' })).toBeVisible()
-    await expect(first.getByRole('grid')).toBeVisible()
+    await expect(first.getByRole('img', { name: /^Bar chart/ })).toBeVisible()
+    await first.getByRole('tab', { name: 'Table' }).click()
     await expect(first.getByText('5 rows · 2 columns')).toBeVisible()
     await expect(first.getByRole('list', { name: 'Progress' })).toContainText('Fixing SQL (2)')
     await expect(first.getByText('Demo', { exact: true })).toBeHidden()
 
-    const plans = calls.filter((call) => call.user !== 'Reply with the word OK.')
+    const plans = plansOf(calls)
     expect(plans).toHaveLength(2)
     expect(plans[0].headers['x-api-key']).toBe(KEY)
     expect(plans[0].raw).not.toContain(KEY)
@@ -180,8 +206,8 @@ test.describe('J2: own key (F-AI-01, F-ASK-03…09)', () => {
     await expect(first).toContainText('guard · attempt 2')
 
     const followUp = await ask(page, 'Now split by channel')
-    await expect(followUp.getByRole('grid')).toBeVisible()
-    const last = calls.at(-1)
+    await expect(followUp.getByRole('tab', { name: 'Chart' })).toBeVisible()
+    const last = plansOf(calls).at(-1)
     expect(last?.user).toContain('Earlier in this conversation')
     expect(last?.user).toContain('Question: Top 5 countries by revenue')
     expect(last?.user).toContain(TOP_COUNTRIES)
@@ -226,6 +252,33 @@ test.describe('J2: own key (F-AI-01, F-ASK-03…09)', () => {
   })
 })
 
+test.describe('AI summary (F-ASK-12)', () => {
+  test('replaces the local summary in Balanced mode, from the result rows', async ({ page }) => {
+    const calls = await mockAnthropic(page, salesAnalyst)
+    await page.goto('/')
+    await addKey(page)
+    await page.keyboard.press('Escape')
+    await loadSales(page)
+
+    const answer = await ask(page, 'Revenue by country and channel')
+    await expect(answer.getByText(AI_HEADLINE)).toBeVisible()
+    await expect(answer.getByText('Summary by Claude Haiku 4.5, from the result')).toBeVisible()
+    await expect(answer.getByRole('list', { name: 'Progress' })).toContainText('Writing summary')
+
+    const [summary] = summariesOf(calls)
+    expect(summary?.raw).toContain('"model":"claude-haiku-4-5-20251001"')
+    expect(summary?.user).toContain('Question: Revenue by country and channel')
+    expect(summary?.user).toMatch(/<data>\n\{"rowCount":1,/)
+    expect(summary?.raw).not.toContain(KEY)
+
+    await page.getByRole('button', { name: 'Side panel' }).click()
+    await page.getByRole('tab', { name: 'AI inspector' }).click()
+    const requests = page.getByRole('list', { name: 'AI requests' })
+    await expect(requests.getByRole('listitem').first()).toContainText('Summarize')
+    await expect(requests.getByRole('listitem').first()).toContainText('claude-haiku-4-5-20251001')
+  })
+})
+
 test.describe('J6: privacy check (F-AI-02, F-EXPL-04, F-SEC-03, F-SEC-04)', () => {
   test('the inspector shows each payload; Strict sends no data values', async ({ page }) => {
     const calls = await mockAnthropic(page, salesAnalyst)
@@ -234,8 +287,10 @@ test.describe('J6: privacy check (F-AI-02, F-EXPL-04, F-SEC-03, F-SEC-04)', () =
     await page.keyboard.press('Escape')
     await loadSales(page)
 
-    await expect((await ask(page, 'Total revenue')).getByRole('grid')).toBeVisible()
-    const balanced = calls.at(-1)
+    await expect(
+      (await ask(page, 'Total revenue')).getByRole('tab', { name: 'Chart' }),
+    ).toBeVisible()
+    const balanced = plansOf(calls).at(-1)
     expect(balanced?.raw).toContain('topValues')
     expect(balanced?.raw).toContain('sampleRows')
 
@@ -243,7 +298,8 @@ test.describe('J6: privacy check (F-AI-02, F-EXPL-04, F-SEC-03, F-SEC-04)', () =
     const panel = page.getByRole('complementary', { name: 'Side panel' })
     await panel.getByRole('tab', { name: 'AI inspector' }).click()
     const requests = panel.getByRole('list', { name: 'AI requests' })
-    await expect(requests.getByRole('listitem')).toHaveCount(1)
+    // The SQL plan, then the AI summary of the result (Balanced, F-ASK-12).
+    await expect(requests.getByRole('listitem')).toHaveCount(2)
     await expect(requests).toContainText('Balanced')
     await expect(requests).toContainText(/[1-9][\d,]* data values sent/)
     await expect(requests).toContainText('1,800 in · 240 out · 1,500 cached')
@@ -261,12 +317,17 @@ test.describe('J6: privacy check (F-AI-02, F-EXPL-04, F-SEC-03, F-SEC-04)', () =
     await page.keyboard.press('Escape')
     await expect(page.getByRole('button', { name: 'Privacy mode: Strict' })).toBeVisible()
 
-    await expect((await ask(page, 'Total revenue again')).getByRole('grid')).toBeVisible()
-    const strict = calls.at(-1)
+    const summariesBefore = summariesOf(calls).length
+    const again = await ask(page, 'Total revenue again')
+    await expect(again.getByRole('tab', { name: 'Chart' })).toBeVisible()
+    const strict = plansOf(calls).at(-1)
     for (const field of ['topValues', 'sampleRows', 'nullPct', '"min"', 'APAC']) {
       expect(strict?.raw).not.toContain(field)
     }
-    await expect(requests.getByRole('listitem')).toHaveCount(2)
+    // Strict: no AI summary, so no result rows leave the device.
+    await expect(again.getByText('Summary written on this device')).toBeVisible()
+    expect(summariesOf(calls)).toHaveLength(summariesBefore)
+    await expect(requests.getByRole('listitem')).toHaveCount(3)
     await expect(requests.getByRole('listitem').first()).toContainText('Strict')
     await expect(requests.getByRole('listitem').first()).toContainText('0 data values sent')
   })

@@ -4,7 +4,8 @@ import { isCancellation, toAppError } from '@/lib/errors'
 // The answer's trace (docs/PRD.md §7 TraceStep): every stage of every attempt with its timing,
 // SQL, error and tokens. Drives the pipeline timeline (F-ASK-06) and the Trace tab (F-EXPL-06).
 
-export type StageId = 'context' | 'plan' | 'guard' | 'explain' | 'execute' | 'summary'
+export type StageId =
+  'context' | 'plan' | 'guard' | 'explain' | 'execute' | 'chart' | 'summary' | 'narrate'
 
 export const STAGE_LABELS: Record<StageId, string> = {
   context: 'Reading schema',
@@ -12,7 +13,10 @@ export const STAGE_LABELS: Record<StageId, string> = {
   guard: 'Checking SQL',
   explain: 'Checking SQL',
   execute: 'Running',
+  chart: 'Choosing chart',
   summary: 'Summarizing',
+  /** The AI summary (F-ASK-12), after the answer is shown. */
+  narrate: 'Writing summary',
 }
 
 export interface TraceStep {
@@ -32,8 +36,10 @@ export class Trace {
   readonly steps: TraceStep[] = []
   private readonly onChange: (steps: TraceStep[]) => void
 
-  constructor(onChange: (steps: TraceStep[]) => void = () => undefined) {
+  /** `initial`: steps so far, when a later stage (the AI summary) extends an answer's trace. */
+  constructor(onChange: (steps: TraceStep[]) => void = () => undefined, initial: TraceStep[] = []) {
     this.onChange = onChange
+    this.steps.push(...initial.map((step) => ({ ...step })))
   }
 
   private emit() {

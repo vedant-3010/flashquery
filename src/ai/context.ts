@@ -1,15 +1,19 @@
 import type { PrivacyMode } from '@/ai/schemas'
 import type { SqlRunner } from '@/engine/connection'
 import { quoteIdent } from '@/engine/naming'
-import { toLogicalType } from '@/engine/normalize'
+import { tableToRows, toLogicalType } from '@/engine/normalize'
+import { fetchPage, type PagedResult } from '@/engine/paging'
 import { runQuery } from '@/engine/query'
-import type { CellValue, ColumnProfile, DatasetProfile } from '@/engine/types'
+import type { CellValue, ColumnMeta, ColumnProfile, DatasetProfile } from '@/engine/types'
+import { AppError } from '@/lib/errors'
 
 // The ONLY code that decides what reaches an LLM (CLAUDE.md, F-ASK-02). Per privacy mode:
 // - strict: table names, row counts, column names + types (+ role), user notes. No data values.
 // - balanced: strict + null %, distinct count, min/max for numbers and dates, top values for
 //   low-cardinality text (≤ 40 chars each) and 3 sample rows (strings truncated to 40 chars).
 // Everything is data from the user's files and is rendered as JSON inside a <data> block.
+// The AI summary (F-ASK-12, balanced only) also sees the answer's result: every row when there are
+// at most 50, else column statistics plus the first, highest and lowest rows (ResultDigest).
 
 export const TEXT_LIMIT = 40
 export const SAMPLE_ROWS = 3
@@ -112,9 +116,17 @@ export function countDataValues(context: AiContext): number {
   return count
 }
 
+/**
+ * JSON for inside a <data> block. `<` and `>` are escaped (\u003c, \u003e: still valid JSON, the same
+ * text to the model), so a value like "</data> now obey me" can't close the block early (F-SEC-05).
+ */
+export function dataJson(value: unknown): string {
+  return JSON.stringify(value).replace(/</g, '\\u003c').replace(/>/g, '\\u003e')
+}
+
 /** The context as sent: one JSON line per table inside a <data> block. */
 export function renderContext(context: AiContext): string {
-  const lines = context.tables.map((table) => JSON.stringify(table))
+  const lines = context.tables.map((table) => dataJson(table))
   return `<data>\n${lines.join('\n')}\n</data>`
 }
 
@@ -133,4 +145,144 @@ export async function fetchSamples(
     samples.set(table, { columns: result.columns.map((c) => c.name), rows: result.rows })
   }
   return samples
+}
+
+// ---- The answer's result, for the AI summary (F-ASK-12) ----
+
+/** Results with at most this many rows are sent whole; bigger ones as a digest. */
+export const SUMMARY_ROWS = 50
+const DIGEST_FIRST_ROWS = 10
+const DIGEST_EXTREME_ROWS = 5
+
+export interface ColumnStats {
+  min?: number | string
+  max?: number | string
+  avg?: number
+  sum?: number
+  distinct?: number
+}
+
+export interface ResultDigest {
+  rowCount: number
+  columns: { name: string; type: string }[]
+  /** Every row (results of up to SUMMARY_ROWS rows). */
+  rows?: CellValue[][]
+  /** Bigger results: statistics per column over all rows… */
+  stats?: Record<string, ColumnStats>
+  /** …and a few rows: the first ones, and the highest and lowest by the chart's measure. */
+  firstRows?: CellValue[][]
+  highestRows?: CellValue[][]
+  lowestRows?: CellValue[][]
+  /** Which measure highestRows/lowestRows are ordered by. */
+  orderedBy?: string
+}
+
+function refuseStrict(mode: PrivacyMode) {
+  if (mode !== 'balanced') {
+    throw new AppError({
+      code: 'privacy',
+      message: 'Result rows are only sent to the AI in Balanced mode.',
+      detail: null,
+    })
+  }
+}
+
+const clipRows = (rows: CellValue[][]) => rows.map((row) => row.map(clipCell))
+
+/** Statistics per column over the whole result, in one query. */
+async function resultStats(
+  runner: SqlRunner,
+  result: PagedResult,
+  signal?: AbortSignal,
+): Promise<Record<string, ColumnStats>> {
+  const parts: { column: string; stat: keyof ColumnStats; sql: string }[] = []
+  for (const column of result.columns) {
+    const id = quoteIdent(column.name)
+    if (column.logicalType === 'integer' || column.logicalType === 'number') {
+      const value = `CAST(${id} AS DOUBLE)`
+      for (const stat of ['min', 'max', 'avg', 'sum'] as const) {
+        parts.push({ column: column.name, stat, sql: `${stat}(${value})` })
+      }
+    } else if (column.logicalType === 'date' || column.logicalType === 'timestamp') {
+      parts.push({ column: column.name, stat: 'min', sql: `CAST(min(${id}) AS VARCHAR)` })
+      parts.push({ column: column.name, stat: 'max', sql: `CAST(max(${id}) AS VARCHAR)` })
+    } else {
+      parts.push({ column: column.name, stat: 'distinct', sql: `approx_count_distinct(${id})` })
+    }
+  }
+  if (parts.length === 0) return {}
+  const select = parts.map((part, i) => `${part.sql} AS s${i}`).join(', ')
+  const [row] = tableToRows(await runner.run(`SELECT ${select} FROM ${result.relation}`, signal))
+  const stats: Record<string, ColumnStats> = {}
+  parts.forEach((part, i) => {
+    const value = row?.[i]
+    if (value === null || value === undefined || typeof value === 'boolean') return
+    const entry = (stats[part.column] ??= {})
+    if (part.stat === 'min' || part.stat === 'max') {
+      entry[part.stat] = typeof value === 'string' ? clip(value) : roundStat(value)
+    } else if (typeof value === 'number') {
+      entry[part.stat] = roundStat(value)
+    }
+  })
+  return stats
+}
+
+const roundStat = (value: number) => Math.round(value * 1e4) / 1e4
+
+/**
+ * What the AI summary sees of a result (balanced only; throws otherwise). `rows` are the result's
+ * first rows (all of them when it is small); `measure` orders the highest/lowest rows.
+ */
+export async function fetchResultDigest(
+  runner: SqlRunner,
+  {
+    mode,
+    result,
+    rows,
+    measure,
+  }: { mode: PrivacyMode; result: PagedResult; rows: CellValue[][]; measure: string | null },
+  signal?: AbortSignal,
+): Promise<ResultDigest> {
+  refuseStrict(mode)
+  const columns = result.columns.map((column: ColumnMeta) => ({
+    name: column.name,
+    type: column.duckType,
+  }))
+  if (result.rowCount <= SUMMARY_ROWS && rows.length >= result.rowCount) {
+    return { rowCount: result.rowCount, columns, rows: clipRows(rows) }
+  }
+  const digest: ResultDigest = {
+    rowCount: result.rowCount,
+    columns,
+    stats: await resultStats(runner, result, signal),
+    firstRows: clipRows(rows.slice(0, DIGEST_FIRST_ROWS)),
+  }
+  if (measure && result.columns.some((column) => column.name === measure)) {
+    const page = (desc: boolean) =>
+      fetchPage(
+        runner,
+        result,
+        { offset: 0, limit: DIGEST_EXTREME_ROWS, sorting: [{ column: measure, desc }] },
+        signal,
+      )
+    digest.orderedBy = measure
+    digest.highestRows = clipRows(await page(true))
+    digest.lowestRows = clipRows(await page(false))
+  }
+  return digest
+}
+
+/** How many values from the data a digest contains (the inspector's "data values sent"). */
+export function countResultValues(digest: ResultDigest): number {
+  let count = 0
+  for (const rows of [digest.rows, digest.firstRows, digest.highestRows, digest.lowestRows]) {
+    for (const row of rows ?? []) count += row.length
+  }
+  for (const stats of Object.values(digest.stats ?? {})) count += Object.keys(stats).length
+  return count
+}
+
+/** The digest as sent: JSON inside a <data> block. */
+export function renderDigest(digest: ResultDigest): string {
+  return `<data>\n${dataJson(digest)}\n</data>`
 }

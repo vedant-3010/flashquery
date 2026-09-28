@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/dialog'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { PrivacyModeSchema } from '@/ai/schemas'
+import { FormatSettings } from '@/features/settings/FormatSettings'
 import { ProviderSettings } from '@/features/settings/ProviderSettings'
 import { PRIVACY_MODES } from '@/features/settings/privacyText'
 import { useSettingsStore } from '@/stores/settings'
@@ -81,6 +82,13 @@ export function SettingsDialog() {
             Changes apply to your next question. The side panel&apos;s AI inspector shows every
             request exactly as it was sent.
           </p>
+        </section>
+
+        <section aria-labelledby="settings-format" className="grid gap-3 border-t pt-4">
+          <h3 id="settings-format" className="text-sm font-medium">
+            Formatting
+          </h3>
+          <FormatSettings />
         </section>
       </DialogContent>
     </Dialog>

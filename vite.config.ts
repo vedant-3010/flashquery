@@ -25,6 +25,14 @@ export default defineConfig({
       '@uiw/react-codemirror',
       '@codemirror/lang-sql',
       'sql-formatter',
+      '@langchain/anthropic',
+      '@langchain/openai',
+      '@langchain/core/messages',
+      'echarts/core',
+      'echarts/charts',
+      'echarts/components',
+      'echarts/features',
+      'echarts/renderers',
       'xlsx', // imported by the Excel worker
     ],
   },
@@ -35,5 +43,8 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.ts'],
     include: ['src/**/*.test.{ts,tsx}'],
     passWithNoTests: true,
+    // Engine tests run real DuckDB (Node build) in parallel workers: slow machines need headroom.
+    testTimeout: 20_000,
+    hookTimeout: 30_000,
   },
 })

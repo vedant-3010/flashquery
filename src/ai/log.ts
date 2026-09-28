@@ -22,7 +22,7 @@ export const LoggedMessageSchema = z.object({
 export const AiLogEntrySchema = z.object({
   id: z.string(),
   answerId: z.string(),
-  purpose: z.enum(['plan', 'repair', 'test']),
+  purpose: z.enum(['plan', 'repair', 'summary', 'test']),
   provider: z.string(),
   model: z.string(),
   mode: PrivacyModeSchema,

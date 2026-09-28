@@ -61,7 +61,7 @@ export function PipelineTimeline({ trace }: { trace: TraceStep[] }) {
   return (
     <ol
       aria-label="Progress"
-      className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground"
+      className="relative flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground"
     >
       {items(trace).map((item) => {
         const Icon = ICONS[item.status]

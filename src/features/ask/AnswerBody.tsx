@@ -3,17 +3,11 @@ import { useState } from 'react'
 import { DEMO_QUESTIONS } from '@/ai/providers/fixture'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { ExplanationTab } from '@/features/explain/ExplanationTab'
-import { SqlTab } from '@/features/explain/SqlTab'
-import { TraceTab } from '@/features/explain/TraceTab'
-import { ResultGrid } from '@/features/grid/ResultGrid'
+import { AnswerSummaryView } from '@/features/ask/AnswerSummaryView'
+import { AnswerTabs } from '@/features/ask/AnswerTabs'
 import { useAskStore, type Answer } from '@/stores/ask'
 import { useDatasetsStore } from '@/stores/datasets'
 import { useUiStore } from '@/stores/ui'
-
-/** Fits small results (28 px rows plus header and footer), up to 320 px. */
-const gridHeight = (rows: number) => Math.min(320, Math.max(3, rows) * 28 + 72)
 
 function Chips({ questions }: { questions: string[] }) {
   const ask = useAskStore((state) => state.ask)
@@ -27,48 +21,6 @@ function Chips({ questions }: { questions: string[] }) {
         </li>
       ))}
     </ul>
-  )
-}
-
-function AnswerTabs({ answer, withTable }: { answer: Answer; withTable: boolean }) {
-  const [tab, setTab] = useState(withTable ? 'table' : 'sql')
-  return (
-    <Tabs value={tab} onValueChange={setTab} className="gap-2">
-      <TabsList variant="line" aria-label="Answer details">
-        {withTable && <TabsTrigger value="table">Table</TabsTrigger>}
-        {answer.sql !== null && <TabsTrigger value="sql">SQL</TabsTrigger>}
-        {answer.plan && <TabsTrigger value="explanation">Explanation</TabsTrigger>}
-        <TabsTrigger value="trace">Trace</TabsTrigger>
-      </TabsList>
-      {withTable && answer.result && (
-        <TabsContent value="table">
-          <div
-            className="flex flex-col overflow-hidden rounded-md border"
-            style={{ height: gridHeight(answer.result.rowCount) }}
-          >
-            <ResultGrid
-              key={answer.result.relation}
-              result={answer.result}
-              label={`Result: ${answer.question}`}
-              exportName="answer"
-            />
-          </div>
-        </TabsContent>
-      )}
-      {answer.sql !== null && (
-        <TabsContent value="sql">
-          <SqlTab answer={answer} />
-        </TabsContent>
-      )}
-      {answer.plan && (
-        <TabsContent value="explanation">
-          <ExplanationTab plan={answer.plan} />
-        </TabsContent>
-      )}
-      <TabsContent value="trace">
-        <TraceTab trace={answer.trace} />
-      </TabsContent>
-    </Tabs>
   )
 }
 
@@ -184,24 +136,7 @@ export function AnswerBody({ answer }: { answer: Answer }) {
     case 'answered':
       return (
         <div className="grid gap-3">
-          {answer.summary && (
-            <div className="grid gap-1">
-              <p className="text-base font-medium">{answer.summary.headline}</p>
-              {answer.summary.bullets.length > 0 && (
-                <ul className="list-disc pl-5 text-sm text-muted-foreground">
-                  {answer.summary.bullets.map((bullet) => (
-                    <li key={bullet}>{bullet}</li>
-                  ))}
-                </ul>
-              )}
-              {answer.summary.caveats.map((caveat) => (
-                <p key={caveat} className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <Info className="size-3.5" aria-hidden />
-                  {caveat}
-                </p>
-              ))}
-            </div>
-          )}
+          <AnswerSummaryView answer={answer} />
           <AnswerTabs answer={answer} withTable />
         </div>
       )

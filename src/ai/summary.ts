@@ -1,11 +1,14 @@
+import { summarizeChart } from '@/ai/chartSummary'
 import type { AnswerSummary } from '@/ai/schemas'
+import type { ChartData } from '@/charts/shape'
+import type { ChartSpec } from '@/charts/spec'
 import { isIdentifierLike } from '@/engine/roles'
 import type { CellValue, ColumnMeta } from '@/engine/types'
 import { formatCompact, formatNumber, formatPercent } from '@/lib/format'
 
-// F-ASK-11: the answer's headline written locally from the result, no LLM. Used in strict mode and
-// demo mode (and until the LLM summary lands in M4). Reads the result's shape:
-// - one row → the value(s); a time column → first vs last; categories → leader and runner-up.
+// F-ASK-11: the answer's headline written locally, no LLM. Used in strict and demo mode, and until
+// the AI summary arrives. Charts are summarized from their spec (chartSummary.ts); tables from the
+// result's shape: one row → the value(s); a time column → first vs last; categories → the leader.
 
 export interface SummaryInput {
   columns: ColumnMeta[]
@@ -13,6 +16,9 @@ export interface SummaryInput {
   rows: CellValue[][]
   rowCount: number
   locale: string
+  /** The chart shown, and its data: when both are given, the summary follows the chart. */
+  spec?: ChartSpec
+  data?: ChartData
 }
 
 const FRACTION = /(pct|percent|share|rate|ratio|margin|growth)/i
@@ -63,7 +69,16 @@ function isTemporal(column: ColumnMeta) {
   )
 }
 
-export function summarizeLocally({ columns, rows, rowCount, locale }: SummaryInput): AnswerSummary {
+export function summarizeLocally(input: SummaryInput): AnswerSummary {
+  const { spec, data } = input
+  if (spec && data && spec.type !== 'table' && data.rows.length > 0) {
+    const summary = summarizeChart(spec, data, input.locale)
+    if (summary) return summary
+  }
+  return summarizeShape(input)
+}
+
+function summarizeShape({ columns, rows, rowCount, locale }: SummaryInput): AnswerSummary {
   const caveats: string[] = []
   if (rowCount > rows.length) {
     caveats.push(

@@ -1,15 +1,16 @@
 // @vitest-environment node
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import type { AiLogEntry } from '@/ai/log'
-import type { LLMProvider, PlanRequest } from '@/ai/providers'
-import type { SqlPlan } from '@/ai/schemas'
+import type { LLMProvider, PlanRequest, SummaryRequest } from '@/ai/providers'
+import type { AnswerSummary, SqlPlan } from '@/ai/schemas'
+import { Trace } from '@/ai/trace'
 import type { Engine } from '@/engine/connection'
 import { profileTable } from '@/engine/profile'
 import { runQuery } from '@/engine/query'
 import type { DatasetProfile } from '@/engine/types'
 import { AppError } from '@/lib/errors'
 import { createTestEngine } from '@/test/duckdb'
-import { runPipeline, type PipelineInput } from './pipeline'
+import { canNarrate, narrate, runPipeline, type PipelineInput } from './pipeline'
 
 let engine: Engine
 
@@ -52,13 +53,28 @@ const plan = (sql: string | null, overrides: Partial<SqlPlan> = {}): SqlPlan => 
   ...overrides,
 })
 
+const AI_SUMMARY: AnswerSummary = {
+  headline: 'APAC brings in 350, well ahead of EMEA.',
+  bullets: ['APAC is 64% of the total.'],
+  caveats: [],
+}
+
 /** A provider that replays plans (or throws errors) and records every request. */
 function scripted(replies: (SqlPlan | Error)[]) {
   const requests: PlanRequest[] = []
+  const summaryRequests: SummaryRequest[] = []
   const provider: LLMProvider = {
     id: 'anthropic',
     model: 'test-model',
     remote: true,
+    summaryModel: 'fast-model',
+    async summarize(request) {
+      summaryRequests.push(request)
+      return {
+        summary: AI_SUMMARY,
+        usage: { inputTokens: 3, outputTokens: 2, cacheReadTokens: 0, cacheWriteTokens: 0 },
+      }
+    },
     async planSql(request) {
       requests.push(request)
       const next = replies.shift()
@@ -71,7 +87,7 @@ function scripted(replies: (SqlPlan | Error)[]) {
     },
     async testConnection() {},
   }
-  return { provider, requests }
+  return { provider, requests, summaryRequests }
 }
 
 async function ask(
@@ -89,6 +105,7 @@ async function ask(
     mode: 'balanced',
     history: [],
     locale: 'en-US',
+    currency: null,
     today: '2026-09-29',
     signal: new AbortController().signal,
     onLog: (entry) => logs.push(entry),
@@ -113,15 +130,17 @@ const GOOD =
   'SELECT region, sum(revenue) AS total_revenue FROM sales GROUP BY ALL ORDER BY total_revenue DESC'
 
 describe('runPipeline', () => {
-  it('answers: plan → guard → explain → execute → summary', async () => {
+  it('answers: plan → guard → explain → execute → chart → summary', async () => {
     const { provider } = scripted([plan(GOOD)])
     const { outcome, logs } = await ask(provider, [sales])
     expect(outcome.kind).toBe('answer')
     if (outcome.kind !== 'answer') return
-    expect(outcome.previewRows).toEqual([
+    expect(outcome.rows).toEqual([
       ['APAC', 350],
       ['EMEA', 200],
     ])
+    expect(outcome.chart.spec).toMatchObject({ type: 'bar', x: 'region', y: ['total_revenue'] })
+    expect(outcome.chart.data).toMatchObject({ sampling: 'none', rowCount: 2 })
     expect(outcome.summary.headline).toBe('APAC leads with 350, followed by EMEA (200).')
     expect(outcome.trace.map((s) => `${s.stage}:${s.status}`)).toEqual([
       'context:done',
@@ -129,6 +148,7 @@ describe('runPipeline', () => {
       'guard:done',
       'explain:done',
       'execute:done',
+      'chart:done',
       'summary:done',
     ])
     expect(logs).toHaveLength(1)
@@ -210,6 +230,82 @@ describe('runPipeline', () => {
     setTimeout(() => controller.abort(), 20)
     await expect(pending).rejects.toMatchObject({ code: 'cancelled' })
     expect(steps.at(-1)).toEqual(['context:done', 'plan:cancelled'])
+  })
+})
+
+describe('charts and AI summaries (F-VIZ-01, F-ASK-12)', () => {
+  it('uses the AI chart hint when it fits the result', async () => {
+    const { provider } = scripted([
+      plan(GOOD, {
+        title: 'Revenue share by region',
+        chartHint: { type: 'donut', x: 'region', y: ['total_revenue'], series: null },
+      }),
+    ])
+    const { outcome } = await ask(provider, [sales])
+    expect(outcome.kind === 'answer' && outcome.chart.spec).toMatchObject({
+      type: 'donut',
+      title: 'Revenue share by region',
+      reason: expect.stringMatching(/^The AI suggested a donut chart, and it fits/),
+    })
+  })
+
+  async function answered() {
+    const scriptedProvider = scripted([plan(GOOD)])
+    const { outcome } = await ask(scriptedProvider.provider, [sales])
+    if (outcome.kind !== 'answer') throw new Error('expected an answer')
+    return { ...scriptedProvider, outcome }
+  }
+
+  it('writes the AI summary from the result rows in balanced mode, logged as sent', async () => {
+    const { provider, outcome, summaryRequests } = await answered()
+    const logs: AiLogEntry[] = []
+    const trace = new Trace(undefined, outcome.trace)
+    const { summary, model } = await narrate({
+      answerId: 'a1',
+      question: 'Revenue by region?',
+      plan: outcome.plan,
+      sql: outcome.sql,
+      result: outcome.result,
+      rows: outcome.rows,
+      spec: outcome.chart.spec,
+      provider,
+      engine,
+      mode: 'balanced',
+      signal: new AbortController().signal,
+      trace,
+      onLog: (entry) => logs.push(entry),
+    })
+    expect(summary).toEqual(AI_SUMMARY)
+    expect(model).toBe('fast-model')
+    const sent = summaryRequests[0]?.messages.map((m) => m.content).join('\n') ?? ''
+    expect(sent).toContain('Question: Revenue by region?')
+    expect(sent).toMatch(
+      /<data>\n\{"rowCount":2,.*"rows":\[\["APAC",350\],\["EMEA",200\]\]\}\n<\/data>/,
+    )
+    expect(logs[0]).toMatchObject({ purpose: 'summary', model: 'fast-model', dataValues: 4 })
+    expect(trace.steps.at(-1)).toMatchObject({ stage: 'narrate', status: 'done' })
+  })
+
+  it('never writes AI summaries in strict mode or without a key', async () => {
+    const { provider, outcome } = await answered()
+    expect(canNarrate(provider, 'strict')).toBe(false)
+    expect(canNarrate({ ...provider, remote: false }, 'balanced')).toBe(false)
+    await expect(
+      narrate({
+        answerId: 'a1',
+        question: 'q',
+        plan: outcome.plan,
+        sql: outcome.sql,
+        result: outcome.result,
+        rows: outcome.rows,
+        spec: outcome.chart.spec,
+        provider,
+        engine,
+        mode: 'strict',
+        signal: new AbortController().signal,
+        trace: new Trace(),
+      }),
+    ).rejects.toMatchObject({ code: 'no_summary' })
   })
 })
 

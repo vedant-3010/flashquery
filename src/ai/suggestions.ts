@@ -1,4 +1,5 @@
 import type { ColumnProfile, DatasetProfile } from '@/engine/types'
+import { pluralize } from '@/lib/format'
 
 // F-PROF-03: up to 5 starter questions from column roles, no LLM. Templates:
 // "Total <measure> by <category>", "<measure> by month", "Top 10 <category> by <measure>", ...
@@ -10,10 +11,6 @@ const MEASURE_RANK = [/revenue|sales/i, /amount|profit|spend|income|value|total/
 const NON_ADDITIVE = /price|rate|ratio|pct|percent|discount|score|age|avg|mean/i
 
 const words = (name: string) => name.replace(/[_\s]+/g, ' ').trim()
-
-/** Naive English plural for column names: product → products, country → countries. */
-const plural = (name: string) =>
-  /s$/i.test(name) ? name : /[^aeiou]y$/i.test(name) ? `${name.slice(0, -1)}ies` : `${name}s`
 
 function pickMeasure(columns: ColumnProfile[]): ColumnProfile | undefined {
   const measures = columns.filter((column) => column.role === 'measure')
@@ -47,7 +44,7 @@ export function suggestQuestions(datasets: DatasetProfile[]): string[] {
     if (measure && time)
       add(`${words(measure.name)} by month`.replace(/^./, (c) => c.toUpperCase()))
     if (measure && (second ?? first)) {
-      add(`Top 10 ${plural(words((second ?? first)?.name ?? ''))} by ${words(measure.name)}`)
+      add(`Top 10 ${pluralize(words((second ?? first)?.name ?? ''))} by ${words(measure.name)}`)
     }
     if (first && !measure) add(`How many rows are there for each ${words(first.name)}?`)
     if (time) add(`How many rows per month?`)

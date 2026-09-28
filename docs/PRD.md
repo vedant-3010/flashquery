@@ -91,7 +91,7 @@ Format: `ID (priority) Title: description. AC: acceptance criteria.`
   "Upload a file", "Add API key", and a "How it works" link. AC: J1 completes with no key.
 - [x] **F-SHELL-03 (P0) Engine status**: DuckDB idle/loading/ready/error with version; Pyodide not
   loaded/loading/ready. AC: errors show a "Restart engine" action.
-- [ ] **F-SHELL-04 (P1) Theme**: light/dark/system, persisted. AC: charts switch theme without re-creating data.
+- [x] **F-SHELL-04 (P1) Theme**: light/dark/system, persisted. AC: charts switch theme without re-creating data.
 - [ ] **F-SHELL-05 (P1) Guided tour**: 3 dismissible steps on first run; remembered.
 - [ ] **F-SHELL-06 (P1) Shortcuts dialog** (`?`) listing all shortcuts.
 - [ ] **F-SHELL-07 (P2) Command palette** (Ctrl/Cmd+K): datasets, questions, dashboards, settings.
@@ -173,7 +173,7 @@ Format: `ID (priority) Title: description. AC: acceptance criteria.`
 - [x] **F-ASK-10 (P0) Unanswerable questions**: explain why and suggest answerable alternatives.
 - [x] **F-ASK-11 (P0) Local templated summary** (Strict + demo mode): e.g. "APAC leads with +142%,
   followed by LATAM (+64%)"; built from ChartSpec + result, no LLM.
-- [ ] **F-ASK-12 (P1) LLM narrative summary** (`AnswerSummary`) in Balanced mode, shown after the chart.
+- [x] **F-ASK-12 (P1) LLM narrative summary** (`AnswerSummary`) in Balanced mode, shown after the chart.
 - [x] **F-ASK-13 (P1) Clarification chips** when kind = clarify; choosing one continues the pipeline.
 - [ ] **F-ASK-14 (P1) Feedback**: 👍/👎 per answer; 👎 asks what was wrong and offers "Save as eval case"
   (stored locally, exportable to `evals/` format).
@@ -185,27 +185,27 @@ Format: `ID (priority) Title: description. AC: acceptance criteria.`
   the same guard; edited versions are marked "edited".
 - [x] **F-EXPL-02 (P0) Explanation tab**: plain-English explanation, assumptions list, tables and columns
   used (click → highlight in sidebar).
-- [ ] **F-EXPL-03 (P0) "Why this chart"**: the `reason` from `selectChart`.
+- [x] **F-EXPL-03 (P0) "Why this chart"**: the `reason` from `selectChart`.
 - [x] **F-EXPL-04 (P0) AI payload inspector ("What the AI saw")**: per request: mode, provider, model, exact
   messages, parsed output, tokens, latency; copy as JSON; Strict mode shows "0 data values sent".
 - [ ] **F-EXPL-05 (P0) History**: every question and manual query with time, re-run, pin, delete; persisted.
 - [x] **F-EXPL-06 (P1) Trace tab**: every attempt (SQL, error, fix), stage timings, tokens.
-- [ ] **F-EXPL-07 (P0) SQL scratchpad**: standalone editor to query tables directly; results in grid + chart.
+- [x] **F-EXPL-07 (P0) SQL scratchpad**: standalone editor to query tables directly; results in grid + chart.
 - [x] **F-EXPL-08 (P1) Schema-aware autocomplete** in the SQL editor (tables, columns).
 - [ ] **F-EXPL-09 (P2) Query plan view**: `EXPLAIN ANALYZE` rendered as a tree with timings.
 
 ### 4.8 Visualization (F-VIZ)
-- [ ] **F-VIZ-01 (P0) Automatic chart selection** (rules §6) with a stated reason. AC: ≥ 25 table-driven
+- [x] **F-VIZ-01 (P0) Automatic chart selection** (rules §6) with a stated reason. AC: ≥ 25 table-driven
   unit cases pass.
-- [ ] **F-VIZ-02 (P0) Chart types**: KPI (single, group), line, area, bar, horizontal bar, grouped bar,
+- [x] **F-VIZ-02 (P0) Chart types**: KPI (single, group), line, area, bar, horizontal bar, grouped bar,
   stacked bar, scatter, histogram, donut (≤ 6 slices), heatmap, table fallback.
-- [ ] **F-VIZ-03 (P0) Chart switcher**: any compatible type; incompatible ones disabled with a tooltip.
-- [ ] **F-VIZ-04 (P0) Formatting**: humanized axis titles, compact numbers, locale + currency, sensible date
+- [x] **F-VIZ-03 (P0) Chart switcher**: any compatible type; incompatible ones disabled with a tooltip.
+- [x] **F-VIZ-04 (P0) Formatting**: humanized axis titles, compact numbers, locale + currency, sensible date
   ticks, sorted bars, top-N + "Other" beyond 12 categories.
-- [ ] **F-VIZ-05 (P0) Large data**: ≤ 5k points rule, LTTB sampling for lines, large mode for scatter.
+- [x] **F-VIZ-05 (P0) Large data**: ≤ 5k points rule, LTTB sampling for lines, large mode for scatter.
   AC: a 1M-row scatter request is sampled in SQL and renders in < 300 ms.
-- [ ] **F-VIZ-06 (P1) Chart settings popover**: x / y / series pickers, sort, stack, log scale, labels.
-- [ ] **F-VIZ-07 (P1) Export chart** as PNG/SVG; copy image to clipboard.
+- [x] **F-VIZ-06 (P1) Chart settings popover**: x / y / series pickers, sort, stack, log scale, labels.
+- [x] **F-VIZ-07 (P1) Export chart** as PNG/SVG; copy image to clipboard.
 - [ ] **F-VIZ-08 (P2) Annotations**: max/min markers, average line, target line.
 
 ### 4.9 Dashboard (F-DASH)
@@ -580,6 +580,43 @@ Build in order. A milestone is done when its features are ticked and the DoD in 
   lazy chunks (gzip: core 136 KB, OpenAI 106 KB, Anthropic 59 KB). The Anthropic SDK's Node-only
   credential code (`node:fs`) is stubbed by Vite and never runs (a key is always passed). The J2/J6
   e2e run the real LangChain + SDK code against a mocked `api.anthropic.com`.
+- **D41** AI summary (F-ASK-12): Balanced mode with a key only, after the answer (chart and local
+  summary) is on screen; on failure the local summary stays and the trace says why. It uses the
+  provider's fast model (Claude Haiku 4.5, or GPT-6 Luna with low reasoning effort), shown in the
+  answer ("Summary by …") and the inspector. What it sees is built by `context.ts`: the result when it
+  has ≤ 50 rows, else per-column statistics over all rows plus the first 10 and the 5 highest and 5
+  lowest rows by the chart's measure; text cut to 40 characters. Strict mode never calls it, and
+  `fetchResultDigest` refuses Strict as a second line of defense.
+- **D42** Data blocks escape `<` and `>` as `\u003c`/`\u003e` (still valid JSON, same text to the model),
+  so a value like "</data> ignore previous instructions" can't close the block early. Applies to the
+  planning context and to summaries (F-SEC-05).
+- **D43** Chart data (F-VIZ-05): results of ≤ 5,000 rows are charted whole. Bigger ones are reduced in
+  DuckDB: histogram bins with round widths (1/2/2.5/5 × 10^k, ~20 bins), a repeatable reservoir sample
+  of 5,000 rows for scatter plots, every n-th row per series for lines. Chart choice reads the first
+  1,000 rows of big results. Switching charts re-queries only when the new chart needs other data.
+- **D44** Chart rules beyond §6: several measures share grouped bars only when within 20× of each
+  other, otherwise the bars show the measure the question names (or the last one); a leading
+  whole-number column with ≤ 30 unique values (ratings, units) is a category; month, weekday, quarter
+  and numbered-bucket labels keep the result's order; a share-named measure also gets a donut;
+  averages, rates and prices never stack or add up into "Other" (the tail is dropped with a note);
+  top-N + Other: more than 8 series → top 7 + Other, grouped/stacked bars with more than 12 categories
+  → top 12 + Other, plain bars show up to 30 categories (rule 5); rows that repeat a category or date
+  (not aggregated) get a table. An AI hint is used when its chart fits, and the reason says either way.
+- **D45** Chart look: Paul Tol's "bright" palette (color-blind safe; a lighter variant in dark mode),
+  viridis for heatmaps, decal patterns on multi-series bars and donuts, a different marker per line.
+  Colors are hex in `src/charts/theme.ts` (ECharts can't read the app's oklch tokens). Time axes run
+  in UTC (`useUTC`) with our own Intl tick labels, so dates never shift by the viewer's time zone.
+- **D46** Formatting settings (F-VIZ-04; settings record v2, migrated from v1): a number format
+  (browser default, or en-US/en-GB/en-IN/de-DE/fr-FR/es-ES/ja-JP) and an optional currency for
+  money-named columns (revenue, price, cost…). No currency by default: we can't know the data's.
+- **D47** M4 measurements (production build, headless Chromium, Apple-silicon laptop, 1M-row sample):
+  scatter (sampled in SQL) 85 ms, histogram 62 ms, long line 76 ms from clicking Chart to the chart
+  painted, with no main-thread long tasks. The first chart of a session also loads the ECharts chunk
+  (~220 KB gzip, ~750 ms on localhost), so it is prefetched when a question starts. Initial JS: 235 KB
+  gzip (+14 KB for chart choice, summaries and chart data).
+- **D48** F-ASK-08's Chart tab and "Change chart" landed in M4; F-ASK-08 and F-EXPL-05 are ticked when
+  "Pin" lands with the dashboard (M5, see D34). Unit tests get 20 s per test and 30 s per hook: the
+  engine tests run real DuckDB in parallel workers.
 - **D12** Shared hooks live in `src/hooks/` and shared app components in `src/components/` (outside the
   generated `ui/`), matching the shadcn aliases in `components.json`.
 

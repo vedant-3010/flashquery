@@ -17,10 +17,16 @@ paths:
   `?` opens the shortcuts dialog.
 
 ## Charts
-- `src/charts/select.ts` is the single source of truth: `selectChart(columns, rows, question, hint) →
-  ChartSpec` with a human-readable `reason`. Rules table in `docs/PRD.md` §6. Pure; table-driven unit tests.
-- An LLM `chartHint` is used only if it is compatible with the result shape; otherwise fall back to the rules.
-- `src/charts/toOption.ts`: `(spec, rows, theme, locale) → EChartsOption`. Pure; snapshot tests.
+- `src/charts/select.ts` is the single source of truth: `selectChart({ columns, rows, rowCount, question,
+  hint, title, currency }) → ChartSpec` with a human-readable `reason` (column classes in `classify.ts`).
+  Rules table in `docs/PRD.md` §6, refinements in D44. Pure; table-driven unit tests. `buildSpec`,
+  `chartChoices` and `respec` power the switcher (F-VIZ-03) and the settings popover (F-VIZ-06).
+- An LLM `chartHint` is used only if it is compatible with the result shape; otherwise fall back to the rules
+  (the reason says which).
+- `src/charts/shape.ts` `prepare(spec, data)` pivots series, sorts, and applies top-N + "Other";
+  `src/charts/toOption.ts`: `(spec, prepared, { theme, locale, animation }) → EChartsOption`. Both pure;
+  snapshot tests. Data from the user's files never goes into HTML tooltips unescaped.
+- Chart data comes from `src/engine/chartData.ts` (≤ 5,000 points: whole, sampled, every n-th or binned).
 - `<EChart>`: `echarts.init` once per mount (canvas renderer), `setOption(option, { notMerge: true })` on
   change, `ResizeObserver` → `resize()`, `dispose()` on unmount. Register only the chart types and
   components we use via `echarts/core`.

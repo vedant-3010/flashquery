@@ -59,7 +59,7 @@ Main thread: React UI, Zustand stores, LLM calls (network only, lazy-loaded chun
 Ask pipeline (`src/ai/pipeline.ts`); each stage emits a status event for the UI timeline:
 `buildContext → plan (LLM → SqlPlan) → guard (Zod + AST allowlist + EXPLAIN) → execute (normalized,
 row-capped) → self-correct ≤ 2× on error → chooseChart (heuristic; LLM hint only if compatible) →
-summarize (LLM or local template, per privacy mode)`
+local summary`, then, in Balanced mode with a key, the AI summary (`narrate`) once the answer is shown.
 
 ## Layout
 ```
@@ -68,9 +68,9 @@ src/
   components/   shared app components (EmptyState, IconButton); ui/ = shadcn/ui primitives (generated)
   hooks/        shared React hooks (useMediaQuery, useResolvedTheme)
   features/     datasets/ grid/ sql/ ask/ explain/ charts/ dashboard/ python/ settings/  (React only)
-  engine/       duckdb init, ingest, catalog, profile, query, normalize, sqlGuard, samples, export
+  engine/       duckdb init, ingest, catalog, profile, query, normalize, sqlGuard, samples, export, chartData
   ai/           models, providers, prompts/, schemas, context, pipeline, fixtures/  (no React/DOM)
-  charts/       select.ts (chart choice), toOption.ts (spec → ECharts option), theme.ts  (pure)
+  charts/       classify, select (chart choice), shape (data → series), toOption (→ ECharts option), theme  (pure)
   workers/      *.worker.ts (Comlink wiring only) + clients.ts (typed main-thread clients)
   stores/       zustand stores      lib/  format, errors, theme, ids, idb      types/  shared types
   test/         setup, fixtures
@@ -155,5 +155,10 @@ docs/PRD.md     evals/ (M7)     e2e/ (Playwright)
   `method: 'jsonSchema'` (tool calling conflicts with adaptive thinking); see PRD D29–D30.
 - e2e never needs a key: provider flows mock `https://api.anthropic.com` with `page.route`
   (`e2e/ai-provider.spec.ts`), which runs the real LangChain + SDK code in the browser.
+- ECharts 6: `grid.containLabel` is deprecated; use `outerBoundsMode: 'same', outerBoundsContain: 'all'`
+  (keeps axis names inside too). Time axes need `useUTC: true` (our dates are UTC wall clock). ECharts
+  can't parse oklch colors: chart colors are hex in `src/charts/theme.ts`.
+- `sr-only` (and any absolutely positioned) elements inside a scrolling container need a positioned
+  ancestor (`relative`), or they stretch the page and `scrollIntoView` scrolls the whole document.
 - Model IDs live only in `src/ai/models.ts` (default `claude-sonnet-5`, fast `claude-haiku-4-5-20251001`).
   Check provider docs before changing them.
