@@ -3,11 +3,13 @@ import { DashboardView } from '@/app/DashboardView'
 import { PanelErrorBoundary } from '@/app/PanelErrorBoundary'
 import { SidePanel } from '@/app/SidePanel'
 import { TopBar } from '@/app/TopBar'
-import { WorkspaceView } from '@/app/WorkspaceView'
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
 import { Tabs, TabsContent } from '@/components/ui/tabs'
+import { AskView } from '@/features/ask/AskView'
+import { HowItWorksDialog } from '@/features/ask/HowItWorksDialog'
 import { DatasetsPanel } from '@/features/datasets/DatasetsPanel'
 import { FileDropZone } from '@/features/datasets/FileDropZone'
+import { SettingsDialog } from '@/features/settings/SettingsDialog'
 import { SqlView } from '@/features/sql/SqlView'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { useUiStore, ViewSchema } from '@/stores/ui'
@@ -21,12 +23,18 @@ export function AppShell() {
   const sidebarOpen = useUiStore((state) => state.sidebarOpen)
   const setSidebarOpen = useUiStore((state) => state.setSidebarOpen)
   const sidePanelOpen = useUiStore((state) => state.sidePanelOpen)
+  const highlight = useUiStore((state) => state.highlight)
   const wide = useMediaQuery(WIDE_LAYOUT_QUERY)
 
   // Don't reopen a stale overlay after the window was widened and narrowed again.
   useEffect(() => {
     if (wide) setSidebarOpen(false)
   }, [wide, setSidebarOpen])
+
+  // A highlighted column must be visible: open the overlay sidebar when it isn't docked.
+  useEffect(() => {
+    if (highlight && !wide) setSidebarOpen(true)
+  }, [highlight, wide, setSidebarOpen])
 
   const datasetsPanel = (onClose?: () => void) => (
     <PanelErrorBoundary name="the datasets panel">
@@ -62,7 +70,7 @@ export function AppShell() {
         <main className="flex min-w-0 flex-1 flex-col">
           <TabsContent value="workspace" className="flex min-h-0 flex-col">
             <PanelErrorBoundary name="the workspace">
-              <WorkspaceView />
+              <AskView />
             </PanelErrorBoundary>
           </TabsContent>
           <TabsContent value="sql" className="flex min-h-0 flex-col">
@@ -85,6 +93,8 @@ export function AppShell() {
         )}
       </div>
       <FileDropZone />
+      <SettingsDialog />
+      <HowItWorksDialog />
     </Tabs>
   )
 }

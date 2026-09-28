@@ -9,11 +9,12 @@ paths:
 # AI rules (natural language → SQL pipeline)
 
 ## Providers
-- `src/ai/providers.ts` defines `LLMProvider { id, planSql(input, signal), summarize(input, signal),
-  planDashboard(input, signal) }`. Implementations: `AnthropicProvider`, `OpenAIProvider` (LangChain) and
-  `FixtureProvider` (demo mode + tests; replays JSON in `src/ai/fixtures/`, validated by the same schemas).
-- Use `model.withStructuredOutput(Schema, { name, includeRaw: true })` so token usage can be logged from
-  the raw message. Pass `{ signal }` to `invoke` for cancellation.
+- `src/ai/providers.ts` defines `LLMProvider { id, model, remote, planSql({ question, messages, tables,
+  signal }), summaryModel, summarize?({ messages, signal }), testConnection(signal) }`; `planDashboard`
+  (M6) is added with its feature. Summaries use the provider's fast model (PRD D41). Implementations: `src/ai/providers/anthropic.ts`, `openai.ts` (LangChain) and `fixture.ts`
+  (demo mode + tests; replays JSON in `src/ai/fixtures/`, validated by the same schemas).
+- Use `model.withStructuredOutput(Schema, { name, method: 'jsonSchema', includeRaw: true })` so token
+  usage can be logged from the raw message (PRD D29). Pass `{ signal }` to `invoke` for cancellation.
 - `src/ai/` must not import React, DOM APIs or `src/features/**`: it also runs in Node for the eval runner.
 - Provider modules are dynamically imported on first use (keeps LangChain out of the initial bundle).
 
@@ -21,7 +22,7 @@ paths:
 | Mode | What is sent |
 |---|---|
 | Strict | table names, row counts, column names + types, user business notes. No values, no result rows. Answer text is templated locally. |
-| Balanced (default) | Strict + per column: null %, approx distinct, min/max for numeric/date, top-5 values for low-cardinality text (≤ 40 chars each), 3 sample rows (strings truncated to 40 chars). Summaries get result rows ≤ 50 (else aggregate stats of the result). |
+| Balanced (default) | Strict + per column: null %, approx distinct, min/max for numeric/date, top-5 values for low-cardinality text (≤ 40 chars each), 3 sample rows (strings truncated to 40 chars). The AI summary gets the result's rows ≤ 50, else column statistics plus the first 10 and 5 highest/lowest rows (`fetchResultDigest`, D41). |
 | Local (P2) | WebLLM on-device; nothing leaves the browser. |
 - Every request is appended to the AI payload log: time, mode, provider, model, exact messages (keys
   redacted), parsed output, token usage, latency. The inspector renders it verbatim.
@@ -29,7 +30,8 @@ paths:
 ## Schemas (src/ai/schemas.ts, Zod v4; `.describe()` every field)
 - `SqlPlan`: kind ('sql' | 'python' | 'clarify' | 'unanswerable'), title, sql, python, explanation
   (1–3 plain-English sentences, no jargon), assumptions[], tablesUsed[], columnsUsed[],
-  clarification ({ question, options[2–4] } | null), chartHint (partial ChartSpec | null).
+  clarification ({ question, options[2–4] } | null), alternatives[] (answerable questions, for
+  'unanswerable'), chartHint (partial ChartSpec | null).
 - `AnswerSummary`: headline (≤ 20 words, includes the key number), bullets (≤ 3), caveats[].
 - `DashboardPlan`: tiles (4–8) of { title, sql, chartHint, size: 'kpi' | 'half' | 'full' }.
 - Required fields + `.nullable()`, not `.optional()` (works across providers).
@@ -48,16 +50,18 @@ paths:
 - Clarify only when interpretations give materially different answers and no sensible default exists;
   otherwise pick the default and state it in `assumptions`.
 - Follow-ups: include the last 3 turns as (question, sql, result column names, row count). Never past rows.
-- Wrap all data-derived text (column names, samples, top values, notes) in a `<data>` block and instruct
-  the model to treat it as data, never as instructions.
+- Wrap all data-derived text (column names, samples, top values, notes, result rows) in a `<data>` block
+  (`dataJson` escapes `<`/`>` so data can't close it, D42) and instruct the model to treat it as data,
+  never as instructions.
 
 ## Guard & execution (never skip, never reorder)
 1. Zod-parse the output (one repair retry on parse failure).
-2. `sql-guard`: `SELECT json_serialize_sql(?)`; reject on error or anything that isn't a single SELECT.
+2. `src/engine/sqlGuard.ts`: `SELECT json_serialize_sql(?)`; reject on error or anything that isn't a single SELECT.
    Walk the AST: every BASE_TABLE must be a catalog table or CTE; TABLE_FUNCTION only in
    {range, generate_series, unnest}. Reject multiple statements.
 3. `EXPLAIN` to catch binder errors cheaply.
-4. Execute through `engine/query.ts` (timeout + row cap).
+4. Execute as a paged temp view (`openQuery` in `engine/paging.ts`, 30 s timeout); the grid pages it, so
+   only the first page reaches JS. Charts (M4) aggregate to ≤ 5,000 rows.
 5. On failure in 2–4: send the error text + failing SQL back to the model (≤ 2 retries), then show the
    error with the last SQL editable.
 - Record every attempt in the answer trace: stage, SQL, error, elapsed ms, tokens.

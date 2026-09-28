@@ -4,6 +4,7 @@ import { closeResult, openQuery, type PagedResult } from '@/engine/paging'
 import { isValidTableName, quoteIdent } from '@/engine/naming'
 import { DEFAULT_TIMEOUT_MS } from '@/engine/query'
 import { isCancellation, toAppError, type AppErrorData } from '@/lib/errors'
+import { useHistoryStore } from '@/stores/history'
 import { useUiStore } from '@/stores/ui'
 
 // SQL scratchpad (F-EXPL-07): the user's own queries against loaded tables.
@@ -49,14 +50,32 @@ export const useSqlStore = create<SqlState>()((set, get) => ({
       }
       const previous = get().result
       set({ running: false, result, elapsedMs: performance.now() - started })
+      const sql = get().text.trim()
+      useHistoryStore.getState().add({
+        kind: 'query',
+        text: sql,
+        sql,
+        status: 'answered',
+        headline: null,
+        rowCount: result.rowCount,
+      })
       // After the grid has switched to the new result, so no page is read from a dropped view.
       if (previous) await closeResult(engine, previous)
     } catch (error) {
       if (controller !== current) return
-      set({
-        running: false,
-        error: isCancellation(error) ? null : toAppError(error).toJSON(),
-      })
+      const failure = isCancellation(error) ? null : toAppError(error)
+      set({ running: false, error: failure?.toJSON() ?? null })
+      if (failure) {
+        const sql = get().text.trim()
+        useHistoryStore.getState().add({
+          kind: 'query',
+          text: sql,
+          sql,
+          status: 'failed',
+          headline: failure.message,
+          rowCount: null,
+        })
+      }
     } finally {
       if (controller === current) controller = null
     }

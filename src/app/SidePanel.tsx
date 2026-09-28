@@ -1,6 +1,8 @@
-import { History, ScanEye, Table2, X } from 'lucide-react'
+import { Table2, X } from 'lucide-react'
 import { EmptyState } from '@/components/EmptyState'
 import { IconButton } from '@/components/IconButton'
+import { AiInspector } from '@/features/explain/AiInspector'
+import { HistoryPanel } from '@/features/explain/HistoryPanel'
 import { TableGrid } from '@/features/grid/TableGrid'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { SidePanelTabSchema, useUiStore } from '@/stores/ui'
@@ -39,18 +41,10 @@ export function SidePanel() {
         )}
       </TabsContent>
       <TabsContent value="inspector" className="flex min-h-0 flex-col">
-        <EmptyState
-          icon={ScanEye}
-          title="No AI requests yet"
-          description="Every payload sent to the AI provider is shown here exactly as sent."
-        />
+        <AiInspector />
       </TabsContent>
       <TabsContent value="history" className="flex min-h-0 flex-col">
-        <EmptyState
-          icon={History}
-          title="No history yet"
-          description="Questions and queries you run are listed here."
-        />
+        <HistoryPanel />
       </TabsContent>
     </Tabs>
   )

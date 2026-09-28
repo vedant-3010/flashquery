@@ -22,6 +22,7 @@ export function TopBar({ showSidebarToggle }: TopBarProps) {
   const setSidebarOpen = useUiStore((state) => state.setSidebarOpen)
   const sidePanelOpen = useUiStore((state) => state.sidePanelOpen)
   const setSidePanelOpen = useUiStore((state) => state.setSidePanelOpen)
+  const setSettingsOpen = useUiStore((state) => state.setSettingsOpen)
 
   return (
     <header className="flex h-12 shrink-0 items-center gap-3 border-b px-3">
@@ -59,8 +60,7 @@ export function TopBar({ showSidebarToggle }: TopBarProps) {
         >
           <PanelRight />
         </IconButton>
-        {/* Opens provider, key and privacy settings once F-AI-01/02 land (M3). */}
-        <IconButton label="Settings" disabled>
+        <IconButton label="Settings" onClick={() => setSettingsOpen(true)}>
           <Settings />
         </IconButton>
       </div>

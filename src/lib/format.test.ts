@@ -8,6 +8,7 @@ import {
   formatDate,
   formatDateTime,
   formatDuration,
+  formatEventTime,
   formatNumber,
   formatPercent,
 } from './format'
@@ -145,6 +146,18 @@ describe('formatCell (F-GRID-03)', () => {
     expect(formatCell(true, { logicalType: 'boolean' }, 'en-US')).toBe('true')
     expect(formatCell('9007199254740993', { logicalType: 'integer' }, 'en-US')).toBe(
       '9007199254740993',
+    )
+  })
+})
+
+describe('formatEventTime', () => {
+  it('shows the time for today and date + time otherwise, in local time', () => {
+    const at = new Date(2026, 8, 29, 14, 5, 7).getTime()
+    expect(plain(formatEventTime(at, 'en-US', new Date(2026, 8, 29, 20).getTime()))).toBe(
+      '2:05:07 PM',
+    )
+    expect(plain(formatEventTime(at, 'en-US', new Date(2026, 9, 2).getTime()))).toBe(
+      'Sep 29, 2026, 2:05 PM',
     )
   })
 })

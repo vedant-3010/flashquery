@@ -1,5 +1,5 @@
 import { ChevronRight, Eye, MoreHorizontal, Pencil, SquareTerminal, Trash2 } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { IconButton } from '@/components/IconButton'
 import {
   DropdownMenu,
@@ -23,23 +23,50 @@ export function DatasetItem({ dataset }: { dataset: DatasetProfile }) {
   const previewTable = useUiStore((state) => state.previewTable)
   const showPreview = useUiStore((state) => state.showPreview)
   const openInSql = useSqlStore((state) => state.openTable)
-  const [expanded, setExpanded] = useState(true)
+  // When the user last collapsed the column list (null = expanded).
+  const [collapsedAt, setCollapsedAt] = useState<number | null>(null)
   const [dialog, setDialog] = useState<'rename' | 'remove' | null>(null)
   const selected = previewTable === dataset.table
+  const highlight = useUiStore((state) =>
+    state.highlight?.table === dataset.table ? state.highlight : null,
+  )
+  const [flashedAt, setFlashedAt] = useState<number | null>(null)
+  const section = useRef<HTMLElement>(null)
+  // A newer highlight re-expands the list; it flashes until its timer ends.
+  const expanded = collapsedAt === null || (highlight !== null && highlight.at > collapsedAt)
+  const flash = highlight !== null && highlight.at !== flashedAt ? (highlight.column ?? '') : null
+
+  // "Columns used" chips in an answer point here (F-EXPL-02): scroll to and flash the column.
+  useEffect(() => {
+    if (!highlight) return
+    const frame = requestAnimationFrame(() => {
+      const target =
+        highlight.column === null
+          ? section.current
+          : section.current?.querySelector(`[data-column="${CSS.escape(highlight.column)}"]`)
+      target?.scrollIntoView({ block: 'nearest' })
+    })
+    const timer = window.setTimeout(() => setFlashedAt(highlight.at), 1600)
+    return () => {
+      cancelAnimationFrame(frame)
+      window.clearTimeout(timer)
+    }
+  }, [highlight])
 
   return (
-    <section aria-label={dataset.label} className="px-2 py-1">
+    <section ref={section} aria-label={dataset.label} className="px-2 py-1">
       <div
         className={cn(
-          'flex items-center gap-0.5 rounded-md pr-1 hover:bg-muted/70',
+          'flex items-center gap-0.5 rounded-md pr-1 transition-colors duration-500 hover:bg-muted/70',
           selected && 'bg-muted',
+          flash === '' && 'bg-primary/15',
         )}
       >
         <IconButton
           label={expanded ? `Hide columns of ${dataset.label}` : `Show columns of ${dataset.label}`}
           size="icon-xs"
           aria-expanded={expanded}
-          onClick={() => setExpanded(!expanded)}
+          onClick={() => setCollapsedAt(expanded ? Date.now() : null)}
         >
           <ChevronRight className={cn('transition-transform', expanded && 'rotate-90')} />
         </IconButton>
@@ -90,7 +117,14 @@ export function DatasetItem({ dataset }: { dataset: DatasetProfile }) {
           </p>
           <ul aria-label={`Columns of ${dataset.label}`}>
             {dataset.columns.map((column) => (
-              <li key={column.name}>
+              <li
+                key={column.name}
+                data-column={column.name}
+                className={cn(
+                  'rounded-md transition-colors duration-500',
+                  flash === column.name && 'bg-primary/15',
+                )}
+              >
                 <ColumnProfilePopover column={column} rowCount={dataset.rowCount} />
               </li>
             ))}
