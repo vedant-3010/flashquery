@@ -5,11 +5,17 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import { warmUpEngine } from '@/engine/duckdb'
 import { useResolvedTheme } from '@/hooks/useResolvedTheme'
 import { applyTheme } from '@/lib/theme'
+import { useHistoryStore } from '@/stores/history'
+import { useSettingsStore } from '@/stores/settings'
 
 export function App() {
   const theme = useResolvedTheme()
   useEffect(() => applyTheme(theme), [theme])
   useEffect(() => warmUpEngine(), [])
+  useEffect(() => {
+    void useSettingsStore.getState().hydrate()
+    void useHistoryStore.getState().hydrate()
+  }, [])
 
   return (
     <TooltipProvider>
