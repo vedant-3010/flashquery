@@ -1,0 +1,229 @@
+[
+  {
+    "question": "Which region grew fastest?",
+    "aliases": [
+      "which region grew the fastest",
+      "fastest growing region",
+      "which region is growing fastest",
+      "region growth"
+    ],
+    "plan": {
+      "kind": "sql",
+      "title": "Revenue growth by region, 2022 to 2025",
+      "sql": "WITH yearly AS (\n  SELECT region, year(order_date) AS yr, sum(revenue) AS revenue\n  FROM global_sales\n  WHERE year(order_date) IN (2022, 2025)\n  GROUP BY ALL\n)\nSELECT region,\n       round(sum(revenue) FILTER (WHERE yr = 2022), 2) AS revenue_2022,\n       round(sum(revenue) FILTER (WHERE yr = 2025), 2) AS revenue_2025,\n       round((revenue_2025 - revenue_2022) / revenue_2022, 4) AS growth_pct\nFROM yearly\nGROUP BY region\nORDER BY growth_pct DESC",
+      "python": null,
+      "explanation": "Adds up each region's revenue in 2022 and in 2025, then compares the two years. Regions are ranked by how much their revenue grew.",
+      "assumptions": [
+        "Growth compares total revenue in 2022 (the first full year in the data) with 2025 (the last).",
+        "growth_pct is a fraction: 0.5 means revenue grew by 50%."
+      ],
+      "tablesUsed": ["global_sales"],
+      "columnsUsed": ["global_sales.region", "global_sales.order_date", "global_sales.revenue"],
+      "clarification": null,
+      "alternatives": [],
+      "chartHint": { "type": "bar", "x": "region", "y": ["growth_pct"], "series": null }
+    }
+  },
+  {
+    "question": "What is total revenue by year?",
+    "aliases": ["total revenue by year", "revenue by year", "yearly revenue", "annual revenue"],
+    "plan": {
+      "kind": "sql",
+      "title": "Total revenue by year",
+      "sql": "SELECT year(order_date) AS year, round(sum(revenue), 2) AS total_revenue\nFROM global_sales\nGROUP BY ALL\nORDER BY year",
+      "python": null,
+      "explanation": "Adds up the revenue of every order, grouped by the year the order was placed.",
+      "assumptions": ["Revenue is net of discounts, as stored in the revenue column."],
+      "tablesUsed": ["global_sales"],
+      "columnsUsed": ["global_sales.order_date", "global_sales.revenue"],
+      "clarification": null,
+      "alternatives": [],
+      "chartHint": { "type": "bar", "x": "year", "y": ["total_revenue"], "series": null }
+    }
+  },
+  {
+    "question": "Show the monthly revenue trend by channel",
+    "aliases": [
+      "monthly revenue by channel",
+      "revenue trend by channel",
+      "monthly revenue trend by channel"
+    ],
+    "plan": {
+      "kind": "sql",
+      "title": "Monthly revenue by channel",
+      "sql": "SELECT date_trunc('month', order_date) AS month, channel, round(sum(revenue), 2) AS total_revenue\nFROM global_sales\nGROUP BY ALL\nORDER BY month, channel",
+      "python": null,
+      "explanation": "Adds up revenue for each month and sales channel, so the channels can be compared over time.",
+      "assumptions": ["Months are calendar months of the order date."],
+      "tablesUsed": ["global_sales"],
+      "columnsUsed": ["global_sales.order_date", "global_sales.channel", "global_sales.revenue"],
+      "clarification": null,
+      "alternatives": [],
+      "chartHint": { "type": "line", "x": "month", "y": ["total_revenue"], "series": "channel" }
+    }
+  },
+  {
+    "question": "Top 10 products by revenue in 2025",
+    "aliases": [
+      "top products by revenue in 2025",
+      "top 10 products 2025",
+      "best selling products in 2025"
+    ],
+    "plan": {
+      "kind": "sql",
+      "title": "Top 10 products by revenue, 2025",
+      "sql": "SELECT product, round(sum(revenue), 2) AS total_revenue\nFROM global_sales\nWHERE year(order_date) = 2025\nGROUP BY product\nORDER BY total_revenue DESC\nLIMIT 10",
+      "python": null,
+      "explanation": "Adds up 2025 revenue for each product and keeps the ten with the most.",
+      "assumptions": [],
+      "tablesUsed": ["global_sales"],
+      "columnsUsed": ["global_sales.product", "global_sales.order_date", "global_sales.revenue"],
+      "clarification": null,
+      "alternatives": [],
+      "chartHint": { "type": "hbar", "x": "product", "y": ["total_revenue"], "series": null }
+    }
+  },
+  {
+    "question": "Which category has the highest profit margin?",
+    "aliases": [
+      "highest profit margin by category",
+      "profit margin by category",
+      "most profitable category"
+    ],
+    "plan": {
+      "kind": "sql",
+      "title": "Profit margin by category",
+      "sql": "SELECT category,\n       round(sum(revenue), 2) AS total_revenue,\n       round(sum(revenue) - sum(cost), 2) AS profit,\n       round((sum(revenue) - sum(cost)) / sum(revenue), 4) AS profit_margin\nFROM global_sales\nGROUP BY category\nORDER BY profit_margin DESC",
+      "python": null,
+      "explanation": "For each category, subtracts cost from revenue to get profit, then divides profit by revenue to get the margin.",
+      "assumptions": [
+        "Profit margin is (revenue - cost) / revenue over all years.",
+        "profit_margin is a fraction: 0.45 means 45%."
+      ],
+      "tablesUsed": ["global_sales"],
+      "columnsUsed": ["global_sales.category", "global_sales.revenue", "global_sales.cost"],
+      "clarification": null,
+      "alternatives": [],
+      "chartHint": { "type": "bar", "x": "category", "y": ["profit_margin"], "series": null }
+    }
+  },
+  {
+    "question": "How does discount relate to units sold?",
+    "aliases": ["discount vs units", "does discount increase units sold", "discount and units"],
+    "plan": {
+      "kind": "sql",
+      "title": "Units per order by discount",
+      "sql": "SELECT discount, round(avg(units), 2) AS avg_units, count(*) AS orders\nFROM global_sales\nGROUP BY discount\nORDER BY discount",
+      "python": null,
+      "explanation": "Groups orders by their discount and shows the average number of units per order at each discount level.",
+      "assumptions": ["Each discount level is compared on average units per order."],
+      "tablesUsed": ["global_sales"],
+      "columnsUsed": ["global_sales.discount", "global_sales.units"],
+      "clarification": null,
+      "alternatives": [],
+      "chartHint": { "type": "scatter", "x": "discount", "y": ["avg_units"], "series": null }
+    }
+  },
+  {
+    "question": "What share of revenue comes from each customer segment?",
+    "aliases": [
+      "revenue share by customer segment",
+      "revenue by segment",
+      "share of revenue by segment"
+    ],
+    "plan": {
+      "kind": "sql",
+      "title": "Revenue share by customer segment",
+      "sql": "SELECT customer_segment,\n       round(sum(revenue), 2) AS total_revenue,\n       round(sum(revenue) / sum(sum(revenue)) OVER (), 4) AS revenue_share\nFROM global_sales\nGROUP BY customer_segment\nORDER BY total_revenue DESC",
+      "python": null,
+      "explanation": "Adds up revenue for each customer segment and divides it by total revenue to get each segment's share.",
+      "assumptions": ["revenue_share is a fraction: 0.6 means 60% of all revenue."],
+      "tablesUsed": ["global_sales"],
+      "columnsUsed": ["global_sales.customer_segment", "global_sales.revenue"],
+      "clarification": null,
+      "alternatives": [],
+      "chartHint": {
+        "type": "donut",
+        "x": "customer_segment",
+        "y": ["revenue_share"],
+        "series": null
+      }
+    }
+  },
+  {
+    "question": "What is the return rate by category?",
+    "aliases": [
+      "return rate by category",
+      "returns by category",
+      "which category has the most returns"
+    ],
+    "plan": {
+      "kind": "sql",
+      "title": "Return rate by category",
+      "sql": "SELECT category, round(avg(CASE WHEN returned THEN 1 ELSE 0 END), 4) AS return_rate, count(*) AS orders\nFROM global_sales\nGROUP BY category\nORDER BY return_rate DESC",
+      "python": null,
+      "explanation": "For each category, divides the number of returned orders by the number of orders.",
+      "assumptions": ["return_rate is a fraction of orders: 0.09 means 9% were returned."],
+      "tablesUsed": ["global_sales"],
+      "columnsUsed": ["global_sales.category", "global_sales.returned"],
+      "clarification": null,
+      "alternatives": [],
+      "chartHint": { "type": "bar", "x": "category", "y": ["return_rate"], "series": null }
+    }
+  },
+  {
+    "question": "Revenue by country in APAC",
+    "aliases": [
+      "apac revenue by country",
+      "which apac country has the most revenue",
+      "revenue by country for apac"
+    ],
+    "plan": {
+      "kind": "sql",
+      "title": "APAC revenue by country",
+      "sql": "SELECT country, round(sum(revenue), 2) AS total_revenue\nFROM global_sales\nWHERE region = 'APAC'\nGROUP BY country\nORDER BY total_revenue DESC",
+      "python": null,
+      "explanation": "Keeps orders from the APAC region and adds up revenue for each country.",
+      "assumptions": [],
+      "tablesUsed": ["global_sales"],
+      "columnsUsed": ["global_sales.country", "global_sales.region", "global_sales.revenue"],
+      "clarification": null,
+      "alternatives": [],
+      "chartHint": { "type": "bar", "x": "country", "y": ["total_revenue"], "series": null }
+    }
+  },
+  {
+    "question": "What is the average order value by month?",
+    "aliases": ["average order value by month", "aov by month", "monthly average order value"],
+    "plan": {
+      "kind": "sql",
+      "title": "Average order value by month",
+      "sql": "SELECT date_trunc('month', order_date) AS month, round(avg(revenue), 2) AS avg_order_value\nFROM global_sales\nGROUP BY ALL\nORDER BY month",
+      "python": null,
+      "explanation": "Averages the revenue of the orders placed in each month.",
+      "assumptions": ["Each row is one order, so order value is the row's revenue."],
+      "tablesUsed": ["global_sales"],
+      "columnsUsed": ["global_sales.order_date", "global_sales.revenue"],
+      "clarification": null,
+      "alternatives": [],
+      "chartHint": { "type": "line", "x": "month", "y": ["avg_order_value"], "series": null }
+    }
+  },
+  {
+    "question": "What was total revenue in 2025?",
+    "aliases": ["total revenue in 2025", "2025 revenue", "revenue in 2025"],
+    "plan": {
+      "kind": "sql",
+      "title": "Total revenue, 2025",
+      "sql": "SELECT round(sum(revenue), 2) AS total_revenue\nFROM global_sales\nWHERE year(order_date) = 2025",
+      "python": null,
+      "explanation": "Adds up the revenue of every order placed in 2025.",
+      "assumptions": [],
+      "tablesUsed": ["global_sales"],
+      "columnsUsed": ["global_sales.revenue", "global_sales.order_date"],
+      "clarification": null,
+      "alternatives": [],
+      "chartHint": { "type": "kpi", "x": null, "y": ["total_revenue"], "series": null }
+    }
+  }
+]
