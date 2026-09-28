@@ -175,3 +175,12 @@ export function formatCell(
   // Integers beyond 2^53 arrive as strings to keep their precision.
   return value
 }
+
+/** An app event time (epoch ms) in the viewer's time zone: "2:05:07 PM", or "Mar 1, 2:05 PM" if not today. */
+export function formatEventTime(epochMs: number, locale: string, now = Date.now()): string {
+  const date = new Date(epochMs)
+  const sameDay = new Date(now).toDateString() === date.toDateString()
+  return sameDay
+    ? dateFormat(locale, { timeStyle: 'medium' }).format(date)
+    : dateFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(date)
+}

@@ -21,6 +21,13 @@ interface UiState {
   setSidePanelTab: (tab: SidePanelTab) => void
   /** Opens the side panel on a table's preview; null clears it. */
   showPreview: (table: string | null) => void
+  settingsOpen: boolean
+  setSettingsOpen: (open: boolean) => void
+  howItWorksOpen: boolean
+  setHowItWorksOpen: (open: boolean) => void
+  /** A column to flash in the sidebar (from an answer's "columns used", F-EXPL-02). */
+  highlight: { table: string; column: string | null; at: number } | null
+  highlightColumn: (table: string, column: string | null) => void
 }
 
 export const useUiStore = create<UiState>()((set) => ({
@@ -39,4 +46,10 @@ export const useUiStore = create<UiState>()((set) => ({
         ? { previewTable }
         : { previewTable, sidePanelOpen: true, sidePanelTab: 'preview' },
     ),
+  settingsOpen: false,
+  setSettingsOpen: (settingsOpen) => set({ settingsOpen }),
+  howItWorksOpen: false,
+  setHowItWorksOpen: (howItWorksOpen) => set({ howItWorksOpen }),
+  highlight: null,
+  highlightColumn: (table, column) => set({ highlight: { table, column, at: Date.now() } }),
 }))
