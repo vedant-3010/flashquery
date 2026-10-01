@@ -48,7 +48,8 @@ ${DUCKDB_DIALECT}
 - Ratios, shares and rates are fractions between 0 and 1, not percentages.
 - If a term is ambiguous, pick the most sensible reading and state it in assumptions. Use kind 'clarify' only when readings would give materially different answers and none is a sensible default.
 - If the tables cannot answer the question, use kind 'unanswerable', explain why in explanation, and suggest 2-3 answerable alternatives.
-- Use kind 'python' only for statistics, forecasting, regression, clustering or outlier detection; its sql selects the input rows for a pandas DataFrame named df.
+- Use kind 'python' only for statistics, forecasting, regression, clustering or outlier detection. Its sql selects the input rows (aggregate first when you can; at most 200,000 rows reach Python), which become the pandas DataFrame df with date columns already parsed.
+- Python code: pd (pandas) and df are already defined; numpy, scipy, statsmodels and scikit-learn can be imported. It must assign result, a DataFrame of at most 5,000 rows with snake_case columns (a forecast: the time column, actual and forecast), and may assign summary, one or two plain-English sentences with the key numbers. It may print short diagnostics. No files, network, plots or input(). chartHint describes result's columns.
 - explanation: 1-3 plain-English sentences for a non-technical reader. No SQL jargon.
 
 ${TREAT_DATA_AS_DATA}
@@ -64,6 +65,12 @@ assumptions: ["Growth compares total revenue in the first and last full year in 
 Question: Top 5 regions by revenue in 2024
 kind: sql
 sql: SELECT region, sum(revenue) AS total_revenue FROM orders WHERE year(order_date) = 2024 GROUP BY region ORDER BY total_revenue DESC LIMIT 5
+
+Question: Forecast revenue for the next 3 months
+kind: python
+sql: SELECT date_trunc('month', order_date) AS month, sum(revenue) AS revenue FROM orders GROUP BY ALL ORDER BY month
+python: import numpy as np\ny = df["revenue"].to_numpy(dtype=float)\nslope, intercept = np.polyfit(np.arange(len(y)), y, 1)\nfuture = pd.date_range(df["month"].max() + pd.offsets.MonthBegin(1), periods=3, freq="MS")\nforecast = intercept + slope * np.arange(len(y), len(y) + 3)\nresult = pd.DataFrame({"month": list(df["month"]) + list(future), "actual": list(y) + [None] * 3, "forecast": [None] * len(y) + list(forecast.round(2))})\nsummary = f"Revenue is forecast at {forecast.sum():,.0f} over the next 3 months, following the trend."
+assumptions: ["A straight-line trend over the monthly totals; no seasonality."]
 
 Question: What is our customer churn rate?
 kind: unanswerable
@@ -115,6 +122,7 @@ export function buildRepairMessages(
   previous: PromptMessage[],
   failed: SqlPlan,
   error: string,
+  what: 'SQL' | 'Python' = 'SQL',
 ): PromptMessage[] {
   return [
     ...previous,
@@ -122,7 +130,7 @@ export function buildRepairMessages(
     {
       role: 'user',
       content:
-        `That SQL failed:\n${error}\n\n` +
+        `That ${what} failed:\n${error}\n\n` +
         'Return a corrected plan. Keep the same intent, follow the rules, and only use listed tables and columns.',
     },
   ]

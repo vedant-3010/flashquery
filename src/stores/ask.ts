@@ -16,6 +16,14 @@ import { getDb } from '@/engine/duckdb'
 import type { PagedResult } from '@/engine/paging'
 import type { CellValue } from '@/engine/types'
 import { AppError, isCancellation, toAppError, type AppErrorData } from '@/lib/errors'
+import {
+  connectAsk,
+  releasePython,
+  rememberConversation,
+  runPythonAnswer,
+  setPythonInput,
+  type PythonRun,
+} from '@/stores/askPython'
 import { currentProvider, logRequest, release, today, turns } from '@/stores/askSupport'
 import { useDatasetsStore } from '@/stores/datasets'
 import { useHistoryStore } from '@/stores/history'
@@ -28,7 +36,8 @@ export interface Answer {
   id: string
   question: string
   createdAt: number
-  status: 'running' | 'answered' | 'no-sql' | 'failed' | 'cancelled'
+  /** 'python': a Python plan whose code hasn't run successfully yet (F-PY-03). */
+  status: 'running' | 'answered' | 'no-sql' | 'python' | 'failed' | 'cancelled'
   /** Answered from demo fixtures (no API key). */
   demo: boolean
   /** Tables the question was asked about. */
@@ -45,10 +54,12 @@ export interface Answer {
   /** The chart was picked or adjusted by the user (F-VIZ-03, F-VIZ-06). */
   chartPicked: boolean
   summary: AnswerSummary | null
-  /** Who wrote the summary: this device, or the AI (and which model). */
-  summarySource: 'local' | 'ai'
+  /** Who wrote the summary: this device, the AI (and which model), or the Python code. */
+  summarySource: 'local' | 'ai' | 'python'
   summaryModel: string | null
   error: AppErrorData | null
+  /** Python plans (F-PY-01…05): the code, its input and its last run. */
+  python: PythonRun | null
 }
 
 interface AskState {
@@ -169,6 +180,7 @@ export const useAskStore = create<AskState>()((set, get) => {
             summarySource: 'local',
             summaryModel: null,
             error: null,
+            python: null,
           },
         ],
       }))
@@ -200,6 +212,28 @@ export const useAskStore = create<AskState>()((set, get) => {
         if (outcome.kind === 'answer') {
           patch(id, { ...answered(outcome), plan: outcome.plan, trace: outcome.trace })
           summarize(id, provider, settings.privacyMode)
+        } else if (outcome.kind === 'python') {
+          patch(id, {
+            status: 'python',
+            plan: outcome.plan,
+            sql: outcome.sql,
+            trace: outcome.trace,
+            python: {
+              code: outcome.plan.python ?? '',
+              input: outcome.input,
+              inputSql: outcome.sql,
+              phase: 'ready',
+              status: null,
+              stdout: '',
+              error: null,
+              fixed: false,
+              sampledRows: null,
+              resultTable: null,
+            },
+          })
+          rememberConversation(id, outcome.messages)
+          // Generated code runs only when the user clicks Run, unless they turned on auto-run.
+          if (settings.autoRunPython) void runPythonAnswer(id)
         } else if (outcome.kind === 'no-sql') {
           patch(id, { status: 'no-sql', plan: outcome.plan, trace: outcome.trace })
         } else {
@@ -234,6 +268,8 @@ export const useAskStore = create<AskState>()((set, get) => {
     runEditedSql: async (id, sql) => {
       const answer = find(id)
       if (!answer) return
+      // For Python answers the SQL is the input of df: re-open it; the code runs again on Run.
+      if (answer.python) return setPythonInput(id, sql)
       const settings = useSettingsStore.getState()
       const trace = new Trace()
       const record = (
@@ -283,6 +319,10 @@ export const useAskStore = create<AskState>()((set, get) => {
     },
 
     remove: (id) => {
+      const python = find(id)?.python ?? null
+      releasePython(id, python).catch((error: unknown) =>
+        console.warn('AskData: could not free a Python result', error),
+      )
       summaries.get(id)?.abort()
       release(find(id)?.result ?? null)
       set((state) => ({ answers: state.answers.filter((a) => a.id !== id) }))
@@ -290,4 +330,12 @@ export const useAskStore = create<AskState>()((set, get) => {
 
     setScope: (scope) => set({ scope }),
   }
+})
+
+connectAsk({
+  find: (id) => useAskStore.getState().answers.find((a) => a.id === id),
+  patch: (id, change) =>
+    useAskStore.setState((state) => ({
+      answers: state.answers.map((a) => (a.id === id ? { ...a, ...change } : a)),
+    })),
 })

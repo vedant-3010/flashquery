@@ -4,7 +4,6 @@ import {
   countResultValues,
   fetchResultDigest,
   fetchSamples,
-  type AiContext,
 } from '@/ai/context'
 import type { AiLogEntry } from '@/ai/log'
 import {
@@ -82,8 +81,20 @@ export interface SqlResult {
 
 export type PipelineOutcome =
   | ({ kind: 'answer'; plan: SqlPlan; trace: TraceStep[] } & SqlResult)
-  /** The model answered without SQL: unanswerable, clarify, or python (runs from M6). */
+  /** The model answered without SQL: unanswerable or clarify. */
   | { kind: 'no-sql'; plan: SqlPlan; trace: TraceStep[] }
+  /**
+   * A Python plan (F-PY-01): its input query ran; the code waits for the user's approval.
+   * `messages` are kept for one AI fix if the code fails (F-PY-04).
+   */
+  | {
+      kind: 'python'
+      plan: SqlPlan
+      sql: string
+      input: PagedResult
+      messages: PromptMessage[]
+      trace: TraceStep[]
+    }
   | {
       kind: 'failed'
       plan: SqlPlan | null
@@ -101,9 +112,21 @@ function describeFailure(error: AppError): string {
   return text.slice(0, 2_000)
 }
 
-async function plan(
-  input: PipelineInput,
-  context: AiContext,
+/** What one planning call needs (the first plan, a repair, or a Python fix). */
+export interface PlanCall {
+  provider: LLMProvider
+  answerId: string
+  question: string
+  mode: PrivacyMode
+  tables: string[]
+  /** Values from the data in the messages, for the inspector. */
+  dataValues: number
+  signal: AbortSignal
+  onLog?: (entry: AiLogEntry) => void
+}
+
+export async function planCall(
+  input: PlanCall,
   messages: PromptMessage[],
   purpose: 'plan' | 'repair',
 ): Promise<PlanResponse> {
@@ -119,7 +142,7 @@ async function plan(
         provider: provider.id,
         model: provider.model,
         mode: input.mode,
-        dataValues: countDataValues(context),
+        dataValues: input.dataValues,
         messages: messages.map(({ role, content }) => ({ role, content })),
         output,
         error,
@@ -132,7 +155,7 @@ async function plan(
       const response = await provider.planSql({
         question: input.question,
         messages,
-        tables: input.datasets.map((dataset) => dataset.table),
+        tables: input.tables,
         signal: AbortSignal.any([signal, AbortSignal.timeout(LLM_TIMEOUT_MS)]),
       })
       log(response.plan, null, response.usage)
@@ -152,7 +175,7 @@ async function plan(
 }
 
 /** Picks the chart and reads its data; a chart that can't be drawn falls back to the table. */
-async function chooseChart(
+export async function chooseChart(
   engine: Engine,
   result: PagedResult,
   context: ChartContext,
@@ -185,6 +208,34 @@ async function chooseChart(
   }
 }
 
+/** Guard → EXPLAIN → execute (as a paged temp view). Every query the AI writes goes through here. */
+export async function openChecked(
+  sql: string,
+  {
+    engine,
+    tables,
+    signal,
+    trace,
+    attempt = 1,
+  }: { engine: Engine; tables: string[]; signal: AbortSignal; trace: Trace; attempt?: number },
+): Promise<{ sql: string; result: PagedResult }> {
+  const checked = await trace.step(
+    'guard',
+    attempt,
+    () => guardSql(engine, sql, { tables, signal }),
+    sql,
+  )
+  await trace.step('explain', attempt, () => engine.run(`EXPLAIN ${checked}`, signal), checked)
+  const runSignal = AbortSignal.any([signal, AbortSignal.timeout(DEFAULT_TIMEOUT_MS)])
+  const result = await trace.step(
+    'execute',
+    attempt,
+    () => openQuery(engine, checked, runSignal),
+    checked,
+  )
+  return { sql: checked, result }
+}
+
 /** Guard → EXPLAIN → execute → chart → local summary. Also runs SQL edited in the answer card. */
 export async function executeSql(
   sql: string,
@@ -206,20 +257,14 @@ export async function executeSql(
     chartContext?: ChartContext
   },
 ): Promise<SqlResult> {
-  const checked = await trace.step(
-    'guard',
+  const { sql: checked, result } = await openChecked(sql, {
+    engine,
+    tables,
+    signal,
+    trace,
     attempt,
-    () => guardSql(engine, sql, { tables, signal }),
-    sql,
-  )
-  await trace.step('explain', attempt, () => engine.run(`EXPLAIN ${checked}`, signal), checked)
+  })
   const runSignal = AbortSignal.any([signal, AbortSignal.timeout(DEFAULT_TIMEOUT_MS)])
-  const result = await trace.step(
-    'execute',
-    attempt,
-    () => openQuery(engine, checked, runSignal),
-    checked,
-  )
   const { rows, chart } = await trace.step('chart', attempt, () =>
     chooseChart(engine, result, chartContext, runSignal),
   )
@@ -334,6 +379,16 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineOutcome
     return buildContext({ datasets, mode, samples })
   })
 
+  const call: PlanCall = {
+    provider,
+    answerId: input.answerId,
+    question: input.question,
+    mode,
+    tables,
+    dataValues: countDataValues(context),
+    signal,
+    onLog: input.onLog,
+  }
   let messages = buildPlanMessages({
     context,
     question: input.question,
@@ -346,7 +401,7 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineOutcome
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
     try {
       const response = await trace.step('plan', attempt, async (step) => {
-        const planned = await plan(input, context, messages, attempt === 1 ? 'plan' : 'repair')
+        const planned = await planCall(call, messages, attempt === 1 ? 'plan' : 'repair')
         step.usage = planned.usage
         step.sql = planned.plan.sql
         return planned
@@ -363,9 +418,24 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineOutcome
       }
     }
 
-    if (current.kind !== 'sql') return { kind: 'no-sql', plan: current, trace: trace.steps }
+    const python = current.kind === 'python' && Boolean(current.sql) && Boolean(current.python)
+    if (current.kind !== 'sql' && !python) {
+      return { kind: 'no-sql', plan: current, trace: trace.steps }
+    }
     lastSql = current.sql ?? ''
     try {
+      if (python) {
+        // The input rows for df; the code itself runs only after the user approves it.
+        const opened = await openChecked(lastSql, { engine, tables, signal, trace, attempt })
+        return {
+          kind: 'python',
+          plan: current,
+          sql: opened.sql,
+          input: opened.result,
+          messages,
+          trace: trace.steps,
+        }
+      }
       const executed = await executeSql(lastSql, {
         engine,
         tables,

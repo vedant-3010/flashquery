@@ -44,7 +44,10 @@ export const SqlPlanSchema = z.object({
   python: z
     .string()
     .nullable()
-    .describe("For 'python' only: pandas code that reads df and assigns result. Otherwise null."),
+    .describe(
+      "For 'python' only: Python code (pd and df are defined) that assigns result, a pandas " +
+        'DataFrame, and may assign summary, a short string. Otherwise null.',
+    ),
   explanation: z
     .string()
     .describe('1-3 plain-English sentences on how the answer is computed. No jargon.'),
