@@ -1,4 +1,4 @@
-import { DEMO_FIXTURES, DEMO_TABLE, matchFixture } from '@/ai/fixtures'
+import { DEMO_DASHBOARD, DEMO_FIXTURES, DEMO_TABLE, matchFixture } from '@/ai/fixtures'
 import type { LLMProvider } from '@/ai/providers'
 import { AppError } from '@/lib/errors'
 
@@ -32,6 +32,17 @@ export const fixtureProvider: LLMProvider = {
       })
     }
     return { plan, usage: null }
+  },
+  async planDashboard({ table }) {
+    if (table !== DEMO_TABLE) {
+      throw new AppError({
+        code: 'demo_needs_sample',
+        message:
+          'Demo mode can build a dashboard for the Global Sales sample. Add an API key to build one for your own data.',
+        detail: null,
+      })
+    }
+    return { plan: DEMO_DASHBOARD, usage: null }
   },
   async testConnection() {},
 }

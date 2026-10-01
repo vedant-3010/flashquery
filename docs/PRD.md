@@ -167,7 +167,7 @@ Format: `ID (priority) Title: description. AC: acceptance criteria.`
 - [x] **F-ASK-06 (P0) Pipeline timeline**: stages with live status and durations
   ("Writing SQL 1.8 s · Running 84 ms · Choosing chart").
 - [x] **F-ASK-07 (P0) Cancel** a running question (Esc / button): aborts the LLM request and the DuckDB query.
-- [ ] **F-ASK-08 (P0) Answer card**: title, headline, chart/table, tabs [Chart | Table | SQL | Explanation |
+- [x] **F-ASK-08 (P0) Answer card**: title, headline, chart/table, tabs [Chart | Table | SQL | Explanation |
   Trace (+ Python)], actions (Pin, Copy SQL, Export, Retry, Edit SQL, Change chart).
 - [x] **F-ASK-09 (P0) Follow-ups** use the last 3 turns (question, SQL, result shape).
 - [x] **F-ASK-10 (P0) Unanswerable questions**: explain why and suggest answerable alternatives.
@@ -188,7 +188,7 @@ Format: `ID (priority) Title: description. AC: acceptance criteria.`
 - [x] **F-EXPL-03 (P0) "Why this chart"**: the `reason` from `selectChart`.
 - [x] **F-EXPL-04 (P0) AI payload inspector ("What the AI saw")**: per request: mode, provider, model, exact
   messages, parsed output, tokens, latency; copy as JSON; Strict mode shows "0 data values sent".
-- [ ] **F-EXPL-05 (P0) History**: every question and manual query with time, re-run, pin, delete; persisted.
+- [x] **F-EXPL-05 (P0) History**: every question and manual query with time, re-run, pin, delete; persisted.
 - [x] **F-EXPL-06 (P1) Trace tab**: every attempt (SQL, error, fix), stage timings, tokens.
 - [x] **F-EXPL-07 (P0) SQL scratchpad**: standalone editor to query tables directly; results in grid + chart.
 - [x] **F-EXPL-08 (P1) Schema-aware autocomplete** in the SQL editor (tables, columns).
@@ -209,17 +209,17 @@ Format: `ID (priority) Title: description. AC: acceptance criteria.`
 - [ ] **F-VIZ-08 (P2) Annotations**: max/min markers, average line, target line.
 
 ### 4.9 Dashboard (F-DASH)
-- [ ] **F-DASH-01 (P0) Pin** an answer as a chart, KPI or table tile; toast with "View".
-- [ ] **F-DASH-02 (P0) Layout**: drag (handle), resize, remove, duplicate; auto-place new tiles.
-- [ ] **F-DASH-03 (P0) Persistence** in IndexedDB including snapshots. AC: survives reload.
-- [ ] **F-DASH-04 (P0) Refresh** per tile and "Refresh all", with `schemaHash` check and re-upload prompt.
-- [ ] **F-DASH-05 (P1) Multiple dashboards**: create, rename, delete, switch.
-- [ ] **F-DASH-06 (P1) Text tile** (markdown) for headings and notes.
-- [ ] **F-DASH-07 (P1) Edit tile** in a side sheet: SQL, chart settings, title.
-- [ ] **F-DASH-08 (P1) Export/import dashboard JSON** (layout, SQL, specs, optional snapshots; Zod-validated).
-- [ ] **F-DASH-09 (P1) Auto-generate dashboard** from a dataset via `DashboardPlan`: each tile guarded and
+- [x] **F-DASH-01 (P0) Pin** an answer as a chart, KPI or table tile; toast with "View".
+- [x] **F-DASH-02 (P0) Layout**: drag (handle), resize, remove, duplicate; auto-place new tiles.
+- [x] **F-DASH-03 (P0) Persistence** in IndexedDB including snapshots. AC: survives reload.
+- [x] **F-DASH-04 (P0) Refresh** per tile and "Refresh all", with `schemaHash` check and re-upload prompt.
+- [x] **F-DASH-05 (P1) Multiple dashboards**: create, rename, delete, switch.
+- [x] **F-DASH-06 (P1) Text tile** (markdown) for headings and notes.
+- [x] **F-DASH-07 (P1) Edit tile** in a side sheet: SQL, chart settings, title.
+- [x] **F-DASH-08 (P1) Export/import dashboard JSON** (layout, SQL, specs, optional snapshots; Zod-validated).
+- [x] **F-DASH-09 (P1) Auto-generate dashboard** from a dataset via `DashboardPlan`: each tile guarded and
   executed; layout = KPI row, then trends, then breakdowns. AC: works in demo mode via a fixture.
-- [ ] **F-DASH-10 (P1) Global filters**: date range + up to 3 categorical filters applied to every tile by
+- [x] **F-DASH-10 (P1) Global filters**: date range + up to 3 categorical filters applied to every tile by
   rewriting base-table references to filtered temp views (AST rewrite via `json_serialize_sql` /
   `json_deserialize_sql`; fallback: CTE wrapper). AC: filter change refreshes all tiles < 1 s on 1M rows.
 - [ ] **F-DASH-11 (P2) Cross-filtering**: clicking a bar/slice filters other tiles.
@@ -617,6 +617,38 @@ Build in order. A milestone is done when its features are ticked and the DoD in 
 - **D48** F-ASK-08's Chart tab and "Change chart" landed in M4; F-ASK-08 and F-EXPL-05 are ticked when
   "Pin" lands with the dashboard (M5, see D34). Unit tests get 20 s per test and 30 s per hook: the
   engine tests run real DuckDB in parallel workers.
+- **D49** Dashboards are one IndexedDB record (`dashboards`: every dashboard, its tiles and their
+  snapshots), saved 500 ms after the last change. A snapshot is the tile's chart data (≤ 5,000 rows)
+  or a table's first rows. Whether a tile is live, refreshing or out of date is per session.
+- **D50** Every tile run goes through the guard again (AI-made and imported SQL are untrusted), with
+  the dashboard's filters. The chart the user picked is kept while it still fits the result,
+  otherwise it is chosen again.
+- **D51** Filters (F-DASH-10): one date range and up to 3 value filters, each on one table's column.
+  A filtered table becomes a temp view (`askdata_filtered_<table>`); tile SQL is rewritten by
+  renaming base-table references in DuckDB's own syntax tree (`json_serialize_sql` →
+  `json_deserialize_sql`), which round-trips every demo query; a CTE wrapper is the fallback. Value
+  lists come from `SELECT DISTINCT` (≤ 100). Measured on 1M rows: the 5-tile demo dashboard
+  re-runs in ~220 ms after a filter change (AC < 1 s).
+- **D52** Tiles show their snapshot first, then refresh one by one when the dashboard is shown and
+  whenever datasets change, if every table they read is loaded with the same `schemaHash`. Otherwise
+  they say what to load: "Re-upload sales.csv to refresh" or "Load the Global Sales · 1M rows sample
+  to refresh".
+- **D53** Pinning re-runs the answer's SQL for the active dashboard (with its filters); the first pin
+  creates "My dashboard". The toast's "View" opens the dashboard and scrolls to, focuses and
+  highlights the new tile. History entries can be pinned too (F-EXPL-05).
+- **D54** "Generate dashboard" (F-DASH-09) uses the chosen model and the same privacy-mode context
+  as questions. Tiles that the guard rejects or that fail are left out and counted in a toast. The
+  proposal becomes a new dashboard right away (removing a tile is one click) laid out as a KPI row,
+  full-width trends, then breakdowns in pairs. Demo mode replays a 6-tile fixture for Global Sales.
+- **D55** No new dependencies for M5: text tiles render a small markdown subset as React elements
+  (never HTML; only http(s)/mailto links), and toasts are our own. react-grid-layout v2 loads with
+  the dashboard (lazy chunk, 27 KB gzip). The tile menu's Size and Move earlier/later are the
+  keyboard alternative to dragging and resizing.
+- **D56** Dashboard files (F-DASH-08): `{ format: 'askdata-dashboard', version: 1, dashboard }`,
+  exported with data snapshots or without (layout and SQL only, no data). Imports are validated with
+  Zod, get fresh ids and a unique name, and their SQL only ever runs through the guard.
+- **D57** Bundle after M5: initial JS 244 KB gzip (+9 KB for pinning and dashboard state). F-ASK-08 and
+  F-EXPL-05 are ticked now that Pin exists (D48).
 - **D12** Shared hooks live in `src/hooks/` and shared app components in `src/components/` (outside the
   generated `ui/`), matching the shadcn aliases in `components.json`.
 

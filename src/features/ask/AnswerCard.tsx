@@ -2,6 +2,7 @@ import { RotateCcw, X } from 'lucide-react'
 import { IconButton } from '@/components/IconButton'
 import { Badge } from '@/components/ui/badge'
 import { AnswerBody } from '@/features/ask/AnswerBody'
+import { PinMenu } from '@/features/ask/PinMenu'
 import { PipelineTimeline } from '@/features/ask/PipelineTimeline'
 import { useAskStore, type Answer } from '@/stores/ask'
 
@@ -30,6 +31,7 @@ export function AnswerCard({ answer }: { answer: Answer }) {
             </Badge>
           )}
           {answer.edited && <Badge variant="outline">Edited</Badge>}
+          {answer.status === 'answered' && answer.sql && <PinMenu answer={answer} />}
           {!running && (
             <>
               <IconButton

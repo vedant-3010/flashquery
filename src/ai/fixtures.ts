@@ -1,6 +1,7 @@
 import { z } from 'zod'
+import rawDashboard from '@/ai/fixtures/global-sales-dashboard.json'
 import rawFixtures from '@/ai/fixtures/global-sales.json'
-import { SqlPlanSchema, type SqlPlan } from '@/ai/schemas'
+import { DashboardPlanSchema, SqlPlanSchema, type DashboardPlan, type SqlPlan } from '@/ai/schemas'
 import { GLOBAL_SALES_TABLE } from '@/engine/samples'
 
 // Demo mode (F-AI-03): curated questions about the Global Sales sample, stored as SqlPlans only.
@@ -15,6 +16,9 @@ export type Fixture = z.infer<typeof FixtureSchema>
 
 export const DEMO_TABLE = GLOBAL_SALES_TABLE
 export const DEMO_FIXTURES: Fixture[] = z.array(FixtureSchema).parse(rawFixtures)
+
+/** "Build a dashboard for this dataset" in demo mode (docs/PRD.md §9, fixture 13). */
+export const DEMO_DASHBOARD: DashboardPlan = DashboardPlanSchema.parse(rawDashboard)
 
 /** Lowercase, no punctuation, single spaces: "Which region grew fastest?" → "which region grew fastest". */
 export function normalizeQuestion(question: string): string {

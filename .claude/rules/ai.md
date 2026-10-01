@@ -10,8 +10,8 @@ paths:
 
 ## Providers
 - `src/ai/providers.ts` defines `LLMProvider { id, model, remote, planSql({ question, messages, tables,
-  signal }), summaryModel, summarize?({ messages, signal }), testConnection(signal) }`; `planDashboard`
-  (M6) is added with its feature. Summaries use the provider's fast model (PRD D41). Implementations: `src/ai/providers/anthropic.ts`, `openai.ts` (LangChain) and `fixture.ts`
+  signal }), summaryModel, summarize?({ messages, signal }), planDashboard({ messages, table, signal }),
+  testConnection(signal) }`. Summaries use the provider's fast model (PRD D41); dashboards the chosen one. Implementations: `src/ai/providers/anthropic.ts`, `openai.ts` (LangChain) and `fixture.ts`
   (demo mode + tests; replays JSON in `src/ai/fixtures/`, validated by the same schemas).
 - Use `model.withStructuredOutput(Schema, { name, method: 'jsonSchema', includeRaw: true })` so token
   usage can be logged from the raw message (PRD D29). Pass `{ signal }` to `invoke` for cancellation.
@@ -33,7 +33,8 @@ paths:
   clarification ({ question, options[2–4] } | null), alternatives[] (answerable questions, for
   'unanswerable'), chartHint (partial ChartSpec | null).
 - `AnswerSummary`: headline (≤ 20 words, includes the key number), bullets (≤ 3), caveats[].
-- `DashboardPlan`: tiles (4–8) of { title, sql, chartHint, size: 'kpi' | 'half' | 'full' }.
+- `DashboardPlan`: title, tiles (4–8) of { title, sql, chartHint, size: 'kpi' | 'half' | 'full' }. Generated
+  in `src/ai/dashboard.ts`; every tile is guarded and run like any other (PRD D54).
 - Required fields + `.nullable()`, not `.optional()` (works across providers).
 
 ## Prompting

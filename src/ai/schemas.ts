@@ -75,3 +75,22 @@ export const AnswerSummarySchema = z.object({
   caveats: z.array(z.string()).describe('Limits of the answer worth knowing.'),
 })
 export type AnswerSummary = z.infer<typeof AnswerSummarySchema>
+
+export const DashboardTileSizeSchema = z
+  .enum(['kpi', 'half', 'full'])
+  .describe("'kpi' for one-row totals, 'full' for trends over time, 'half' for breakdowns.")
+
+export const DashboardPlanSchema = z.object({
+  title: z.string().describe('A short dashboard name (at most 6 words).'),
+  tiles: z
+    .array(
+      z.object({
+        title: z.string().describe('Tile title, a few words.'),
+        sql: z.string().describe('One DuckDB SELECT for this tile, aggregated (≤ 5,000 rows).'),
+        chartHint: ChartHintSchema.nullable(),
+        size: DashboardTileSizeSchema,
+      }),
+    )
+    .describe('4 to 8 tiles: 2-4 KPIs first, then 1-2 trends over time, then 2-3 breakdowns.'),
+})
+export type DashboardPlan = z.infer<typeof DashboardPlanSchema>

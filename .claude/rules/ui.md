@@ -45,9 +45,13 @@ paths:
 
 ## Dashboard
 - react-grid-layout v2: `useContainerWidth()` + `<ReactGridLayout width gridConfig dragConfig resizeConfig>`,
-  12 columns, drag only by `.tile-handle`. Defaults: KPI 3×2, chart 6×4, table 6×5, text 4×2.
-- `DashboardTile` (Zod): id, type ('chart' | 'kpi' | 'table' | 'text'), title, sql, chartSpec, text,
-  layout { x, y, w, h }, datasetRefs [{ table, schemaHash }], snapshot (last result ≤ 5,000 rows + timestamp).
+  12 columns, drag only by `.tile-handle`. Defaults: KPI 3×2, chart 6×4, table 6×5, text 4×2. The tile
+  menu's Size and Move earlier/later are the keyboard alternative to dragging.
+- `DashboardTile` (Zod, `src/dashboard/schema.ts`): id, type ('chart' | 'kpi' | 'table' | 'text'), title, sql,
+  chartSpec, text, layout { x, y, w, h }, datasetRefs [{ table, schemaHash, label, fileName, sample }],
+  snapshot (last result ≤ 5,000 rows + timestamp + filtered), question, edited.
 - Tiles render their snapshot instantly, then refresh from DuckDB if referenced tables exist with a matching
-  `schemaHash`; otherwise show "Re-upload <file> to refresh".
+  `schemaHash`; otherwise show "Re-upload <file> to refresh" (`refreshWhenReady`, PRD D52). Every run goes
+  through `src/dashboard/run.ts` (guard + filters).
 - Persist to IndexedDB, debounced 500 ms on change. Export/import as JSON validated by Zod.
+- Text tiles: `src/lib/markdown.ts` subset rendered as React elements; never `dangerouslySetInnerHTML`.

@@ -106,27 +106,40 @@ export function checkStatement(statement: unknown, tables: readonly string[], sq
   })
 }
 
+/** Base tables a parsed statement reads (lower-case), not counting its own CTEs. */
+export function tablesRead(statement: unknown): string[] {
+  const ctes = cteNames(statement)
+  const tables = new Set<string>()
+  walk(statement, (node) => {
+    if (node.type !== 'BASE_TABLE') return
+    const name = String(node.table_name ?? '').toLowerCase()
+    if (name && !ctes.has(name)) tables.add(name)
+  })
+  return [...tables]
+}
+
 /**
- * Parses `sql` with DuckDB and enforces the rules above. Returns the trimmed SQL on success;
- * rejects with AppError `guard_rejected` (the message says why, for the self-correction prompt).
+ * DuckDB's syntax tree for `sql` (json_serialize_sql): the whole document, for rewriting and
+ * json_deserialize_sql, and its single statement. Rejects anything but one SELECT.
  */
-export async function guardSql(
+export async function parseSelect(
   runner: SqlRunner,
   sql: string,
-  options: GuardOptions,
-): Promise<string> {
+  signal?: AbortSignal,
+): Promise<{ body: string; document: Json; statement: unknown }> {
   const body = trimStatement(sql)
   if (body === '') reject('it is empty.', sql)
   await ensureExtension(runner, 'json')
   const [row] = tableToObjects(
     await runner.run(
       `SELECT CAST(json_serialize_sql(${quoteLiteral(body)}) AS VARCHAR) AS ast`,
-      options.signal,
+      signal,
     ),
     z.object({ ast: z.string() }),
   )
-  const ast = AstSchema.safeParse(JSON.parse(row?.ast ?? '{}'))
-  if (!ast.success) reject('DuckDB could not parse it.', sql)
+  const document: unknown = JSON.parse(row?.ast ?? '{}')
+  const ast = AstSchema.safeParse(document)
+  if (!ast.success || !isObject(document)) reject('DuckDB could not parse it.', sql)
   if (ast.data.error) {
     const message = ast.data.error_message
     reject(
@@ -137,6 +150,22 @@ export async function guardSql(
     )
   }
   if (ast.data.statements.length !== 1) reject('it contains more than one statement.', sql)
-  checkStatement(ast.data.statements[0], options.tables, body)
+  return { body, document, statement: ast.data.statements[0] }
+}
+
+/**
+ * Parses `sql` with DuckDB and enforces the rules above. Returns the trimmed SQL on success;
+ * rejects with AppError `guard_rejected` (the message says why, for the self-correction prompt).
+ */
+export async function guardSql(
+  runner: SqlRunner,
+  sql: string,
+  options: GuardOptions,
+): Promise<string> {
+  const { body, statement } = await parseSelect(runner, sql, options.signal)
+  checkStatement(statement, options.tables, body)
   return body
 }
+
+export { walk as walkAst, cteNames }
+export type { Json as AstNode }

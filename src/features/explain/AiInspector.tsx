@@ -13,6 +13,7 @@ const PURPOSES: Record<AiLogEntry['purpose'], string> = {
   plan: 'Write SQL',
   repair: 'Fix SQL',
   summary: 'Summarize',
+  dashboard: 'Plan dashboard',
   test: 'Test connection',
 }
 

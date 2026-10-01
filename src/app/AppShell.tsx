@@ -1,9 +1,10 @@
-import { useEffect } from 'react'
-import { DashboardView } from '@/app/DashboardView'
+import { lazy, Suspense, useEffect } from 'react'
 import { PanelErrorBoundary } from '@/app/PanelErrorBoundary'
 import { SidePanel } from '@/app/SidePanel'
 import { TopBar } from '@/app/TopBar'
+import { Toaster } from '@/components/Toaster'
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent } from '@/components/ui/tabs'
 import { AskView } from '@/features/ask/AskView'
 import { HowItWorksDialog } from '@/features/ask/HowItWorksDialog'
@@ -13,6 +14,13 @@ import { SettingsDialog } from '@/features/settings/SettingsDialog'
 import { SqlView } from '@/features/sql/SqlView'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { useUiStore, ViewSchema } from '@/stores/ui'
+
+// The dashboard (react-grid-layout, its tiles and dialogs) loads on first visit.
+const DashboardView = lazy(() =>
+  import('@/features/dashboard/DashboardView').then((module) => ({
+    default: module.DashboardView,
+  })),
+)
 
 /** At and above this width the sidebar is docked; below it collapses into an overlay (F-SHELL-01). */
 const WIDE_LAYOUT_QUERY = '(min-width: 1280px)'
@@ -80,7 +88,9 @@ export function AppShell() {
           </TabsContent>
           <TabsContent value="dashboard" className="flex min-h-0 flex-col">
             <PanelErrorBoundary name="the dashboard">
-              <DashboardView />
+              <Suspense fallback={<Skeleton className="m-4 h-40" />}>
+                <DashboardView />
+              </Suspense>
             </PanelErrorBoundary>
           </TabsContent>
         </main>
@@ -94,6 +104,7 @@ export function AppShell() {
       </div>
       <FileDropZone />
       <SettingsDialog />
+      <Toaster />
       <HowItWorksDialog />
     </Tabs>
   )

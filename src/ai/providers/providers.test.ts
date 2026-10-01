@@ -300,3 +300,41 @@ describe('AI summaries (F-ASK-12)', () => {
     })
   })
 })
+
+describe('dashboard plans (F-DASH-09)', () => {
+  it('Anthropic: the chosen model, a JSON schema and cache breakpoints', async () => {
+    const dashboard = {
+      title: 'Overview',
+      tiles: [
+        { title: 'Orders', sql: 'SELECT count(*) AS n FROM t', chartHint: null, size: 'kpi' },
+      ],
+    }
+    const { fetch, calls } = fakeFetch(() =>
+      json({
+        id: 'msg_d',
+        type: 'message',
+        role: 'assistant',
+        model: 'claude-sonnet-5',
+        content: [{ type: 'text', text: JSON.stringify(dashboard) }],
+        stop_reason: 'end_turn',
+        stop_sequence: null,
+        usage: { input_tokens: 900, output_tokens: 300 },
+      }),
+    )
+    const provider = await createProvider({
+      provider: 'anthropic',
+      apiKey: KEY,
+      model: 'claude-sonnet-5',
+      fetch,
+    })
+    const response = await provider.planDashboard({ messages, table: 't' })
+    expect(response.plan).toEqual(dashboard)
+    const body = calls[0]?.body ?? {}
+    expect(body.model).toBe('claude-sonnet-5')
+    expect(body.output_config).toMatchObject({ format: { type: 'json_schema' } })
+    expect(body.system).toEqual([
+      expect.objectContaining({ cache_control: { type: 'ephemeral' } }),
+      expect.objectContaining({ cache_control: { type: 'ephemeral' } }),
+    ])
+  })
+})
