@@ -1,6 +1,6 @@
 import type { Usage } from '@/ai/log'
 import type { PromptMessage } from '@/ai/prompts/planSql'
-import type { AnswerSummary, ProviderId, SqlPlan } from '@/ai/schemas'
+import type { AnswerSummary, DashboardPlan, ProviderId, SqlPlan } from '@/ai/schemas'
 
 // LLMProvider hides LangChain (PRD D6): the pipeline only sees planSql(). Real providers load on
 // first use (dynamic import keeps LangChain out of the initial bundle, F-PERF-01).
@@ -28,6 +28,18 @@ export interface SummaryResponse {
   usage: Usage | null
 }
 
+export interface DashboardRequest {
+  messages: PromptMessage[]
+  /** The table the dashboard is for (the fixture provider only knows the demo table). */
+  table: string
+  signal?: AbortSignal
+}
+
+export interface DashboardResponse {
+  plan: DashboardPlan
+  usage: Usage | null
+}
+
 export interface LLMProvider {
   id: ProviderId | 'fixture'
   model: string
@@ -37,6 +49,8 @@ export interface LLMProvider {
   /** The model that writes AI summaries (F-ASK-12): the provider's fast one. Null without summaries. */
   summaryModel: string | null
   summarize?(request: SummaryRequest): Promise<SummaryResponse>
+  /** A first dashboard for a table (F-DASH-09). */
+  planDashboard(request: DashboardRequest): Promise<DashboardResponse>
   /** A tiny request that proves the key and model work ("Test connection"). */
   testConnection(signal?: AbortSignal): Promise<void>
 }

@@ -1,21 +1,17 @@
 import { Info, RotateCcw, Table2 } from 'lucide-react'
 import { useMemo, useRef } from 'react'
-import { analyze, isAdditiveName } from '@/charts/classify'
+import { analyze } from '@/charts/classify'
 import { chartChoices } from '@/charts/select'
-import { prepare, type ChartData } from '@/charts/shape'
+import type { ChartData } from '@/charts/shape'
 import type { ChartSpec } from '@/charts/spec'
-import { chartTheme } from '@/charts/theme'
-import { describeChart, toOption } from '@/charts/toOption'
 import { Button } from '@/components/ui/button'
 import type { CellValue, ColumnMeta } from '@/engine/types'
 import { ChartExportMenu } from '@/features/charts/ChartExportMenu'
 import { ChartSettings } from '@/features/charts/ChartSettings'
 import { ChartTypeMenu } from '@/features/charts/ChartTypeMenu'
-import { EChart } from '@/features/charts/EChart'
+import { ChartView } from '@/features/charts/ChartView'
 import type { ECharts } from '@/features/charts/echarts'
-import { KpiView } from '@/features/charts/KpiView'
-import { useMediaQuery } from '@/hooks/useMediaQuery'
-import { useResolvedTheme } from '@/hooks/useResolvedTheme'
+import { useChartOption } from '@/features/charts/useChartOption'
 import { useSettingsStore } from '@/stores/settings'
 
 export interface ChartPanelProps {
@@ -41,24 +37,14 @@ export interface ChartPanelProps {
  */
 export function ChartPanel(props: ChartPanelProps) {
   const { spec, data, columns, rows, rowCount, question, onChange } = props
-  const locale = useSettingsStore((state) => state.locale)
   const currency = useSettingsStore((state) => state.currency)
-  const theme = chartTheme(useResolvedTheme())
-  const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)')
   const chartRef = useRef<ECharts | null>(null)
-
   const shape = useMemo(() => analyze(columns, rows, rowCount), [columns, rows, rowCount])
   const choices = useMemo(
     () => chartChoices(shape, spec, { question, currency }),
     [shape, spec, question, currency],
   )
-  const prepared = useMemo(() => prepare(spec, data, spec.y.every(isAdditiveName)), [spec, data])
-  const option = useMemo(
-    () => toOption(spec, prepared, { theme, locale, animation: !reducedMotion }),
-    [spec, prepared, theme, locale, reducedMotion],
-  )
-  const label = describeChart(spec, prepared, locale)
-  const notes = 'notes' in prepared ? prepared.notes : []
+  const { option, theme, notes } = useChartOption(spec, data)
 
   return (
     <div className="grid gap-2">
@@ -91,15 +77,7 @@ export function ChartPanel(props: ChartPanelProps) {
       </div>
 
       <div className={props.loading ? 'opacity-50 transition-opacity' : undefined}>
-        {prepared.kind === 'kpi' ? (
-          <KpiView spec={spec} prepared={prepared} />
-        ) : option ? (
-          <EChart option={option} label={label} instanceRef={chartRef} className="h-72 w-full" />
-        ) : (
-          <p className="rounded-md border border-dashed p-4 text-sm text-muted-foreground">
-            This result is shown as a table.
-          </p>
-        )}
+        <ChartView spec={spec} data={data} instanceRef={chartRef} className="h-72 w-full" />
       </div>
 
       {notes.map((note) => (

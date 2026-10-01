@@ -4,7 +4,7 @@ import { FAST_MODEL, findModel } from '@/ai/models'
 import type { LLMProvider, ProviderSettings } from '@/ai/providers'
 import { TEST_PROMPT } from '@/ai/prompts/testConnection'
 import { providerError, toLangChainMessages, usageOf } from '@/ai/providers/langchain'
-import { AnswerSummarySchema, SqlPlanSchema } from '@/ai/schemas'
+import { AnswerSummarySchema, DashboardPlanSchema, SqlPlanSchema } from '@/ai/schemas'
 
 // Claude through LangChain (PRD D6), called from the browser with the user's own key (BYOK, D3).
 // Structured output uses native JSON outputs (output_config.format, `method: "jsonSchema"`): it
@@ -30,6 +30,11 @@ export function createAnthropicProvider({ apiKey, model, fetch }: ProviderSettin
   })
   const planner = chat.withStructuredOutput(SqlPlanSchema, {
     name: 'sql_plan',
+    method: 'jsonSchema',
+    includeRaw: true,
+  })
+  const dashboardPlanner = chat.withStructuredOutput(DashboardPlanSchema, {
+    name: 'dashboard_plan',
     method: 'jsonSchema',
     includeRaw: true,
   })
@@ -60,6 +65,17 @@ export function createAnthropicProvider({ apiKey, model, fetch }: ProviderSettin
           signal,
         })
         return { plan: SqlPlanSchema.parse(result.parsed), usage: usageOf(result.raw) }
+      } catch (error) {
+        throw providerError(error, model, signal)
+      }
+    },
+    async planDashboard({ messages, signal }) {
+      try {
+        const result = await dashboardPlanner.invoke(
+          toLangChainMessages(messages, { cacheControl: true }),
+          { signal },
+        )
+        return { plan: DashboardPlanSchema.parse(result.parsed), usage: usageOf(result.raw) }
       } catch (error) {
         throw providerError(error, model, signal)
       }

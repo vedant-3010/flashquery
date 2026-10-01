@@ -28,6 +28,9 @@ interface UiState {
   /** A column to flash in the sidebar (from an answer's "columns used", F-EXPL-02). */
   highlight: { table: string; column: string | null; at: number } | null
   highlightColumn: (table: string, column: string | null) => void
+  /** A dashboard tile to scroll to and flash (after pinning, F-DASH-01). */
+  focusTile: { id: string; at: number } | null
+  setFocusTile: (id: string | null) => void
 }
 
 export const useUiStore = create<UiState>()((set) => ({
@@ -52,4 +55,6 @@ export const useUiStore = create<UiState>()((set) => ({
   setHowItWorksOpen: (howItWorksOpen) => set({ howItWorksOpen }),
   highlight: null,
   highlightColumn: (table, column) => set({ highlight: { table, column, at: Date.now() } }),
+  focusTile: null,
+  setFocusTile: (id) => set({ focusTile: id ? { id, at: Date.now() } : null }),
 }))

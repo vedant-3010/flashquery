@@ -1,0 +1,41 @@
+{
+  "title": "Global Sales overview",
+  "tiles": [
+    {
+      "title": "Total revenue",
+      "sql": "SELECT round(sum(revenue), 2) AS total_revenue FROM global_sales",
+      "chartHint": { "type": "kpi", "x": null, "y": ["total_revenue"], "series": null },
+      "size": "kpi"
+    },
+    {
+      "title": "Orders",
+      "sql": "SELECT count(*) AS orders FROM global_sales",
+      "chartHint": { "type": "kpi", "x": null, "y": ["orders"], "series": null },
+      "size": "kpi"
+    },
+    {
+      "title": "Average order value",
+      "sql": "SELECT round(avg(revenue), 2) AS avg_order_value FROM global_sales",
+      "chartHint": { "type": "kpi", "x": null, "y": ["avg_order_value"], "series": null },
+      "size": "kpi"
+    },
+    {
+      "title": "Monthly revenue",
+      "sql": "SELECT date_trunc('month', order_date) AS month, round(sum(revenue), 2) AS revenue\nFROM global_sales\nGROUP BY ALL\nORDER BY month",
+      "chartHint": { "type": "line", "x": "month", "y": ["revenue"], "series": null },
+      "size": "full"
+    },
+    {
+      "title": "Revenue by region",
+      "sql": "SELECT region, round(sum(revenue), 2) AS revenue\nFROM global_sales\nGROUP BY ALL\nORDER BY revenue DESC",
+      "chartHint": { "type": "bar", "x": "region", "y": ["revenue"], "series": null },
+      "size": "half"
+    },
+    {
+      "title": "Revenue share by channel",
+      "sql": "SELECT channel, round(sum(revenue), 2) AS revenue\nFROM global_sales\nGROUP BY ALL\nORDER BY revenue DESC",
+      "chartHint": { "type": "donut", "x": "channel", "y": ["revenue"], "series": null },
+      "size": "half"
+    }
+  ]
+}

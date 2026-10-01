@@ -1,12 +1,15 @@
-import { History, MessageSquareText, Play, SquareTerminal, Trash2, X } from 'lucide-react'
+import { History, MessageSquareText, Pin, Play, SquareTerminal, Trash2, X } from 'lucide-react'
 import { EmptyState } from '@/components/EmptyState'
 import { IconButton } from '@/components/IconButton'
 import { Button } from '@/components/ui/button'
+import { toAppError } from '@/lib/errors'
 import { formatEventTime, formatNumber } from '@/lib/format'
 import { useAskStore } from '@/stores/ask'
+import { pinQuery } from '@/stores/dashboardJobs'
 import { useHistoryStore, type HistoryEntry } from '@/stores/history'
 import { useSettingsStore } from '@/stores/settings'
 import { useSqlStore } from '@/stores/sql'
+import { useToastStore } from '@/stores/toast'
 import { useUiStore } from '@/stores/ui'
 
 const STATUS: Record<HistoryEntry['status'], string> = {
@@ -23,6 +26,14 @@ export function HistoryPanel() {
   const locale = useSettingsStore((state) => state.locale)
   const ask = useAskStore((state) => state.ask)
   const setView = useUiStore((state) => state.setView)
+  const toast = useToastStore((state) => state.show)
+
+  const pin = (entry: HistoryEntry) => {
+    if (!entry.sql) return
+    pinQuery({ title: entry.kind === 'question' ? entry.text : 'Query', sql: entry.sql }).catch(
+      (error: unknown) => toast(`Couldn't pin: ${toAppError(error).message}`),
+    )
+  }
 
   const rerun = (entry: HistoryEntry) => {
     if (entry.kind === 'question') {
@@ -71,6 +82,11 @@ export function HistoryPanel() {
                   {entry.headline && ` · ${entry.headline}`}
                 </p>
               </div>
+              {entry.sql && entry.status === 'answered' && (
+                <IconButton label="Pin to dashboard" size="icon-xs" onClick={() => pin(entry)}>
+                  <Pin />
+                </IconButton>
+              )}
               <IconButton
                 label={entry.kind === 'question' ? 'Ask again' : 'Run again'}
                 size="icon-xs"

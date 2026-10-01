@@ -68,8 +68,10 @@ src/
   components/   shared app components (EmptyState, IconButton); ui/ = shadcn/ui primitives (generated)
   hooks/        shared React hooks (useMediaQuery, useResolvedTheme)
   features/     datasets/ grid/ sql/ ask/ explain/ charts/ dashboard/ python/ settings/  (React only)
-  engine/       duckdb init, ingest, catalog, profile, query, normalize, sqlGuard, samples, export, chartData
-  ai/           models, providers, prompts/, schemas, context, pipeline, fixtures/  (no React/DOM)
+  engine/       duckdb init, ingest, catalog, profile, query, normalize, sqlGuard, samples, export,
+                chartData, filters (dashboard filter views + AST table rewrite)
+  ai/           models, providers, prompts/, schemas, context, pipeline, dashboard, fixtures/  (no React/DOM)
+  dashboard/    schema (Zod), layout (placement), run (guarded, filtered tile runs)  (no React/DOM)
   charts/       classify, select (chart choice), shape (data → series), toOption (→ ECharts option), theme  (pure)
   workers/      *.worker.ts (Comlink wiring only) + clients.ts (typed main-thread clients)
   stores/       zustand stores      lib/  format, errors, theme, ids, idb      types/  shared types
@@ -160,5 +162,7 @@ docs/PRD.md     evals/ (M7)     e2e/ (Playwright)
   can't parse oklch colors: chart colors are hex in `src/charts/theme.ts`.
 - `sr-only` (and any absolutely positioned) elements inside a scrolling container need a positioned
   ancestor (`relative`), or they stretch the page and `scrollIntoView` scrolls the whole document.
+- Zustand 5: a selector must not build a new object or array on each call (e.g. `findTile(...)` inside
+  `useStore(...)`): it re-renders forever. Select the stable state and derive with `useMemo`.
 - Model IDs live only in `src/ai/models.ts` (default `claude-sonnet-5`, fast `claude-haiku-4-5-20251001`).
   Check provider docs before changing them.

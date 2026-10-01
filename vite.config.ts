@@ -28,6 +28,7 @@ export default defineConfig({
       '@langchain/anthropic',
       '@langchain/openai',
       '@langchain/core/messages',
+      'react-grid-layout',
       'echarts/core',
       'echarts/charts',
       'echarts/components',

@@ -85,6 +85,9 @@ function scripted(replies: (SqlPlan | Error)[]) {
         usage: { inputTokens: 10, outputTokens: 5, cacheReadTokens: 0, cacheWriteTokens: 0 },
       }
     },
+    async planDashboard() {
+      throw new Error('no dashboard scripted')
+    },
     async testConnection() {},
   }
   return { provider, requests, summaryRequests }

@@ -1,0 +1,21 @@
+/* react-grid-layout, themed: the drop placeholder and resize handle follow the app's colors. */
+.react-grid-item.react-grid-placeholder {
+  background: var(--primary);
+  opacity: 0.12;
+  border-radius: 0.75rem;
+}
+
+.react-grid-item > .react-resizable-handle::after {
+  border-color: var(--muted-foreground);
+}
+
+.react-grid-item:focus-within > .react-resizable-handle {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .react-grid-layout,
+  .react-grid-item {
+    transition: none !important;
+  }
+}
