@@ -15,6 +15,7 @@ import { useUiStore } from '@/stores/ui'
 const STATUS: Record<HistoryEntry['status'], string> = {
   answered: 'Answered',
   'no-sql': 'No SQL',
+  python: 'Python analysis',
   failed: 'Failed',
 }
 

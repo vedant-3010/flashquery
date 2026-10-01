@@ -6,6 +6,7 @@ import { ExplanationTab } from '@/features/explain/ExplanationTab'
 import { SqlTab } from '@/features/explain/SqlTab'
 import { TraceTab } from '@/features/explain/TraceTab'
 import { ResultGrid } from '@/features/grid/ResultGrid'
+import { PythonPanel } from '@/features/python/PythonPanel'
 import { toAppError } from '@/lib/errors'
 import { useAskStore, type Answer } from '@/stores/ask'
 
@@ -20,8 +21,9 @@ const gridHeight = (rows: number) => Math.min(320, Math.max(3, rows) * 28 + 72)
 export function AnswerTabs({ answer, withTable }: { answer: Answer; withTable: boolean }) {
   const setChart = useAskStore((state) => state.setChart)
   const chart = withTable ? answer.chart : null
+  const python = answer.python
   const [tab, setTab] = useState(
-    chart && chart.spec.type !== 'table' ? 'chart' : withTable ? 'table' : 'sql',
+    chart && chart.spec.type !== 'table' ? 'chart' : withTable ? 'table' : python ? 'input' : 'sql',
   )
   const [pending, setPending] = useState(false)
   const [chartError, setChartError] = useState<string | null>(null)
@@ -39,7 +41,11 @@ export function AnswerTabs({ answer, withTable }: { answer: Answer; withTable: b
       <TabsList variant="line" aria-label="Answer details">
         {chart && <TabsTrigger value="chart">Chart</TabsTrigger>}
         {withTable && <TabsTrigger value="table">Table</TabsTrigger>}
-        {answer.sql !== null && <TabsTrigger value="sql">SQL</TabsTrigger>}
+        {python && withTable && <TabsTrigger value="python">Python</TabsTrigger>}
+        {python && <TabsTrigger value="input">Input data</TabsTrigger>}
+        {answer.sql !== null && (
+          <TabsTrigger value="sql">{python ? 'Input SQL' : 'SQL'}</TabsTrigger>
+        )}
         {answer.plan && <TabsTrigger value="explanation">Explanation</TabsTrigger>}
         <TabsTrigger value="trace">Trace</TabsTrigger>
       </TabsList>
@@ -78,6 +84,26 @@ export function AnswerTabs({ answer, withTable }: { answer: Answer; withTable: b
               result={answer.result}
               label={`Result: ${answer.question}`}
               exportName="answer"
+            />
+          </div>
+        </TabsContent>
+      )}
+      {python && withTable && (
+        <TabsContent value="python">
+          <PythonPanel answer={answer} />
+        </TabsContent>
+      )}
+      {python && (
+        <TabsContent value="input">
+          <div
+            className="flex flex-col overflow-hidden rounded-md border"
+            style={{ height: gridHeight(python.input.rowCount) }}
+          >
+            <ResultGrid
+              key={python.input.relation}
+              result={python.input}
+              label={`Python input: ${answer.question}`}
+              exportName="python_input"
             />
           </div>
         </TabsContent>

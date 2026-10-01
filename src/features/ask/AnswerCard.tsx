@@ -31,7 +31,11 @@ export function AnswerCard({ answer }: { answer: Answer }) {
             </Badge>
           )}
           {answer.edited && <Badge variant="outline">Edited</Badge>}
-          {answer.status === 'answered' && answer.sql && <PinMenu answer={answer} />}
+          {/* Python results aren't pinned: refreshing a tile would need to run Python (PRD D63). */}
+          {answer.status === 'answered' && answer.sql && !answer.python && (
+            <PinMenu answer={answer} />
+          )}
+          {answer.python && <Badge variant="outline">Python</Badge>}
           {!running && (
             <>
               <IconButton
