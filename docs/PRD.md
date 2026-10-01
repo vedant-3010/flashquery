@@ -227,14 +227,14 @@ Format: `ID (priority) Title: description. AC: acceptance criteria.`
 - [ ] **F-DASH-13 (P2) Presentation mode**: full screen, read-only.
 
 ### 4.10 Python analysis (F-PY)
-- [ ] **F-PY-01 (P1) Python plans**: the model picks kind = python for statistics, forecasting, regression,
+- [x] **F-PY-01 (P1) Python plans**: the model picks kind = python for statistics, forecasting, regression,
   clustering or outliers; `sql` selects the input rows.
-- [ ] **F-PY-02 (P1) Lazy Pyodide** with progress; packages loaded from imports (pandas, numpy, scipy,
+- [x] **F-PY-02 (P1) Lazy Pyodide** with progress; packages loaded from imports (pandas, numpy, scipy,
   statsmodels, scikit-learn).
-- [ ] **F-PY-03 (P1) Approval**: code shown in an editor with "Run"; auto-run setting (default off).
-- [ ] **F-PY-04 (P1) Outputs**: `result` DataFrame → table + auto chart; `summary` text; stdout panel;
+- [x] **F-PY-03 (P1) Approval**: code shown in an editor with "Run"; auto-run setting (default off).
+- [x] **F-PY-04 (P1) Outputs**: `result` DataFrame → table + auto chart; `summary` text; stdout panel;
   traceback on error (one self-correction retry with user consent).
-- [ ] **F-PY-05 (P1) Timeout & stop**: terminate + recreate the worker; UI explains the reset.
+- [x] **F-PY-05 (P1) Timeout & stop**: terminate + recreate the worker; UI explains the reset.
 - [ ] **F-PY-06 (P2) Notebook-style Python cells** in the scratchpad; matplotlib figures captured as PNG.
 
 ### 4.11 Export & persistence (F-EXP)
@@ -649,6 +649,33 @@ Build in order. A milestone is done when its features are ticked and the DoD in 
   Zod, get fresh ids and a unique name, and their SQL only ever runs through the guard.
 - **D57** Bundle after M5: initial JS 244 KB gzip (+9 KB for pinning and dashboard state). F-ASK-08 and
   F-EXPL-05 are ticked now that Pin exists (D48).
+- **D58** Pyodide 314.0.7 (Python 3.14, pandas 3.0), loaded in a module worker from
+  `cdn.jsdelivr.net/pyodide/v<installed version>/full/` on the first run. pandas loads with Pyodide;
+  other imports (numpy, scipy, statsmodels, scikit-learn…) through `loadPackagesFromImports`.
+  Downloads: core ~12 MB, pandas + numpy ~7 MB, statsmodels +8 MB (+ scipy 14 MB). Measured (J5, fast
+  connection): first run 3.9 s including downloads; later runs ~0.1 s.
+- **D59** Approval (F-PY-03): the pipeline stops at the code. The plan's input query passes the guard
+  and self-corrects like SQL; the code is shown with what it will see and runs only on Run, or at
+  once if the user turned on "Run AI-written Python without asking" (settings v3, off by default).
+- **D60** While analysis code runs, the worker's fetch, XMLHttpRequest, WebSocket, EventSource and
+  importScripts fail ("Network access is turned off…"); packages load before that. Generated code
+  saw data values, so it must not be able to send `df` anywhere. Checked against real Pyodide
+  (`pyodide.http.pyfetch` fails).
+- **D61** Data: the input rows go to pandas as CSV (date columns parsed); above 200,000 rows a
+  repeatable reservoir sample, stated as a caveat. `result` comes back as CSV (≤ 5,000 rows) and
+  becomes a DuckDB temp table, so it gets the normal grid, chart and summary; a `summary` string from
+  the code becomes the headline ("Summary from the Python code").
+- **D62** Stop and the 60 s timeout terminate the worker (Pyodide can't be interrupted from outside);
+  the answer says the Python session was reset, the top bar shows Python as not loaded, and the next
+  run starts a fresh session (packages come from the browser cache). Covered by unit tests of
+  `withDeadline`; the J5 e2e covers a full run.
+- **D63** One AI fix per failed run (F-PY-04): the traceback goes back to the model when the user
+  clicks "Ask the AI to fix it" (with a key, not in demo mode); the fixed code waits for Run again.
+  Python answers can't be pinned: refreshing such a tile would mean running Python.
+- **D64** The Python editor is CodeMirror without a language mode: Python highlighting
+  (`@codemirror/lang-python`) would be a new dependency.
+- **D65** Bundle after M6: initial JS 249 KB gzip (+5 KB); the Python worker is a 26 KB chunk, and
+  Pyodide itself comes from the CDN.
 - **D12** Shared hooks live in `src/hooks/` and shared app components in `src/components/` (outside the
   generated `ui/`), matching the shadcn aliases in `components.json`.
 

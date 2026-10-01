@@ -47,7 +47,9 @@ paths:
   rows); growth = (last − first) / first with the compared periods stated in `assumptions`; never invent
   columns; if the schema can't answer it, return kind 'unanswerable' with alternatives.
 - Choose kind 'python' only for statistics, forecasting, regression, clustering or outlier detection; the
-  `sql` field still selects the input rows for `df`.
+  `sql` field still selects the input rows for `df`. Code contract: `pd` and `df` are defined; it must
+  assign `result` (a DataFrame, ≤ 5,000 rows) and may assign `summary` (a short string). The pipeline
+  stops before the code: it runs on the user's Run (PRD D59), with the network locked (D60).
 - Clarify only when interpretations give materially different answers and no sensible default exists;
   otherwise pick the default and state it in `assumptions`.
 - Follow-ups: include the last 3 turns as (question, sql, result column names, row count). Never past rows.

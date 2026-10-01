@@ -164,5 +164,8 @@ docs/PRD.md     evals/ (M7)     e2e/ (Playwright)
   ancestor (`relative`), or they stretch the page and `scrollIntoView` scrolls the whole document.
 - Zustand 5: a selector must not build a new object or array on each call (e.g. `findTile(...)` inside
   `useStore(...)`): it re-renders forever. Select the stable state and derive with `useMemo`.
+- Pyodide runs in `src/workers/python.worker.ts` (logic in `python.ts`, testable with a fake runtime).
+  The real-Pyodide test is opt-in (`RUN_PYODIDE=1 npx vitest run src/workers/python.test.ts`): it
+  downloads ~20 MB from the CDN and caches packages in a temp dir, never in node_modules.
 - Model IDs live only in `src/ai/models.ts` (default `claude-sonnet-5`, fast `claude-haiku-4-5-20251001`).
   Check provider docs before changing them.

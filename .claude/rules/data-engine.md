@@ -75,3 +75,5 @@ paths:
 - Code contract: generated code reads `df`, must assign `result` (a DataFrame, rendered through the normal
   table + chart pipeline) and may assign `summary` (str). Capture stdout/stderr.
 - Timeout (default 60 s) or "Stop": terminate and recreate the worker; tell the user the Python session reset.
+- While user code runs, the worker's network APIs fail (`guardNetwork` in `src/workers/python.ts`);
+  load packages before locking. `result` comes back as CSV into a temp table (`src/engine/pythonData.ts`).
