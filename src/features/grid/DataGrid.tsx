@@ -8,14 +8,17 @@ import {
   type SortingState,
 } from '@tanstack/react-table'
 import { elementScroll, observeElementOffset, useVirtualizer } from '@tanstack/react-virtual'
-import { useEffect, useLayoutEffect, useMemo, useRef } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, type ReactNode } from 'react'
 import type { SortSpec } from '@/engine/paging'
 import { isIdentifierLike } from '@/engine/roles'
 import type { CellValue, ColumnMeta, ColumnProfile } from '@/engine/types'
+import { defaultWidth } from '@/features/grid/columnWidth'
+import { GridCell } from '@/features/grid/GridCell'
 import { GridHeaderCell } from '@/features/grid/GridHeaderCell'
+import { contains } from '@/features/grid/selection'
 import type { GridRows } from '@/features/grid/useGridRows'
-import { formatCell, type CellFormat } from '@/lib/format'
-import { cn } from '@/lib/utils'
+import { useGridSelection, type CopyRequest } from '@/features/grid/useGridSelection'
+import type { CellFormat } from '@/lib/format'
 import { useSettingsStore } from '@/stores/settings'
 
 // Virtualized grid over a paged DuckDB result (F-GRID-01..03). TanStack Table owns columns,
@@ -35,20 +38,6 @@ const HEADER_HEIGHT = 32
  */
 const MAX_SCROLL_HEIGHT = 15_000_000
 
-const WIDTH_BY_TYPE: Record<ColumnMeta['logicalType'], number> = {
-  integer: 96,
-  number: 116,
-  date: 108,
-  timestamp: 168,
-  boolean: 80,
-  text: 176,
-  other: 176,
-}
-
-function defaultWidth(column: ColumnMeta): number {
-  return Math.min(320, Math.max(WIDTH_BY_TYPE[column.logicalType], column.name.length * 7.5 + 60))
-}
-
 interface DataGridProps {
   label: string
   columns: ColumnMeta[]
@@ -57,6 +46,12 @@ interface DataGridProps {
   sorting: SortSpec[]
   onSortingChange: (sorting: SortSpec[]) => void
   profiles?: ReadonlyMap<string, ColumnProfile>
+  /** Column names to show, in order (F-GRID-05); all columns when absent. */
+  visibleColumns?: readonly string[]
+  /** Copies selected cells (Ctrl/Cmd+C, F-GRID-05). */
+  onCopy?: (request: CopyRequest) => void
+  /** A filter control for a column's header (F-GRID-04). */
+  filterFor?: (column: ColumnMeta) => ReactNode
 }
 
 export function DataGrid({
@@ -67,15 +62,30 @@ export function DataGrid({
   sorting,
   onSortingChange,
   profiles,
+  visibleColumns,
+  onCopy,
+  filterFor,
 }: DataGridProps) {
   const locale = useSettingsStore((state) => state.locale)
   const dates = useSettingsStore((state) => state.dateDisplay)
   const scrollRef = useRef<HTMLDivElement>(null)
 
+  const shown = useMemo(
+    () =>
+      visibleColumns
+        ? visibleColumns.flatMap((name) => {
+            const index = columns.findIndex((column) => column.name === name)
+            const column = columns[index]
+            return column ? [{ column, index }] : []
+          })
+        : columns.map((column, index) => ({ column, index })),
+    [columns, visibleColumns],
+  )
+  const shownNames = useMemo(() => shown.map(({ column }) => column.name), [shown])
   const columnDefs = useMemo(
     () =>
       helper.columns(
-        columns.map((column, index) =>
+        shown.map(({ column, index }) =>
           helper.accessor((row: GridRow) => row[index] ?? null, {
             id: column.name,
             header: column.name,
@@ -88,7 +98,7 @@ export function DataGrid({
           }),
         ),
       ),
-    [columns],
+    [shown],
   )
   const formats = useMemo(
     () =>
@@ -187,6 +197,16 @@ export function DataGrid({
   }, [rows, first, last, direction, rowCount])
 
   const headers = table.getHeaderGroups()[0]?.headers ?? []
+  const selection = useGridSelection({
+    rowCount,
+    columns: shownNames,
+    onCopy,
+    scrollTo: (row, col) => {
+      rowVirtualizer.scrollToIndex(row)
+      columnVirtualizer.scrollToIndex(col)
+    },
+  })
+  const range = selection.range
 
   return (
     <div
@@ -195,7 +215,9 @@ export function DataGrid({
       aria-label={label}
       aria-rowcount={rowCount + 1}
       aria-colcount={leafColumns.length}
+      aria-multiselectable
       tabIndex={0}
+      onKeyDown={selection.onKeyDown}
       className="relative min-h-0 flex-1 overflow-auto text-xs outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-inset"
     >
       <div className="relative" style={{ width: contentWidth, height: spacerHeight }}>
@@ -228,6 +250,7 @@ export function DataGrid({
                 resizing={header.column.getIsResizing()}
                 profile={profiles?.get(header.column.id)}
                 rowCount={rowCount}
+                filter={filterFor?.(entry.meta)}
               />
             )
           })}
@@ -250,8 +273,9 @@ export function DataGrid({
             >
               <div
                 role="rowheader"
-                className="sticky left-0 z-10 flex shrink-0 items-center justify-end border-r bg-background pr-2 text-muted-foreground tabular-nums"
+                className="sticky left-0 z-10 flex shrink-0 cursor-pointer items-center justify-end border-r bg-background pr-2 text-muted-foreground tabular-nums select-none"
                 style={{ width: gutterWidth }}
+                onMouseDown={(event) => selection.onRowHeaderMouseDown(virtualRow.index, event)}
               >
                 {virtualRow.index + 1}
               </div>
@@ -260,29 +284,21 @@ export function DataGrid({
                 const column = leafColumns[virtualColumn.index]
                 const entry = column && formats.get(column.id)
                 if (!column || !entry) return null
-                const value = row?.[entry.index]
-                const numeric =
-                  entry.meta.logicalType === 'integer' || entry.meta.logicalType === 'number'
+                const selected =
+                  range !== null && contains(range, virtualRow.index, virtualColumn.index)
                 return (
-                  <div
+                  <GridCell
                     key={column.id}
-                    role="gridcell"
-                    className={cn(
-                      'flex shrink-0 items-center overflow-hidden border-r border-border/40 px-2 whitespace-nowrap',
-                      numeric && 'justify-end tabular-nums',
-                    )}
-                    style={{ width: column.getSize() }}
-                  >
-                    {row === undefined ? (
-                      <span className="h-2.5 w-3/4 animate-pulse rounded bg-muted motion-reduce:animate-none" />
-                    ) : value === null || value === undefined ? (
-                      <span className="text-muted-foreground/70 italic">null</span>
-                    ) : (
-                      <span className="truncate" title={String(value)}>
-                        {formatCell(value, entry.format, locale)}
-                      </span>
-                    )}
-                  </div>
+                    row={row}
+                    value={row?.[entry.index]}
+                    format={entry.format}
+                    locale={locale}
+                    selected={selected}
+                    width={column.getSize()}
+                    onMouseDown={(event) =>
+                      selection.onCellMouseDown(virtualRow.index, virtualColumn.index, event)
+                    }
+                  />
                 )
               })}
               <div className="shrink-0" style={{ width: padRight }} />

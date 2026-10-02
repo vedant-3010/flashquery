@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from '@/lib/zod'
 import { create } from 'zustand'
 
 export const ViewSchema = z.enum(['workspace', 'sql', 'dashboard'])
@@ -28,6 +28,11 @@ interface UiState {
   /** A column to flash in the sidebar (from an answer's "columns used", F-EXPL-02). */
   highlight: { table: string; column: string | null; at: number } | null
   highlightColumn: (table: string, column: string | null) => void
+  shortcutsOpen: boolean
+  setShortcutsOpen: (open: boolean) => void
+  /** Text in the "Paste data" dialog; null when it's closed (F-DATA-10). */
+  pasteText: string | null
+  setPasteText: (text: string | null) => void
   /** A dashboard tile to scroll to and flash (after pinning, F-DASH-01). */
   focusTile: { id: string; at: number } | null
   setFocusTile: (id: string | null) => void
@@ -55,6 +60,10 @@ export const useUiStore = create<UiState>()((set) => ({
   setHowItWorksOpen: (howItWorksOpen) => set({ howItWorksOpen }),
   highlight: null,
   highlightColumn: (table, column) => set({ highlight: { table, column, at: Date.now() } }),
+  shortcutsOpen: false,
+  setShortcutsOpen: (shortcutsOpen) => set({ shortcutsOpen }),
+  pasteText: null,
+  setPasteText: (pasteText) => set({ pasteText }),
   focusTile: null,
   setFocusTile: (id) => set({ focusTile: id ? { id, at: Date.now() } : null }),
 }))

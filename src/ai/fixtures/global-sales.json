@@ -21,7 +21,12 @@
       "columnsUsed": ["global_sales.region", "global_sales.order_date", "global_sales.revenue"],
       "clarification": null,
       "alternatives": [],
-      "chartHint": { "type": "bar", "x": "region", "y": ["growth_pct"], "series": null }
+      "chartHint": {
+        "type": "bar",
+        "x": "region",
+        "y": ["growth_pct"],
+        "series": null
+      }
     }
   },
   {
@@ -38,7 +43,12 @@
       "columnsUsed": ["global_sales.order_date", "global_sales.revenue"],
       "clarification": null,
       "alternatives": [],
-      "chartHint": { "type": "bar", "x": "year", "y": ["total_revenue"], "series": null }
+      "chartHint": {
+        "type": "bar",
+        "x": "year",
+        "y": ["total_revenue"],
+        "series": null
+      }
     }
   },
   {
@@ -59,7 +69,12 @@
       "columnsUsed": ["global_sales.order_date", "global_sales.channel", "global_sales.revenue"],
       "clarification": null,
       "alternatives": [],
-      "chartHint": { "type": "line", "x": "month", "y": ["total_revenue"], "series": "channel" }
+      "chartHint": {
+        "type": "line",
+        "x": "month",
+        "y": ["total_revenue"],
+        "series": "channel"
+      }
     }
   },
   {
@@ -80,7 +95,12 @@
       "columnsUsed": ["global_sales.product", "global_sales.order_date", "global_sales.revenue"],
       "clarification": null,
       "alternatives": [],
-      "chartHint": { "type": "hbar", "x": "product", "y": ["total_revenue"], "series": null }
+      "chartHint": {
+        "type": "hbar",
+        "x": "product",
+        "y": ["total_revenue"],
+        "series": null
+      }
     }
   },
   {
@@ -104,7 +124,12 @@
       "columnsUsed": ["global_sales.category", "global_sales.revenue", "global_sales.cost"],
       "clarification": null,
       "alternatives": [],
-      "chartHint": { "type": "bar", "x": "category", "y": ["profit_margin"], "series": null }
+      "chartHint": {
+        "type": "bar",
+        "x": "category",
+        "y": ["profit_margin"],
+        "series": null
+      }
     }
   },
   {
@@ -121,7 +146,12 @@
       "columnsUsed": ["global_sales.discount", "global_sales.units"],
       "clarification": null,
       "alternatives": [],
-      "chartHint": { "type": "scatter", "x": "discount", "y": ["avg_units"], "series": null }
+      "chartHint": {
+        "type": "scatter",
+        "x": "discount",
+        "y": ["avg_units"],
+        "series": null
+      }
     }
   },
   {
@@ -168,7 +198,12 @@
       "columnsUsed": ["global_sales.category", "global_sales.returned"],
       "clarification": null,
       "alternatives": [],
-      "chartHint": { "type": "bar", "x": "category", "y": ["return_rate"], "series": null }
+      "chartHint": {
+        "type": "bar",
+        "x": "category",
+        "y": ["return_rate"],
+        "series": null
+      }
     }
   },
   {
@@ -189,7 +224,12 @@
       "columnsUsed": ["global_sales.country", "global_sales.region", "global_sales.revenue"],
       "clarification": null,
       "alternatives": [],
-      "chartHint": { "type": "bar", "x": "country", "y": ["total_revenue"], "series": null }
+      "chartHint": {
+        "type": "bar",
+        "x": "country",
+        "y": ["total_revenue"],
+        "series": null
+      }
     }
   },
   {
@@ -206,7 +246,12 @@
       "columnsUsed": ["global_sales.order_date", "global_sales.revenue"],
       "clarification": null,
       "alternatives": [],
-      "chartHint": { "type": "line", "x": "month", "y": ["avg_order_value"], "series": null }
+      "chartHint": {
+        "type": "line",
+        "x": "month",
+        "y": ["avg_order_value"],
+        "series": null
+      }
     }
   },
   {
@@ -223,7 +268,43 @@
       "columnsUsed": ["global_sales.revenue", "global_sales.order_date"],
       "clarification": null,
       "alternatives": [],
-      "chartHint": { "type": "kpi", "x": null, "y": ["total_revenue"], "series": null }
+      "chartHint": {
+        "type": "kpi",
+        "x": null,
+        "y": ["total_revenue"],
+        "series": null
+      }
+    }
+  },
+  {
+    "question": "Forecast revenue for the next 3 months",
+    "aliases": [
+      "forecast revenue",
+      "revenue forecast",
+      "forecast revenue for the next three months",
+      "predict revenue for the next 3 months",
+      "what will revenue be next quarter"
+    ],
+    "plan": {
+      "kind": "python",
+      "title": "Revenue forecast, next 3 months",
+      "sql": "SELECT date_trunc('month', order_date) AS month, round(sum(revenue), 2) AS revenue\nFROM global_sales\nGROUP BY ALL\nORDER BY month",
+      "python": "import numpy as np\nimport pandas as pd\n\n# Monthly revenue = a straight-line trend x a seasonal factor for each calendar month.\nmonthly = df.sort_values(\"month\").reset_index(drop=True)\nt = np.arange(len(monthly))\ny = monthly[\"revenue\"].to_numpy(dtype=float)\nslope, intercept = np.polyfit(t, y, 1)\ntrend = intercept + slope * t\nseason = pd.Series(y / trend).groupby(monthly[\"month\"].dt.month.to_numpy()).mean()\n\nahead = 3\nfuture_months = pd.date_range(monthly[\"month\"].iloc[-1] + pd.offsets.MonthBegin(1), periods=ahead, freq=\"MS\")\nfuture_trend = intercept + slope * np.arange(len(monthly), len(monthly) + ahead)\nforecast = future_trend * season.reindex(future_months.month).to_numpy()\n\nresult = pd.DataFrame({\n    \"month\": list(monthly[\"month\"]) + list(future_months),\n    \"actual\": list(np.round(y, 2)) + [None] * ahead,\n    # The forecast line starts at the last actual month, so the two lines join up.\n    \"forecast\": [None] * (len(monthly) - 1) + [round(y[-1], 2)] + list(np.round(forecast, 2)),\n})\n\nprint(f\"Trend: {slope:+,.0f} per month; seasonal factors {season.min():.2f}-{season.max():.2f}\")\nsummary = (\n    f\"Revenue is forecast at {forecast.sum() / 1e6:,.1f}M over the next {ahead} months \"\n    f\"({future_months[0]:%b} to {future_months[-1]:%b %Y}), from the trend and each month's seasonality.\"\n)\n",
+      "explanation": "Fits a straight-line trend to monthly revenue, adjusts it by how much each calendar month usually sits above or below the trend, and projects the next three months.",
+      "assumptions": [
+        "Revenue keeps its overall trend and the same seasonal pattern as in past years.",
+        "A simple trend-and-seasonality model; it doesn't account for one-off events."
+      ],
+      "tablesUsed": ["global_sales"],
+      "columnsUsed": ["global_sales.order_date", "global_sales.revenue"],
+      "clarification": null,
+      "alternatives": [],
+      "chartHint": {
+        "type": "line",
+        "x": "month",
+        "y": ["actual", "forecast"],
+        "series": null
+      }
     }
   }
 ]

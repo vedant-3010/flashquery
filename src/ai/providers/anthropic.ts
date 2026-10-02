@@ -4,7 +4,12 @@ import { FAST_MODEL, findModel } from '@/ai/models'
 import type { LLMProvider, ProviderSettings } from '@/ai/providers'
 import { TEST_PROMPT } from '@/ai/prompts/testConnection'
 import { providerError, toLangChainMessages, usageOf } from '@/ai/providers/langchain'
-import { AnswerSummarySchema, DashboardPlanSchema, SqlPlanSchema } from '@/ai/schemas'
+import {
+  AnswerSummarySchema,
+  DashboardPlanSchema,
+  SqlPlanSchema,
+  SuggestedQuestionsSchema,
+} from '@/ai/schemas'
 
 // Claude through LangChain (PRD D6), called from the browser with the user's own key (BYOK, D3).
 // Structured output uses native JSON outputs (output_config.format, `method: "jsonSchema"`): it
@@ -40,7 +45,7 @@ export function createAnthropicProvider({ apiKey, model, fetch }: ProviderSettin
   })
   // Summaries use the fast model: a few sentences about ≤ 50 rows (F-ASK-12, PRD D41).
   const summaryModel = FAST_MODEL.anthropic
-  const summarizer = new ChatAnthropic({
+  const fast = new ChatAnthropic({
     apiKey,
     model: summaryModel,
     maxTokens: SUMMARY_MAX_TOKENS,
@@ -49,8 +54,14 @@ export function createAnthropicProvider({ apiKey, model, fetch }: ProviderSettin
     ...(findModel(summaryModel)?.supportsEffort
       ? { outputConfig: { effort: 'low' as const } }
       : {}),
-  }).withStructuredOutput(AnswerSummarySchema, {
+  })
+  const summarizer = fast.withStructuredOutput(AnswerSummarySchema, {
     name: 'answer_summary',
+    method: 'jsonSchema',
+    includeRaw: true,
+  })
+  const suggester = fast.withStructuredOutput(SuggestedQuestionsSchema, {
+    name: 'suggested_questions',
     method: 'jsonSchema',
     includeRaw: true,
   })
@@ -88,6 +99,18 @@ export function createAnthropicProvider({ apiKey, model, fetch }: ProviderSettin
           { signal },
         )
         return { summary: AnswerSummarySchema.parse(result.parsed), usage: usageOf(result.raw) }
+      } catch (error) {
+        throw providerError(error, summaryModel, signal)
+      }
+    },
+    async suggestQuestions({ messages, signal }) {
+      try {
+        const result = await suggester.invoke(
+          toLangChainMessages(messages, { cacheControl: false }),
+          { signal },
+        )
+        const { questions } = SuggestedQuestionsSchema.parse(result.parsed)
+        return { questions, usage: usageOf(result.raw) }
       } catch (error) {
         throw providerError(error, summaryModel, signal)
       }

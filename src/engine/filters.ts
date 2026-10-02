@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from '@/lib/zod'
 import type { SqlRunner } from '@/engine/connection'
 import { quoteIdent, quoteLiteral } from '@/engine/naming'
 import { tableToRows } from '@/engine/normalize'

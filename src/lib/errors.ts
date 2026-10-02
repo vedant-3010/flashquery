@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from '@/lib/zod'
 
 /** Plain error shape: survives worker boundaries, JSON and IndexedDB, where Error subclasses don't. */
 export const AppErrorDataSchema = z.object({

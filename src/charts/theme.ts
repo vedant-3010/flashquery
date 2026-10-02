@@ -20,13 +20,17 @@ export interface ChartTheme {
   sequential: string[]
 }
 
-const PALETTE = ['#4477AA', '#EE6677', '#228833', '#CCBB44', '#66CCEE', '#AA3377', '#BBBBBB']
+/**
+ * Paul Tol's "bright" scheme; on white its yellow, cyan and grey fall below 3:1 (WCAG 1.4.11), so
+ * light mode uses darker shades of those three (same hues). Checked in src/lib/contrast.test.ts.
+ */
+const LIGHT_PALETTE = ['#4477AA', '#EE6677', '#228833', '#997700', '#1F86A6', '#AA3377', '#808080']
 const VIRIDIS = ['#440154', '#3b528b', '#21918c', '#5ec962', '#fde725']
 
 export const LIGHT_THEME: ChartTheme = {
   mode: 'light',
-  palette: PALETTE,
-  other: '#9ca3af',
+  palette: LIGHT_PALETTE,
+  other: '#7D828C',
   text: '#171717',
   muted: '#737373',
   grid: '#e5e5e5',

@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from '@/lib/zod'
 import { PrivacyModeSchema } from '@/ai/schemas'
 
 // The AI payload log behind "What the AI saw" (F-EXPL-04): every request exactly as sent, the
@@ -22,7 +22,7 @@ export const LoggedMessageSchema = z.object({
 export const AiLogEntrySchema = z.object({
   id: z.string(),
   answerId: z.string(),
-  purpose: z.enum(['plan', 'repair', 'summary', 'dashboard', 'test']),
+  purpose: z.enum(['plan', 'repair', 'summary', 'dashboard', 'suggest', 'test']),
   provider: z.string(),
   model: z.string(),
   mode: PrivacyModeSchema,

@@ -35,6 +35,15 @@ test.describe('sample data (F-DATA-05)', () => {
     await expect(profile).toContainText('APAC')
     await page.keyboard.press('Escape')
 
+    // Mini histogram for numbers and dates (F-PROF-06), computed when the profile opens.
+    await sales.getByRole('button', { name: 'order_date' }).click()
+    await expect(
+      page
+        .getByRole('dialog')
+        .getByRole('img', { name: /^Distribution of order_date from Jan 1, 2022 to Dec 31, 2025/ }),
+    ).toBeVisible()
+    await page.keyboard.press('Escape')
+
     await sales.getByRole('button', { name: 'Preview Global Sales · 10k rows' }).click()
     const panel = page.getByRole('complementary', { name: 'Side panel' })
     const grid = panel.getByRole('grid', { name: 'Rows of global_sales' })

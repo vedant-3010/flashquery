@@ -1,5 +1,5 @@
 import { AIMessage, HumanMessage, SystemMessage, type BaseMessage } from '@langchain/core/messages'
-import { z } from 'zod'
+import { z } from '@/lib/zod'
 import type { Usage } from '@/ai/log'
 import type { PromptMessage } from '@/ai/prompts/planSql'
 import { AppError } from '@/lib/errors'

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { z } from 'zod'
+import { z } from '@/lib/zod'
 import { loadRecord, memoryStore, saveRecord, type CorruptRecord, type RecordSpec } from './idb'
 
 const spec: RecordSpec<{ name: string; count: number }> = {

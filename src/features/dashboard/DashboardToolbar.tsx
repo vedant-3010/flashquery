@@ -34,7 +34,9 @@ export function DashboardToolbar({
   const download = (snapshots: boolean) => {
     if (!dashboard) return
     const file = exportDashboard(dashboard.id, { snapshots })
-    if (file) downloadBytes(new TextEncoder().encode(file.json), file.fileName, 'application/json')
+    if (!file) return
+    downloadBytes(new TextEncoder().encode(file.json), file.fileName, 'application/json')
+    toast(`Exported ${file.fileName}.`)
   }
 
   return (

@@ -32,6 +32,8 @@ export function AnswerSummaryView({ answer }: { answer: Answer }) {
             <LoaderCircle className="size-3 animate-spin motion-reduce:animate-none" aria-hidden />
             Writing the AI summary…
           </>
+        ) : answer.summarySource === 'python' ? (
+          'Summary from the Python code'
         ) : answer.summarySource === 'ai' && model ? (
           `Summary by ${model}, from the result`
         ) : (

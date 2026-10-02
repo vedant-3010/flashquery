@@ -5,7 +5,7 @@ import { isCancellation, toAppError } from '@/lib/errors'
 // SQL, error and tokens. Drives the pipeline timeline (F-ASK-06) and the Trace tab (F-EXPL-06).
 
 export type StageId =
-  'context' | 'plan' | 'guard' | 'explain' | 'execute' | 'chart' | 'summary' | 'narrate'
+  'context' | 'plan' | 'guard' | 'explain' | 'execute' | 'chart' | 'summary' | 'narrate' | 'python'
 
 export const STAGE_LABELS: Record<StageId, string> = {
   context: 'Reading schema',
@@ -17,6 +17,8 @@ export const STAGE_LABELS: Record<StageId, string> = {
   summary: 'Summarizing',
   /** The AI summary (F-ASK-12), after the answer is shown. */
   narrate: 'Writing summary',
+  /** Approved code running in Pyodide (F-PY-04). */
+  python: 'Running Python',
 }
 
 export interface TraceStep {

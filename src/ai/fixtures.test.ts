@@ -36,8 +36,9 @@ describe('matchFixture', () => {
     expect(normalizeQuestion('  Top-10 products, 2025? ')).toBe('top 10 products 2025')
   })
 
-  it('has the 11 PRD questions with unique normalized texts', () => {
-    expect(DEMO_FIXTURES).toHaveLength(11)
+  it('has the 12 PRD questions with unique normalized texts', () => {
+    expect(DEMO_FIXTURES).toHaveLength(12)
+    expect(DEMO_FIXTURES.filter((f) => f.plan.kind === 'python')).toHaveLength(1)
     const texts = DEMO_FIXTURES.flatMap((f) => [f.question, ...f.aliases]).map(normalizeQuestion)
     expect(new Set(texts).size).toBe(texts.length)
   })
@@ -50,7 +51,8 @@ describe('fixture SQL', () => {
       const sql = await guardSql(engine, plan.sql ?? '', { tables: [DEMO_TABLE] })
       const result = await runQuery(engine, sql)
       expect(result.rowCount).toBeGreaterThan(0)
-      // The chart hint refers to real result columns.
+      // The chart hint refers to real result columns (a Python plan's hint is about its result).
+      if (plan.kind === 'python') return
       const names = result.columns.map((column) => column.name)
       for (const column of [plan.chartHint?.x, ...(plan.chartHint?.y ?? [])]) {
         if (column) expect(names).toContain(column)
@@ -90,11 +92,13 @@ const EXPECTED_CHARTS: Record<string, ChartType> = {
 }
 
 describe('fixture charts (M4)', () => {
-  it('covers every fixture', () => {
-    expect(Object.keys(EXPECTED_CHARTS).sort()).toEqual(DEMO_FIXTURES.map((f) => f.question).sort())
+  const SQL_FIXTURES = DEMO_FIXTURES.filter((f) => f.plan.kind === 'sql')
+
+  it('covers every SQL fixture', () => {
+    expect(Object.keys(EXPECTED_CHARTS).sort()).toEqual(SQL_FIXTURES.map((f) => f.question).sort())
   })
 
-  it.each(DEMO_FIXTURES.map((fixture) => [fixture.question, fixture.plan] as const))(
+  it.each(SQL_FIXTURES.map((fixture) => [fixture.question, fixture.plan] as const))(
     '%s',
     async (question, plan) => {
       const sql = await guardSql(engine, plan.sql ?? '', { tables: [DEMO_TABLE] })

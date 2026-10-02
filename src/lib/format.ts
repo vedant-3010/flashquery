@@ -73,6 +73,17 @@ export function formatCurrency(
   return numberFormat(locale, options).format(value)
 }
 
+/** AI usage estimates in US dollars: 0.0042 → "$0.0042", 1.234 → "$1.23", tiny → "<$0.0001". */
+export function formatUsd(value: MaybeNumber, locale: string): string {
+  if (!present(value)) return EMPTY
+  if (value > 0 && value < 0.0001) return `<${formatUsd(0.0001, locale)}`
+  const options: Intl.NumberFormatOptions =
+    value < 1
+      ? { style: 'currency', currency: 'USD', maximumSignificantDigits: 2 }
+      : { style: 'currency', currency: 'USD' }
+  return numberFormat(locale, options).format(value)
+}
+
 /** `value` is a fraction: 0.1234 → "12.3%". */
 export function formatPercent(
   value: MaybeNumber,

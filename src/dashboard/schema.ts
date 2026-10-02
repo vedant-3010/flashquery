@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from '@/lib/zod'
 import { ChartSpecSchema } from '@/charts/spec'
 import { DashboardFilterSchema } from '@/engine/filters'
 import { CellValueSchema, ColumnMetaSchema } from '@/engine/types'

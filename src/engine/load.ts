@@ -1,7 +1,9 @@
 import type { Engine } from '@/engine/connection'
-import { ingestCsvBytes, ingestFile, type IngestResult } from '@/engine/ingest'
+import { ingestCsvBytes, ingestFile, type CsvOptions, type IngestResult } from '@/engine/ingest'
 import { quoteIdent } from '@/engine/naming'
 import { profileTable } from '@/engine/profile'
+import { describeQuery } from '@/engine/query'
+import { retypeColumn, type TypeOverride } from '@/engine/retype'
 import { createGlobalSalesSql, type SampleDefinition } from '@/engine/samples'
 import type { DatasetProfile, DatasetSource } from '@/engine/types'
 import { abortError, AppError } from '@/lib/errors'
@@ -10,7 +12,10 @@ import { closeWorkbook, openWorkbook, workbookSheetToCsv } from '@/workers/clien
 // Any dataset input → a profiled table. Also used to re-ingest everything after "Restart engine".
 
 export type DatasetInput =
-  | { kind: 'file'; file: File; format: 'csv' | 'parquet' | 'json' }
+  /** `csv`: import overrides (F-DATA-08). */
+  | { kind: 'file'; file: File; format: 'csv' | 'parquet' | 'json'; csv?: CsvOptions }
+  /** Tab-separated text pasted from a spreadsheet (F-DATA-10). */
+  | { kind: 'paste'; text: string }
   /** `workbookId` reuses a workbook already parsed for the sheet picker. */
   | { kind: 'excel'; file: File; sheet: string; workbookId?: string }
   | { kind: 'sample'; sample: SampleDefinition }
@@ -21,6 +26,10 @@ export interface LoadRequest {
   label: string
   input: DatasetInput
   ignoreErrors?: boolean
+  /** Column type overrides to apply after loading (F-DATA-09). */
+  overrides?: readonly TypeOverride[]
+  /** Re-import over an existing table: load into a temp table and swap only on success. */
+  replace?: boolean
   signal?: AbortSignal
   onProfiling?: () => void
 }
@@ -92,6 +101,15 @@ function describeSource(input: DatasetInput, result: IngestResult): DatasetSourc
         // The dialect is that of our own sheet-to-CSV conversion, not something the user chose.
         csv: null,
       }
+    case 'paste':
+      return {
+        kind: 'paste',
+        format: 'csv',
+        fileName: null,
+        sizeBytes: new TextEncoder().encode(input.text).length,
+        sheet: null,
+        ...result,
+      }
     case 'sample':
       return {
         kind: 'sample',
@@ -104,20 +122,60 @@ function describeSource(input: DatasetInput, result: IngestResult): DatasetSourc
   }
 }
 
-export async function loadDataset(engine: Engine, request: LoadRequest): Promise<DatasetProfile> {
-  const { table, input, ignoreErrors = false, signal } = request
-  const loadStarted = performance.now()
-  let result: IngestResult
+async function ingest(
+  engine: Engine,
+  table: string,
+  input: DatasetInput,
+  ignoreErrors: boolean,
+  signal?: AbortSignal,
+): Promise<IngestResult> {
   switch (input.kind) {
     case 'file':
-      result = await ingestFile(engine, table, input.file, input.format, { ignoreErrors, signal })
-      break
+      return ingestFile(engine, table, input.file, input.format, {
+        ignoreErrors,
+        csv: input.csv,
+        signal,
+      })
+    case 'paste':
+      return ingestCsvBytes(engine, table, new TextEncoder().encode(input.text), {
+        ignoreErrors,
+        csv: { delimiter: '\t', header: null, skipRows: 0, dateFormat: null, allText: false },
+        signal,
+      })
     case 'excel':
-      result = await loadExcelSheet(engine, table, input, ignoreErrors, signal)
-      break
+      return loadExcelSheet(engine, table, input, ignoreErrors, signal)
     case 'sample':
-      result = await loadSample(engine, table, input.sample, signal)
-      break
+      return loadSample(engine, table, input.sample, signal)
+  }
+}
+
+export async function loadDataset(engine: Engine, request: LoadRequest): Promise<DatasetProfile> {
+  const { table, input, ignoreErrors = false, overrides = [], replace = false, signal } = request
+  const loadStarted = performance.now()
+  // A re-import loads beside the old table, which stays until the new one is complete.
+  const target = replace ? `${table}__reimport` : table
+  let result: IngestResult
+  try {
+    if (replace) await engine.run(`DROP TABLE IF EXISTS ${quoteIdent(target)}`)
+    result = await ingest(engine, target, input, ignoreErrors, signal)
+    if (overrides.length > 0) {
+      // Overrides for columns a re-import no longer has are dropped, not errors.
+      const names = new Set(
+        (await describeQuery(engine, `SELECT * FROM ${quoteIdent(target)}`, signal)).map(
+          (column) => column.name,
+        ),
+      )
+      for (const override of overrides.filter((o) => names.has(o.column))) {
+        await retypeColumn(engine, target, override, signal)
+      }
+    }
+    if (replace) {
+      await engine.run(`DROP TABLE IF EXISTS ${quoteIdent(table)}`)
+      await engine.run(`ALTER TABLE ${quoteIdent(target)} RENAME TO ${quoteIdent(table)}`)
+    }
+  } catch (error) {
+    if (replace) await engine.run(`DROP TABLE IF EXISTS ${quoteIdent(target)}`).catch(() => {})
+    throw error
   }
   const loadMs = performance.now() - loadStarted
 

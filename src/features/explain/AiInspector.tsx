@@ -1,11 +1,13 @@
 import { ChevronRight, ClipboardCopy, ScanEye, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import type { AiLogEntry } from '@/ai/log'
+import { estimateCost } from '@/ai/cost'
 import { EmptyState } from '@/components/EmptyState'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { formatDuration, formatEventTime, formatNumber } from '@/lib/format'
+import { formatDuration, formatEventTime, formatNumber, formatUsd } from '@/lib/format'
 import { cn } from '@/lib/utils'
+import { UsageSummary } from '@/features/explain/UsageSummary'
 import { useAiLogStore } from '@/stores/aiLog'
 import { activeApiKey, useSettingsStore } from '@/stores/settings'
 
@@ -14,6 +16,7 @@ const PURPOSES: Record<AiLogEntry['purpose'], string> = {
   repair: 'Fix SQL',
   summary: 'Summarize',
   dashboard: 'Plan dashboard',
+  suggest: 'Suggest questions',
   test: 'Test connection',
 }
 
@@ -22,6 +25,7 @@ function Entry({ entry }: { entry: AiLogEntry }) {
   const [open, setOpen] = useState(false)
   const [copied, setCopied] = useState(false)
   const usage = entry.usage
+  const cost = estimateCost(entry.model, usage)
 
   return (
     <li className="min-w-0 rounded-md border text-xs">
@@ -56,6 +60,7 @@ function Entry({ entry }: { entry: AiLogEntry }) {
               {formatNumber(usage.outputTokens, locale)} out
               {usage.cacheReadTokens > 0 &&
                 ` · ${formatNumber(usage.cacheReadTokens, locale)} cached`}
+              {cost !== null && ` · ≈ ${formatUsd(cost, locale)}`}
             </span>
           )}
         </span>
@@ -121,8 +126,9 @@ export function AiInspector() {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex items-center gap-2 border-b px-3 py-1.5 text-xs text-muted-foreground">
-        <span>This session only. Keys are never shown.</span>
-        <Button size="xs" variant="ghost" className="ml-auto" onClick={clear}>
+        <span className="flex-1">This session only. Keys are never shown.</span>
+        <UsageSummary entries={entries} label="Session" />
+        <Button size="xs" variant="ghost" onClick={clear}>
           <Trash2 aria-hidden />
           Clear
         </Button>

@@ -1,5 +1,5 @@
 import { ArrowDown, ArrowUp } from 'lucide-react'
-import type { MouseEvent, TouchEvent } from 'react'
+import type { MouseEvent, ReactNode, TouchEvent } from 'react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import type { ColumnMeta, ColumnProfile } from '@/engine/types'
 import { ColumnProfileCard } from '@/features/datasets/ColumnProfileCard'
@@ -18,6 +18,8 @@ interface GridHeaderCellProps {
   resizing: boolean
   profile?: ColumnProfile
   rowCount: number
+  /** The column's filter control (F-GRID-04). */
+  filter?: ReactNode
 }
 
 export function GridHeaderCell({
@@ -31,6 +33,7 @@ export function GridHeaderCell({
   resizing,
   profile,
   rowCount,
+  filter,
 }: GridHeaderCellProps) {
   const numeric = meta.logicalType === 'integer' || meta.logicalType === 'number'
   const SortIcon = sorted === 'desc' ? ArrowDown : ArrowUp
@@ -79,6 +82,7 @@ export function GridHeaderCell({
           </span>
         )}
       </button>
+      {filter}
       <div
         role="separator"
         aria-orientation="vertical"

@@ -14,6 +14,8 @@ interface SqlState {
   running: boolean
   /** The last successful result; kept while a new query runs. */
   result: PagedResult | null
+  /** The SQL behind `result` (the editor text may have changed since). */
+  resultSql: string | null
   error: AppErrorData | null
   elapsedMs: number | null
   setText: (text: string) => void
@@ -29,6 +31,7 @@ export const useSqlStore = create<SqlState>()((set, get) => ({
   text: '',
   running: false,
   result: null,
+  resultSql: null,
   error: null,
   elapsedMs: null,
 
@@ -49,8 +52,8 @@ export const useSqlStore = create<SqlState>()((set, get) => ({
         return
       }
       const previous = get().result
-      set({ running: false, result, elapsedMs: performance.now() - started })
       const sql = get().text.trim()
+      set({ running: false, result, resultSql: sql, elapsedMs: performance.now() - started })
       useHistoryStore.getState().add({
         kind: 'query',
         text: sql,

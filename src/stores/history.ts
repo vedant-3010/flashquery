@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from '@/lib/zod'
 import { create } from 'zustand'
 import { loadRecord, saveRecord, type RecordSpec } from '@/lib/idb'
 import { backupCorruptRecord } from '@/stores/persistence'
@@ -12,7 +12,8 @@ export const HistoryEntrySchema = z.object({
   /** The question, or the SQL for queries. */
   text: z.string(),
   sql: z.string().nullable(),
-  status: z.enum(['answered', 'no-sql', 'failed']),
+  /** 'python': a Python plan, run (or not) from its answer card. */
+  status: z.enum(['answered', 'no-sql', 'python', 'failed']),
   headline: z.string().nullable(),
   rowCount: z.number().nullable(),
   at: z.number(),

@@ -16,14 +16,19 @@ paths:
   `allow_community_extensions = false`) so generated SQL can never pull in httpfs or anything else.
   parquet and json are not built in (DuckDB 1.5.x WASM): load them with `ensureExtension()` right
   before first use (PRD D13), never eagerly.
-- "Restart engine": terminate, re-instantiate, re-ingest from retained `File` handles, restore views.
+- "Restart engine": terminate, re-instantiate, re-ingest from retained `File` handles (with their type
+  overrides), restore answers' views and charts (`src/stores/engineRestart.ts`, PRD D67).
 
 ## Ingest
 - CSV/TSV/Parquet/JSON: `registerFileHandle(name, file, DuckDBDataProtocol.BROWSER_FILEREADER, true)`;
   never read whole files into JS memory. Then `CREATE TABLE "<t>" AS SELECT * FROM read_csv(...)`,
   `read_parquet(...)` or `read_json_auto(...)`.
 - CSV: `read_csv('<name>', auto_detect = true, sample_size = 20480)`. Show the sniffed delimiter, header and
-  types; allow re-import with overrides (delimiter, header, skip rows, date format, all-varchar, ignore_errors).
+  types; allow re-import with overrides (`CsvOptions` in `ingest.ts`: delimiter, header, skip rows, date
+  format, all-varchar, ignore_errors). A re-import loads into `<table>__reimport` and swaps on success.
+- Column type override: `src/engine/retype.ts` (`TRY_CAST` / `try_strptime`), previewed first; kept with
+  the retained input (`src/stores/datasetInputs.ts`) and re-applied on every reload (PRD D77).
+- Pasted cells: a `paste` input, read as tab-separated CSV.
 - XLSX/XLS: parse in `xlsx.worker.ts` (SheetJS `read(buf, { dense: true })`), convert the chosen sheet to
   CSV bytes, `Comlink.transfer` the buffer back, `registerFileBuffer`, ingest as CSV. Multi-sheet → sheet picker.
 - Table names: snake_case from the filename, `[a-z0-9_]` only, `t_` prefix if it starts with a digit,
@@ -44,7 +49,8 @@ paths:
 - Large results: `CREATE OR REPLACE TEMP VIEW "result_<id>" AS <sql>` and page it in 200-row windows
   (LIMIT/OFFSET, LRU page cache, prefetch the next window). Grid sort/filter = new SQL over the view.
   Unsorted base tables page by `rowid` range (dense rowids; O(1) at any depth); sorted ones add
-  `rowid` as a tie-breaker. All of this lives in `src/engine/paging.ts` + `pageCache.ts`.
+  `rowid` as a tie-breaker. All of this lives in `src/engine/paging.ts` + `pageCache.ts`. Grid column
+  filters (`src/engine/gridFilters.ts`) add a WHERE; filtered base tables page by `ORDER BY rowid`.
 - Cancellation: honour `AbortSignal`, cancel the pending DuckDB query, default timeout 30 s (setting).
 - Export: `engine.createFile(name)` → `COPY (<sql>) TO '<name>' (FORMAT csv | parquet, USE_TMP_FILE false)`
   → `readFile` → Blob download → drop the virtual file (`src/engine/export.ts`).
@@ -75,3 +81,5 @@ paths:
 - Code contract: generated code reads `df`, must assign `result` (a DataFrame, rendered through the normal
   table + chart pipeline) and may assign `summary` (str). Capture stdout/stderr.
 - Timeout (default 60 s) or "Stop": terminate and recreate the worker; tell the user the Python session reset.
+- While user code runs, the worker's network APIs fail (`guardNetwork` in `src/workers/python.ts`);
+  load packages before locking. `result` comes back as CSV into a temp table (`src/engine/pythonData.ts`).

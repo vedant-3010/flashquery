@@ -9,7 +9,9 @@ import {
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { PrivacyModeSchema } from '@/ai/schemas'
 import { FormatSettings } from '@/features/settings/FormatSettings'
+import { LocalDataSettings } from '@/features/settings/LocalDataSettings'
 import { ProviderSettings } from '@/features/settings/ProviderSettings'
+import { PythonSettings } from '@/features/settings/PythonSettings'
 import { PRIVACY_MODES } from '@/features/settings/privacyText'
 import { useSettingsStore } from '@/stores/settings'
 import { useUiStore } from '@/stores/ui'
@@ -89,6 +91,20 @@ export function SettingsDialog() {
             Formatting
           </h3>
           <FormatSettings />
+        </section>
+
+        <section aria-labelledby="settings-python" className="grid gap-3 border-t pt-4">
+          <h3 id="settings-python" className="text-sm font-medium">
+            Python analysis
+          </h3>
+          <PythonSettings />
+        </section>
+
+        <section aria-labelledby="settings-data" className="grid gap-3 border-t pt-4">
+          <h3 id="settings-data" className="text-sm font-medium">
+            Your data on this device
+          </h3>
+          <LocalDataSettings />
         </section>
       </DialogContent>
     </Dialog>

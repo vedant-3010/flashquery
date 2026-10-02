@@ -4,7 +4,12 @@ import { FAST_MODEL, findModel } from '@/ai/models'
 import type { LLMProvider, ProviderSettings } from '@/ai/providers'
 import { TEST_PROMPT } from '@/ai/prompts/testConnection'
 import { providerError, toLangChainMessages, usageOf } from '@/ai/providers/langchain'
-import { AnswerSummarySchema, DashboardPlanSchema, SqlPlanSchema } from '@/ai/schemas'
+import {
+  AnswerSummarySchema,
+  DashboardPlanSchema,
+  SqlPlanSchema,
+  SuggestedQuestionsSchema,
+} from '@/ai/schemas'
 
 // OpenAI through LangChain (PRD D6), called from the browser with the user's own key (BYOK, D3).
 // Structured Outputs (strict JSON schema); OpenAI caches long prompt prefixes automatically.
@@ -36,14 +41,21 @@ export function createOpenAIProvider({ apiKey, model, fetch }: ProviderSettings)
   })
   // Summaries use the fast model: a few sentences about ≤ 50 rows (F-ASK-12, PRD D41).
   const summaryModel = FAST_MODEL.openai
-  const summarizer = new ChatOpenAI({
+  const fast = new ChatOpenAI({
     apiKey,
     model: summaryModel,
     maxRetries: 2,
     configuration: { dangerouslyAllowBrowser: true, ...(fetch ? { fetch } : {}) },
     ...(findModel(summaryModel)?.supportsEffort ? { reasoning: { effort: 'low' as const } } : {}),
-  }).withStructuredOutput(AnswerSummarySchema, {
+  })
+  const summarizer = fast.withStructuredOutput(AnswerSummarySchema, {
     name: 'answer_summary',
+    method: 'jsonSchema',
+    strict: true,
+    includeRaw: true,
+  })
+  const suggester = fast.withStructuredOutput(SuggestedQuestionsSchema, {
+    name: 'suggested_questions',
     method: 'jsonSchema',
     strict: true,
     includeRaw: true,
@@ -85,6 +97,18 @@ export function createOpenAIProvider({ apiKey, model, fetch }: ProviderSettings)
           { signal },
         )
         return { summary: AnswerSummarySchema.parse(result.parsed), usage: usageOf(result.raw) }
+      } catch (error) {
+        throw providerError(error, summaryModel, signal)
+      }
+    },
+    async suggestQuestions({ messages, signal }) {
+      try {
+        const result = await suggester.invoke(
+          toLangChainMessages(messages, { cacheControl: false }),
+          { signal },
+        )
+        const { questions } = SuggestedQuestionsSchema.parse(result.parsed)
+        return { questions, usage: usageOf(result.raw) }
       } catch (error) {
         throw providerError(error, summaryModel, signal)
       }

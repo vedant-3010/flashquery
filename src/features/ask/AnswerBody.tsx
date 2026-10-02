@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { AnswerSummaryView } from '@/features/ask/AnswerSummaryView'
 import { AnswerTabs } from '@/features/ask/AnswerTabs'
+import { PythonPanel } from '@/features/python/PythonPanel'
 import { useAskStore, type Answer } from '@/stores/ask'
 import { useDatasetsStore } from '@/stores/datasets'
 import { useUiStore } from '@/stores/ui'
@@ -120,7 +121,7 @@ export function AnswerBody({ answer }: { answer: Answer }) {
           {plan.kind === 'python' && (
             <p className="flex items-center gap-1.5 text-muted-foreground">
               <Info className="size-4" aria-hidden />
-              This needs Python (statistics or forecasting), which arrives in a later version.
+              The AI chose Python but sent no code or input query. Try asking again.
             </p>
           )}
           <p>{plan.explanation}</p>
@@ -133,6 +134,15 @@ export function AnswerBody({ answer }: { answer: Answer }) {
         </div>
       )
     }
+    case 'python':
+      // Nothing has run yet, or the last run failed: the code is front and center (F-PY-03).
+      return (
+        <div className="grid gap-3">
+          {answer.plan && <p className="text-sm">{answer.plan.explanation}</p>}
+          <PythonPanel answer={answer} />
+          <AnswerTabs answer={answer} withTable={false} />
+        </div>
+      )
     case 'answered':
       return (
         <div className="grid gap-3">

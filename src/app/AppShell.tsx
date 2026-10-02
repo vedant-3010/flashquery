@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect } from 'react'
 import { PanelErrorBoundary } from '@/app/PanelErrorBoundary'
 import { SidePanel } from '@/app/SidePanel'
 import { TopBar } from '@/app/TopBar'
+import { ShortcutsDialog } from '@/app/ShortcutsDialog'
 import { Toaster } from '@/components/Toaster'
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -10,9 +11,11 @@ import { AskView } from '@/features/ask/AskView'
 import { HowItWorksDialog } from '@/features/ask/HowItWorksDialog'
 import { DatasetsPanel } from '@/features/datasets/DatasetsPanel'
 import { FileDropZone } from '@/features/datasets/FileDropZone'
+import { PasteDataDialog } from '@/features/datasets/PasteDataDialog'
 import { SettingsDialog } from '@/features/settings/SettingsDialog'
 import { SqlView } from '@/features/sql/SqlView'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
+import { looksLikeTable } from '@/lib/tsv'
 import { useUiStore, ViewSchema } from '@/stores/ui'
 
 // The dashboard (react-grid-layout, its tiles and dialogs) loads on first visit.
@@ -33,6 +36,44 @@ export function AppShell() {
   const sidePanelOpen = useUiStore((state) => state.sidePanelOpen)
   const highlight = useUiStore((state) => state.highlight)
   const wide = useMediaQuery(WIDE_LAYOUT_QUERY)
+
+  // `?` lists the shortcuts (F-SHELL-06), unless the user is typing.
+  const setShortcutsOpen = useUiStore((state) => state.setShortcutsOpen)
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target
+      const typing =
+        target instanceof HTMLElement &&
+        (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))
+      if (event.key === '?' && !typing && !event.metaKey && !event.ctrlKey) {
+        event.preventDefault()
+        setShortcutsOpen(true)
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [setShortcutsOpen])
+
+  // Spreadsheet cells pasted anywhere outside a text field become a new table (F-DATA-10).
+  const setPasteText = useUiStore((state) => state.setPasteText)
+  useEffect(() => {
+    const onPaste = (event: ClipboardEvent) => {
+      const target = event.target
+      if (
+        target instanceof HTMLElement &&
+        (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))
+      ) {
+        return
+      }
+      if (useUiStore.getState().pasteText !== null) return
+      const text = event.clipboardData?.getData('text/plain') ?? ''
+      if (!looksLikeTable(text)) return
+      event.preventDefault()
+      setPasteText(text)
+    }
+    window.addEventListener('paste', onPaste)
+    return () => window.removeEventListener('paste', onPaste)
+  }, [setPasteText])
 
   // Don't reopen a stale overlay after the window was widened and narrowed again.
   useEffect(() => {
@@ -104,6 +145,8 @@ export function AppShell() {
       </div>
       <FileDropZone />
       <SettingsDialog />
+      <ShortcutsDialog />
+      <PasteDataDialog />
       <Toaster />
       <HowItWorksDialog />
     </Tabs>

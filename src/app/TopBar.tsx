@@ -1,4 +1,5 @@
 import {
+  Keyboard,
   LayoutDashboard,
   MessageSquareText,
   PanelLeft,
@@ -23,6 +24,7 @@ export function TopBar({ showSidebarToggle }: TopBarProps) {
   const sidePanelOpen = useUiStore((state) => state.sidePanelOpen)
   const setSidePanelOpen = useUiStore((state) => state.setSidePanelOpen)
   const setSettingsOpen = useUiStore((state) => state.setSettingsOpen)
+  const setShortcutsOpen = useUiStore((state) => state.setShortcutsOpen)
 
   return (
     <header className="flex h-12 shrink-0 items-center gap-3 border-b px-3">
@@ -53,6 +55,9 @@ export function TopBar({ showSidebarToggle }: TopBarProps) {
         <PrivacyBadge />
         <EngineStatusBadge />
         <ThemeMenu />
+        <IconButton label="Keyboard shortcuts (?)" onClick={() => setShortcutsOpen(true)}>
+          <Keyboard />
+        </IconButton>
         <IconButton
           label="Side panel"
           aria-pressed={sidePanelOpen}

@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from '@/lib/zod'
 import { ChartTypeSchema } from '@/charts/spec'
 
 // What the LLM returns (validated before anything runs) and the settings that shape requests.
@@ -44,7 +44,10 @@ export const SqlPlanSchema = z.object({
   python: z
     .string()
     .nullable()
-    .describe("For 'python' only: pandas code that reads df and assigns result. Otherwise null."),
+    .describe(
+      "For 'python' only: Python code (pd and df are defined) that assigns result, a pandas " +
+        'DataFrame, and may assign summary, a short string. Otherwise null.',
+    ),
   explanation: z
     .string()
     .describe('1-3 plain-English sentences on how the answer is computed. No jargon.'),
@@ -75,6 +78,13 @@ export const AnswerSummarySchema = z.object({
   caveats: z.array(z.string()).describe('Limits of the answer worth knowing.'),
 })
 export type AnswerSummary = z.infer<typeof AnswerSummarySchema>
+
+export const SuggestedQuestionsSchema = z.object({
+  questions: z
+    .array(z.string().describe('One question in plain English, at most 12 words.'))
+    .describe('4 to 6 questions this data can answer, most useful first.'),
+})
+export type SuggestedQuestions = z.infer<typeof SuggestedQuestionsSchema>
 
 export const DashboardTileSizeSchema = z
   .enum(['kpi', 'half', 'full'])

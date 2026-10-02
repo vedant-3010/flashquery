@@ -30,9 +30,10 @@ export function TileCard({
     <section
       aria-label={tile.title}
       data-tile-id={tile.id}
-      tabIndex={-1}
+      // Reachable by Tab (F-A11Y-01); its menu has the keyboard versions of drag and resize.
+      tabIndex={0}
       className={cn(
-        'flex h-full flex-col overflow-hidden rounded-xl border bg-card transition-shadow duration-500 outline-none',
+        'flex h-full flex-col overflow-hidden rounded-xl border bg-card transition-shadow duration-500 outline-none focus-visible:ring-2 focus-visible:ring-ring/60',
         focused && 'ring-2 ring-primary/60',
       )}
     >

@@ -1,4 +1,13 @@
-import { ChevronRight, Eye, MoreHorizontal, Pencil, SquareTerminal, Trash2 } from 'lucide-react'
+import {
+  ChevronRight,
+  Eye,
+  FileCog,
+  MoreHorizontal,
+  NotebookPen,
+  Pencil,
+  SquareTerminal,
+  Trash2,
+} from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { IconButton } from '@/components/IconButton'
 import {
@@ -9,11 +18,14 @@ import {
 } from '@/components/ui/dropdown-menu'
 import type { DatasetProfile } from '@/engine/types'
 import { ColumnProfilePopover } from '@/features/datasets/ColumnProfilePopover'
+import { ImportOptionsDialog } from '@/features/datasets/ImportOptionsDialog'
+import { NotesDialog } from '@/features/datasets/NotesDialog'
 import { RemoveDatasetDialog } from '@/features/datasets/RemoveDatasetDialog'
 import { RenameDatasetDialog } from '@/features/datasets/RenameDatasetDialog'
 import { sourceSummary } from '@/features/datasets/sourceSummary'
 import { formatCompact } from '@/lib/format'
 import { cn } from '@/lib/utils'
+import { importOptionsOf } from '@/stores/datasetEdits'
 import { useSettingsStore } from '@/stores/settings'
 import { useSqlStore } from '@/stores/sql'
 import { useUiStore } from '@/stores/ui'
@@ -25,7 +37,7 @@ export function DatasetItem({ dataset }: { dataset: DatasetProfile }) {
   const openInSql = useSqlStore((state) => state.openTable)
   // When the user last collapsed the column list (null = expanded).
   const [collapsedAt, setCollapsedAt] = useState<number | null>(null)
-  const [dialog, setDialog] = useState<'rename' | 'remove' | null>(null)
+  const [dialog, setDialog] = useState<'rename' | 'remove' | 'notes' | 'import' | null>(null)
   const selected = previewTable === dataset.table
   const highlight = useUiStore((state) =>
     state.highlight?.table === dataset.table ? state.highlight : null,
@@ -102,6 +114,16 @@ export function DatasetItem({ dataset }: { dataset: DatasetProfile }) {
               <Pencil aria-hidden />
               Rename…
             </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => setDialog('notes')}>
+              <NotebookPen aria-hidden />
+              Notes…
+            </DropdownMenuItem>
+            {importOptionsOf(dataset.id) && (
+              <DropdownMenuItem onSelect={() => setDialog('import')}>
+                <FileCog aria-hidden />
+                Import options…
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem variant="destructive" onSelect={() => setDialog('remove')}>
               <Trash2 aria-hidden />
               Remove…
@@ -115,6 +137,12 @@ export function DatasetItem({ dataset }: { dataset: DatasetProfile }) {
           <p className="px-2 pb-1 text-[11px] leading-snug text-muted-foreground">
             {sourceSummary(dataset, locale)}
           </p>
+          {dataset.notes && (
+            <p className="line-clamp-2 px-2 pb-1 text-[11px] leading-snug" title={dataset.notes}>
+              <span className="font-medium">Notes: </span>
+              {dataset.notes}
+            </p>
+          )}
           <ul aria-label={`Columns of ${dataset.label}`}>
             {dataset.columns.map((column) => (
               <li
@@ -125,13 +153,23 @@ export function DatasetItem({ dataset }: { dataset: DatasetProfile }) {
                   flash === column.name && 'bg-primary/15',
                 )}
               >
-                <ColumnProfilePopover column={column} rowCount={dataset.rowCount} />
+                <ColumnProfilePopover dataset={dataset} column={column} />
               </li>
             ))}
           </ul>
         </div>
       )}
 
+      <ImportOptionsDialog
+        dataset={dataset}
+        open={dialog === 'import'}
+        onOpenChange={(open) => setDialog(open ? 'import' : null)}
+      />
+      <NotesDialog
+        dataset={dataset}
+        open={dialog === 'notes'}
+        onOpenChange={(open) => setDialog(open ? 'notes' : null)}
+      />
       <RenameDatasetDialog
         dataset={dataset}
         open={dialog === 'rename'}

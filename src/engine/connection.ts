@@ -1,5 +1,5 @@
 import type { Table } from 'apache-arrow'
-import { z } from 'zod'
+import { z } from '@/lib/zod'
 import { AppError } from '@/lib/errors'
 
 /** Runs SQL. Engine modules take this instead of a DuckDB object so they also run in Node tests. */
