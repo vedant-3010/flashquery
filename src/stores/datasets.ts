@@ -1,11 +1,22 @@
 import { create } from 'zustand'
 import { getDb, restartDb } from '@/engine/duckdb'
 import { detectFormat, sizeWarning } from '@/engine/ingest'
-import { loadDataset, type DatasetInput } from '@/engine/load'
+import { loadDataset } from '@/engine/load'
 import { isValidTableName, quoteIdent, toTableName } from '@/engine/naming'
 import { SAMPLES, type SampleId } from '@/engine/samples'
 import type { DatasetProfile } from '@/engine/types'
 import { AppError, isCancellation, toAppError, type AppErrorData } from '@/lib/errors'
+import {
+  controllers,
+  excelFiles,
+  excelParseMs,
+  forgetInput,
+  inputs,
+  previousInputs,
+  workbooks,
+  type StoredInput,
+} from '@/stores/datasetInputs'
+import { useNotesStore, withNotes, type DatasetNotes } from '@/stores/notes'
 import { useUiStore } from '@/stores/ui'
 import { closeWorkbook, openWorkbook } from '@/workers/clients'
 import type { SheetInfo } from '@/workers/xlsx'
@@ -36,20 +47,18 @@ interface DatasetsState {
   renameDataset: (id: string, next: { label: string; table: string }) => Promise<void>
   removeDataset: (id: string) => Promise<void>
   restartEngine: () => Promise<void>
+  /** Business notes for a dataset and its columns (F-PROF-05), saved for re-uploads. */
+  setNotes: (id: string, notes: DatasetNotes) => void
+  /** Adds a job for `stored` and runs it (re-import, paste: stores/datasetEdits.ts). */
+  startJob: (job: { id: string; label: string; table: string }, stored: StoredInput) => void
+  /** Replaces a dataset's profile (after a column type change). */
+  replaceDataset: (dataset: DatasetProfile) => void
 }
-
-// Not state: how each job/dataset was loaded (kept, with its File, for Retry and Restart engine),
-// in-flight cancellation, and Excel workbooks parsed for the sheet picker.
-const inputs = new Map<string, { input: DatasetInput; ignoreErrors: boolean }>()
-const excelFiles = new Map<string, File>()
-const workbooks = new Map<string, string>()
-/** Time spent parsing a workbook for the sheet picker, added to the dataset's load time. */
-const excelParseMs = new Map<string, number>()
-const controllers = new Map<string, AbortController>()
 
 let counter = 0
 /** Ids are ordered: the catalog lists datasets in the order they were added, not finished. */
-const newId = () => `ds_${Date.now().toString(36)}_${String((counter += 1)).padStart(6, '0')}`
+export const newId = () =>
+  `ds_${Date.now().toString(36)}_${String((counter += 1)).padStart(6, '0')}`
 const byAddedOrder = (a: DatasetProfile, b: DatasetProfile) => a.id.localeCompare(b.id)
 
 export const useDatasetsStore = create<DatasetsState>()((set, get) => {
@@ -97,25 +106,30 @@ export const useDatasetsStore = create<DatasetsState>()((set, get) => {
         label: job.label,
         input: stored.input,
         ignoreErrors: stored.ignoreErrors,
+        overrides: stored.overrides,
+        replace: stored.replace,
         signal: controller.signal,
         onProfiling: () => patchJob(id, { status: 'profiling' }),
       })
       const parseMs =
         stored.input.kind === 'excel' && stored.input.workbookId ? (excelParseMs.get(id) ?? 0) : 0
-      const dataset = {
-        ...loaded,
-        timings: { ...loaded.timings, loadMs: loaded.timings.loadMs + parseMs },
-      }
+      // Notes saved for a dataset with the same columns come back with it (F-PROF-05).
+      const dataset = withNotes(
+        { ...loaded, timings: { ...loaded.timings, loadMs: loaded.timings.loadMs + parseMs } },
+        useNotesStore.getState().bySchema[loaded.schemaHash],
+      )
       set((state) => ({
         datasets: [...state.datasets.filter((d) => d.table !== dataset.table), dataset].sort(
           byAddedOrder,
         ),
         jobs: state.jobs.filter((j) => j.id !== id),
       }))
+      previousInputs.delete(id)
+      if (stored.replace) inputs.set(id, { ...stored, replace: false })
     } catch (error) {
       if (isCancellation(error)) {
         removeJob(id)
-        inputs.delete(id)
+        forgetInput(id)
         return
       }
       failJob(id, toAppError(error, 'ingest_failed', `${job.label} couldn't be loaded.`))
@@ -250,7 +264,8 @@ export const useDatasetsStore = create<DatasetsState>()((set, get) => {
       if (!controllers.has(jobId)) {
         // Not running (choosing a sheet, parsing Excel, or failed): just drop it.
         removeJob(jobId)
-        for (const map of [inputs, excelFiles, workbooks, excelParseMs]) map.delete(jobId)
+        forgetInput(jobId)
+        for (const map of [excelFiles, workbooks, excelParseMs]) map.delete(jobId)
       }
     },
 
@@ -297,6 +312,35 @@ export const useDatasetsStore = create<DatasetsState>()((set, get) => {
       const ui = useUiStore.getState()
       if (ui.previewTable === dataset.table) ui.showPreview(null)
     },
+
+    setNotes: (id, notes) => {
+      const dataset = get().datasets.find((d) => d.id === id)
+      if (!dataset) return
+      const saved = useNotesStore.getState().save(dataset.schemaHash, notes)
+      const updated = withNotes(
+        {
+          ...dataset,
+          notes: null,
+          columns: dataset.columns.map((c) => ({ ...c, description: null, unit: null })),
+        },
+        saved,
+      )
+      set((state) => ({ datasets: state.datasets.map((d) => (d.id === id ? updated : d)) }))
+    },
+
+    startJob: (job, stored) => {
+      if (get().jobs.some((j) => j.id === job.id)) return
+      const previous = inputs.get(job.id)
+      if (previous && stored.replace) previousInputs.set(job.id, previous)
+      inputs.set(job.id, stored)
+      addJob({ ...job, warning: null })
+      void runJob(job.id)
+    },
+
+    replaceDataset: (dataset) =>
+      set((state) => ({
+        datasets: state.datasets.map((d) => (d.id === dataset.id ? dataset : d)),
+      })),
 
     restartEngine: async () => {
       for (const controller of controllers.values()) controller.abort()

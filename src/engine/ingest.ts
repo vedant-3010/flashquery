@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from '@/lib/zod'
 import type { Engine, SqlRunner } from '@/engine/connection'
 import { ensureExtension } from '@/engine/extensions'
 import { quoteIdent, quoteLiteral } from '@/engine/naming'
@@ -41,9 +41,43 @@ export function sizeWarning(sizeBytes: number, format: IngestFormat): string | n
   return null
 }
 
+/** CSV import overrides (F-DATA-08); null fields keep DuckDB's detection. */
+export const CsvOptionsSchema = z.object({
+  delimiter: z.string().min(1).max(4).nullable(),
+  header: z.boolean().nullable(),
+  skipRows: z.number().int().min(0).max(1_000_000),
+  /** strptime format for DATE columns, e.g. "%d/%m/%Y". */
+  dateFormat: z.string().max(40).nullable(),
+  /** Load every column as text (VARCHAR). */
+  allText: z.boolean(),
+})
+export type CsvOptions = z.infer<typeof CsvOptionsSchema>
+
+export const DEFAULT_CSV_OPTIONS: CsvOptions = {
+  delimiter: null,
+  header: null,
+  skipRows: 0,
+  dateFormat: null,
+  allText: false,
+}
+
+/** read_csv / sniff_csv parameters for the overrides that are set. */
+export function csvParameters(options: CsvOptions | undefined): string {
+  if (!options) return ''
+  const parts: string[] = []
+  if (options.delimiter !== null) parts.push(`delim = ${quoteLiteral(options.delimiter)}`)
+  if (options.header !== null) parts.push(`header = ${options.header}`)
+  if (options.skipRows > 0) parts.push(`skip = ${Math.floor(options.skipRows)}`)
+  if (options.dateFormat) parts.push(`dateformat = ${quoteLiteral(options.dateFormat)}`)
+  if (options.allText) parts.push('all_varchar = true')
+  return parts.map((part) => `, ${part}`).join('')
+}
+
 export interface IngestOptions {
   /** CSV only: skip rows that don't parse instead of failing ("skip bad rows"). */
   ignoreErrors?: boolean
+  /** CSV only: import overrides (F-DATA-08). */
+  csv?: CsvOptions
   signal?: AbortSignal
 }
 
@@ -84,12 +118,13 @@ async function createFromCsv(
   runner: SqlRunner,
   table: string,
   name: string,
-  { ignoreErrors = false, signal }: IngestOptions,
+  { ignoreErrors = false, csv, signal }: IngestOptions,
 ): Promise<IngestResult> {
   const file = quoteLiteral(name)
+  const overrides = csvParameters(csv)
   const [dialect] = tableToObjects(
     await runner.run(
-      `SELECT Delimiter, HasHeader FROM sniff_csv(${file}, sample_size = 20480)`,
+      `SELECT Delimiter, HasHeader FROM sniff_csv(${file}, sample_size = 20480${overrides})`,
       signal,
     ),
     SniffRowSchema,
@@ -99,7 +134,7 @@ async function createFromCsv(
     ? `, ignore_errors = true, store_rejects = true, rejects_table = ${quoteLiteral(rejects)}, rejects_scan = ${quoteLiteral(`${rejects}_scan`)}`
     : ''
   await runner.run(
-    `CREATE TABLE ${quoteIdent(table)} AS SELECT * FROM read_csv(${file}, auto_detect = true, sample_size = 20480${errorOptions})`,
+    `CREATE TABLE ${quoteIdent(table)} AS SELECT * FROM read_csv(${file}, auto_detect = true, sample_size = 20480${overrides}${errorOptions})`,
     signal,
   )
   let skippedRows = 0

@@ -1,5 +1,5 @@
-import { createStore, del, get, set } from 'idb-keyval'
-import type { z } from 'zod'
+import { clear, createStore, del, get, set } from 'idb-keyval'
+import type { z } from '@/lib/zod'
 
 // Local persistence (F-EXP-02): each record is stored as { version, savedAt, data }, validated with
 // Zod on load and migrated forward from older versions. Anything unreadable (corrupt, from a newer
@@ -9,6 +9,8 @@ export interface KeyValueStore {
   get(key: string): Promise<unknown>
   set(key: string, value: unknown): Promise<void>
   del(key: string): Promise<void>
+  /** Removes every record (F-EXP-04). */
+  clear(): Promise<void>
 }
 
 let database: ReturnType<typeof createStore> | null = null
@@ -18,6 +20,7 @@ export const idbStore: KeyValueStore = {
   get: (key) => get(key, idbDatabase()),
   set: (key, value) => set(key, value, idbDatabase()),
   del: (key) => del(key, idbDatabase()),
+  clear: () => clear(idbDatabase()),
 }
 
 export interface RecordSpec<T> {
@@ -107,5 +110,6 @@ export function memoryStore(initial: Record<string, unknown> = {}): KeyValueStor
     get: async (key) => values.get(key),
     set: async (key, value) => void values.set(key, value),
     del: async (key) => void values.delete(key),
+    clear: async () => values.clear(),
   }
 }

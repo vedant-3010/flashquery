@@ -13,6 +13,7 @@ export function sourceSummary(dataset: DatasetProfile, locale: string): string {
   const { source, timings } = dataset
   const parts: string[] = []
   if (source.format === 'generated') parts.push('Generated in your browser')
+  else if (source.kind === 'paste') parts.push('Pasted')
   else if (source.fileName) parts.push(source.fileName)
   if (source.sheet) parts.push(`sheet “${source.sheet}”`)
   if (source.sizeBytes !== null) parts.push(formatBytes(source.sizeBytes, locale))

@@ -28,6 +28,9 @@ the LLM provider the user picks with their own API key.
 - `npm run typecheck` / `npm run lint` / `npm run format`
 - `npm test`: Vitest (one file: `npx vitest run src/engine/sqlGuard.test.ts`)
 - `npm run e2e`: Playwright; runs in demo mode, no API key needed
+- `ANTHROPIC_API_KEY=… npm run evals`: NL→SQL evals → `evals/report.md` (`EVAL_DRY_RUN=1` checks the
+  harness without a key; see `.claude/rules/ai.md`)
+- `http://localhost:5173/#/bench`: benchmark page (§5 budgets on this device; "Copy as Markdown")
 - `npx shadcn@latest add <component>`: add a shadcn/ui primitive (files in `src/components/ui/` stay
   as generated; they're in `.prettierignore`)
 - `node scripts/generate-samples.mjs` / `node scripts/generate-e2e-fixtures.mjs`: regenerate
@@ -67,7 +70,7 @@ src/
   app/          shell, layout, providers, view switching (no router; hash for #/bench)
   components/   shared app components (EmptyState, IconButton); ui/ = shadcn/ui primitives (generated)
   hooks/        shared React hooks (useMediaQuery, useResolvedTheme)
-  features/     datasets/ grid/ sql/ ask/ explain/ charts/ dashboard/ python/ settings/  (React only)
+  features/     datasets/ grid/ sql/ ask/ explain/ charts/ dashboard/ python/ settings/ bench/  (React only)
   engine/       duckdb init, ingest, catalog, profile, query, normalize, sqlGuard, samples, export,
                 chartData, filters (dashboard filter views + AST table rewrite)
   ai/           models, providers, prompts/, schemas, context, pipeline, dashboard, fixtures/  (no React/DOM)
@@ -76,7 +79,7 @@ src/
   workers/      *.worker.ts (Comlink wiring only) + clients.ts (typed main-thread clients)
   stores/       zustand stores      lib/  format, errors, theme, ids, idb      types/  shared types
   test/         setup, fixtures
-docs/PRD.md     evals/ (M7)     e2e/ (Playwright)
+docs/PRD.md     evals/ (questions.jsonl, run.eval.ts, report.md)     e2e/ (Playwright)
 ```
 
 ## Code conventions
@@ -167,5 +170,10 @@ docs/PRD.md     evals/ (M7)     e2e/ (Playwright)
 - Pyodide runs in `src/workers/python.worker.ts` (logic in `python.ts`, testable with a fake runtime).
   The real-Pyodide test is opt-in (`RUN_PYODIDE=1 npx vitest run src/workers/python.test.ts`): it
   downloads ~20 MB from the CDN and caches packages in a temp dir, never in node_modules.
+- Production CSP (`CONTENT_SECURITY_POLICY` in vite.config.ts, build only): a new third-party host, inline
+  script or eval breaks the build's `e2e/privacy.spec.ts` (run with `CI=1`). Change the policy only with a
+  PRD §12 entry (D66). Import `z` from `@/lib/zod` (jitless), never from 'zod' (lint enforces it).
+- `engine.registerBuffer(name, bytes)` transfers the bytes to the DuckDB worker: read `bytes.length`
+  before the call, never after.
 - Model IDs live only in `src/ai/models.ts` (default `claude-sonnet-5`, fast `claude-haiku-4-5-20251001`).
   Check provider docs before changing them.

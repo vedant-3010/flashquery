@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from '@/lib/zod'
 import { create } from 'zustand'
 import { DEFAULT_MODEL } from '@/ai/models'
 import {
@@ -32,6 +32,8 @@ const SavedSettingsSchema = z.object({
   currency: z.string().nullable(),
   /** Run AI-written Python without asking first (F-PY-03). Off by default. */
   autoRunPython: z.boolean(),
+  /** The first-run tour was finished or skipped (F-SHELL-05). */
+  tourDone: z.boolean(),
 })
 type SavedSettings = z.infer<typeof SavedSettingsSchema>
 
@@ -39,13 +41,15 @@ const NO_KEYS: Keys = { anthropic: null, openai: null }
 
 export const SETTINGS_RECORD: RecordSpec<SavedSettings> = {
   key: 'settings',
-  version: 3,
+  version: 4,
   schema: SavedSettingsSchema,
   migrations: {
     // v2 (M4): number format and currency.
     1: (data) => ({ ...(data as object), numberLocale: null, currency: null }),
     // v3 (M6): Python auto-run, off.
     2: (data) => ({ ...(data as object), autoRunPython: false }),
+    // v4 (M7): the guided tour, not seen yet.
+    3: (data) => ({ ...(data as object), tourDone: false }),
   },
   fallback: () => ({
     provider: 'anthropic',
@@ -57,6 +61,7 @@ export const SETTINGS_RECORD: RecordSpec<SavedSettings> = {
     numberLocale: null,
     currency: null,
     autoRunPython: false,
+    tourDone: false,
   }),
 }
 
@@ -68,6 +73,7 @@ interface SettingsState {
   numberLocale: string | null
   currency: string | null
   autoRunPython: boolean
+  tourDone: boolean
   /** How grids show DATE/TIMESTAMP values (F-GRID-03). */
   dateDisplay: DateDisplay
   provider: ProviderId
@@ -86,6 +92,7 @@ interface SettingsState {
   setNumberLocale: (locale: string | null) => void
   setCurrency: (currency: string | null) => void
   setAutoRunPython: (on: boolean) => void
+  setTourDone: (done: boolean) => void
   /** Loads saved settings (once, at startup), then saves every change. */
   hydrate: () => Promise<void>
 }
@@ -97,6 +104,7 @@ export const useSettingsStore = create<SettingsState>()((set, get) => ({
   numberLocale: null,
   currency: null,
   autoRunPython: false,
+  tourDone: false,
   dateDisplay: 'iso',
   provider: 'anthropic',
   models: { ...DEFAULT_MODEL },
@@ -118,6 +126,7 @@ export const useSettingsStore = create<SettingsState>()((set, get) => ({
     set({ numberLocale, locale: numberLocale ?? navigator.language }),
   setCurrency: (currency) => set({ currency }),
   setAutoRunPython: (autoRunPython) => set({ autoRunPython }),
+  setTourDone: (tourDone) => set({ tourDone }),
   hydrate: () => (hydrating ??= load()),
 }))
 
@@ -151,6 +160,7 @@ async function persist(state: SettingsState) {
     numberLocale: state.numberLocale,
     currency: state.currency,
     autoRunPython: state.autoRunPython,
+    tourDone: state.tourDone,
   }
   await saveRecord(SETTINGS_RECORD, record).catch((error: unknown) =>
     console.warn('AskData: settings could not be saved', error),

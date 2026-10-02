@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from '@/lib/zod'
 import rawDashboard from '@/ai/fixtures/global-sales-dashboard.json'
 import rawFixtures from '@/ai/fixtures/global-sales.json'
 import { DashboardPlanSchema, SqlPlanSchema, type DashboardPlan, type SqlPlan } from '@/ai/schemas'

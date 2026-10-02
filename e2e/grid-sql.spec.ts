@@ -202,3 +202,60 @@ test.describe('export (F-EXP-01)', () => {
     ).toHaveAttribute('aria-disabled', 'true')
   })
 })
+
+test.describe('filters, columns and copy (F-GRID-04, F-GRID-05)', () => {
+  test.use({ permissions: ['clipboard-read', 'clipboard-write'] })
+
+  test('filters in DuckDB with chips, hides columns and copies selected cells', async ({
+    page,
+  }) => {
+    await loadSample(page, 'Global Sales · 10k rows')
+    await runSql(
+      page,
+      'select region, channel, count(*) as orders from global_sales group by all order by all',
+    )
+    const grid = results(page)
+    await expect(page.getByText('15 rows · 3 columns')).toBeVisible()
+
+    // A value list for few distinct values; a range for numbers.
+    await grid.getByRole('columnheader', { name: /region/ }).hover()
+    await grid.getByRole('button', { name: 'Filter region' }).click()
+    await page.getByRole('checkbox', { name: 'APAC' }).check()
+    await page.getByRole('checkbox', { name: 'MEA' }).check()
+    await page.getByRole('button', { name: 'Apply' }).click()
+    await expect(page.getByText('6 of 15 rows · 3 columns')).toBeVisible()
+    const chips = page.getByRole('list', { name: 'Active filters' })
+    await expect(chips).toContainText('region is APAC or MEA')
+
+    await grid.getByRole('columnheader', { name: /orders/ }).hover()
+    await grid.getByRole('button', { name: 'Filter orders' }).click()
+    await page.getByRole('textbox', { name: 'At least' }).fill('400')
+    await page.getByRole('button', { name: 'Apply' }).click()
+    await expect(chips).toContainText('orders ≥ 400')
+    const filtered = await page.getByText(/^\d+ of 15 rows/).textContent()
+    expect(Number(filtered?.split(' ')[0])).toBeLessThan(6)
+    await chips.getByRole('button', { name: 'Remove filter: orders ≥ 400' }).click()
+    await expect(page.getByText('6 of 15 rows · 3 columns')).toBeVisible()
+
+    // Hide a column, then copy a cell and a block of cells.
+    await page.getByRole('button', { name: 'Columns', exact: true }).click()
+    await page
+      .getByRole('list', { name: 'Columns' })
+      .getByRole('checkbox', { name: 'channel' })
+      .uncheck()
+    await page.keyboard.press('Escape')
+    await expect(page.getByText('6 of 15 rows · 2 of 3 columns')).toBeVisible()
+    await expect(grid.getByRole('columnheader', { name: /channel/ })).toHaveCount(0)
+
+    await cell(page, 1, 0).click()
+    await page.keyboard.press('ControlOrMeta+c')
+    await expect(page.getByText('Copied 1 cell')).toBeVisible()
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('APAC')
+
+    await cell(page, 2, 1).click({ modifiers: ['Shift'] })
+    await page.keyboard.press('ControlOrMeta+c')
+    await expect(page.getByText('Copied 2 rows × 2 columns')).toBeVisible()
+    const block = await page.evaluate(() => navigator.clipboard.readText())
+    expect(block).toMatch(/^APAC\t\d+\nAPAC\t\d+\n$/)
+  })
+})

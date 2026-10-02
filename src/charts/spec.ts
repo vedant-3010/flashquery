@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from '@/lib/zod'
 
 // ChartSpec (docs/PRD.md §7): what to draw and why. Chosen by select.ts, tweaked by the user in
 // the chart switcher and settings popover (F-VIZ-03, F-VIZ-06), drawn by toOption.ts.

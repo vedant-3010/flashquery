@@ -28,6 +28,11 @@ export interface SummaryResponse {
   usage: Usage | null
 }
 
+export interface SuggestResponse {
+  questions: string[]
+  usage: Usage | null
+}
+
 export interface DashboardRequest {
   messages: PromptMessage[]
   /** The table the dashboard is for (the fixture provider only knows the demo table). */
@@ -49,6 +54,8 @@ export interface LLMProvider {
   /** The model that writes AI summaries (F-ASK-12): the provider's fast one. Null without summaries. */
   summaryModel: string | null
   summarize?(request: SummaryRequest): Promise<SummaryResponse>
+  /** Questions worth asking about the data (F-PROF-04), with the summary model. */
+  suggestQuestions?(request: SummaryRequest): Promise<SuggestResponse>
   /** A first dashboard for a table (F-DASH-09). */
   planDashboard(request: DashboardRequest): Promise<DashboardResponse>
   /** A tiny request that proves the key and model work ("Test connection"). */

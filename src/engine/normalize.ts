@@ -1,5 +1,5 @@
 import type { Table } from 'apache-arrow'
-import { z } from 'zod'
+import { z } from '@/lib/zod'
 import { quoteIdent } from '@/engine/naming'
 import type { CellValue, ColumnMeta, LogicalType } from '@/engine/types'
 

@@ -14,7 +14,10 @@ paths:
 - Accessibility: keyboard reachable, visible focus, `aria-label` on icon buttons, charts have an
   `aria-label` summary plus a "View as table" toggle, honour `prefers-reduced-motion` (no chart animation).
 - Shortcuts: `/` focuses the ask box, `Ctrl/Cmd+Enter` runs the SQL editor, `Esc` cancels a running question,
-  `?` opens the shortcuts dialog.
+  `?` opens the shortcuts dialog (`src/app/ShortcutsDialog.tsx`: list every new shortcut there).
+- Background events (pinned, exported, engine restarted, saved) show a toast (`useToastStore`).
+- Contrast: `src/lib/contrast.test.ts` checks the theme tokens in `index.css`; keep it passing when
+  changing colours (text 4.5:1, chart marks 3:1).
 
 ## Charts
 - `src/charts/select.ts` is the single source of truth: `selectChart({ columns, rows, rowCount, question,
@@ -40,7 +43,10 @@ paths:
   for rows and columns. The row model is a windowed cache fed by `engine/paging.ts` (`PageCache`);
   unloaded rows render as skeleton rows. Fixed 28 px rows; grids taller than 15M px scale the scroll
   offset (`src/features/grid/DataGrid.tsx`).
-- Header: type icon, name, sort indicator, profile popover (nulls, distinct, min/max, mini histogram).
+- Header: type icon, name, sort indicator, profile popover (nulls, distinct, min/max, mini histogram
+  computed on open: `src/engine/histogram.ts`), filter popover (F-GRID-04) with chips above the grid.
+- Columns menu (visibility, order) and cell selection (click, Shift-click, row numbers, arrows;
+  Ctrl/Cmd+C copies ≤ 10k rows re-read from DuckDB): `ColumnsMenu`, `selection.ts`, `useGridSelection`.
 - Numbers right-aligned and locale-formatted; nulls shown as muted `null`.
 
 ## Dashboard

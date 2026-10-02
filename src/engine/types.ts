@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from '@/lib/zod'
 
 // Engine data shapes (docs/PRD.md §7). Everything that crosses into React, IndexedDB or JSON is one of
 // these, so values are plain (no BigInt, no Arrow objects).

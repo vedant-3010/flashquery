@@ -1,5 +1,6 @@
-import { z } from 'zod'
+import { z } from '@/lib/zod'
 import type { SqlRunner } from '@/engine/connection'
+import { whereClause, type ColumnFilter } from '@/engine/gridFilters'
 import { quoteIdent } from '@/engine/naming'
 import {
   normalizeExpression,
@@ -44,6 +45,8 @@ export interface PageRequest {
   offset: number
   limit: number
   sorting: SortSpec[]
+  /** Column filters (F-GRID-04), pushed down as WHERE. */
+  filters?: readonly ColumnFilter[]
 }
 
 async function countRows(runner: SqlRunner, relation: string, signal?: AbortSignal) {
@@ -112,16 +115,34 @@ function orderBy(result: PagedResult, sorting: SortSpec[]): string {
 }
 
 /** SQL for one page of normalized rows. */
-export function pageSql(result: PagedResult, { offset, limit, sorting }: PageRequest): string {
+export function pageSql(
+  result: PagedResult,
+  { offset, limit, sorting, filters = [] }: PageRequest,
+): string {
   const start = Math.max(0, Math.floor(offset))
   const size = Math.max(0, Math.floor(limit))
   const expressions =
     result.columns.length > 0 ? result.columns.map(normalizeExpression).join(', ') : '*'
   const select = `SELECT ${expressions} FROM ${result.relation}`
+  const where = whereClause(result.relation, filters)
   if (result.byRowid && sorting.length === 0) {
+    // Filtered rowids aren't dense: page by OFFSET, still in rowid order.
+    if (where) return `${select}${where} ORDER BY rowid LIMIT ${size} OFFSET ${start}`
     return `${select} WHERE rowid >= ${start} AND rowid < ${start + size} ORDER BY rowid`
   }
-  return `${select}${orderBy(result, sorting)} LIMIT ${size} OFFSET ${start}`
+  return `${select}${where}${orderBy(result, sorting)} LIMIT ${size} OFFSET ${start}`
+}
+
+/** Rows that pass the filters (F-GRID-04). */
+export async function countFiltered(
+  runner: SqlRunner,
+  result: PagedResult,
+  filters: readonly ColumnFilter[],
+  signal?: AbortSignal,
+): Promise<number> {
+  const where = whereClause(result.relation, filters)
+  if (!where) return result.rowCount
+  return countRows(runner, `${result.relation}${where}`, signal)
 }
 
 export async function fetchPage(
@@ -133,8 +154,12 @@ export async function fetchPage(
   return tableToRows(await runner.run(pageSql(result, request), signal))
 }
 
-/** All rows in the grid's order, with DuckDB's own types (for COPY ... TO). */
-export function exportSql(result: PagedResult, sorting: SortSpec[]): string {
+/** All rows the grid shows, in its order, with DuckDB's own types (for COPY ... TO). */
+export function exportSql(
+  result: PagedResult,
+  sorting: SortSpec[],
+  filters: readonly ColumnFilter[] = [],
+): string {
   const order = orderBy(result, sorting) || (result.byRowid ? ' ORDER BY rowid' : '')
-  return `SELECT * FROM ${result.relation}${order}`
+  return `SELECT * FROM ${result.relation}${whereClause(result.relation, filters)}${order}`
 }

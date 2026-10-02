@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from '@/lib/zod'
 import { create } from 'zustand'
 import { loadRecord, saveRecord, type RecordSpec } from '@/lib/idb'
 import { backupCorruptRecord } from '@/stores/persistence'

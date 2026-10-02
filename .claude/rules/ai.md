@@ -10,8 +10,8 @@ paths:
 
 ## Providers
 - `src/ai/providers.ts` defines `LLMProvider { id, model, remote, planSql({ question, messages, tables,
-  signal }), summaryModel, summarize?({ messages, signal }), planDashboard({ messages, table, signal }),
-  testConnection(signal) }`. Summaries use the provider's fast model (PRD D41); dashboards the chosen one. Implementations: `src/ai/providers/anthropic.ts`, `openai.ts` (LangChain) and `fixture.ts`
+  signal }), summaryModel, summarize?({ messages, signal }), suggestQuestions?({ messages, signal }),
+  planDashboard({ messages, table, signal }), testConnection(signal) }`. Summaries use the provider's fast model (PRD D41); dashboards the chosen one. Implementations: `src/ai/providers/anthropic.ts`, `openai.ts` (LangChain) and `fixture.ts`
   (demo mode + tests; replays JSON in `src/ai/fixtures/`, validated by the same schemas).
 - Use `model.withStructuredOutput(Schema, { name, method: 'jsonSchema', includeRaw: true })` so token
   usage can be logged from the raw message (PRD D29). Pass `{ signal }` to `invoke` for cancellation.
@@ -25,7 +25,10 @@ paths:
 | Balanced (default) | Strict + per column: null %, approx distinct, min/max for numeric/date, top-5 values for low-cardinality text (≤ 40 chars each), 3 sample rows (strings truncated to 40 chars). The AI summary gets the result's rows ≤ 50, else column statistics plus the first 10 and 5 highest/lowest rows (`fetchResultDigest`, D41). |
 | Local (P2) | WebLLM on-device; nothing leaves the browser. |
 - Every request is appended to the AI payload log: time, mode, provider, model, exact messages (keys
-  redacted), parsed output, token usage, latency. The inspector renders it verbatim.
+  redacted), parsed output, token usage, latency. The inspector renders it verbatim, with an estimated
+  cost per request and per session (`src/ai/cost.ts`, prices in `models.ts`, PRD D72).
+- AI-suggested questions (`src/ai/suggest.ts`, F-PROF-04) only on the user's request, Balanced mode,
+  fast model, cached per schema (PRD D75).
 
 ## Schemas (src/ai/schemas.ts, Zod v4; `.describe()` every field)
 - `SqlPlan`: kind ('sql' | 'python' | 'clarify' | 'unanswerable'), title, sql, python, explanation
@@ -76,8 +79,12 @@ paths:
 - Unmatched question → friendly message with the fixture questions as chips and "Add an API key to ask anything".
 
 ## Evals (M7)
-- `evals/questions.jsonl`: { id, dataset, question, reference_sql, notes }. The runner (Node, `tsx`,
-  `@duckdb/node-api` as devDependencies when M7 starts) generates SQL with the real prompt code, runs both
-  queries on the same generated data, compares result sets (order-insensitive unless ORDER BY; 1e-6
-  relative tolerance) and reports execution accuracy + failure categories to `evals/report.md`.
+- `evals/questions.jsonl`: { id, dataset, question, reference_sql (null = should be 'unanswerable'),
+  notes }. `src/ai/evals.ts` parses it and compares results (relaxed execution accuracy, PRD D74);
+  `src/ai/evalReport.ts` renders `evals/report.md`. `src/ai/evalSet.test.ts` (in `npm test`) checks
+  every reference query passes the guard and returns rows.
+- The runner is `evals/run.eval.ts` under Vitest (`npm run evals`, `vitest.evals.config.ts`) with the
+  DuckDB-WASM Node build (`src/test/evalData.ts` loads Global Sales 10k + HR attrition). It runs the
+  real `runPipeline` in Balanced mode. `EVAL_DRY_RUN=1` answers with the reference SQL (harness check,
+  no key); `EVAL_ONLY=<id prefix>` runs a subset; `EVAL_MODEL` picks the model.
 - The runner reads `ANTHROPIC_API_KEY` from the shell environment: the only place an env key is allowed.

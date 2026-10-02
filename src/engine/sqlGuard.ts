@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from '@/lib/zod'
 import type { SqlRunner } from '@/engine/connection'
 import { ensureExtension } from '@/engine/extensions'
 import { quoteLiteral } from '@/engine/naming'

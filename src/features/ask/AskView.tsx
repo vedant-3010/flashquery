@@ -5,6 +5,7 @@ import { AnswerCard } from '@/features/ask/AnswerCard'
 import { Composer } from '@/features/ask/Composer'
 import { prefetchCharts } from '@/features/charts/prefetch'
 import { FirstRun } from '@/features/ask/FirstRun'
+import { QuickTour } from '@/features/ask/QuickTour'
 import { useAskStore } from '@/stores/ask'
 import { useDatasetsStore } from '@/stores/datasets'
 import { useUiStore } from '@/stores/ui'
@@ -70,6 +71,9 @@ export function AskView() {
         // stretching the page.
         className="relative flex min-h-0 flex-1 flex-col overflow-y-auto"
       >
+        <div className="mx-auto w-full max-w-3xl px-4 pt-4 empty:hidden">
+          <QuickTour />
+        </div>
         {answers.length === 0 ? (
           <EmptyState
             icon={Sparkles}

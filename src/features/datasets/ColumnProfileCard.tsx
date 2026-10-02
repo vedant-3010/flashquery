@@ -2,7 +2,10 @@ import { Badge } from '@/components/ui/badge'
 import { EXACT_DISTINCT_LIMIT } from '@/engine/profile'
 import type { ColumnProfile } from '@/engine/types'
 import { ColumnTypeIcon } from '@/features/datasets/ColumnTypeIcon'
+import { MiniHistogram } from '@/features/datasets/MiniHistogram'
+import { useHistogram } from '@/features/datasets/useHistogram'
 import { formatCompact, formatNumber, formatPercent } from '@/lib/format'
+import { useDatasetsStore } from '@/stores/datasets'
 import { useSettingsStore } from '@/stores/settings'
 
 const ROLE_LABELS: Record<ColumnProfile['role'], string> = {
@@ -24,6 +27,11 @@ export function ColumnProfileCard({
   rowCount: number
 }) {
   const locale = useSettingsStore((state) => state.locale)
+  // The profile objects are the dataset's own, so identity finds the table.
+  const dataset = useDatasetsStore((state) =>
+    state.datasets.find((d) => d.columns.includes(column)),
+  )
+  const histogram = useHistogram(dataset, column)
   const value = (v: string | number | null) =>
     v === null ? '—' : typeof v === 'number' ? formatNumber(v, locale, { maxFractionDigits: 4 }) : v
   const stats: [string, string][] = [
@@ -58,6 +66,10 @@ export function ColumnProfileCard({
           </div>
         ))}
       </dl>
+      {histogram === undefined && (
+        <div className="mt-3 h-[3.25rem] animate-pulse rounded bg-muted" />
+      )}
+      {histogram && <MiniHistogram histogram={histogram} column={column.name} locale={locale} />}
       {column.topValues.length > 0 && (
         <div className="mt-3">
           <p className="mb-1 text-xs font-medium text-muted-foreground">Top values</p>

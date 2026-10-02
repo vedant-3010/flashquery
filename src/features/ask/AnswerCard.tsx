@@ -1,9 +1,13 @@
 import { RotateCcw, X } from 'lucide-react'
+import { useMemo } from 'react'
 import { IconButton } from '@/components/IconButton'
 import { Badge } from '@/components/ui/badge'
 import { AnswerBody } from '@/features/ask/AnswerBody'
+import { FeedbackBar } from '@/features/ask/FeedbackBar'
 import { PinMenu } from '@/features/ask/PinMenu'
 import { PipelineTimeline } from '@/features/ask/PipelineTimeline'
+import { UsageSummary } from '@/features/explain/UsageSummary'
+import { useAiLogStore } from '@/stores/aiLog'
 import { useAskStore, type Answer } from '@/stores/ask'
 
 /** One question and its answer (F-ASK-08). */
@@ -11,6 +15,8 @@ export function AnswerCard({ answer }: { answer: Answer }) {
   const ask = useAskStore((state) => state.ask)
   const remove = useAskStore((state) => state.remove)
   const running = answer.status === 'running'
+  const log = useAiLogStore((state) => state.entries)
+  const usage = useMemo(() => log.filter((entry) => entry.answerId === answer.id), [log, answer.id])
 
   return (
     <article aria-label={answer.question} className="grid gap-2">
@@ -53,6 +59,16 @@ export function AnswerCard({ answer }: { answer: Answer }) {
         </header>
         <PipelineTimeline trace={answer.trace} />
         <AnswerBody answer={answer} />
+        {!running && (
+          <footer className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+            {answer.status === 'answered' && answer.sql && !answer.python ? (
+              <FeedbackBar answer={answer} />
+            ) : (
+              <span />
+            )}
+            <UsageSummary entries={usage} label="AI usage" />
+          </footer>
+        )}
       </div>
     </article>
   )

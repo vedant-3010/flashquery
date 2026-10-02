@@ -5,6 +5,7 @@ import {
   formatCell,
   formatCompact,
   formatCurrency,
+  formatUsd,
   formatDate,
   formatDateTime,
   formatDuration,
@@ -159,5 +160,15 @@ describe('formatEventTime', () => {
     expect(plain(formatEventTime(at, 'en-US', new Date(2026, 9, 2).getTime()))).toBe(
       'Sep 29, 2026, 2:05 PM',
     )
+  })
+})
+
+describe('formatUsd', () => {
+  it('shows small AI costs with two significant digits', () => {
+    expect(formatUsd(0.004213, 'en-US')).toBe('$0.0042')
+    expect(formatUsd(1.234, 'en-US')).toBe('$1.23')
+    expect(formatUsd(0.00001, 'en-US')).toBe('<$0.0001')
+    expect(formatUsd(0, 'en-US')).toBe('$0')
+    expect(formatUsd(null, 'en-US')).toBe(EMPTY)
   })
 })

@@ -32,7 +32,11 @@ interface Summary {
 }
 
 type Reply =
-  { plan: Plan } | { text: string } | { delayMs: number; plan: Plan } | { summary: Summary }
+  | { plan: Plan }
+  | { text: string }
+  | { delayMs: number; plan: Plan }
+  | { summary: Summary }
+  | { questions: string[] }
 
 const textOf = (content: unknown): string =>
   typeof content === 'string'
@@ -95,7 +99,9 @@ async function mockAnthropic(page: Page, reply: (call: Call) => Reply) {
         ? answer.text
         : 'summary' in answer
           ? JSON.stringify(answer.summary)
-          : JSON.stringify(sqlPlan(answer.plan))
+          : 'questions' in answer
+            ? JSON.stringify({ questions: answer.questions })
+            : JSON.stringify(sqlPlan(answer.plan))
     await route
       .fulfill({
         status: 200,
@@ -110,18 +116,25 @@ async function mockAnthropic(page: Page, reply: (call: Call) => Reply) {
 const TOP_COUNTRIES =
   'SELECT country, round(sum(revenue), 2) AS revenue FROM global_sales GROUP BY ALL ORDER BY revenue DESC LIMIT 5'
 
-/** Which request this is: the connection test, an answer summary (F-ASK-12) or a SQL plan. */
-function kindOf(call: Call): 'test' | 'summary' | 'plan' {
+/** Which request this is: the connection test, a summary (F-ASK-12), suggestions or a SQL plan. */
+function kindOf(call: Call): 'test' | 'summary' | 'suggest' | 'plan' {
   if (call.user === 'Reply with the word OK.') return 'test'
-  return textOf(call.body.system).includes('short summary') ? 'summary' : 'plan'
+  const system = textOf(call.body.system)
+  if (system.includes('Suggest questions')) return 'suggest'
+  return system.includes('short summary') ? 'summary' : 'plan'
 }
 const plansOf = (calls: Call[]) => calls.filter((call) => kindOf(call) === 'plan')
 const summariesOf = (calls: Call[]) => calls.filter((call) => kindOf(call) === 'summary')
 
 const AI_HEADLINE = 'Revenue is concentrated in a handful of countries.'
+const AI_QUESTIONS = [
+  'Which country buys the most laptops?',
+  'How did APAC revenue change by year?',
+]
 
 function salesAnalyst(call: Call): Reply {
   if (kindOf(call) === 'test') return { text: 'OK' }
+  if (kindOf(call) === 'suggest') return { questions: AI_QUESTIONS }
   if (kindOf(call) === 'summary') {
     return { summary: { headline: AI_HEADLINE, bullets: ['From the AI.'], caveats: [] } }
   }
@@ -287,9 +300,10 @@ test.describe('J6: privacy check (F-AI-02, F-EXPL-04, F-SEC-03, F-SEC-04)', () =
     await page.keyboard.press('Escape')
     await loadSales(page)
 
-    await expect(
-      (await ask(page, 'Total revenue')).getByRole('tab', { name: 'Chart' }),
-    ).toBeVisible()
+    const total = await ask(page, 'Total revenue')
+    await expect(total.getByRole('tab', { name: 'Chart' })).toBeVisible()
+    // Usage meter (F-AI-04): the plan and the summary, 1,800 + 240 tokens each.
+    await expect(total.getByText(/^AI usage: 4,080 tokens · ≈ \$0\.0\d+$/)).toBeVisible()
     const balanced = plansOf(calls).at(-1)
     expect(balanced?.raw).toContain('topValues')
     expect(balanced?.raw).toContain('sampleRows')
@@ -302,7 +316,8 @@ test.describe('J6: privacy check (F-AI-02, F-EXPL-04, F-SEC-03, F-SEC-04)', () =
     await expect(requests.getByRole('listitem')).toHaveCount(2)
     await expect(requests).toContainText('Balanced')
     await expect(requests).toContainText(/[1-9][\d,]* data values sent/)
-    await expect(requests).toContainText('1,800 in · 240 out · 1,500 cached')
+    await expect(requests).toContainText('1,800 in · 240 out · 1,500 cached · ≈ $')
+    await expect(panel.getByText(/^Session: 4,080 tokens/)).toBeVisible()
     await requests.getByRole('button', { name: /Write SQL/ }).click()
     await expect(requests.getByRole('region', { name: 'Message 2: system' })).toContainText(
       'sampleRows',
@@ -330,5 +345,28 @@ test.describe('J6: privacy check (F-AI-02, F-EXPL-04, F-SEC-03, F-SEC-04)', () =
     await expect(requests.getByRole('listitem')).toHaveCount(3)
     await expect(requests.getByRole('listitem').first()).toContainText('Strict')
     await expect(requests.getByRole('listitem').first()).toContainText('0 data values sent')
+  })
+
+  test('suggests questions with AI on request, cached per schema (F-PROF-04)', async ({ page }) => {
+    const calls = await mockAnthropic(page, salesAnalyst)
+    const suggestions = () => calls.filter((call) => kindOf(call) === 'suggest')
+    await page.goto('/')
+    await addKey(page, { remember: true })
+    await page.keyboard.press('Escape')
+    await loadSales(page)
+
+    const chips = page.getByRole('list', { name: 'Suggested questions' })
+    await expect(chips.getByRole('button', { name: 'Total revenue by region' })).toBeVisible()
+    await chips.getByRole('button', { name: 'Suggest with AI' }).click()
+    await expect(chips.getByRole('button', { name: AI_QUESTIONS[0] })).toBeVisible()
+    await expect(chips.getByRole('button', { name: 'Suggest with AI' })).toBeHidden()
+    expect(suggestions()).toHaveLength(1)
+    expect(suggestions()[0]?.user).toContain('<data>')
+    expect(suggestions()[0]?.raw).not.toContain(KEY)
+
+    await page.reload()
+    await loadSales(page)
+    await expect(chips.getByRole('button', { name: AI_QUESTIONS[1] })).toBeVisible()
+    expect(suggestions()).toHaveLength(1)
   })
 })

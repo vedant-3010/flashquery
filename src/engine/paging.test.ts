@@ -2,8 +2,10 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { createTestEngine } from '@/test/duckdb'
 import type { Engine } from './connection'
+import { setFilter, type ColumnFilter } from './gridFilters'
 import {
   closeResult,
+  countFiltered,
   exportSql,
   fetchPage,
   openQuery,
@@ -141,5 +143,46 @@ describe('exportSql', () => {
     expect(exportSql(result, [{ column: 'id', desc: true }])).toBe(
       'SELECT * FROM "sales" ORDER BY "sales"."id" DESC NULLS LAST, rowid',
     )
+  })
+})
+
+describe('column filters (F-GRID-04)', () => {
+  const filters: ColumnFilter[] = [
+    { column: 'letter', kind: 'values', values: ['a', 'b'] },
+    { column: 'amount', kind: 'range', min: 100, max: null },
+    { column: 'day', kind: 'dates', from: '2025-01-01', to: '2025-01-10' },
+  ]
+
+  it('pushes filters down, counts and pages the filtered rows', async () => {
+    const result = await openTable(engine, 'sales')
+    const expected = (
+      await engine.run(`SELECT count(*) AS n FROM sales WHERE letter IN ('a', 'b')
+        AND amount >= 100 AND day BETWEEN DATE '2025-01-01' AND DATE '2025-01-10'`)
+    ).toArray()[0]?.n
+    const count = await countFiltered(engine, result, filters)
+    expect(count).toBe(Number(expected))
+    const rows = (
+      await Promise.all(
+        [0, 200].map((offset) =>
+          fetchPage(engine, result, { offset, limit: 200, sorting: [], filters }),
+        ),
+      )
+    ).flat()
+    expect(rows).toHaveLength(count)
+    expect(rows.every((row) => row[1] !== 'c' && Number(row[2]) >= 100)).toBe(true)
+    expect(rows[0]?.[0]).toBeLessThan(rows[1]?.[0] as number)
+  })
+
+  it('matches text case-insensitively and NULL on request; ignores empty filters', async () => {
+    const result = await openTable(engine, 'sales')
+    const nulls = setFilter([], { column: 'amount', kind: 'values', values: [null] })
+    expect(await countFiltered(engine, result, nulls)).toBe(100)
+    const text = setFilter([], { column: 'letter', kind: 'contains', text: 'A' })
+    expect(await countFiltered(engine, result, text)).toBe(333)
+    expect(setFilter(text, { column: 'letter', kind: 'contains', text: '' })).toEqual([])
+    const injected = setFilter([], { column: 'letter', kind: 'contains', text: "a') OR (1=1" })
+    expect(await countFiltered(engine, result, injected)).toBe(0)
+    const exported = await runQuery(engine, exportSql(result, [], text), { maxRows: 1000 })
+    expect(exported.rowCount).toBe(333)
   })
 })

@@ -1,12 +1,55 @@
 /// <reference types="vitest/config" />
 // askdata:vite-config
 import { fileURLToPath, URL } from 'node:url'
-import { defineConfig } from 'vite'
+import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
+/**
+ * Production Content-Security-Policy (F-SEC-06), as a meta tag in the built index.html (the dev
+ * server needs inline scripts for HMR). It governs the page; our workers (DuckDB, Excel, Python) are
+ * same-origin files with their own context. Every directive beyond 'self' is explained in
+ * docs/PRD.md (D66).
+ */
+export const CONTENT_SECURITY_POLICY: Record<string, string[]> = {
+  'default-src': ["'self'"],
+  'script-src': ["'self'", "'wasm-unsafe-eval'"],
+  'worker-src': ["'self'", 'blob:'],
+  'connect-src': [
+    "'self'",
+    'https://api.anthropic.com',
+    'https://api.openai.com',
+    'https://cdn.jsdelivr.net',
+    'https://extensions.duckdb.org',
+  ],
+  // CodeMirror and Radix's scroll lock inject <style> elements (D66).
+  'style-src': ["'self'", "'unsafe-inline'"],
+  'img-src': ["'self'", 'data:', 'blob:'],
+  'font-src': ["'self'"],
+  'object-src': ["'none'"],
+  'base-uri': ["'self'"],
+  'form-action': ["'none'"],
+}
+
+function contentSecurityPolicy(): Plugin {
+  const policy = Object.entries(CONTENT_SECURITY_POLICY)
+    .map(([directive, sources]) => `${directive} ${sources.join(' ')}`)
+    .join('; ')
+  return {
+    name: 'askdata:csp',
+    apply: 'build',
+    transformIndexHtml: () => [
+      {
+        tag: 'meta',
+        attrs: { 'http-equiv': 'Content-Security-Policy', content: policy },
+        injectTo: 'head-prepend',
+      },
+    ],
+  }
+}
+
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), contentSecurityPolicy()],
   resolve: {
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
   },

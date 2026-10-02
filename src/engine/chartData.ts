@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from '@/lib/zod'
 import { CHART_POINT_LIMIT } from '@/charts/select'
 import type { ChartData } from '@/charts/shape'
 import type { ChartSpec } from '@/charts/spec'

@@ -5,6 +5,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/utils'
 import { useDatasetsStore } from '@/stores/datasets'
 import { useEngineStore, type EngineStatus, type PythonStatus } from '@/stores/engine'
+import { restartEngine } from '@/stores/engineRestart'
 
 const STATUS: Record<EngineStatus, { label: string; dot: string }> = {
   idle: { label: 'Engine idle', dot: 'bg-muted-foreground' },
@@ -27,7 +28,6 @@ const PYTHON: Record<PythonStatus, string> = {
 export function EngineStatusBadge() {
   const { status, version, error, python } = useEngineStore()
   const restarting = useDatasetsStore((state) => state.restarting)
-  const restartEngine = useDatasetsStore((state) => state.restartEngine)
   const [showDetails, setShowDetails] = useState(false)
   const { label, dot } = STATUS[status]
 
@@ -73,6 +73,22 @@ export function EngineStatusBadge() {
                 </Button>
               )}
             </div>
+          </div>
+        )}
+        {status === 'ready' && (
+          <div className="mt-3 flex items-center gap-2 border-t pt-3">
+            <p className="min-w-0 flex-1 text-xs text-muted-foreground">
+              Slow or stuck? A restart reloads your files and restores answers.
+            </p>
+            <Button
+              size="xs"
+              variant="outline"
+              disabled={restarting}
+              onClick={() => void restartEngine()}
+            >
+              <RotateCcw aria-hidden />
+              Restart engine
+            </Button>
           </div>
         )}
       </PopoverContent>

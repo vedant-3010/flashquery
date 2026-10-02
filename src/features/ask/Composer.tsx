@@ -1,7 +1,8 @@
-import { KeyRound, SendHorizontal, Square } from 'lucide-react'
+import { KeyRound, LoaderCircle, SendHorizontal, Sparkles, Square } from 'lucide-react'
 import { useMemo, useState, type Ref } from 'react'
 import { DEMO_TABLE } from '@/ai/fixtures'
 import { DEMO_QUESTIONS } from '@/ai/providers/fixture'
+import { suggestionKey } from '@/ai/suggest'
 import { suggestQuestions } from '@/ai/suggestions'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -9,11 +10,13 @@ import { ScopeMenu } from '@/features/ask/ScopeMenu'
 import { useAskStore } from '@/stores/ask'
 import { useDatasetsStore } from '@/stores/datasets'
 import { activeApiKey, useSettingsStore } from '@/stores/settings'
+import { useSuggestionsStore } from '@/stores/suggestions'
 import { useUiStore } from '@/stores/ui'
 
 /**
  * The ask box (F-ASK-01): Enter sends, Shift+Enter adds a line, Esc cancels a running question
- * (in AskView). Suggestion chips come from the data (F-PROF-03) or, in demo mode, the fixtures.
+ * (in AskView). Suggestion chips come from the data (F-PROF-03), the AI on request in Balanced mode
+ * (F-PROF-04, cached per schema) or, in demo mode, the fixtures.
  */
 export function Composer({ inputRef }: { inputRef?: Ref<HTMLTextAreaElement> }) {
   const [text, setText] = useState('')
@@ -23,12 +26,26 @@ export function Composer({ inputRef }: { inputRef?: Ref<HTMLTextAreaElement> }) 
   const datasets = useDatasetsStore((state) => state.datasets)
   const demo = useSettingsStore((state) => activeApiKey(state) === null)
   const openSettings = useUiStore((state) => state.setSettingsOpen)
+  const scope = useAskStore((state) => state.scope)
+  const balanced = useSettingsStore((state) => state.privacyMode === 'balanced')
+  const aiByKey = useSuggestionsStore((state) => state.byKey)
+  const aiPending = useSuggestionsStore((state) => state.pending)
+  const aiError = useSuggestionsStore((state) => state.error)
+  const requestAi = useSuggestionsStore((state) => state.request)
   const hasData = datasets.length > 0
+
+  const scoped = useMemo(
+    () => (scope === null ? datasets : datasets.filter((d) => scope.includes(d.table))),
+    [datasets, scope],
+  )
+  const key = suggestionKey(scoped)
+  const aiQuestions = demo ? undefined : aiByKey[key]
+  const canAskAi = !demo && balanced && scoped.length > 0 && !aiQuestions
 
   const suggestions = useMemo(() => {
     if (demo) return datasets.some((d) => d.table === DEMO_TABLE) ? DEMO_QUESTIONS.slice(0, 6) : []
-    return suggestQuestions(datasets)
-  }, [datasets, demo])
+    return aiQuestions ?? suggestQuestions(scoped)
+  }, [datasets, scoped, demo, aiQuestions])
 
   const submit = () => {
     if (!text.trim() || !hasData) return
@@ -39,8 +56,13 @@ export function Composer({ inputRef }: { inputRef?: Ref<HTMLTextAreaElement> }) 
   return (
     <div className="shrink-0 border-t bg-background p-3">
       <div className="mx-auto grid max-w-3xl gap-2">
-        {suggestions.length > 0 && (
+        {(suggestions.length > 0 || canAskAi) && (
           <ul className="flex gap-1.5 overflow-x-auto pb-0.5" aria-label="Suggested questions">
+            {aiQuestions && (
+              <li className="flex shrink-0 items-center" title="Suggested by the AI">
+                <Sparkles className="size-3.5 text-muted-foreground" aria-label="AI suggestions" />
+              </li>
+            )}
             {suggestions.map((question) => (
               <li key={question} className="shrink-0">
                 <Button
@@ -53,6 +75,31 @@ export function Composer({ inputRef }: { inputRef?: Ref<HTMLTextAreaElement> }) 
                 </Button>
               </li>
             ))}
+            {canAskAi && (
+              <li className="shrink-0">
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  disabled={aiPending === key}
+                  title={
+                    aiError ??
+                    'Sends the schema and a few sample values (Balanced mode), like a question does.'
+                  }
+                  onClick={() => void requestAi(scoped)}
+                >
+                  {aiPending === key ? (
+                    <LoaderCircle className="animate-spin" aria-hidden />
+                  ) : (
+                    <Sparkles aria-hidden />
+                  )}
+                  {aiPending === key
+                    ? 'Suggesting…'
+                    : aiError
+                      ? 'Suggest with AI (failed, retry)'
+                      : 'Suggest with AI'}
+                </Button>
+              </li>
+            )}
           </ul>
         )}
         <form
