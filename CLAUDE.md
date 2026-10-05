@@ -31,6 +31,8 @@ the LLM provider the user picks with their own API key.
 - `ANTHROPIC_API_KEY=… npm run evals`: NL→SQL evals → `evals/report.md` (`EVAL_DRY_RUN=1` checks the
   harness without a key; see `.claude/rules/ai.md`)
 - `http://localhost:5173/#/bench`: benchmark page (§5 budgets on this device; "Copy as Markdown")
+- `node scripts/record-demo.mjs` (after `npm run build`): re-records the README demo, `docs/demo.png`
+- Deploy: Vercel, configured by `vercel.json`; steps and checks in `docs/DEPLOY.md`
 - `npx shadcn@latest add <component>`: add a shadcn/ui primitive (files in `src/components/ui/` stay
   as generated; they're in `.prettierignore`)
 - `node scripts/generate-samples.mjs` / `node scripts/generate-e2e-fixtures.mjs`: regenerate
@@ -79,7 +81,8 @@ src/
   workers/      *.worker.ts (Comlink wiring only) + clients.ts (typed main-thread clients)
   stores/       zustand stores      lib/  format, errors, theme, ids, idb      types/  shared types
   test/         setup, fixtures
-docs/PRD.md     evals/ (questions.jsonl, run.eval.ts, report.md)     e2e/ (Playwright)
+docs/           PRD.md, ARCHITECTURE.md, DEPLOY.md, demo.png     evals/ (questions.jsonl, run.eval.ts)
+e2e/ (Playwright)     scripts/ (sample + fixture generators, record-demo)
 ```
 
 ## Code conventions

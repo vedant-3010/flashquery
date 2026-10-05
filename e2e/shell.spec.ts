@@ -94,3 +94,24 @@ test.describe('theme (F-SHELL-04)', () => {
     await expect(page.locator('html')).not.toHaveClass(/dark/)
   })
 })
+
+test.describe('how it works (F-SHIP-04)', () => {
+  test('explains the privacy modes and opens the AI inspector', async ({ page }) => {
+    await page.goto('/')
+    await page.getByRole('button', { name: 'How AskData works' }).click()
+    const dialog = page.getByRole('dialog', { name: 'How AskData works' })
+    const modes = dialog.getByRole('table', { name: 'What the AI receives in each privacy mode' })
+    await expect(modes.getByRole('rowheader', { name: /Balanced/ })).toContainText('(yours)')
+    await expect(modes).toContainText('No values, no results.')
+    await expect(dialog).toContainText('Demo mode sends nothing')
+
+    await dialog.getByRole('button', { name: 'Open the AI inspector' }).click()
+    await expect(dialog).toBeHidden()
+    const panel = page.getByRole('complementary', { name: 'Side panel' })
+    await expect(panel.getByRole('tab', { name: 'AI inspector' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+    await expect(panel).toContainText('No AI requests yet')
+  })
+})
