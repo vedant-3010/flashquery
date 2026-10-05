@@ -4,6 +4,7 @@ import { quoteIdent } from '@/engine/naming'
 import { tableToRows, toLogicalType } from '@/engine/normalize'
 import { fetchPage, type PagedResult } from '@/engine/paging'
 import { runQuery } from '@/engine/query'
+import type { Relationship } from '@/engine/relationships'
 import type { CellValue, ColumnMeta, ColumnProfile, DatasetProfile } from '@/engine/types'
 import { AppError } from '@/lib/errors'
 
@@ -41,9 +42,20 @@ export interface ContextTable {
   sampleRows?: CellValue[][]
 }
 
+/** A detected join key (F-PROF-07): "table.column" on each side. */
+export interface ContextJoin {
+  from: string
+  to: string
+  kind: Relationship['kind']
+  /** Balanced only: % of `from` values found in `to`. */
+  matchPct?: number
+}
+
 export interface AiContext {
   mode: PrivacyMode
   tables: ContextTable[]
+  /** Join keys between the tables in scope, when there are several (F-PROF-07). */
+  joins?: ContextJoin[]
 }
 
 export type TableSamples = ReadonlyMap<string, { columns: string[]; rows: CellValue[][] }>
@@ -78,13 +90,25 @@ export function buildContext({
   datasets,
   mode,
   samples,
+  relationships = [],
 }: {
   datasets: DatasetProfile[]
   mode: PrivacyMode
   samples?: TableSamples
+  relationships?: readonly Relationship[]
 }): AiContext {
+  const tables = new Set(datasets.map((dataset) => dataset.table))
+  const joins = relationships
+    .filter((r) => tables.has(r.from.table) && tables.has(r.to.table))
+    .map((r): ContextJoin => ({
+      from: `${r.from.table}.${r.from.column}`,
+      to: `${r.to.table}.${r.to.column}`,
+      kind: r.kind,
+      ...(mode === 'balanced' ? { matchPct: Math.round(r.overlap * 100) } : {}),
+    }))
   return {
     mode,
+    ...(joins.length > 0 ? { joins } : {}),
     tables: datasets.map((dataset) => {
       const table: ContextTable = {
         name: dataset.table,
@@ -124,9 +148,10 @@ export function dataJson(value: unknown): string {
   return JSON.stringify(value).replace(/</g, '\\u003c').replace(/>/g, '\\u003e')
 }
 
-/** The context as sent: one JSON line per table inside a <data> block. */
+/** The context as sent: one JSON line per table (and one for joins) inside a <data> block. */
 export function renderContext(context: AiContext): string {
   const lines = context.tables.map((table) => dataJson(table))
+  if (context.joins?.length) lines.push(dataJson({ suggestedJoins: context.joins }))
   return `<data>\n${lines.join('\n')}\n</data>`
 }
 

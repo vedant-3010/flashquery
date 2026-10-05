@@ -37,6 +37,29 @@ export const CHART_TYPE_LABELS: Record<ChartType, string> = {
 export const ValueFormatSchema = z.enum(['number', 'percent', 'currency'])
 export type ValueFormat = z.infer<typeof ValueFormatSchema>
 
+/** Chart annotations (F-VIZ-08), for bar and line charts. */
+export const AnnotationsSchema = z.object({
+  /** Markers on the highest and lowest values. */
+  extremes: z.boolean(),
+  /** A dashed line at the average. */
+  average: z.boolean(),
+  /** A target line at this value, or null. */
+  target: z.number().nullable(),
+})
+export type Annotations = z.infer<typeof AnnotationsSchema>
+
+export const NO_ANNOTATIONS: Annotations = { extremes: false, average: false, target: null }
+
+/** Chart types that can be annotated: they have one value axis and series of values. */
+export const ANNOTATABLE: ReadonlySet<ChartType> = new Set([
+  'bar',
+  'hbar',
+  'grouped_bar',
+  'stacked_bar',
+  'line',
+  'area',
+])
+
 export const ChartSpecSchema = z.object({
   type: ChartTypeSchema,
   /** Category, time or x-measure column; null for KPIs and tables. */
@@ -60,5 +83,7 @@ export const ChartSpecSchema = z.object({
   title: z.string(),
   /** Why this chart, in plain English (F-EXPL-03). */
   reason: z.string(),
+  /** Max/min markers, average and target lines (F-VIZ-08); absent in older saved charts. */
+  annotations: AnnotationsSchema.optional(),
 })
 export type ChartSpec = z.infer<typeof ChartSpecSchema>

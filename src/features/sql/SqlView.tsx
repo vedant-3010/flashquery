@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { prefetchCharts } from '@/features/charts/prefetch'
 import { useAutoChart } from '@/features/charts/useAutoChart'
+import { QueryPlanPanel } from '@/features/explain/QueryPlanPanel'
 import { ResultGrid } from '@/features/grid/ResultGrid'
 import { useResolvedTheme } from '@/hooks/useResolvedTheme'
 import { formatDuration, formatNumber } from '@/lib/format'
@@ -25,13 +26,13 @@ const RUN_SHORTCUT = /Mac|iPhone|iPad/.test(navigator.userAgent) ? '⌘↵' : 'C
 
 /** SQL scratchpad: query loaded tables directly; results in the grid or a chart (F-EXPL-07). */
 export function SqlView() {
-  const { text, running, result, error, elapsedMs, setText, run, cancel } = useSqlStore()
+  const { text, running, result, resultSql, error, elapsedMs, setText, run, cancel } = useSqlStore()
   const datasets = useDatasetsStore((state) => state.datasets)
   const locale = useSettingsStore((state) => state.locale)
   const dark = useResolvedTheme() === 'dark'
   const [showDetails, setShowDetails] = useState(false)
   const [formatError, setFormatError] = useState<string | null>(null)
-  const [resultView, setResultView] = useState<'grid' | 'chart'>('grid')
+  const [resultView, setResultView] = useState<'grid' | 'chart' | 'plan'>('grid')
   const auto = useAutoChart(result, resultView === 'chart')
 
   const schema = useMemo(
@@ -129,7 +130,9 @@ export function SqlView() {
       {result ? (
         <Tabs
           value={resultView}
-          onValueChange={(value) => setResultView(value === 'chart' ? 'chart' : 'grid')}
+          onValueChange={(value) =>
+            setResultView(value === 'chart' || value === 'plan' ? value : 'grid')
+          }
           onPointerEnter={prefetchCharts}
           className="min-h-0 flex-1 gap-0"
         >
@@ -137,6 +140,7 @@ export function SqlView() {
             <TabsList variant="line" aria-label="Show results as">
               <TabsTrigger value="grid">Grid</TabsTrigger>
               <TabsTrigger value="chart">Chart</TabsTrigger>
+              <TabsTrigger value="plan">Plan</TabsTrigger>
             </TabsList>
           </div>
           <TabsContent value="grid" className="flex min-h-0 flex-col">
@@ -170,6 +174,9 @@ export function SqlView() {
             ) : (
               <Skeleton className="h-72 w-full" />
             )}
+          </TabsContent>
+          <TabsContent value="plan" className="min-h-0 overflow-y-auto p-3">
+            <QueryPlanPanel sql={resultSql} />
           </TabsContent>
         </Tabs>
       ) : (

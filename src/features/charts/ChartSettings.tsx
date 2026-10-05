@@ -2,7 +2,7 @@ import { SlidersHorizontal } from 'lucide-react'
 import { useId, useState } from 'react'
 import type { ResultShape } from '@/charts/classify'
 import { fieldOptions, respec, type PreferredColumns } from '@/charts/select'
-import type { ChartSpec } from '@/charts/spec'
+import { ANNOTATABLE, type ChartSpec } from '@/charts/spec'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { AnnotationSettings } from '@/features/charts/AnnotationSettings'
 import { humanizeName } from '@/lib/format'
 
 const NONE = '__none__'
@@ -84,7 +85,7 @@ function Toggle({
   )
 }
 
-/** Axis, series and display options for the current chart (F-VIZ-06). */
+/** Axis, series, display options and annotations for the current chart (F-VIZ-06, F-VIZ-08). */
 export function ChartSettings({ spec, shape, question, currency, onChange }: ChartSettingsProps) {
   const [error, setError] = useState<string | null>(null)
   const options = fieldOptions(spec.type, shape)
@@ -208,6 +209,7 @@ export function ChartSettings({ spec, shape, question, currency, onChange }: Cha
             onChange={(labels) => onChange({ ...spec, labels })}
           />
         </div>
+        {ANNOTATABLE.has(spec.type) && <AnnotationSettings spec={spec} onChange={onChange} />}
         {error && (
           <p role="alert" className="text-xs text-destructive">
             {error}

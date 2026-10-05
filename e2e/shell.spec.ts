@@ -115,3 +115,40 @@ test.describe('how it works (F-SHIP-04)', () => {
     await expect(panel).toContainText('No AI requests yet')
   })
 })
+
+test.describe('command palette (F-SHELL-07)', () => {
+  test('goes anywhere, loads data and asks questions from the keyboard', async ({ page }) => {
+    await page.goto('/')
+    const palette = page.getByRole('dialog', { name: 'Command palette' })
+    const search = palette.getByRole('combobox', { name: 'Search commands' })
+
+    await page.keyboard.press('ControlOrMeta+k')
+    await search.fill('global sales 10k')
+    await expect(palette.getByRole('option').first()).toHaveText(
+      /Load sample: Global Sales · 10k rows/,
+    )
+    await page.keyboard.press('Enter')
+    await expect(palette).toBeHidden()
+    await expect(page.getByRole('region', { name: 'Global Sales · 10k rows' })).toBeVisible({
+      timeout: 60_000,
+    })
+
+    await page.keyboard.press('ControlOrMeta+k')
+    await search.fill('fastest')
+    await page.keyboard.press('Enter')
+    await expect(
+      page.getByRole('article', { name: 'Which region grew fastest?' }).getByRole('img', {
+        name: /^Bar chart/,
+      }),
+    ).toBeVisible({ timeout: 60_000 })
+
+    await page.keyboard.press('ControlOrMeta+k')
+    await search.fill('go to sql')
+    await page.keyboard.press('ArrowDown')
+    await page.keyboard.press('ArrowUp')
+    await page.keyboard.press('Enter')
+    await expect(
+      page.getByRole('tablist', { name: 'Views' }).getByRole('tab', { name: 'SQL' }),
+    ).toHaveAttribute('aria-selected', 'true')
+  })
+})

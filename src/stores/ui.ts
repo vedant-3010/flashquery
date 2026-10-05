@@ -30,6 +30,8 @@ interface UiState {
   highlightColumn: (table: string, column: string | null) => void
   shortcutsOpen: boolean
   setShortcutsOpen: (open: boolean) => void
+  commandPaletteOpen: boolean
+  setCommandPaletteOpen: (open: boolean) => void
   /** Text in the "Paste data" dialog; null when it's closed (F-DATA-10). */
   pasteText: string | null
   setPasteText: (text: string | null) => void
@@ -62,6 +64,8 @@ export const useUiStore = create<UiState>()((set) => ({
   highlightColumn: (table, column) => set({ highlight: { table, column, at: Date.now() } }),
   shortcutsOpen: false,
   setShortcutsOpen: (shortcutsOpen) => set({ shortcutsOpen }),
+  commandPaletteOpen: false,
+  setCommandPaletteOpen: (commandPaletteOpen) => set({ commandPaletteOpen }),
   pasteText: null,
   setPasteText: (pasteText) => set({ pasteText }),
   focusTile: null,

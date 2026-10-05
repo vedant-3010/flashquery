@@ -29,9 +29,13 @@ paths:
   cost per request and per session (`src/ai/cost.ts`, prices in `models.ts`, PRD D72).
 - AI-suggested questions (`src/ai/suggest.ts`, F-PROF-04) only on the user's request, Balanced mode,
   fast model, cached per schema (PRD D75).
+- Exploration (`src/ai/explore.ts`, F-ASK-15, D96): kind 'explore' only in Balanced mode; guarded,
+  ≤ 20 rows, results back inside `<data>`, at most 3, then the model must answer.
+- Suggested joins (F-PROF-07, D91) go in the context as `suggestedJoins` (match % in Balanced only).
+- Provider `local` (F-AI-06, D85): an OpenAI-compatible server on localhost through the OpenAI client.
 
 ## Schemas (src/ai/schemas.ts, Zod v4; `.describe()` every field)
-- `SqlPlan`: kind ('sql' | 'python' | 'clarify' | 'unanswerable'), title, sql, python, explanation
+- `SqlPlan`: kind ('sql' | 'python' | 'clarify' | 'unanswerable' | 'explore'), title, sql, python, explanation
   (1–3 plain-English sentences, no jargon), assumptions[], tablesUsed[], columnsUsed[],
   clarification ({ question, options[2–4] } | null), alternatives[] (answerable questions, for
   'unanswerable'), chartHint (partial ChartSpec | null).

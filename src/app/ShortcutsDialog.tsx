@@ -10,6 +10,7 @@ import { useUiStore } from '@/stores/ui'
 const MOD = /Mac|iPhone|iPad/.test(navigator.userAgent) ? '⌘' : 'Ctrl'
 
 const SHORTCUTS: { keys: string[]; action: string }[] = [
+  { keys: [MOD, 'K'], action: 'Command palette: go anywhere, ask, open data or a dashboard' },
   { keys: ['/'], action: 'Focus the ask box' },
   { keys: ['Enter'], action: 'Ask the question' },
   { keys: ['Shift', 'Enter'], action: 'New line in the question' },

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { DatasetItem } from '@/features/datasets/DatasetItem'
 import { IngestJobRow } from '@/features/datasets/IngestJobRow'
 import { SampleMenu } from '@/features/datasets/SampleMenu'
+import { SuggestedJoins } from '@/features/datasets/SuggestedJoins'
 import { UploadButton } from '@/features/datasets/UploadButton'
 import { useDatasetsStore } from '@/stores/datasets'
 import { useUiStore } from '@/stores/ui'
@@ -61,6 +62,7 @@ export function DatasetsPanel({ onClose }: { onClose?: () => void }) {
           {datasets.map((dataset) => (
             <DatasetItem key={dataset.id} dataset={dataset} />
           ))}
+          <SuggestedJoins />
         </div>
       )}
     </div>

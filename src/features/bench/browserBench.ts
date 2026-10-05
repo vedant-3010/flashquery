@@ -1,6 +1,7 @@
 import type { BenchResult } from '@/engine/bench'
 import { percentile } from '@/engine/bench'
 import type { Engine } from '@/engine/connection'
+import { engineMemory } from '@/engine/memory'
 
 // Benchmark (F-PERF-04): the parts that need a browser. Chart render times ECharts drawing 5,000
 // points; grid scroll watches for long tasks while the 1M-row grid scrolls top to bottom.
@@ -80,15 +81,9 @@ export async function measureGridScroll(scroller: HTMLElement, rows: number): Pr
 
 export async function measureMemory(engine: Engine): Promise<BenchResult[]> {
   const heap = (performance as { memory?: { usedJSHeapSize: number } }).memory?.usedJSHeapSize
-  let duckdb: number | null = null
-  try {
-    const row = (
-      await engine.run('SELECT sum(memory_usage_bytes) AS n FROM duckdb_memory()')
-    ).toArray()[0] as { n?: number | bigint } | undefined
-    duckdb = row?.n === undefined ? null : Number(row.n) / 1e6
-  } catch {
-    duckdb = null
-  }
+  const duckdb = await engineMemory(engine)
+    .then((memory) => memory.totalBytes / 1e6)
+    .catch(() => null)
   return [
     {
       id: 'memory-js',

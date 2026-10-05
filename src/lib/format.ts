@@ -196,6 +196,11 @@ export function formatEventTime(epochMs: number, locale: string, now = Date.now(
     : dateFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(date)
 }
 
+/** A moment in the reader's time zone, with the date: "Oct 6, 2026, 1:39 AM". */
+export function formatMoment(epochMs: number, locale: string): string {
+  return dateFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(epochMs))
+}
+
 /** How chart values and KPIs are shown (ChartSpec.format). */
 export interface ValueStyle {
   y: 'number' | 'percent' | 'currency'

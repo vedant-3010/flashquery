@@ -10,7 +10,7 @@ export const PrivacyModeSchema = z
   .describe('What the AI may see; see the privacy-mode table in .claude/rules/ai.md')
 export type PrivacyMode = z.infer<typeof PrivacyModeSchema>
 
-export const ProviderIdSchema = z.enum(['anthropic', 'openai'])
+export const ProviderIdSchema = z.enum(['anthropic', 'openai', 'local'])
 export type ProviderId = z.infer<typeof ProviderIdSchema>
 
 export const ChartHintSchema = z
@@ -27,19 +27,21 @@ export type ChartHint = z.infer<typeof ChartHintSchema>
 
 export const SqlPlanSchema = z.object({
   kind: z
-    .enum(['sql', 'python', 'clarify', 'unanswerable'])
+    .enum(['sql', 'python', 'clarify', 'unanswerable', 'explore'])
     .describe(
       "'sql' for normal answers. 'python' only for statistics, forecasting, regression, clustering or " +
         "outlier detection. 'clarify' only when readings differ materially and no default is " +
-        "sensible. 'unanswerable' when the tables can't answer it.",
+        "sensible. 'unanswerable' when the tables can't answer it. 'explore' (only when allowed, " +
+        'at most 3 times) to look at the data before answering: sql is a small query whose result ' +
+        'you get back.',
     ),
   title: z.string().describe('Short title for the answer, at most 8 words.'),
   sql: z
     .string()
     .nullable()
     .describe(
-      "One DuckDB SELECT (CTEs allowed) over the listed tables. For 'python', the input rows. " +
-        "Null for 'clarify' and 'unanswerable'.",
+      "One DuckDB SELECT (CTEs allowed) over the listed tables. For 'python', the input rows; for " +
+        "'explore', a small query (at most 20 rows). Null for 'clarify' and 'unanswerable'.",
     ),
   python: z
     .string()

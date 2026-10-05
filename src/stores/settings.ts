@@ -1,5 +1,6 @@
 import { z } from '@/lib/zod'
 import { create } from 'zustand'
+import { DEFAULT_LOCAL_URL, LOCAL_NO_KEY, localBaseUrl } from '@/ai/localServer'
 import { DEFAULT_MODEL } from '@/ai/models'
 import {
   PrivacyModeSchema,
@@ -15,12 +16,18 @@ import { backupCorruptRecord } from '@/stores/persistence'
 // Settings (F-AI-01, F-AI-02). API keys live in memory and are saved to IndexedDB only while
 // "Remember on this device" is on (F-SEC-04). The theme stays in localStorage (PRD D8).
 
-const KeysSchema = z.object({ anthropic: z.string().nullable(), openai: z.string().nullable() })
+const KeysSchema = z.object({
+  anthropic: z.string().nullable(),
+  openai: z.string().nullable(),
+  local: z.string().nullable(),
+})
 type Keys = z.infer<typeof KeysSchema>
 
 const SavedSettingsSchema = z.object({
   provider: ProviderIdSchema,
-  models: z.object({ anthropic: z.string(), openai: z.string() }),
+  models: z.object({ anthropic: z.string(), openai: z.string(), local: z.string() }),
+  /** Local OpenAI-compatible server (F-AI-06). */
+  baseUrl: z.string(),
   privacyMode: PrivacyModeSchema,
   dateDisplay: z.enum(['iso', 'locale']),
   rememberKey: z.boolean(),
@@ -34,14 +41,16 @@ const SavedSettingsSchema = z.object({
   autoRunPython: z.boolean(),
   /** The first-run tour was finished or skipped (F-SHELL-05). */
   tourDone: z.boolean(),
+  /** Keep loaded files in the browser's private storage across reloads (F-DATA-12). Off by default. */
+  persistFiles: z.boolean(),
 })
 type SavedSettings = z.infer<typeof SavedSettingsSchema>
 
-const NO_KEYS: Keys = { anthropic: null, openai: null }
+const NO_KEYS: Keys = { anthropic: null, openai: null, local: null }
 
 export const SETTINGS_RECORD: RecordSpec<SavedSettings> = {
   key: 'settings',
-  version: 4,
+  version: 5,
   schema: SavedSettingsSchema,
   migrations: {
     // v2 (M4): number format and currency.
@@ -50,6 +59,17 @@ export const SETTINGS_RECORD: RecordSpec<SavedSettings> = {
     2: (data) => ({ ...(data as object), autoRunPython: false }),
     // v4 (M7): the guided tour, not seen yet.
     3: (data) => ({ ...(data as object), tourDone: false }),
+    // v5 (stretch): a local OpenAI-compatible server, and keeping files (off).
+    4: (data) => {
+      const old = data as { models?: object; apiKeys?: object }
+      return {
+        ...old,
+        models: { ...old.models, local: DEFAULT_MODEL.local },
+        apiKeys: { ...old.apiKeys, local: null },
+        baseUrl: DEFAULT_LOCAL_URL,
+        persistFiles: false,
+      }
+    },
   },
   fallback: () => ({
     provider: 'anthropic',
@@ -58,10 +78,12 @@ export const SETTINGS_RECORD: RecordSpec<SavedSettings> = {
     dateDisplay: 'iso',
     rememberKey: false,
     apiKeys: NO_KEYS,
+    baseUrl: DEFAULT_LOCAL_URL,
     numberLocale: null,
     currency: null,
     autoRunPython: false,
     tourDone: false,
+    persistFiles: false,
   }),
 }
 
@@ -74,12 +96,15 @@ interface SettingsState {
   currency: string | null
   autoRunPython: boolean
   tourDone: boolean
+  persistFiles: boolean
   /** How grids show DATE/TIMESTAMP values (F-GRID-03). */
   dateDisplay: DateDisplay
   provider: ProviderId
   models: Record<ProviderId, string>
   /** In memory; see rememberKey. */
   apiKeys: Keys
+  /** Base URL of a local OpenAI-compatible server (F-AI-06). */
+  baseUrl: string
   rememberKey: boolean
   hydrated: boolean
   setTheme: (theme: ThemePreference) => void
@@ -88,11 +113,13 @@ interface SettingsState {
   setProvider: (provider: ProviderId) => void
   setModel: (provider: ProviderId, model: string) => void
   setApiKey: (provider: ProviderId, key: string | null) => void
+  setBaseUrl: (url: string) => void
   setRememberKey: (remember: boolean) => void
   setNumberLocale: (locale: string | null) => void
   setCurrency: (currency: string | null) => void
   setAutoRunPython: (on: boolean) => void
   setTourDone: (done: boolean) => void
+  setPersistFiles: (on: boolean) => void
   /** Loads saved settings (once, at startup), then saves every change. */
   hydrate: () => Promise<void>
 }
@@ -105,10 +132,12 @@ export const useSettingsStore = create<SettingsState>()((set, get) => ({
   currency: null,
   autoRunPython: false,
   tourDone: false,
+  persistFiles: false,
   dateDisplay: 'iso',
   provider: 'anthropic',
   models: { ...DEFAULT_MODEL },
   apiKeys: NO_KEYS,
+  baseUrl: DEFAULT_LOCAL_URL,
   rememberKey: false,
   hydrated: false,
   setTheme: (theme) => {
@@ -121,12 +150,14 @@ export const useSettingsStore = create<SettingsState>()((set, get) => ({
   setModel: (provider, model) => set({ models: { ...get().models, [provider]: model.trim() } }),
   setApiKey: (provider, key) =>
     set({ apiKeys: { ...get().apiKeys, [provider]: key?.trim() || null } }),
+  setBaseUrl: (baseUrl) => set({ baseUrl: baseUrl.trim() }),
   setRememberKey: (rememberKey) => set({ rememberKey }),
   setNumberLocale: (numberLocale) =>
     set({ numberLocale, locale: numberLocale ?? navigator.language }),
   setCurrency: (currency) => set({ currency }),
   setAutoRunPython: (autoRunPython) => set({ autoRunPython }),
   setTourDone: (tourDone) => set({ tourDone }),
+  setPersistFiles: (persistFiles) => set({ persistFiles }),
   hydrate: () => (hydrating ??= load()),
 }))
 
@@ -157,17 +188,27 @@ async function persist(state: SettingsState) {
     dateDisplay: state.dateDisplay,
     rememberKey: state.rememberKey,
     apiKeys: state.rememberKey ? state.apiKeys : NO_KEYS,
+    baseUrl: state.baseUrl,
     numberLocale: state.numberLocale,
     currency: state.currency,
     autoRunPython: state.autoRunPython,
     tourDone: state.tourDone,
+    persistFiles: state.persistFiles,
   }
   await saveRecord(SETTINGS_RECORD, record).catch((error: unknown) =>
     console.warn('AskData: settings could not be saved', error),
   )
 }
 
-/** The key for the selected provider, or null (demo mode). */
-export function activeApiKey(state: Pick<SettingsState, 'apiKeys' | 'provider'>): string | null {
-  return state.apiKeys[state.provider]
+/**
+ * The credential for the selected provider, or null (demo mode). A local server (F-AI-06) needs no
+ * key: it is ready once it has a valid localhost URL and a model, and gets a placeholder key.
+ */
+export function activeApiKey(
+  state: Pick<SettingsState, 'apiKeys' | 'provider' | 'baseUrl' | 'models'>,
+): string | null {
+  const key = state.apiKeys[state.provider]
+  if (state.provider !== 'local') return key
+  if (localBaseUrl(state.baseUrl) === null || state.models.local === '') return null
+  return key ?? LOCAL_NO_KEY
 }

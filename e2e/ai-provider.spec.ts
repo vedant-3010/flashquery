@@ -15,6 +15,7 @@ interface Plan {
   title: string
   sql: string
   explanation?: string
+  kind?: 'sql' | 'explore'
 }
 
 interface Call {
@@ -45,9 +46,9 @@ const textOf = (content: unknown): string =>
       ? content.map((block: { text?: string }) => block.text ?? '').join('')
       : ''
 
-function sqlPlan({ title, sql, explanation = 'Adds up revenue.' }: Plan) {
+function sqlPlan({ title, sql, explanation = 'Adds up revenue.', kind = 'sql' }: Plan) {
   return {
-    kind: 'sql',
+    kind,
     title,
     sql,
     python: null,
@@ -403,5 +404,155 @@ test.describe('J6: privacy check (F-AI-02, F-EXPL-04, F-SEC-03, F-SEC-04)', () =
     await loadSales(page)
     await expect(chips.getByRole('button', { name: AI_QUESTIONS[1] })).toBeVisible()
     expect(suggestions()).toHaveLength(1)
+  })
+})
+
+test.describe('local OpenAI-compatible server (F-AI-06)', () => {
+  /** Answers OpenAI chat completions at Ollama's default address; returns the request bodies. */
+  async function mockLocalServer(page: Page) {
+    const bodies: string[] = []
+    await page.route('http://localhost:11434/v1/**', async (route) => {
+      const request = route.request()
+      if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: CORS })
+      const raw = request.postData() ?? ''
+      bodies.push(raw)
+      const body = JSON.parse(raw) as { messages: { content: string }[]; model: string }
+      const last = body.messages.at(-1)?.content ?? ''
+      const content =
+        last === 'Reply with the word OK.'
+          ? 'OK'
+          : JSON.stringify(
+              sqlPlan({
+                title: 'Total revenue',
+                sql: 'SELECT sum(revenue) AS revenue FROM global_sales',
+              }),
+            )
+      await route.fulfill({
+        status: 200,
+        headers: { ...CORS, 'content-type': 'application/json' },
+        body: JSON.stringify({
+          id: 'chatcmpl-e2e',
+          object: 'chat.completion',
+          created: 0,
+          model: body.model,
+          choices: [{ index: 0, message: { role: 'assistant', content }, finish_reason: 'stop' }],
+          usage: { prompt_tokens: 900, completion_tokens: 60, total_tokens: 960 },
+        }),
+      })
+    })
+    return bodies
+  }
+
+  test('answers through a server on this computer, without a key', async ({ page }) => {
+    const bodies = await mockLocalServer(page)
+    await page.goto('/')
+    await page.getByRole('button', { name: 'Settings', exact: true }).click()
+    const dialog = page.getByRole('dialog', { name: 'Settings' })
+    await dialog.getByRole('combobox', { name: 'Provider' }).click()
+    await page.getByRole('option', { name: 'Local server (OpenAI-compatible)' }).click()
+    await expect(dialog.getByLabel('Server URL')).toHaveValue('http://localhost:11434/v1')
+    await expect(dialog.getByLabel('Model')).toHaveValue('qwen2.5-coder:7b')
+
+    // Only this computer: anything else is refused, and the app stays in demo mode.
+    await dialog.getByLabel('Server URL').fill('https://api.example.com/v1')
+    await expect(dialog.getByRole('alert')).toContainText('Use a server on this computer')
+    await dialog.getByRole('button', { name: 'Ollama' }).click()
+
+    await dialog.getByRole('button', { name: 'Test connection' }).click()
+    await expect(dialog.getByRole('status')).toContainText('Connected')
+    await page.keyboard.press('Escape')
+    await expect(page.getByRole('button', { name: 'Demo' })).toBeHidden()
+
+    await loadSales(page)
+    const answer = await ask(page, 'Total revenue')
+    await expect(answer.getByRole('heading', { name: 'Total revenue' })).toBeVisible()
+    await expect(answer.getByText(/^AI usage: [\d,]+ tokens$/)).toBeVisible()
+    const plan = bodies.find((body) => body.includes('Total revenue') && body.includes('<data>'))
+    expect(JSON.parse(plan ?? '{}').model).toBe('qwen2.5-coder:7b')
+  })
+})
+
+test.describe('suggested joins (F-PROF-07)', () => {
+  test('finds a join key between uploads, sends it with questions until ignored', async ({
+    page,
+  }) => {
+    const calls = await mockAnthropic(page, (call) =>
+      kindOf(call) === 'plan'
+        ? { plan: { title: 'Revenue', sql: 'SELECT sum(amount) AS revenue FROM orders' } }
+        : salesAnalyst(call),
+    )
+    await page.goto('/')
+    await addKey(page)
+    await page.keyboard.press('Escape')
+
+    const customers = [
+      'id,name',
+      ...Array.from({ length: 30 }, (_, i) => `${i + 1},Customer ${i + 1}`),
+    ]
+    const orders = [
+      'order_id,customer_id,amount',
+      ...Array.from({ length: 120 }, (_, i) => `${i + 1},${(i % 30) + 1},${(i + 1) * 3}`),
+    ]
+    await page
+      .getByTestId('file-input')
+      .first()
+      .setInputFiles([
+        { name: 'customers.csv', mimeType: 'text/csv', buffer: Buffer.from(customers.join('\n')) },
+        { name: 'orders.csv', mimeType: 'text/csv', buffer: Buffer.from(orders.join('\n')) },
+      ])
+    const joins = page.getByRole('region', { name: 'Suggested joins' })
+    await expect(joins).toContainText('orders.customer_id → customers.id', { timeout: 30_000 })
+    await expect(joins).toContainText('many to one · 100% of values match')
+
+    await expect((await ask(page, 'Revenue')).getByRole('tab', { name: 'Chart' })).toBeVisible()
+    // The data line, not the system prompt's rule about it.
+    expect(plansOf(calls).at(-1)?.raw).toContain('{\\"suggestedJoins\\":[')
+
+    await joins
+      .getByRole('button', { name: 'Ignore the join orders.customer_id → customers.id' })
+      .click()
+    await expect(joins).toBeHidden()
+    await expect(
+      (await ask(page, 'Revenue again')).getByRole('tab', { name: 'Chart' }),
+    ).toBeVisible()
+    expect(plansOf(calls).at(-1)?.raw).not.toContain('{\\"suggestedJoins\\":[')
+  })
+})
+
+test.describe('multi-step exploration (F-ASK-15)', () => {
+  test('looks at the data first; the exploration is in the timeline and the trace', async ({
+    page,
+  }) => {
+    const calls = await mockAnthropic(page, (call) => {
+      if (kindOf(call) !== 'plan') return salesAnalyst(call)
+      if (call.user.includes('Exploration 1 returned')) {
+        return {
+          plan: {
+            title: 'Revenue by channel',
+            sql: 'SELECT channel, sum(revenue) AS revenue FROM global_sales GROUP BY ALL ORDER BY revenue DESC',
+          },
+        }
+      }
+      return {
+        plan: {
+          kind: 'explore',
+          title: 'Checking channels',
+          sql: 'SELECT DISTINCT channel FROM global_sales ORDER BY channel',
+        },
+      }
+    })
+    await page.goto('/')
+    await addKey(page)
+    await page.keyboard.press('Escape')
+    await loadSales(page)
+
+    const answer = await ask(page, 'Revenue for each sales channel')
+    await expect(answer.getByRole('heading', { name: 'Revenue by channel' })).toBeVisible()
+    await expect(answer.getByRole('list', { name: 'Progress' })).toContainText('Exploring data')
+    await answer.getByRole('tab', { name: 'Trace' }).click()
+    await expect(answer).toContainText('SELECT DISTINCT channel FROM global_sales')
+    const followUp = plansOf(calls).at(-1)?.user ?? ''
+    expect(followUp).toContain('Exploration 1 returned 3 rows')
+    expect(followUp).toContain('Online')
   })
 })

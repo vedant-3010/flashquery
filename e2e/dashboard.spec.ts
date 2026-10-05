@@ -243,3 +243,77 @@ test.describe('dashboards and files (F-DASH-05, F-DASH-08)', () => {
     await expect(page.getByText('No tiles yet')).toBeVisible()
   })
 })
+
+test.describe('presentation mode (F-DASH-13)', () => {
+  test('shows the dashboard full screen, read-only; Esc ends it', async ({ page }) => {
+    await page.goto('/')
+    await loadSales(page)
+    await generateDashboard(page)
+    await page.getByRole('button', { name: 'Present' }).click()
+
+    const stage = page.getByRole('region', { name: 'Presenting Global Sales overview' })
+    await expect(stage.getByRole('heading', { name: 'Global Sales overview' })).toBeVisible()
+    await expect(stage.getByRole('region', { name: 'Total revenue', exact: true })).toBeVisible()
+    await expect(stage.getByRole('button', { name: /^Actions for/ })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'Generate dashboard' })).toHaveCount(0)
+
+    await page.keyboard.press('Escape')
+    await expect(stage).toBeHidden()
+    await expect(page.getByRole('button', { name: 'Present' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Actions for Total revenue' })).toBeVisible()
+  })
+})
+
+test.describe('cross-filtering (F-DASH-11)', () => {
+  test('clicking a bar filters every tile; clicking it again clears the filter', async ({
+    page,
+  }) => {
+    await page.goto('/')
+    await loadSales(page)
+    await generateDashboard(page)
+    const filters = page.getByRole('group', { name: 'Filters' })
+    await expect(filters).toContainText('or click a bar or slice')
+
+    // The tallest bar (APAC, sorted first) sits at the left of the plot.
+    const chart = tile(page, 'Revenue by region').getByRole('img', { name: /^Bar chart/ })
+    await expect(chart).toBeVisible()
+    const box = await chart.boundingBox()
+    if (!box) throw new Error('no chart box')
+    const firstBar = { x: 60 + (box.width - 70) / 10, y: box.height * 0.7 }
+    await chart.click({ position: firstBar })
+    await expect(filters).toContainText('Region: APAC')
+    await expect(tile(page, 'Total revenue').getByText('Filtered')).toBeVisible()
+
+    await chart.click({ position: firstBar })
+    await expect(filters).not.toContainText('Region: APAC')
+    await expect(tile(page, 'Total revenue').getByText('Filtered')).toBeHidden()
+  })
+})
+
+test.describe('export as HTML and PDF (F-DASH-12)', () => {
+  test('downloads a standalone HTML file and opens it for printing', async ({ page }) => {
+    await page.goto('/')
+    await loadSales(page)
+    await generateDashboard(page)
+    await expect(tile(page, 'Revenue by region').getByRole('img')).toBeVisible()
+
+    await page.getByRole('button', { name: 'More dashboard actions' }).click()
+    const download = page.waitForEvent('download')
+    await page.getByRole('menuitem', { name: 'Download as HTML (standalone)' }).click()
+    const file = await download
+    expect(file.suggestedFilename()).toBe('global-sales-overview.html')
+    const html = readFileSync(await file.path(), 'utf8')
+    expect(html).toContain('<title>Global Sales overview</title>')
+    expect(html).toContain("default-src 'none'")
+    expect(html).not.toContain('<script')
+    expect(html.match(/<svg/g)?.length ?? 0).toBeGreaterThanOrEqual(3)
+    expect(html).toContain('<h2>Total revenue</h2>')
+
+    await page.getByRole('button', { name: 'More dashboard actions' }).click()
+    const popup = page.waitForEvent('popup')
+    await page.getByRole('menuitem', { name: 'Print or save as PDF…' }).click()
+    const printTab = await popup
+    await expect(printTab).toHaveTitle('Global Sales overview')
+    expect(printTab.url()).toMatch(/^blob:/)
+  })
+})

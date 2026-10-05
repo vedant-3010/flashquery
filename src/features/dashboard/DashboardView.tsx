@@ -1,5 +1,5 @@
-import { LayoutDashboard, MessageSquareText, Sparkles } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { LayoutDashboard, MessageSquareText, Minimize2, Sparkles } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 import { EmptyState } from '@/components/EmptyState'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -8,6 +8,7 @@ import { DashboardToolbar } from '@/features/dashboard/DashboardToolbar'
 import { EditTileSheet } from '@/features/dashboard/EditTileSheet'
 import { FilterBar } from '@/features/dashboard/FilterBar'
 import { GenerateDialog } from '@/features/dashboard/GenerateDialog'
+import { usePresentation } from '@/features/dashboard/usePresentation'
 import { useDashboardStore } from '@/stores/dashboard'
 import { refreshWhenReady } from '@/stores/dashboardJobs'
 import { useDatasetsStore } from '@/stores/datasets'
@@ -28,15 +29,44 @@ export function DashboardView() {
   const dashboard = dashboards.find((d) => d.id === activeId) ?? dashboards.at(-1) ?? null
   const dashboardId = dashboard?.id ?? null
   const tileIds = dashboard?.tiles.map((t) => t.id).join(',') ?? ''
+  const root = useRef<HTMLDivElement>(null)
+  const presentation = usePresentation(root)
 
   useEffect(() => {
     if (dashboardId) void refreshWhenReady(dashboardId)
   }, [dashboardId, datasets, tileIds])
 
+  // One root element in both modes: it's the element that goes full screen.
+  if (presentation.presenting && dashboard) {
+    return (
+      <div
+        ref={root}
+        role="region"
+        aria-label={`Presenting ${dashboard.name}`}
+        className="fixed inset-0 z-50 flex flex-col bg-background"
+      >
+        <div className="flex shrink-0 items-center gap-2 border-b px-6 py-3">
+          <h1 className="min-w-0 flex-1 truncate text-lg font-semibold">{dashboard.name}</h1>
+          <Button size="sm" variant="ghost" onClick={presentation.stop}>
+            <Minimize2 aria-hidden />
+            Exit presentation (Esc)
+          </Button>
+        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto p-6">
+          <DashboardGrid dashboard={dashboard} onEdit={() => undefined} readOnly />
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div ref={root} className="flex min-h-0 flex-1 flex-col">
       <div className="grid shrink-0 gap-2 border-b px-4 py-2">
-        <DashboardToolbar dashboard={dashboard} onGenerate={() => setGenerating(true)} />
+        <DashboardToolbar
+          dashboard={dashboard}
+          onGenerate={() => setGenerating(true)}
+          onPresent={presentation.start}
+        />
         {dashboard && <FilterBar dashboard={dashboard} />}
       </div>
       <div className="relative min-h-0 flex-1 overflow-y-auto p-4">

@@ -1,5 +1,6 @@
 import { proxy, transfer, wrap, type Remote } from 'comlink'
 import { withDeadline } from '@/lib/deadline'
+import type { NotebookCellResult, NotebookStartRequest } from '@/workers/notebook'
 import type { PythonApi, PythonRunRequest, PythonRunResult } from '@/workers/python'
 import type { SheetInfo, XlsxApi } from '@/workers/xlsx'
 
@@ -46,10 +47,15 @@ function pythonClient(): Remote<PythonApi> {
   return python.api
 }
 
+/** Bumped whenever the session is thrown away, so the notebook knows its variables are gone. */
+let pythonSession = 0
+export const currentPythonSession = () => pythonSession
+
 /** Throws the Python session away (Stop, timeout); the next run starts a fresh one. */
 export function resetPython(): void {
   python?.worker.terminate()
   python = null
+  pythonSession += 1
 }
 
 export const PYTHON_TIMEOUT_MS = 60_000
@@ -82,4 +88,37 @@ export async function runPython(
     return api.run(transfer({ ...request, csv }, [csv.buffer]), status)
   })()
   return withDeadline(work, { signal, timeoutMs, onGiveUp: resetPython })
+}
+
+// ---- Notebook cells (F-PY-06): the user's own code, in the same worker and session ----
+
+/** A fresh notebook namespace with `df` loaded (Pyodide loads first if needed). */
+export async function startNotebook(
+  request: NotebookStartRequest,
+  {
+    signal,
+    onStatus,
+    onLoaded,
+  }: { signal?: AbortSignal; onStatus?: (message: string) => void; onLoaded?: () => void },
+): Promise<{ rows: number }> {
+  const api = pythonClient()
+  const status = onStatus ? proxy(onStatus) : undefined
+  const work = (async () => {
+    await api.init(status)
+    onLoaded?.()
+    return api.notebookStart(transfer(request, [request.csv.buffer]))
+  })()
+  return withDeadline(work, { signal, timeoutMs: PYTHON_TIMEOUT_MS, onGiveUp: resetPython })
+}
+
+/** Runs one cell; Stop and the timeout reset the session like any Python run. */
+export async function runNotebookCell(
+  code: string,
+  { signal, timeoutMs = PYTHON_TIMEOUT_MS }: { signal?: AbortSignal; timeoutMs?: number },
+): Promise<NotebookCellResult> {
+  return withDeadline(pythonClient().notebookRun(code), {
+    signal,
+    timeoutMs,
+    onGiveUp: resetPython,
+  })
 }

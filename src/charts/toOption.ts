@@ -1,4 +1,5 @@
 import type { EChartsOption } from 'echarts'
+import { describeAnnotations, seriesMarks } from '@/charts/annotations'
 import { OTHER, type Prepared } from '@/charts/shape'
 import type { ChartSpec } from '@/charts/spec'
 import { FONT_FAMILY, SYMBOLS, type ChartTheme } from '@/charts/theme'
@@ -72,6 +73,24 @@ function base(ctx: OptionContext, legend: boolean, decals: boolean): EChartsOpti
   }
 }
 
+/** 1,234 → 2,000; 630,000 → 700,000: a round axis end just past `value`. */
+function niceCeil(value: number): number {
+  if (value <= 0) return 0
+  const magnitude = 10 ** Math.floor(Math.log10(value))
+  return Math.ceil(value / magnitude) * magnitude
+}
+
+/** A target line outside the data (F-VIZ-08) stretches the axis so the line stays visible. */
+function targetRange(spec: ChartSpec, values: number[]): { max?: number; min?: number } {
+  const target = spec.annotations?.target ?? null
+  if (target === null || values.length === 0) return {}
+  const max = Math.max(...values)
+  const min = Math.min(...values)
+  if (target > max) return { max: niceCeil(target * 1.05) }
+  if (target < min && target < 0) return { min: -niceCeil(-target * 1.05) }
+  return {}
+}
+
 function valueAxis(
   spec: ChartSpec,
   ctx: OptionContext,
@@ -82,6 +101,7 @@ function valueAxis(
   const log = spec.logScale && values.length > 0 && values.every((value) => value > 0)
   return {
     type: log ? ('log' as const) : ('value' as const),
+    ...(log ? {} : targetRange(spec, values)),
     name: name ?? undefined,
     // Vertical axes carry their title on top; horizontal ones below, centered.
     ...(horizontal
@@ -161,7 +181,7 @@ function categoryOption(
     },
     xAxis: horizontal ? vals : cats,
     yAxis: horizontal ? cats : vals,
-    series: prepared.series.map((s) => ({
+    series: prepared.series.map((s, i) => ({
       type: 'bar' as const,
       name: s.name,
       data: s.values,
@@ -170,6 +190,7 @@ function categoryOption(
       emphasis: { focus: 'series' as const },
       itemStyle: s.other ? { color: ctx.theme.other } : undefined,
       label: labelOf(spec, ctx, spec.stacked ? 'inside' : horizontal ? 'right' : 'top'),
+      ...seriesMarks(spec, ctx, { horizontal, first: i === 0 }),
     })),
   }
 }
@@ -232,6 +253,7 @@ function timeOption(
         itemStyle: s.other ? { color: ctx.theme.other } : undefined,
         areaStyle: spec.type === 'area' ? { opacity: spec.stacked ? 0.7 : 0.25 } : undefined,
         label: labelOf(spec, ctx, 'top'),
+        ...seriesMarks(spec, ctx, { horizontal: false, first: i === 0 }),
       }
     }),
   }
@@ -476,14 +498,19 @@ export function describeChart(spec: ChartSpec, prepared: Prepared, locale: strin
         top && bottom && top !== bottom
           ? ` Highest ${top.name} (${fmt(top.value)}), lowest ${bottom.name} (${fmt(bottom.value)}).`
           : ''
-      return `${kind}: ${spec.title}. ${prepared.categories.length} categories${prepared.series.length > 1 ? `, ${prepared.series.length} series` : ''}.${extremes}`
+      return `${kind}: ${spec.title}. ${prepared.categories.length} categories${prepared.series.length > 1 ? `, ${prepared.series.length} series` : ''}.${extremes}${describeAnnotations(
+        spec,
+        pairs.map((pair) => pair.value),
+        locale,
+      )}`
     }
     case 'time': {
       const [first] = prepared.series
       const points = first?.points ?? []
       const start = points[0]?.[1] ?? null
       const end = points.at(-1)?.[1] ?? null
-      return `${kind}: ${spec.title}. ${prepared.series.length} ${prepared.series.length === 1 ? 'line' : 'lines'} of ${points.length} points${first ? `; ${first.name} goes from ${fmt(start)} to ${fmt(end)}` : ''}.`
+      const values = points.map(([, y]) => y).filter((y): y is number => y !== null)
+      return `${kind}: ${spec.title}. ${prepared.series.length} ${prepared.series.length === 1 ? 'line' : 'lines'} of ${points.length} points${first ? `; ${first.name} goes from ${fmt(start)} to ${fmt(end)}` : ''}.${describeAnnotations(spec, values, locale)}`
     }
     case 'pie':
       return `${kind}: ${spec.title}. ${prepared.slices

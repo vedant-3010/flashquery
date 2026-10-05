@@ -27,3 +27,17 @@ test('restarting the engine reloads data and restores answers', async ({ page })
     timeout: 30_000,
   })
 })
+
+// F-PERF-05: the engine popover shows DuckDB's memory and what uses it.
+test('the engine popover shows memory use', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Try sample data', exact: true }).click()
+  await page.getByRole('menuitem', { name: 'Global Sales · 100k rows' }).click()
+  await expect(page.getByRole('region', { name: 'Global Sales · 100k rows' })).toBeVisible({
+    timeout: 60_000,
+  })
+  await page.getByRole('button', { name: /^Engine ready/ }).click()
+  const users = page.getByRole('list', { name: 'Largest memory users' })
+  await expect(users).toContainText('Tables')
+  await expect(page.getByRole('dialog')).toContainText(/Memory\s*[\d.]+\s*(MB|GB)/)
+})

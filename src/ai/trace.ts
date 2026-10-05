@@ -5,11 +5,22 @@ import { isCancellation, toAppError } from '@/lib/errors'
 // SQL, error and tokens. Drives the pipeline timeline (F-ASK-06) and the Trace tab (F-EXPL-06).
 
 export type StageId =
-  'context' | 'plan' | 'guard' | 'explain' | 'execute' | 'chart' | 'summary' | 'narrate' | 'python'
+  | 'context'
+  | 'plan'
+  | 'explore'
+  | 'guard'
+  | 'explain'
+  | 'execute'
+  | 'chart'
+  | 'summary'
+  | 'narrate'
+  | 'python'
 
 export const STAGE_LABELS: Record<StageId, string> = {
   context: 'Reading schema',
   plan: 'Writing SQL',
+  /** A query the AI ran to look at the data first (F-ASK-15). */
+  explore: 'Exploring data',
   guard: 'Checking SQL',
   explain: 'Checking SQL',
   execute: 'Running',

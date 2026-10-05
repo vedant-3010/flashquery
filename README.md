@@ -17,16 +17,19 @@ No key? Demo mode answers a set of questions about a generated 1M-row sales data
 ## What it does
 
 - **Ask in plain English**: questions become SQL, a chart picked by rules (with the AI's hint when it
-  fits the result), a summary, and follow-ups that remember the last three turns.
+  fits the result), a summary, and follow-ups that remember the last three turns. The AI can look at
+  the data first (up to three small queries) and uses join keys it finds between your tables.
 - **Check every answer**: editable SQL, assumptions, a step-by-step trace, and "What the AI saw" for
   every request. Wrong SQL is fixed automatically (up to twice) using DuckDB's error.
 - **1M+ rows without freezing**: queries run in a worker; the grid pages results from DuckDB, with
   sorting and filters pushed down to SQL.
 - **Dashboards**: pin answers or generate a dashboard, drag and resize tiles, filter every tile at
-  once, export and import as JSON.
+  once (or click a bar), present full screen, export as JSON or a standalone HTML/PDF report.
 - **Python when SQL isn't enough**: forecasts, regressions and outliers run as pandas in Pyodide, only
-  after you approve the code, with the network blocked.
-- **Your data, your rules**: Strict or Balanced privacy, business notes for context, workspace export,
+  after you approve the code, with the network blocked. A notebook in the scratchpad runs your own
+  cells, with matplotlib charts.
+- **Your data, your rules**: Strict or Balanced privacy, a local model server (Ollama, LM Studio)
+  instead of a cloud API, business notes for context, optional file keeping, workspace export,
   "Clear all local data".
 
 ## How it works
@@ -57,12 +60,14 @@ switched off. Details, threading and a sequence diagram of the pipeline:
 | Mode | Sent to the provider |
 |---|---|
 | Demo (no key) | Nothing. Answers are recorded plans; their SQL runs live in your browser. |
+| Local server | The Strict or Balanced payload, to a model server on your own computer. |
 | Strict | Table and column names and types, row counts, your notes. No values, no results. |
 | Balanced (default) | Strict, plus per-column statistics, up to 5 common values, 3 sample rows (text cut to 40 characters), and the answer's result (≤ 50 rows, or a digest) for the AI summary. |
 
 Data values are treated as untrusted text: they're sent as JSON inside a delimited block the model is
-told never to follow. A production Content-Security-Policy limits network access to the two LLM APIs
-and the two CDNs (Pyodide, DuckDB extensions), and an end-to-end test checks it on the built app.
+told never to follow. A production Content-Security-Policy limits network access to the two LLM APIs,
+the two CDNs (Pyodide, DuckDB extensions) and servers on your own computer, and an end-to-end test
+checks it on the built app.
 
 ## Performance
 

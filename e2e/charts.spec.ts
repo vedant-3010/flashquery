@@ -133,3 +133,23 @@ test.describe('SQL scratchpad charts (F-EXPL-07, F-VIZ-05)', () => {
     await expect(page.getByRole('grid', { name: 'Query results' })).toBeVisible()
   })
 })
+
+test.describe('annotations (F-VIZ-08)', () => {
+  test('adds an average and a target line, described in the text alternative', async ({ page }) => {
+    await loadSales(page)
+    const answer = await ask(page, 'Which region grew fastest?')
+    await answer.getByRole('button', { name: 'Chart settings' }).click()
+    const settings = page.getByRole('dialog')
+    await settings.getByRole('checkbox', { name: 'Mark highest and lowest' }).check()
+    await settings.getByRole('checkbox', { name: 'Average line' }).check()
+    const target = settings.getByRole('textbox', { name: 'Target (%)' })
+    await target.fill('50')
+    await target.press('Enter')
+    await page.keyboard.press('Escape')
+
+    const chart = answer.getByRole('img', { name: /^Bar chart/ })
+    await expect(chart).toHaveAccessibleName(
+      /With highest and lowest values marked, average line at [\d.]+%, target line at 50%\./,
+    )
+  })
+})

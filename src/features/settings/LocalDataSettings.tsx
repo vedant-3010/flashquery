@@ -11,13 +11,14 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
+import { KeepFilesSetting } from '@/features/settings/KeepFilesSetting'
 import { downloadBytes } from '@/lib/download'
 import { toAppError } from '@/lib/errors'
 import { toJsonl, useFeedbackStore } from '@/stores/feedback'
 import { useToastStore } from '@/stores/toast'
 import { clearLocalData, exportWorkspace, importWorkspace } from '@/stores/workspace'
 
-/** Workspace export/import (F-EXP-03) and "Clear all local data" (F-EXP-04). */
+/** Kept files (F-DATA-12), workspace export/import (F-EXP-03) and "Clear all local data" (F-EXP-04). */
 export function LocalDataSettings() {
   const input = useRef<HTMLInputElement>(null)
   const [confirming, setConfirming] = useState(false)
@@ -50,9 +51,10 @@ export function LocalDataSettings() {
   return (
     <div className="grid gap-3 text-sm">
       <p className="text-xs text-muted-foreground">
-        Settings, history, dashboards, notes and eval cases are saved in this browser only. Your
-        files are never saved; load them again after a reload.
+        Settings, history, dashboards, notes and eval cases are saved in this browser only. Files
+        are saved only if you choose to keep them.
       </p>
+      <KeepFilesSetting />
       <div className="flex flex-wrap gap-2">
         <Button size="sm" variant="outline" onClick={() => download(false)}>
           <Download aria-hidden />
@@ -99,9 +101,9 @@ export function LocalDataSettings() {
           <AlertDialogHeader>
             <AlertDialogTitle>Clear all local data?</AlertDialogTitle>
             <AlertDialogDescription>
-              This removes your settings (including a remembered API key), history, dashboards and
-              notes from this browser, then reloads AskData. Export your workspace first to keep a
-              copy.
+              This removes your settings (including a remembered API key), history, dashboards,
+              notes and any kept files from this browser, then reloads AskData. Export your
+              workspace first to keep a copy.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

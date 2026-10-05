@@ -44,6 +44,10 @@ test('the production build enforces its Content-Security-Policy', async ({ page 
     .getAttribute('content')
   expect(policy).toContain("default-src 'self'")
   expect(policy).toContain('connect-src')
+  // Only named hosts plus this computer (F-AI-06): never every https host.
+  const connect = /connect-src ([^;]*)/.exec(policy ?? '')?.[1] ?? ''
+  expect(connect.split(/\s+/)).not.toContain('https:')
+  expect(connect).toContain('http://localhost:*')
 
   // The app itself runs without violations: data, a chart, the SQL editor.
   await page.getByRole('button', { name: 'Try sample data', exact: true }).click()

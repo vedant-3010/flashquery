@@ -44,7 +44,7 @@ flowchart LR
 | Main thread | React, Zustand, prompt building, LLM calls (network I/O only), chart options | Nothing in this list is CPU-heavy; ECharts gets ≤ 5,000 points. |
 | DuckDB worker | Ingest, profiling, every query, grid pages, exports | Columnar, vectorized SQL. Big results stay in DuckDB as temp views. |
 | xlsx worker | Parsing workbooks into CSV bytes | SheetJS parsing is synchronous and slow on big files. |
-| Python worker | Pyodide + pandas, after the user approves the code | Isolated; terminated on Stop or timeout; `fetch`/XHR blocked during user code. |
+| Python worker | Pyodide + pandas: approved analysis code, and the scratchpad's notebook cells | Isolated; terminated on Stop or timeout; `fetch`/XHR blocked during user code. |
 
 - DuckDB runs without threads (no COOP/COEP headers), so queries run one at a time. Grid pages are
   small and stale ones are cancelled (`src/engine/connection.ts` serial queue).
@@ -114,12 +114,18 @@ sequenceDiagram
   200-row pages from the temp view (sorted and filtered in SQL). Charts read at most 5,000 points.
 - **Self-correction**: guard, EXPLAIN and execution errors go back to the model with the failing SQL,
   at most twice. After that, the user gets the error with the last SQL to edit.
+- **Exploration** (Balanced mode): before answering, the model may return up to three `explore` plans,
+  small guarded queries (≤ 20 rows) whose results go back to it inside `<data>`. Each is an "Exploring
+  data" step in the trace.
+- **Suggested joins**: when several tables are loaded, join keys found by name and value overlap
+  (`src/engine/relationships.ts`) are sent as `suggestedJoins`, unless the user dismissed them.
 
 ## What can leave the device
 
 | Mode | Sent to the LLM provider |
 |---|---|
 | Demo (no key) | Nothing. Answers are recorded plans; their SQL runs live on the device. |
+| Local server | The Strict or Balanced payload, to an OpenAI-compatible server on this computer (Ollama, LM Studio); nothing leaves the machine. |
 | Strict | Table names, row counts, column names and types, the user's notes. No values and no results; summaries are written locally. |
 | Balanced (default) | Strict, plus per-column null %, approximate distinct counts, min/max, up to 5 common values (≤ 40 chars), 3 sample rows. The AI summary gets the result (≤ 50 rows, otherwise statistics plus the first 10 and 5 highest/lowest rows). |
 
@@ -136,7 +142,8 @@ sequenceDiagram
 ## Defense in depth
 
 1. **Content-Security-Policy**, injected into `index.html` at build: `script-src 'self'
-   'wasm-unsafe-eval'`, and `connect-src` limited to the two LLM APIs and the two CDNs. Zod runs
+   'wasm-unsafe-eval'`, and `connect-src` limited to the two LLM APIs, the two CDNs and servers on
+   this computer (`localhost`, `127.0.0.1`) for local models. Zod runs
    jitless so nothing needs `eval`. `e2e/privacy.spec.ts` runs the production build and checks for no
    violations and that a third-party request is blocked.
 2. **SQL guard + extension lockdown** (above).
@@ -158,9 +165,11 @@ replaced by defaults, never half-loaded.
 | `notes` | business notes by schema hash, so re-loading the same file brings them back |
 | `evalCases` | 👍/👎 cases saved from answers, exportable in the evals format |
 | `suggestions` | AI-suggested questions by schema hash |
+| `persistedDatasets` | opt-in only: how to load each kept file again; the bytes live in OPFS (`askdata-files/`) |
 
-Files themselves are never stored. After a reload the user loads them again, and dashboards refresh
-once a table with the same schema hash is back. "Restart engine" re-ingests the retained `File`
+Files are stored only if the user turns on "Keep loaded files on this device": then their bytes go
+to the Origin Private File System and are loaded again at startup. Otherwise the user loads them
+again after a reload. Either way, dashboards refresh once a table with the same schema hash is back. "Restart engine" re-ingests the retained `File`
 handles, re-applies column type overrides and reopens every answer's view.
 
 ## Dashboards
@@ -169,6 +178,9 @@ A tile stores its SQL, chart spec and a snapshot. It renders the snapshot at onc
 through `src/dashboard/run.ts` (the same guard) when its tables are loaded. Dashboard filters create
 filtered views (`askdata_filtered_<table>`), and the tile SQL's table references are rewritten through
 the AST to point at them (`src/engine/filters.ts`), so filters work on any tile without string editing.
+Clicking a bar or slice adds such a filter (cross-filtering). A dashboard can be presented full screen
+(read-only), or exported as a standalone HTML file of its snapshots (inline SVG, no scripts) that
+also prints to PDF.
 
 ## Testing
 

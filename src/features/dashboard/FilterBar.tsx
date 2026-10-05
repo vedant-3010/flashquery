@@ -14,6 +14,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { crossFilterTarget } from '@/dashboard/crossFilter'
+import { describeFilter } from '@/dashboard/describeFilter'
 import type { Dashboard } from '@/dashboard/schema'
 import { getDb } from '@/engine/duckdb'
 import { MAX_VALUE_FILTERS, type DashboardFilter } from '@/engine/filters'
@@ -50,17 +52,6 @@ function candidatesFor(dashboard: Dashboard, datasets: DatasetProfile[]): Candid
             : [],
       ),
     )
-}
-
-function describeFilter(filter: DashboardFilter): string {
-  const name = humanizeName(filter.column)
-  if (filter.kind === 'date') {
-    if (filter.from && filter.to) return `${name}: ${filter.from} – ${filter.to}`
-    return filter.from ? `${name}: from ${filter.from}` : `${name}: until ${filter.to ?? ''}`
-  }
-  const shown = filter.values.slice(0, 3).map((v) => (v === null ? '(blank)' : String(v)))
-  const more = filter.values.length > 3 ? ` +${filter.values.length - 3}` : ''
-  return `${name}: ${shown.join(', ')}${more}`
 }
 
 function years(column: ColumnProfile): number[] {
@@ -272,6 +263,11 @@ function AddFilter({ dashboard, candidates }: { dashboard: Dashboard; candidates
 export function FilterBar({ dashboard }: { dashboard: Dashboard }) {
   const datasets = useDatasetsStore((state) => state.datasets)
   const candidates = useMemo(() => candidatesFor(dashboard, datasets), [dashboard, datasets])
+  // Cross-filtering (F-DASH-11) works on these tiles: say so next to "Add filter".
+  const clickable = useMemo(
+    () => dashboard.tiles.some((tile) => crossFilterTarget(tile, datasets) !== null),
+    [dashboard, datasets],
+  )
   const remove = (index: number) =>
     void applyFilters(
       dashboard.id,
@@ -303,6 +299,9 @@ export function FilterBar({ dashboard }: { dashboard: Dashboard }) {
       <AddFilter dashboard={dashboard} candidates={candidates} />
       {candidates.length === 0 && (
         <span className="text-xs text-muted-foreground">Load the data to add filters.</span>
+      )}
+      {clickable && dashboard.filters.length === 0 && (
+        <span className="text-xs text-muted-foreground">or click a bar or slice</span>
       )}
     </div>
   )

@@ -1,5 +1,6 @@
 import { RotateCcw } from 'lucide-react'
 import { useState } from 'react'
+import { EngineMemory } from '@/app/EngineMemory'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
@@ -24,7 +25,10 @@ const PYTHON: Record<PythonStatus, string> = {
   error: 'Failed to load',
 }
 
-/** Engine status in the top bar; the popover explains it and offers "Restart engine" (F-SHELL-03). */
+/**
+ * Engine status in the top bar; the popover explains it, shows DuckDB's memory (F-PERF-05) and
+ * offers "Restart engine" (F-SHELL-03).
+ */
 export function EngineStatusBadge() {
   const { status, version, error, python } = useEngineStore()
   const restarting = useDatasetsStore((state) => state.restarting)
@@ -50,6 +54,7 @@ export function EngineStatusBadge() {
           </dd>
           <dt className="text-muted-foreground">Python</dt>
           <dd>{PYTHON[python]}</dd>
+          {status === 'ready' && <EngineMemory />}
         </dl>
         <p className="mt-2 text-xs text-muted-foreground">
           Both run inside this browser tab. Your data is never uploaded.

@@ -43,3 +43,36 @@ test('J5: forecast with Python, run only after approval (F-PY-01…04)', async (
   await card.getByText('Output (print)').click()
   await expect(card).toContainText(/Trend: \+/)
 })
+
+test('notebook cells share a session and show matplotlib figures (F-PY-06)', async ({ page }) => {
+  await page.goto('/')
+  await loadSales(page)
+  await page.getByRole('tablist', { name: 'Views' }).getByRole('tab', { name: 'SQL' }).click()
+  await page.getByRole('tab', { name: 'Python notebook' }).click()
+  await page.getByRole('combobox', { name: 'Load df from' }).click()
+  await page.getByRole('option', { name: 'global_sales' }).click()
+  await page.getByRole('button', { name: 'Load into df' }).click()
+  await expect(page.getByRole('status').filter({ hasText: 'df:' })).toHaveText(
+    'df: 10,000 rows from global_sales',
+    { timeout: 180_000 },
+  )
+
+  const first = page.getByRole('region', { name: 'Cell 1', exact: true })
+  await first.getByRole('button', { name: 'Run' }).click()
+  const firstOutput = page.getByRole('region', { name: 'Output of cell 1' })
+  await expect(firstOutput.getByRole('table')).toContainText('revenue', { timeout: 120_000 })
+  await expect(first).toContainText('[1]')
+
+  await page.getByRole('button', { name: 'Add cell', exact: true }).click()
+  const second = page.getByRole('region', { name: 'Cell 2', exact: true })
+  await second.getByLabel('Code of cell 2').click()
+  await page.keyboard.type(
+    'by_region = df.groupby("region").revenue.sum()\nby_region.plot(kind="bar")\nplt.title("Revenue by region")\nlen(by_region)',
+  )
+  await page.keyboard.press('ControlOrMeta+Enter')
+  const secondOutput = page.getByRole('region', { name: 'Output of cell 2' })
+  await expect(secondOutput.getByRole('img', { name: 'Figure 1 from cell 2' })).toBeVisible({
+    timeout: 120_000,
+  })
+  await expect(secondOutput).toContainText('5')
+})

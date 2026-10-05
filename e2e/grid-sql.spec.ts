@@ -259,3 +259,21 @@ test.describe('filters, columns and copy (F-GRID-04, F-GRID-05)', () => {
     expect(block).toMatch(/^APAC\t\d+\nAPAC\t\d+\n$/)
   })
 })
+
+test.describe('query plan (F-EXPL-09)', () => {
+  test('shows the EXPLAIN ANALYZE tree with timings for a scratchpad query', async ({ page }) => {
+    await loadSample(page, 'Global Sales · 10k rows')
+    await runSql(
+      page,
+      'select region, sum(revenue) as revenue from global_sales group by all order by revenue desc',
+    )
+    await expect(cell(page, 1, 0)).toHaveText('APAC')
+    await page.getByRole('tab', { name: 'Plan' }).click()
+    const plan = page.getByRole('region', { name: 'Query plan' })
+    await plan.getByRole('button', { name: 'Show query plan' }).click()
+    await expect(plan).toContainText(/Ran in [\d.]+\s*(ms|s)/)
+    await expect(plan).toContainText('Hash group by')
+    await expect(plan).toContainText('10,000 scanned')
+    await expect(plan).toContainText('global_sales')
+  })
+})

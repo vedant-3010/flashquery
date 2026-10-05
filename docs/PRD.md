@@ -115,7 +115,7 @@ Format: `ID (priority) Title: description. AC: acceptance criteria.`
 - [x] **F-SHELL-04 (P1) Theme**: light/dark/system, persisted. AC: charts switch theme without re-creating data.
 - [x] **F-SHELL-05 (P1) Guided tour**: 3 dismissible steps on first run; remembered.
 - [x] **F-SHELL-06 (P1) Shortcuts dialog** (`?`) listing all shortcuts.
-- [ ] **F-SHELL-07 (P2) Command palette** (Ctrl/Cmd+K): datasets, questions, dashboards, settings.
+- [x] **F-SHELL-07 (P2) Command palette** (Ctrl/Cmd+K): datasets, questions, dashboards, settings.
 
 
 
@@ -139,8 +139,8 @@ Format: `ID (priority) Title: description. AC: acceptance criteria.`
 - [x] **F-DATA-09 (P1) Column type override** (e.g. VARCHAR → DATE with format) via `TRY_CAST`, reporting
   how many values failed to convert.
 - [x] **F-DATA-10 (P1) Paste data**: paste TSV from Excel/Sheets → new table.
-- [ ] **F-DATA-11 (P2) Load from URL** (public CSV/Parquet); off by default; needs a CSP exception.
-- [ ] **F-DATA-12 (P2) Persist datasets across reloads** via OPFS (opt-in).
+- [ ] **F-DATA-11 (P2) Load from URL** (public CSV/Parquet); off by default; needs a CSP exception. *(Not done: D86.)*
+- [x] **F-DATA-12 (P2) Persist datasets across reloads** via OPFS (opt-in).
 
 
 
@@ -157,7 +157,7 @@ Format: `ID (priority) Title: description. AC: acceptance criteria.`
 - [x] **F-PROF-05 (P1) Business notes**: free text per dataset and per column (description, unit, currency),
   e.g. "fiscal year starts in April", "amounts are INR". Included in prompts as data.
 - [x] **F-PROF-06 (P1) Mini histograms / top-value bars** in the profile popover.
-- [ ] **F-PROF-07 (P2) Relationship detection** across tables (name/type match + value overlap) → suggested
+- [x] **F-PROF-07 (P2) Relationship detection** across tables (name/type match + value overlap) → suggested
   joins shown to the user and included in the prompt.
 
 
@@ -186,8 +186,8 @@ Format: `ID (priority) Title: description. AC: acceptance criteria.`
   Global Sales (§9); labelled "Demo answers are pre-recorded; SQL runs live on your device".
 - [x] **F-AI-04 (P1) Usage meter**: tokens and estimated cost per answer and per session (editable price
   table in `src/ai/models.ts`).
-- [ ] **F-AI-05 (P2) Local model mode** via WebLLM (WebGPU): download with progress; quality warning.
-- [ ] **F-AI-06 (P2) OpenAI-compatible base URL** (e.g. a local Ollama/LM Studio server).
+- [ ] **F-AI-05 (P2) Local model mode** via WebLLM (WebGPU): download with progress; quality warning. *(Not done: D86; F-AI-06 covers local models.)*
+- [x] **F-AI-06 (P2) OpenAI-compatible base URL** (e.g. a local Ollama/LM Studio server).
 
 
 
@@ -213,7 +213,7 @@ Format: `ID (priority) Title: description. AC: acceptance criteria.`
 - [x] **F-ASK-13 (P1) Clarification chips** when kind = clarify; choosing one continues the pipeline.
 - [x] **F-ASK-14 (P1) Feedback**: 👍/👎 per answer; 👎 asks what was wrong and offers "Save as eval case"
   (stored locally, exportable to `evals/` format).
-- [ ] **F-ASK-15 (P2) Multi-step exploration**: up to 3 exploratory queries (e.g. check distinct values)
+- [x] **F-ASK-15 (P2) Multi-step exploration**: up to 3 exploratory queries (e.g. check distinct values)
   before the final SQL, all visible in the trace.
 
 
@@ -231,7 +231,7 @@ Format: `ID (priority) Title: description. AC: acceptance criteria.`
 - [x] **F-EXPL-06 (P1) Trace tab**: every attempt (SQL, error, fix), stage timings, tokens.
 - [x] **F-EXPL-07 (P0) SQL scratchpad**: standalone editor to query tables directly; results in grid + chart.
 - [x] **F-EXPL-08 (P1) Schema-aware autocomplete** in the SQL editor (tables, columns).
-- [ ] **F-EXPL-09 (P2) Query plan view**: `EXPLAIN ANALYZE` rendered as a tree with timings.
+- [x] **F-EXPL-09 (P2) Query plan view**: `EXPLAIN ANALYZE` rendered as a tree with timings.
 
 
 
@@ -248,7 +248,7 @@ Format: `ID (priority) Title: description. AC: acceptance criteria.`
   AC: a 1M-row scatter request is sampled in SQL and renders in < 300 ms.
 - [x] **F-VIZ-06 (P1) Chart settings popover**: x / y / series pickers, sort, stack, log scale, labels.
 - [x] **F-VIZ-07 (P1) Export chart** as PNG/SVG; copy image to clipboard.
-- [ ] **F-VIZ-08 (P2) Annotations**: max/min markers, average line, target line.
+- [x] **F-VIZ-08 (P2) Annotations**: max/min markers, average line, target line.
 
 
 
@@ -267,9 +267,9 @@ Format: `ID (priority) Title: description. AC: acceptance criteria.`
 - [x] **F-DASH-10 (P1) Global filters**: date range + up to 3 categorical filters applied to every tile by
   rewriting base-table references to filtered temp views (AST rewrite via `json_serialize_sql` /
   `json_deserialize_sql`; fallback: CTE wrapper). AC: filter change refreshes all tiles < 1 s on 1M rows.
-- [ ] **F-DASH-11 (P2) Cross-filtering**: clicking a bar/slice filters other tiles.
-- [ ] **F-DASH-12 (P2) Export** as PNG/PDF, or a standalone HTML file with embedded snapshots.
-- [ ] **F-DASH-13 (P2) Presentation mode**: full screen, read-only.
+- [x] **F-DASH-11 (P2) Cross-filtering**: clicking a bar/slice filters other tiles.
+- [x] **F-DASH-12 (P2) Export** as PNG/PDF, or a standalone HTML file with embedded snapshots.
+- [x] **F-DASH-13 (P2) Presentation mode**: full screen, read-only.
 
 
 
@@ -283,7 +283,7 @@ Format: `ID (priority) Title: description. AC: acceptance criteria.`
 - [x] **F-PY-04 (P1) Outputs**: `result` DataFrame → table + auto chart; `summary` text; stdout panel;
   traceback on error (one self-correction retry with user consent).
 - [x] **F-PY-05 (P1) Timeout & stop**: terminate + recreate the worker; UI explains the reset.
-- [ ] **F-PY-06 (P2) Notebook-style Python cells** in the scratchpad; matplotlib figures captured as PNG.
+- [x] **F-PY-06 (P2) Notebook-style Python cells** in the scratchpad; matplotlib figures captured as PNG.
 
 
 
@@ -308,7 +308,7 @@ Format: `ID (priority) Title: description. AC: acceptance criteria.`
   retained files and restores views.
 - [x] **F-PERF-04 (P1) Benchmark panel** (`#/bench`): ingest time, query p50/p95 on a fixed query set,
   grid scroll, memory (where available); copy results as markdown for the README.
-- [ ] **F-PERF-05 (P2) Engine memory indicator** from DuckDB memory stats.
+- [x] **F-PERF-05 (P2) Engine memory indicator** from DuckDB memory stats.
 
 
 
@@ -858,6 +858,64 @@ open until `npm run evals` runs with a key.
 - **D84** "How it works" (F-SHIP-04) opens from the top bar (?) as well as the first-run screen. It
 adds a table of what each privacy mode sends, says demo mode sends nothing, and has buttons for the AI
 inspector and the privacy settings.
+- **D85** Local OpenAI-compatible server (F-AI-06): a third provider, `local`, through the OpenAI client
+with a base URL (presets for Ollama and LM Studio), JSON-schema output without OpenAI's `strict` flag,
+one model for plans and summaries, and a placeholder key when none is given. The CSP allows only
+`http://localhost:*` and `http://127.0.0.1:*` (chosen 2026-10-06: localhost only), and the URL field
+refuses anything else. The server must accept the page's origin (CORS, e.g. `OLLAMA_ORIGINS`); from the
+deployed site, Chrome may also ask to allow local network access. Requests still go to the inspector
+and follow the privacy mode. Settings v5 adds `baseUrl` and the local model and key.
+- **D86** Not done (chosen 2026-10-06): F-AI-05 WebLLM (a new dependency, gigabytes of model downloads
+from new hosts, WebGPU only, and small models write noticeably worse SQL; D85 covers on-device models)
+and F-DATA-11 Load from URL (it needs `connect-src` for any https host, which would end the "only the
+LLM APIs and two CDNs" guarantee for every user).
+- **D87** Command palette (F-SHELL-07): our own Dialog with a combobox and listbox, no `cmdk`
+dependency. Every word of the query must match a command's label, group or keywords; matches at the
+start of the label rank first. Ctrl/Cmd+K works everywhere, even while typing.
+- **D88** Engine memory (F-PERF-05): `duckdb_memory()` in the engine popover, polled every 2 s while it is
+open: the total, what spilled to temp files, and the four largest consumers under friendly names.
+- **D89** Query plan (F-EXPL-09): `EXPLAIN (ANALYZE, FORMAT JSON)` on request, since it runs the query
+again, and only for SQL that already ran: an answer's guarded SQL, or the scratchpad's last successful
+query. DuckDB's internal string (de)compression projections are folded out of the tree.
+- **D90** Annotations (F-VIZ-08): an optional `ChartSpec.annotations` (older saved charts still load),
+drawn as ECharts markPoint/markLine with text labels, so meaning never rests on colour. Stacked charts
+get only the target line. Percent charts take the target in %. A target outside the data stretches the
+value axis to a round number so the line stays visible. The chart's text alternative lists them.
+- **D91** Relationship detection (F-PROF-07): candidate columns by name (the same name, or `<table>_id`
+next to that table's `id`) with key-like types and roles; kept when at least 50% of one side's
+distinct values appear in the other; pointed from the many side to the unique one. Detected again
+400 ms after the set of tables changes. Shown in the catalog, dismissable for the session, and sent as
+`suggestedJoins` inside `<data>` (the match % in Balanced mode only), with one rule line in the prompt.
+- **D92** Cross-filtering (F-DASH-11): a click on a bar or slice adds an ordinary dashboard value filter on
+the category column, so every tile, the clicked one included, is filtered and the filter bar shows it;
+clicking it again clears it. It needs the category to be a real column of a table the tile reads (not a
+computed label). Off in presentation mode; the filter bar is the keyboard alternative.
+- **D93** Presentation mode (F-DASH-13): the Fullscreen API on the dashboard's root element (one element in
+both modes), with a full-window overlay where full screen isn't available. Read-only: no dragging,
+resizing, tile menus or cross-filtering, and layout changes aren't saved. Esc ends it.
+- **D94** Dashboard export (F-DASH-12): one standalone HTML file (charts as inline SVG from ECharts' SVG
+renderer, KPIs, the first 50 table rows, markdown text) with its own CSP (no scripts, no network) and
+everything from the data escaped. "Print or save as PDF" opens that file and the browser's print
+dialog. PNG isn't offered: it would need a DOM-to-image dependency.
+- **D95** Kept files (F-DATA-12): an opt-in setting (`persistFiles`, settings v5). Each loaded file's bytes
+go to OPFS (`askdata-files/<dataset id>`), and an IndexedDB manifest (`persistedDatasets` v1) records
+how to load it again (CSV options, sheet, type overrides). Samples are regenerated, not stored. The
+manifest is replayed at startup through the normal ingest jobs; entries survive an engine restart and
+jobs still loading. Turning the setting off, or "Clear all local data", deletes the files.
+`navigator.storage.persist()` is requested when it is turned on.
+- **D96** Exploration (F-ASK-15): a plan kind `explore`, in Balanced mode only, since its results are
+data values. The query passes the guard and returns at most 20 rows within 10 s, and goes back to the
+model in `<data>`. Up to 3 explorations, not counted as repair attempts; then the model is told to
+answer, and the answer fails if it keeps exploring. Each one is an "Exploring data" trace step with its
+SQL, and the inspector's data-value count includes the returned values.
+- **D97** Python notebook (F-PY-06): a scratchpad tab for the user's own code, so no approval step. It
+shares the analysis worker and session but has its own namespace. `df` loads from a table or the last
+SQL result (same 200k-row cap and sampling), and the network is locked while a cell runs. The last
+expression is shown (DataFrames as a table of ≤ 50 rows, numbers plainly, anything else as its repr).
+matplotlib draws with the Agg backend and figures come back as PNG data URLs (at most 6 per cell). Stop
+and the timeout reset the session, so `df` has to be loaded again. Cells aren't saved.
+- **D98** Bundle after the stretch items: initial JS 278 KB gzip (+8 KB); the notebook, benchmark and
+dashboard are lazy chunks.
 - **D12** Shared hooks live in `src/hooks/` and shared app components in `src/components/` (outside the
 generated `ui/`), matching the shadcn aliases in `components.json`.
 

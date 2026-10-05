@@ -92,3 +92,67 @@ test('notes come back with the data; the workspace exports, clears and imports',
     page.getByText(/Imported 0 dashboards, 1 history entries and notes for 1 datasets/),
   ).toBeVisible()
 })
+
+/** Datasets listed in the kept-files manifest (F-DATA-12), read straight from IndexedDB. */
+async function keptCount(page: Page): Promise<number> {
+  return page.evaluate(
+    () =>
+      new Promise<number>((resolve) => {
+        const open = indexedDB.open('askdata')
+        open.onerror = () => resolve(-1)
+        open.onsuccess = () => {
+          const db = open.result
+          try {
+            const request = db
+              .transaction('records')
+              .objectStore('records')
+              .get('persistedDatasets')
+            request.onsuccess = () => {
+              resolve(request.result?.data?.length ?? 0)
+              db.close()
+            }
+          } catch {
+            db.close()
+            resolve(0)
+          }
+        }
+      }),
+  )
+}
+
+test('kept files load again after a reload, until the setting is turned off', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Settings', exact: true }).click()
+  await page.getByRole('checkbox', { name: 'Keep loaded files on this device' }).check()
+  await page.keyboard.press('Escape')
+
+  await loadSales(page)
+  await page
+    .getByTestId('file-input')
+    .first()
+    .setInputFiles({
+      name: 'regions.csv',
+      mimeType: 'text/csv',
+      buffer: Buffer.from('region,target\nAPAC,100\nMEA,40\n'),
+    })
+  await expect(page.getByRole('region', { name: 'regions.csv' })).toBeVisible()
+  await page.getByRole('button', { name: 'Paste data' }).click()
+  await page.getByRole('textbox', { name: /^Cells/ }).fill('a\tb\n1\t2\n')
+  await page.getByRole('button', { name: 'Create table' }).click()
+  await expect(page.getByRole('region', { name: 'Pasted data' })).toBeVisible()
+  await expect.poll(() => keptCount(page)).toBe(3)
+
+  await page.reload()
+  for (const name of ['Global Sales · 10k rows', 'regions.csv', 'Pasted data']) {
+    await expect(page.getByRole('region', { name })).toBeVisible({ timeout: 60_000 })
+  }
+  await expect(page.getByRole('region', { name: 'regions.csv' })).toContainText('regions · 2 rows')
+
+  await page.getByRole('button', { name: 'Settings', exact: true }).click()
+  await page.getByRole('checkbox', { name: 'Keep loaded files on this device' }).uncheck()
+  await page.keyboard.press('Escape')
+  await expect.poll(() => keptCount(page)).toBe(0)
+  await page.reload()
+  await expect(page.getByRole('heading', { name: 'Ask your data anything' })).toBeVisible()
+  await expect(page.getByRole('region', { name: 'regions.csv' })).toHaveCount(0)
+})

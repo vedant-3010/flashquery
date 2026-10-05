@@ -17,6 +17,7 @@ exports[`buildPlanMessages > matches the snapshot 1`] = `
 # Rules
 - Write exactly one SELECT statement. CTEs (WITH ...) are fine. Never write INSERT, UPDATE, DELETE, CREATE, COPY, ATTACH, SET, PRAGMA or INSTALL.
 - Use only the tables and columns listed in <data>. Never invent columns. Check column types before comparing or casting.
+- suggestedJoins in <data> are join keys found by matching column names and values (many-to-one points to the unique side). Use them when a question needs more than one table; many-to-many joins multiply rows, so aggregate each side first.
 - Alias computed columns in snake_case (total_revenue, growth_pct).
 - Order rankings by the measure (DESC) and time series by time (ASC). Use LIMIT for "top N".
 - Aggregate in SQL so the result has at most 5,000 rows.
@@ -71,6 +72,8 @@ alternatives: ["How many customers ordered in each year?", "Which segment has th
   },
   {
     "content": "Today is 2026-09-28.
+
+Strict privacy mode: no data values are shared, so kind 'explore' is not available.
 
 Question: Revenue by region?",
     "role": "user",

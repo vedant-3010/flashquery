@@ -41,8 +41,8 @@ export function TraceTab({ trace }: { trace: TraceStep[] }) {
             )}
           </div>
           {step.error && <p className="mt-1 text-destructive">{step.error}</p>}
-          {/* Each attempt's SQL, once: where it was checked. */}
-          {step.sql && step.stage === 'guard' && (
+          {/* Each attempt's SQL, once: where it was checked; and every exploration query. */}
+          {step.sql && (step.stage === 'guard' || step.stage === 'explore') && (
             <pre className="mt-1 max-h-40 overflow-auto rounded bg-muted p-2 font-mono whitespace-pre-wrap">
               {step.sql}
             </pre>
