@@ -1,4 +1,5 @@
 import {
+  CircleHelp,
   Keyboard,
   LayoutDashboard,
   MessageSquareText,
@@ -25,6 +26,7 @@ export function TopBar({ showSidebarToggle }: TopBarProps) {
   const setSidePanelOpen = useUiStore((state) => state.setSidePanelOpen)
   const setSettingsOpen = useUiStore((state) => state.setSettingsOpen)
   const setShortcutsOpen = useUiStore((state) => state.setShortcutsOpen)
+  const setHowItWorksOpen = useUiStore((state) => state.setHowItWorksOpen)
 
   return (
     <header className="flex h-12 shrink-0 items-center gap-3 border-b px-3">
@@ -55,6 +57,9 @@ export function TopBar({ showSidebarToggle }: TopBarProps) {
         <PrivacyBadge />
         <EngineStatusBadge />
         <ThemeMenu />
+        <IconButton label="How AskData works" onClick={() => setHowItWorksOpen(true)}>
+          <CircleHelp />
+        </IconButton>
         <IconButton label="Keyboard shortcuts (?)" onClick={() => setShortcutsOpen(true)}>
           <Keyboard />
         </IconButton>

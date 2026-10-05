@@ -357,11 +357,13 @@ Format: `ID (priority) Title: description. AC: acceptance criteria.`
 ### 4.16 Ship & portfolio (F-SHIP)
 
 - [ ] **F-SHIP-01 (P0) Deploy** as a static site (Vercel, Netlify or Cloudflare Pages); wasm served as
-  `application/wasm`.
-- [ ] **F-SHIP-02 (P0) README**: demo GIF, 3-sentence pitch, architecture diagram (Mermaid), privacy-mode
-  table, benchmark numbers, eval accuracy, key decisions and trade-offs, how to run.
-- [ ] **F-SHIP-03 (P1)** `docs/ARCHITECTURE.md`: threading model + sequence diagram of the ask pipeline.
-- [ ] **F-SHIP-04 (P1) In-app "How it works"** modal explaining the privacy model, linking to the inspector.
+  `application/wasm`. *(Config, test and guide done (D81); the first deploy needs the owner's Vercel
+  account: `docs/DEPLOY.md`.)*
+- [x] **F-SHIP-02 (P0) README**: demo GIF, 3-sentence pitch, architecture diagram (Mermaid), privacy-mode
+  table, benchmark numbers, eval accuracy, key decisions and trade-offs, how to run. *(Demo as an animated PNG, D82;
+  eval accuracy not measured yet, D83.)*
+- [x] **F-SHIP-03 (P1)** `docs/ARCHITECTURE.md`: threading model + sequence diagram of the ask pipeline.
+- [x] **F-SHIP-04 (P1) In-app "How it works"** modal explaining the privacy model, linking to the inspector.
 
 ---
 
@@ -838,6 +840,24 @@ machine. Not measured: download time over a real network, the LLM p50 (needs a k
 Safari (only Chromium is installed).
 - **D80** Bundle after M7: initial JS 269 KB gzip (+20 KB: grid filters and selection, import
 dialogs, feedback, suggestions, notes, workspace). The bench page is its own lazy chunk.
+- **D81** Hosting: Vercel (chosen 2026-10-06). `vercel.json` builds with `npm ci` / `npm run build`
+into `dist` and sets headers: `application/wasm` for `.wasm` (explicit), immutable caching for hashed
+`/assets/*`, a day for `/samples/*`, and on every path `nosniff`, `no-referrer`, a Permissions-Policy,
+`X-Frame-Options: DENY` and `Content-Security-Policy: frame-ancestors 'none'` (the meta CSP can't set
+`frame-ancestors`, D66). Node 24.x via `engines`. Cloudflare Pages was ruled out: its 25 MiB file
+limit is below the 34 and 39 MiB DuckDB wasm files. `src/test/vercelConfig.test.ts` checks the
+headers; `docs/DEPLOY.md` has the steps and a post-deploy checklist.
+- **D82** The README demo is an animated PNG (APNG, `docs/demo.png`) rather than a GIF: full colour and
+sharp text, and no ffmpeg or new dependency. `scripts/record-demo.mjs` serves the build with
+`vite preview`, drives demo mode with Playwright (1M-row sample, two questions, SQL and explanation
+tabs, a generated dashboard, the privacy model, dark mode) and joins the screenshots into 11 frames
+(1.2 MB). Browsers and GitHub animate it; viewers without APNG support show the first frame.
+- **D83** The README ships without a measured eval accuracy (chosen 2026-10-06): it describes the
+method and the dry-run harness (53/53) and says accuracy is still to be measured, so F-QA-04 stays
+open until `npm run evals` runs with a key.
+- **D84** "How it works" (F-SHIP-04) opens from the top bar (?) as well as the first-run screen. It
+adds a table of what each privacy mode sends, says demo mode sends nothing, and has buttons for the AI
+inspector and the privacy settings.
 - **D12** Shared hooks live in `src/hooks/` and shared app components in `src/components/` (outside the
 generated `ui/`), matching the shadcn aliases in `components.json`.
 

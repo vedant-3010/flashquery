@@ -1,10 +1,14 @@
+import { ScanEye, Settings } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { activeApiKey, useSettingsStore } from '@/stores/settings'
 import { useUiStore } from '@/stores/ui'
 
 const STEPS = [
@@ -26,14 +30,35 @@ const STEPS = [
   },
 ]
 
-/** A plain-language tour of the privacy model, from the first-run screen (F-SHELL-02). */
+const MODES = [
+  {
+    mode: 'strict',
+    name: 'Strict',
+    sent: 'Table and column names, types, row counts and your notes. No values, no results.',
+  },
+  {
+    mode: 'balanced',
+    name: 'Balanced',
+    sent: 'Strict, plus per-column statistics, up to 5 common values, 3 sample rows (text cut to 40 characters), and the result (≤ 50 rows, or a digest) for the AI summary.',
+  },
+] as const
+
+/**
+ * A plain-language tour of the privacy model (F-SHELL-02, F-SHIP-04), from the first-run screen and
+ * the top bar; links to the AI inspector, where every request is shown as sent.
+ */
 export function HowItWorksDialog() {
   const open = useUiStore((state) => state.howItWorksOpen)
   const setOpen = useUiStore((state) => state.setHowItWorksOpen)
+  const setSidePanelOpen = useUiStore((state) => state.setSidePanelOpen)
+  const setSidePanelTab = useUiStore((state) => state.setSidePanelTab)
+  const setSettingsOpen = useUiStore((state) => state.setSettingsOpen)
+  const mode = useSettingsStore((state) => state.privacyMode)
+  const demo = useSettingsStore((state) => activeApiKey(state) === null)
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>How AskData works</DialogTitle>
           <DialogDescription>
@@ -56,6 +81,51 @@ export function HowItWorksDialog() {
             </li>
           ))}
         </ol>
+        <table className="w-full text-left text-xs">
+          <caption className="pb-1 text-left text-sm font-medium">
+            What the AI receives in each privacy mode
+          </caption>
+          <tbody>
+            {MODES.map((row) => (
+              <tr key={row.mode} className="border-t align-top">
+                <th scope="row" className="py-1.5 pr-3 font-medium whitespace-nowrap">
+                  {row.name}
+                  {row.mode === mode && (
+                    <span className="block font-normal text-muted-foreground">(yours)</span>
+                  )}
+                </th>
+                <td className="py-1.5 text-muted-foreground">{row.sent}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <p className="text-xs text-muted-foreground">
+          {demo
+            ? 'Demo mode sends nothing: its answers are pre-recorded and the SQL runs on your device.'
+            : 'Requests go straight from your browser to the AI provider with your key. Your rows and files stay here.'}
+        </p>
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setOpen(false)
+              setSettingsOpen(true)
+            }}
+          >
+            <Settings aria-hidden />
+            Privacy settings
+          </Button>
+          <Button
+            onClick={() => {
+              setOpen(false)
+              setSidePanelTab('inspector')
+              setSidePanelOpen(true)
+            }}
+          >
+            <ScanEye aria-hidden />
+            Open the AI inspector
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   )

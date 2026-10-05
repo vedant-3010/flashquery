@@ -174,6 +174,39 @@ async function addKey(page: Page, { remember = false } = {}) {
   return dialog
 }
 
+/**
+ * Waits until IndexedDB holds the settings with `remembered` (true: the key is saved too). Saving is
+ * async, so reloading right after a change would race it.
+ */
+async function settingsSaved(page: Page, remembered: boolean) {
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          new Promise<string | null>((resolve) => {
+            const open = indexedDB.open('askdata')
+            open.onerror = () => resolve(null)
+            open.onsuccess = () => {
+              const db = open.result
+              try {
+                const request = db.transaction('records').objectStore('records').get('settings')
+                request.onsuccess = () => {
+                  const data = request.result?.data
+                  resolve(data ? `${data.rememberKey}:${data.apiKeys?.anthropic !== null}` : null)
+                  db.close()
+                }
+                request.onerror = () => resolve(null)
+              } catch {
+                db.close()
+                resolve(null)
+              }
+            }
+          }),
+      ),
+    )
+    .toBe(remembered ? 'true:true' : 'false:false')
+}
+
 async function loadSales(page: Page) {
   await page.getByRole('button', { name: 'Try sample data', exact: true }).click()
   await page.getByRole('menuitem', { name: 'Global Sales · 10k rows' }).click()
@@ -253,6 +286,7 @@ test.describe('J2: own key (F-AI-01, F-ASK-03…09)', () => {
     const dialog = await addKey(page, { remember: true })
     await expect(dialog).toContainText('anyone using this browser profile could read it')
     await page.keyboard.press('Escape')
+    await settingsSaved(page, true)
     await page.reload()
     await expect(page.getByRole('button', { name: 'Demo' })).toBeHidden()
     await page.getByRole('button', { name: 'Settings' }).click()
@@ -260,6 +294,7 @@ test.describe('J2: own key (F-AI-01, F-ASK-03…09)', () => {
 
     await dialog.getByRole('checkbox', { name: 'Remember on this device' }).uncheck()
     await page.keyboard.press('Escape')
+    await settingsSaved(page, false)
     await page.reload()
     await expect(page.getByRole('button', { name: 'Demo' })).toBeVisible()
   })
