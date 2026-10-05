@@ -10,7 +10,10 @@ import { useSettingsStore } from '@/stores/settings'
 // Guard + EXPLAIN show as one "Checking SQL" item; later attempts read "Fixing SQL".
 
 interface Item {
+  /** Unique: explorations (F-ASK-15) mean a stage can repeat within one attempt. */
   key: string
+  /** stage-attempt, to fold EXPLAIN into its guard check. */
+  group: string
   label: string
   status: TraceStep['status']
   startedAt: number
@@ -19,13 +22,13 @@ interface Item {
 
 function items(trace: TraceStep[]): Item[] {
   const out: Item[] = []
-  for (const step of trace) {
+  trace.forEach((step, index) => {
     if (step.stage === 'explain') {
       const check = out.at(-1)
-      if (check && check.key === `guard-${step.attempt}`) {
+      if (check && check.group === `guard-${step.attempt}`) {
         check.status = step.status
         check.ms = (check.ms ?? 0) + (step.ms ?? 0)
-        continue
+        return
       }
     }
     const label =
@@ -33,13 +36,14 @@ function items(trace: TraceStep[]): Item[] {
         ? `Fixing SQL (${step.attempt})`
         : STAGE_LABELS[step.stage]
     out.push({
-      key: `${step.stage}-${step.attempt}`,
+      key: `${step.stage}-${step.attempt}-${index}`,
+      group: `${step.stage}-${step.attempt}`,
       label,
       status: step.status,
       startedAt: step.startedAt,
       ms: step.ms,
     })
-  }
+  })
   return out
 }
 

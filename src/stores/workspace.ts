@@ -1,6 +1,7 @@
 import { z } from '@/lib/zod'
 import { DashboardSchema, type DashboardTile } from '@/dashboard/schema'
 import { idbStore } from '@/lib/idb'
+import { clearOpfs } from '@/lib/opfs'
 import { AppError } from '@/lib/errors'
 import { THEME_STORAGE_KEY } from '@/lib/theme'
 import { useDashboardStore } from '@/stores/dashboard'
@@ -101,6 +102,7 @@ export function importWorkspace(text: string): {
 /** Removes everything AskData saved in this browser, then reloads (F-EXP-04). */
 export async function clearLocalData(): Promise<void> {
   await idbStore.clear()
+  await clearOpfs()
   localStorage.removeItem(THEME_STORAGE_KEY)
   window.location.reload()
 }

@@ -9,7 +9,14 @@ const ChartView = lazy(() =>
 )
 
 /** What a tile shows: its chart, KPI, table (from the snapshot) or markdown. */
-export function TileBody({ tile }: { tile: DashboardTile }) {
+export function TileBody({
+  tile,
+  onSelect,
+}: {
+  tile: DashboardTile
+  /** Clicking a bar or slice filters the dashboard (F-DASH-11); absent when it can't. */
+  onSelect?: (value: string) => void
+}) {
   if (tile.type === 'text') return <Markdown text={tile.text ?? ''} />
   const { snapshot } = tile
   if (!snapshot) {
@@ -29,6 +36,7 @@ export function TileBody({ tile }: { tile: DashboardTile }) {
           sampling: snapshot.sampling,
         }}
         compact
+        onSelect={onSelect}
         className="h-full w-full"
       />
     </Suspense>

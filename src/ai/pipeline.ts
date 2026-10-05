@@ -7,6 +7,14 @@ import {
 } from '@/ai/context'
 import type { AiLogEntry } from '@/ai/log'
 import {
+  describeExploration,
+  explorationValues,
+  exploreQuery,
+  MAX_EXPLORATIONS,
+} from '@/ai/explore'
+import {
+  buildExploreMessages,
+  buildNoExploreMessages,
   buildPlanMessages,
   buildRepairMessages,
   type PromptMessage,
@@ -25,6 +33,7 @@ import type { Engine } from '@/engine/connection'
 import { openQuery, type PagedResult } from '@/engine/paging'
 import { DEFAULT_TIMEOUT_MS } from '@/engine/query'
 import { guardSql } from '@/engine/sqlGuard'
+import type { Relationship } from '@/engine/relationships'
 import type { CellValue, DatasetProfile } from '@/engine/types'
 import { AppError, isCancellation, toAppError, type AppErrorData } from '@/lib/errors'
 
@@ -43,6 +52,8 @@ export interface PipelineInput {
   engine: Engine
   /** Tables in scope. */
   datasets: DatasetProfile[]
+  /** Join keys between them (F-PROF-07), already without the ones the user dismissed. */
+  relationships?: readonly Relationship[]
   mode: PrivacyMode
   history: Turn[]
   locale: string
@@ -376,7 +387,7 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineOutcome
       mode === 'balanced' && provider.remote
         ? await fetchSamples(engine, tables, signal)
         : undefined
-    return buildContext({ datasets, mode, samples })
+    return buildContext({ datasets, mode, samples, relationships: input.relationships })
   })
 
   const call: PlanCall = {
@@ -397,6 +408,8 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineOutcome
   })
   let current: SqlPlan | null = null
   let lastSql: string | null = null
+  let explorations = 0
+  let toldToAnswer = false
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
     try {
@@ -416,6 +429,54 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineOutcome
         error: toAppError(error).toJSON(),
         trace: trace.steps,
       }
+    }
+
+    // Exploration (F-ASK-15): look at the data, then plan again. Doesn't use up a repair attempt.
+    if (current.kind === 'explore') {
+      attempt -= 1
+      if (mode === 'balanced' && current.sql && explorations < MAX_EXPLORATIONS) {
+        explorations += 1
+        const n = explorations
+        const sql = current.sql
+        let observation: string
+        try {
+          const result = await trace.step(
+            'explore',
+            n,
+            () => exploreQuery(engine, sql, tables, signal),
+            sql,
+          )
+          call.dataValues += explorationValues(result)
+          observation = describeExploration(n, { result })
+        } catch (error) {
+          if (isCancellation(error)) throw error
+          observation = describeExploration(n, { error: describeFailure(toAppError(error)) })
+        }
+        messages = buildExploreMessages(messages, current, observation, MAX_EXPLORATIONS - n)
+        continue
+      }
+      if (toldToAnswer) {
+        return {
+          kind: 'failed',
+          plan: current,
+          sql: lastSql,
+          error: new AppError({
+            code: 'ai_bad_output',
+            message: 'The AI kept exploring the data instead of answering. Try rephrasing.',
+            detail: null,
+          }).toJSON(),
+          trace: trace.steps,
+        }
+      }
+      toldToAnswer = true
+      messages = buildNoExploreMessages(
+        messages,
+        current,
+        mode === 'balanced'
+          ? 'That was the last exploration.'
+          : 'Exploring is not available in Strict privacy mode.',
+      )
+      continue
     }
 
     const python = current.kind === 'python' && Boolean(current.sql) && Boolean(current.python)

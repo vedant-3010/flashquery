@@ -62,7 +62,7 @@ Main thread: React UI, Zustand stores, LLM calls (network only, lazy-loaded chun
  └─ workers/python.worker  → Pyodide + pandas: CSV bytes in → tables/text out
 ```
 Ask pipeline (`src/ai/pipeline.ts`); each stage emits a status event for the UI timeline:
-`buildContext → plan (LLM → SqlPlan) → guard (Zod + AST allowlist + EXPLAIN) → execute (normalized,
+`buildContext → plan (LLM → SqlPlan; Balanced: ≤ 3 'explore' queries first) → guard (Zod + AST allowlist + EXPLAIN) → execute (normalized,
 row-capped) → self-correct ≤ 2× on error → chooseChart (heuristic; LLM hint only if compatible) →
 local summary`, then, in Balanced mode with a key, the AI summary (`narrate`) once the answer is shown.
 
@@ -178,5 +178,10 @@ e2e/ (Playwright)     scripts/ (sample + fixture generators, record-demo)
   PRD §12 entry (D66). Import `z` from `@/lib/zod` (jitless), never from 'zod' (lint enforces it).
 - `engine.registerBuffer(name, bytes)` transfers the bytes to the DuckDB worker: read `bytes.length`
   before the call, never after.
+- The CSP's `connect-src` allows `http://localhost:*` and `http://127.0.0.1:*` for local model servers
+  (F-AI-06, D85) and nothing else beyond the named hosts. Never widen it to `https:` (D86).
+- Settings are v5 (local server, kept files). A new saved field needs a migration in `SETTINGS_RECORD`.
+- The Python worker also runs the scratchpad notebook (`src/workers/notebook.ts`, own namespace);
+  Stop/timeout reset both. Kept files (`src/stores/persistFiles.ts`) live in OPFS, opt-in only.
 - Model IDs live only in `src/ai/models.ts` (default `claude-sonnet-5`, fast `claude-haiku-4-5-20251001`).
   Check provider docs before changing them.

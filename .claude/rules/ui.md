@@ -61,3 +61,8 @@ paths:
   through `src/dashboard/run.ts` (guard + filters).
 - Persist to IndexedDB, debounced 500 ms on change. Export/import as JSON validated by Zod.
 - Text tiles: `src/lib/markdown.ts` subset rendered as React elements; never `dangerouslySetInnerHTML`.
+- Cross-filtering (`src/dashboard/crossFilter.ts`): a click adds a normal dashboard value filter.
+  Presentation mode is read-only. Export: standalone HTML (`src/dashboard/exportHtml.ts`, escaped, its
+  own no-script CSP) and print to PDF.
+- Chart annotations (`src/charts/annotations.ts`) always carry a text label; stacked charts get only
+  the target line.

@@ -45,7 +45,9 @@ describe('buildPlanMessages', () => {
     ])
     expect(messages[0]?.content).toBe(PLAN_SYSTEM_PROMPT)
     expect(messages[1]?.content).toContain('<data>\n{"name":"global_sales"')
-    expect(messages[2]?.content).toBe('Today is 2026-09-28.\n\nQuestion: Revenue by region?')
+    expect(messages[2]?.content).toBe(
+      "Today is 2026-09-28.\n\nStrict privacy mode: no data values are shared, so kind 'explore' is not available.\n\nQuestion: Revenue by region?",
+    )
   })
 
   it('keeps the cached prefix identical across questions and days', () => {

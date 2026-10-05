@@ -66,6 +66,8 @@ export interface ProviderSettings {
   provider: ProviderId
   apiKey: string
   model: string
+  /** Local OpenAI-compatible server (F-AI-06), already checked by localBaseUrl(). */
+  baseUrl?: string
   /** For tests: stands in for the network. */
   fetch?: typeof fetch
 }

@@ -1,4 +1,14 @@
-import { Download, Ellipsis, RefreshCw, Sparkles, Type, Upload } from 'lucide-react'
+import {
+  Download,
+  Ellipsis,
+  FileCode2,
+  Presentation,
+  Printer,
+  RefreshCw,
+  Sparkles,
+  Type,
+  Upload,
+} from 'lucide-react'
 import { useRef } from 'react'
 import { IconButton } from '@/components/IconButton'
 import { Button } from '@/components/ui/button'
@@ -11,25 +21,47 @@ import {
 } from '@/components/ui/dropdown-menu'
 import type { Dashboard } from '@/dashboard/schema'
 import { DashboardSwitcher } from '@/features/dashboard/DashboardSwitcher'
+import { printDashboardHtml, renderDashboardHtml } from '@/features/dashboard/exportDashboard'
 import { downloadBytes } from '@/lib/download'
 import { toAppError } from '@/lib/errors'
 import { useDashboardStore } from '@/stores/dashboard'
 import { addTextTile, exportDashboard, importDashboard, refreshAll } from '@/stores/dashboardJobs'
+import { useSettingsStore } from '@/stores/settings'
 import { useToastStore } from '@/stores/toast'
 
-/** Switcher and dashboard actions: generate, add text, refresh all, export and import. */
+/** Switcher and dashboard actions: generate, add text, refresh all, present, export and import. */
 export function DashboardToolbar({
   dashboard,
   onGenerate,
+  onPresent,
 }: {
   dashboard: Dashboard | null
   onGenerate: () => void
+  /** Presentation mode (F-DASH-13). */
+  onPresent: () => void
 }) {
   const input = useRef<HTMLInputElement>(null)
   const refreshing = useDashboardStore((state) =>
     (dashboard?.tiles ?? []).some((t) => state.status[t.id]?.state === 'refreshing'),
   )
   const toast = useToastStore((state) => state.show)
+  const locale = useSettingsStore((state) => state.locale)
+
+  /** Standalone HTML with the tiles' snapshots (F-DASH-12); printing it gives a PDF. */
+  const exportHtml = (print: boolean) => {
+    if (!dashboard) return
+    renderDashboardHtml(dashboard, locale)
+      .then(({ fileName, html }) => {
+        if (print) {
+          if (!printDashboardHtml(html))
+            toast('Allow pop-ups for this site to print the dashboard.')
+          return
+        }
+        downloadBytes(new TextEncoder().encode(html), fileName, 'text/html')
+        toast(`Exported ${fileName}.`)
+      })
+      .catch((error: unknown) => toast(`Couldn't export: ${toAppError(error).message}`))
+  }
 
   const download = (snapshots: boolean) => {
     if (!dashboard) return
@@ -65,6 +97,12 @@ export function DashboardToolbar({
             Refresh all
           </Button>
         )}
+        {dashboard && dashboard.tiles.length > 0 && (
+          <Button size="sm" variant="outline" onClick={onPresent}>
+            <Presentation aria-hidden />
+            Present
+          </Button>
+        )}
         <input
           ref={input}
           type="file"
@@ -98,6 +136,20 @@ export function DashboardToolbar({
             <DropdownMenuItem disabled={!dashboard} onSelect={() => download(false)}>
               <Download aria-hidden />
               Export JSON (layout and SQL only)
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              disabled={!dashboard || dashboard.tiles.length === 0}
+              onSelect={() => exportHtml(false)}
+            >
+              <FileCode2 aria-hidden />
+              Download as HTML (standalone)
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              disabled={!dashboard || dashboard.tiles.length === 0}
+              onSelect={() => exportHtml(true)}
+            >
+              <Printer aria-hidden />
+              Print or save as PDF…
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={() => input.current?.click()}>

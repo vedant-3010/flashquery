@@ -21,6 +21,9 @@ export const CONTENT_SECURITY_POLICY: Record<string, string[]> = {
     'https://api.openai.com',
     'https://cdn.jsdelivr.net',
     'https://extensions.duckdb.org',
+    // A local OpenAI-compatible server (Ollama, LM Studio), on this computer only (F-AI-06, D85).
+    'http://localhost:*',
+    'http://127.0.0.1:*',
   ],
   // CodeMirror and Radix's scroll lock inject <style> elements (D66).
   'style-src': ["'self'", "'unsafe-inline'"],

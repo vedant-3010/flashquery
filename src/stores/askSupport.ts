@@ -1,3 +1,4 @@
+import { localBaseUrl } from '@/ai/localServer'
 import type { AiLogEntry } from '@/ai/log'
 import type { Turn } from '@/ai/prompts/planSql'
 import { createProvider, type LLMProvider } from '@/ai/providers'
@@ -17,11 +18,13 @@ export function currentProvider(): Promise<LLMProvider> {
   const apiKey = activeApiKey(settings)
   if (!apiKey) return Promise.resolve(fixtureProvider)
   const model = settings.models[settings.provider]
-  const cacheKey = `${settings.provider}:${model}:${apiKey}`
+  const baseUrl =
+    settings.provider === 'local' ? (localBaseUrl(settings.baseUrl) ?? undefined) : undefined
+  const cacheKey = `${settings.provider}:${model}:${apiKey}:${baseUrl ?? ''}`
   if (providerCache?.key !== cacheKey) {
     providerCache = {
       key: cacheKey,
-      provider: createProvider({ provider: settings.provider, apiKey, model }),
+      provider: createProvider({ provider: settings.provider, apiKey, model, baseUrl }),
     }
   }
   return providerCache.provider

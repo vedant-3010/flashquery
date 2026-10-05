@@ -412,3 +412,73 @@ describe('prompt injection (F-SEC-05)', () => {
     expect((await runQuery(engine, 'SELECT count(*) FROM vault')).rows).toEqual([[1]])
   })
 })
+
+describe('multi-step exploration (F-ASK-15)', () => {
+  const explore = (sql: string) => plan(sql, { kind: 'explore', title: 'Looking' })
+
+  it('runs an exploration, sends its rows back as data, then answers', async () => {
+    const { provider, requests } = scripted([
+      explore('SELECT DISTINCT region FROM sales ORDER BY region'),
+      plan('SELECT region, sum(revenue) AS revenue FROM sales GROUP BY ALL ORDER BY revenue DESC'),
+    ])
+    const { outcome, logs } = await ask(provider, [sales])
+    expect(outcome.kind).toBe('answer')
+    const explored = outcome.trace.filter((step) => step.stage === 'explore')
+    expect(explored).toHaveLength(1)
+    expect(explored[0]).toMatchObject({
+      status: 'done',
+      sql: expect.stringContaining('DISTINCT region'),
+    })
+    const followUp = requests[1]?.messages.at(-1)?.content ?? ''
+    expect(followUp).toContain('Exploration 1 returned 2 rows:')
+    expect(followUp).toMatch(/<data>[\s\S]*"APAC"[\s\S]*<\/data>/)
+    expect(followUp).toContain('2 left')
+    // Exploring doesn't count as a self-correction, and the shared values are counted.
+    expect(outcome.trace.filter((step) => step.stage === 'plan').map((s) => s.attempt)).toEqual([
+      1, 1,
+    ])
+    expect(logs[1]?.dataValues).toBeGreaterThan(logs[0]?.dataValues ?? 0)
+  })
+
+  it('reports a failing exploration to the model instead of failing the answer', async () => {
+    const { provider, requests } = scripted([
+      explore('SELECT nope FROM sales'),
+      plan('SELECT sum(revenue) AS revenue FROM sales'),
+    ])
+    const { outcome } = await ask(provider, [sales])
+    expect(outcome.kind).toBe('answer')
+    expect(requests[1]?.messages.at(-1)?.content).toContain('Exploration 1 failed:')
+  })
+
+  it('stops after three explorations and fails if the model keeps exploring', async () => {
+    const q = 'SELECT DISTINCT region FROM sales'
+    const { provider, requests } = scripted([
+      explore(q),
+      explore(q),
+      explore(q),
+      explore(q),
+      explore(q),
+    ])
+    const { outcome } = await ask(provider, [sales])
+    expect(outcome.trace.filter((step) => step.stage === 'explore')).toHaveLength(3)
+    expect(requests[3]?.messages.at(-1)?.content).toContain('no more exploring')
+    expect(requests[4]?.messages.at(-1)?.content).toContain('That was the last exploration.')
+    expect(outcome).toMatchObject({
+      kind: 'failed',
+      error: { message: 'The AI kept exploring the data instead of answering. Try rephrasing.' },
+    })
+  })
+
+  it("doesn't explore in Strict mode", async () => {
+    const { provider, requests } = scripted([
+      explore('SELECT DISTINCT region FROM sales'),
+      plan('SELECT sum(revenue) AS revenue FROM sales'),
+    ])
+    const { outcome } = await ask(provider, [sales], { mode: 'strict' })
+    expect(outcome.kind).toBe('answer')
+    expect(outcome.trace.some((step) => step.stage === 'explore')).toBe(false)
+    expect(requests[0]?.messages.at(-1)?.content).toContain("kind 'explore' is not available")
+    expect(requests[1]?.messages.at(-1)?.content).toContain('not available in Strict privacy mode')
+    expect(JSON.stringify(requests[1]?.messages)).not.toContain('APAC')
+  })
+})

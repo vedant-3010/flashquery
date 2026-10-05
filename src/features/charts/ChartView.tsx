@@ -13,6 +13,7 @@ export function ChartView({
   className,
   compact = false,
   instanceRef,
+  onSelect,
 }: {
   spec: ChartSpec
   data: ChartData
@@ -20,6 +21,8 @@ export function ChartView({
   /** Tiles: KPIs without their own border. */
   compact?: boolean
   instanceRef?: RefObject<ECharts | null>
+  /** Dashboard tiles: a click on a bar or slice (F-DASH-11). */
+  onSelect?: (name: string) => void
 }) {
   const { prepared, option, label } = useChartOption(spec, data)
   if (prepared.kind === 'kpi') return <KpiView spec={spec} prepared={prepared} compact={compact} />
@@ -30,5 +33,13 @@ export function ChartView({
       </p>
     )
   }
-  return <EChart option={option} label={label} instanceRef={instanceRef} className={className} />
+  return (
+    <EChart
+      option={option}
+      label={label}
+      instanceRef={instanceRef}
+      onSelect={onSelect}
+      className={className}
+    />
+  )
 }

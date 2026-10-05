@@ -3,6 +3,7 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } fro
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { QueryPlanPanel } from '@/features/explain/QueryPlanPanel'
 import { useResolvedTheme } from '@/hooks/useResolvedTheme'
 import { toAppError } from '@/lib/errors'
 import { useAskStore, type Answer } from '@/stores/ask'
@@ -14,7 +15,8 @@ const SqlEditor = lazy(() =>
 
 /**
  * The answer's SQL (F-EXPL-01): formatted, highlighted, copyable, and editable. Run sends the edit
- * through the same guard as generated SQL; the answer is then marked "edited".
+ * through the same guard as generated SQL; the answer is then marked "edited". Below it, the query
+ * plan with timings (F-EXPL-09).
  */
 export function SqlTab({ answer }: { answer: Answer }) {
   const runEditedSql = useAskStore((state) => state.runEditedSql)
@@ -106,6 +108,8 @@ export function SqlTab({ answer }: { answer: Answer }) {
           {error}
         </p>
       )}
+      {/* The SQL that ran (already checked by the guard), not the draft. */}
+      <QueryPlanPanel sql={answer.result ? answer.sql : null} />
     </div>
   )
 }

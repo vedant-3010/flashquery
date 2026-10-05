@@ -9,6 +9,8 @@ import { useDashboardStore } from '@/stores/dashboard'
 import { useHistoryStore } from '@/stores/history'
 import { useFeedbackStore } from '@/stores/feedback'
 import { useNotesStore } from '@/stores/notes'
+import { restorePersistedDatasets, startFilePersistence } from '@/stores/persistFiles'
+import { startRelationshipDetection } from '@/stores/relationships'
 import { useSuggestionsStore } from '@/stores/suggestions'
 import { useSettingsStore } from '@/stores/settings'
 
@@ -29,12 +31,20 @@ export function App() {
   useEffect(() => applyTheme(theme), [theme])
   useEffect(() => warmUpEngine(), [])
   useEffect(() => {
-    void useSettingsStore.getState().hydrate()
+    // Kept files (F-DATA-12) come back once settings say the user opted in.
+    void useSettingsStore
+      .getState()
+      .hydrate()
+      .then(() => {
+        startFilePersistence()
+        if (useSettingsStore.getState().persistFiles) void restorePersistedDatasets()
+      })
     void useHistoryStore.getState().hydrate()
     void useDashboardStore.getState().hydrate()
     void useNotesStore.getState().hydrate()
     void useFeedbackStore.getState().hydrate()
     void useSuggestionsStore.getState().hydrate()
+    startRelationshipDetection()
   }, [])
 
   if (hash === '#/bench') {

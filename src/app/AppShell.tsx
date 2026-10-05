@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect } from 'react'
+import { CommandPalette } from '@/app/CommandPalette'
 import { PanelErrorBoundary } from '@/app/PanelErrorBoundary'
 import { SidePanel } from '@/app/SidePanel'
 import { TopBar } from '@/app/TopBar'
@@ -13,7 +14,7 @@ import { DatasetsPanel } from '@/features/datasets/DatasetsPanel'
 import { FileDropZone } from '@/features/datasets/FileDropZone'
 import { PasteDataDialog } from '@/features/datasets/PasteDataDialog'
 import { SettingsDialog } from '@/features/settings/SettingsDialog'
-import { SqlView } from '@/features/sql/SqlView'
+import { ScratchpadView } from '@/features/sql/ScratchpadView'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { looksLikeTable } from '@/lib/tsv'
 import { useUiStore, ViewSchema } from '@/stores/ui'
@@ -37,7 +38,7 @@ export function AppShell() {
   const highlight = useUiStore((state) => state.highlight)
   const wide = useMediaQuery(WIDE_LAYOUT_QUERY)
 
-  // `?` lists the shortcuts (F-SHELL-06), unless the user is typing.
+  // `?` lists the shortcuts (F-SHELL-06), unless the user is typing; Ctrl/Cmd+K: command palette.
   const setShortcutsOpen = useUiStore((state) => state.setShortcutsOpen)
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -48,6 +49,12 @@ export function AppShell() {
       if (event.key === '?' && !typing && !event.metaKey && !event.ctrlKey) {
         event.preventDefault()
         setShortcutsOpen(true)
+      }
+      // Ctrl/Cmd+K opens the command palette from anywhere, even while typing (F-SHELL-07).
+      if (event.key.toLowerCase() === 'k' && (event.metaKey || event.ctrlKey) && !event.altKey) {
+        event.preventDefault()
+        const ui = useUiStore.getState()
+        ui.setCommandPaletteOpen(!ui.commandPaletteOpen)
       }
     }
     window.addEventListener('keydown', onKeyDown)
@@ -124,7 +131,7 @@ export function AppShell() {
           </TabsContent>
           <TabsContent value="sql" className="flex min-h-0 flex-col">
             <PanelErrorBoundary name="the SQL editor">
-              <SqlView />
+              <ScratchpadView />
             </PanelErrorBoundary>
           </TabsContent>
           <TabsContent value="dashboard" className="flex min-h-0 flex-col">
@@ -146,6 +153,7 @@ export function AppShell() {
       <FileDropZone />
       <SettingsDialog />
       <ShortcutsDialog />
+      <CommandPalette />
       <PasteDataDialog />
       <Toaster />
       <HowItWorksDialog />

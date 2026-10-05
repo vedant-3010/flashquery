@@ -27,6 +27,7 @@ import {
 import { currentProvider, logRequest, release, today, turns } from '@/stores/askSupport'
 import { useDatasetsStore } from '@/stores/datasets'
 import { useHistoryStore } from '@/stores/history'
+import { activeRelationships } from '@/stores/relationships'
 import { activeApiKey, useSettingsStore } from '@/stores/settings'
 
 // The answer feed (F-ASK-01…12): one question runs at a time; each becomes an answer card with a
@@ -200,6 +201,7 @@ export const useAskStore = create<AskState>()((set, get) => {
           provider,
           engine,
           datasets,
+          relationships: activeRelationships(datasets.map((d) => d.table)),
           mode: settings.privacyMode,
           history,
           locale: settings.locale,

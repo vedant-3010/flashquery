@@ -75,17 +75,22 @@ export const MODELS: ModelInfo[] = [
 export const DEFAULT_MODEL: Record<ProviderId, string> = {
   anthropic: 'claude-sonnet-5',
   openai: 'gpt-6-sol',
+  // A suggestion for Ollama; local servers name their own models (F-AI-06).
+  local: 'qwen2.5-coder:7b',
 }
 
 /** For cheap, latency-sensitive calls (e.g. suggested questions, M7). */
 export const FAST_MODEL: Record<ProviderId, string> = {
   anthropic: 'claude-haiku-4-5-20251001',
   openai: 'gpt-6-luna',
+  /** Empty: a local server uses its one model for everything. */
+  local: '',
 }
 
 export const PROVIDER_LABELS: Record<ProviderId, string> = {
   anthropic: 'Anthropic',
   openai: 'OpenAI',
+  local: 'Local server (OpenAI-compatible)',
 }
 
 export function modelsFor(provider: ProviderId): ModelInfo[] {

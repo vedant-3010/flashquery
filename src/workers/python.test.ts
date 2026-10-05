@@ -169,4 +169,43 @@ describe.runIf(process.env.RUN_PYODIDE === '1')('real Pyodide', () => {
       error: expect.stringContaining('Network access is turned off'),
     })
   }, 240_000)
+
+  it('runs notebook cells that share variables and draw matplotlib figures (F-PY-06)', async () => {
+    const indexURL = `${dirname(createRequire(import.meta.url).resolve('pyodide/package.json'))}/`
+    const cache = mkdtempSync(join(tmpdir(), 'askdata-pyodide-'))
+    const api = createPythonApi({
+      indexURL,
+      packageBaseUrl: PYODIDE_INDEX_URL,
+      load: (options) => loadPyodide({ ...options, packageCacheDir: cache }),
+      network: guardNetwork(globalThis as unknown as NetworkScope),
+    })
+    await api.init()
+    const csv = new TextEncoder().encode('region,revenue\nAPAC,300\nEMEA,200\nAPAC,50\n')
+    expect(await api.notebookStart({ csv, dateColumns: [] })).toEqual({ rows: 3 })
+
+    const first = await api.notebookRun(
+      'total = df.revenue.sum()\nprint("total", total)\ndf.groupby("region").revenue.sum()',
+    )
+    expect(first).toMatchObject({ ok: true, stdout: 'total 550\n', figures: [] })
+    expect(first.value).toEqual({
+      kind: 'table',
+      columns: ['region', 'revenue'],
+      rows: [
+        ['APAC', '350'],
+        ['EMEA', '200'],
+      ],
+      totalRows: 2,
+    })
+
+    const plot = await api.notebookRun(
+      'import matplotlib.pyplot as plt\nplt.bar(df.region, df.revenue)\nplt.title("Revenue")\ntotal * 2',
+    )
+    expect(plot).toMatchObject({ ok: true, value: { kind: 'text', text: '1100' } })
+    expect(plot.figures).toHaveLength(1)
+    expect(plot.figures[0]).toMatch(/^data:image\/png;base64,iVBORw0KGgo/)
+
+    const failed = await api.notebookRun('undefined_name + 1')
+    expect(failed).toMatchObject({ ok: false, error: expect.stringContaining('NameError') })
+    expect(failed.error).toContain('File "<cell>"')
+  }, 300_000)
 })

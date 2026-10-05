@@ -1,4 +1,9 @@
 import { loadPyodide, version, type PyodideAPI } from 'pyodide'
+import {
+  createNotebook,
+  type NotebookCellResult,
+  type NotebookStartRequest,
+} from '@/workers/notebook'
 
 // Python analysis (F-PY-01…05), inside python.worker.ts; importable for tests. Pyodide and its
 // packages load from the pinned CDN (the installed package's own version), only when the user
@@ -42,6 +47,10 @@ export interface PythonApi {
   /** Loads Pyodide and pandas once; later calls return the same promise. */
   init(onStatus?: StatusCallback): Promise<{ version: string }>
   run(request: PythonRunRequest, onStatus?: StatusCallback): Promise<PythonRunResult>
+  /** Notebook cells (F-PY-06): see notebook.ts. */
+  notebookStart(request: NotebookStartRequest): Promise<{ rows: number }>
+  notebookRun(code: string): Promise<NotebookCellResult>
+  notebookReset(): void
 }
 
 /** The network APIs a worker has; replaced by guarded versions (tests pass a fake scope). */
@@ -131,9 +140,9 @@ __askdata_collect()
 `
 
 /** The traceback without Pyodide's own frames, and not too long. */
-export function cleanTraceback(message: string): string {
+export function cleanTraceback(message: string, filename = '<analysis>'): string {
   const lines = message.split('\n')
-  const start = lines.findIndex((line) => line.includes('File "<analysis>"'))
+  const start = lines.findIndex((line) => line.includes(`File "${filename}"`))
   const kept = start > 0 ? ['Traceback (most recent call last):', ...lines.slice(start)] : lines
   const text = kept.join('\n').trim()
   return text.length > MAX_ERROR_CHARS ? `…${text.slice(-MAX_ERROR_CHARS)}` : text
@@ -231,5 +240,17 @@ export function createPythonApi({
     }
   }
 
-  return { init, run }
+  const notebook = createNotebook({
+    ready: () => ready(),
+    network,
+    output: {
+      reset: () => {
+        output = ''
+      },
+      read: () => output,
+    },
+    cleanTraceback,
+  })
+
+  return { init, run, ...notebook }
 }

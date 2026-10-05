@@ -176,3 +176,42 @@ describe('renderContext', () => {
     expect(text.split('\n')).toHaveLength(3)
   })
 })
+
+describe('suggested joins (F-PROF-07)', () => {
+  const customers = { ...dataset, table: 'customers' }
+  const join = {
+    from: { table: dataset.table, column: 'customer_id' },
+    to: { table: 'customers', column: 'id' },
+    overlap: 0.987,
+    kind: 'many-to-one' as const,
+  }
+
+  it('sends joins between tables in scope; the match % only in Balanced mode', () => {
+    const balanced = buildContext({
+      datasets: [dataset, customers],
+      mode: 'balanced',
+      relationships: [join],
+    })
+    expect(balanced.joins).toEqual([
+      {
+        from: `${dataset.table}.customer_id`,
+        to: 'customers.id',
+        kind: 'many-to-one',
+        matchPct: 99,
+      },
+    ])
+    const strict = buildContext({
+      datasets: [dataset, customers],
+      mode: 'strict',
+      relationships: [join],
+    })
+    expect(strict.joins?.[0]).not.toHaveProperty('matchPct')
+    expect(renderContext(strict)).toContain('{"suggestedJoins":[{"from":')
+  })
+
+  it('leaves out joins to tables outside the scope', () => {
+    const context = buildContext({ datasets: [dataset], mode: 'balanced', relationships: [join] })
+    expect(context.joins).toBeUndefined()
+    expect(renderContext(context)).not.toContain('suggestedJoins')
+  })
+})

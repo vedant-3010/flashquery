@@ -19,9 +19,12 @@ const GRID = {
 export function DashboardGrid({
   dashboard,
   onEdit,
+  readOnly = false,
 }: {
   dashboard: Dashboard
   onEdit: (tileId: string) => void
+  /** Presentation mode (F-DASH-13): no dragging, resizing or tile menus; the layout isn't saved. */
+  readOnly?: boolean
 }) {
   const { width, containerRef, mounted } = useContainerWidth()
   const setLayouts = useDashboardStore((state) => state.setLayouts)
@@ -56,14 +59,15 @@ export function DashboardGrid({
           width={width}
           layout={layout}
           gridConfig={GRID}
-          dragConfig={{ handle: '.tile-handle' }}
-          resizeConfig={{ handles: ['se'] }}
-          onLayoutChange={(next) =>
+          dragConfig={{ enabled: !readOnly, handle: '.tile-handle' }}
+          resizeConfig={{ enabled: !readOnly, handles: ['se'] }}
+          onLayoutChange={(next) => {
+            if (readOnly) return
             setLayouts(
               dashboard.id,
               new Map(next.map((item) => [item.i, { x: item.x, y: item.y, w: item.w, h: item.h }])),
             )
-          }
+          }}
         >
           {dashboard.tiles.map((tile) => (
             <div key={tile.id}>
@@ -71,6 +75,7 @@ export function DashboardGrid({
                 tile={tile}
                 focused={tile.id === focus?.id}
                 onEdit={() => onEdit(tile.id)}
+                readOnly={readOnly}
               />
             </div>
           ))}
