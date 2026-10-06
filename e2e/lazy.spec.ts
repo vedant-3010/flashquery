@@ -18,11 +18,11 @@ function recordRequests(page: Page): string[] {
 
 const loaded = (urls: string[], pattern: RegExp) => urls.some((url) => pattern.test(url))
 
-test('the landing page loads none of the heavy libraries; each loads on first use', async ({
+test('the app loads none of the heavy libraries at first; each loads on first use', async ({
   page,
 }) => {
   const urls = recordRequests(page)
-  await page.goto('/')
+  await page.goto('/app/')
   // DuckDB starts after the first paint, in an idle callback.
   await expect(page.getByRole('button', { name: /^Engine ready/ })).toBeVisible({ timeout: 30_000 })
   for (const [name, pattern] of Object.entries(HEAVY)) {

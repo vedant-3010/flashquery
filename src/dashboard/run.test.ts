@@ -86,7 +86,7 @@ describe('runTile', () => {
     expect(tile.snapshot.rows[0]?.[0]).toBe(expected.rows[0]?.[0])
     expect(tile.snapshot.filtered).toBe(true)
     // The tile keeps its own SQL; filters are applied when it runs.
-    expect(tile.sql).not.toContain('askdata_filtered')
+    expect(tile.sql).not.toContain('flashQuery_filtered')
   })
 
   it('keeps the chart the user chose while it fits, and re-picks when it does not', async () => {

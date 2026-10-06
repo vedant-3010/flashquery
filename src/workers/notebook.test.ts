@@ -24,7 +24,7 @@ function fake(value: unknown) {
     },
     loadPackagesFromImports: async () => calls.push(`imports (locked: ${network.locked})`),
     runPythonAsync: async (code: string, options: { filename?: string }) => {
-      if (code === '__askdata_figures()') return proxy(['data:image/png;base64,AAAA'])
+      if (code === '__flashQuery_figures()') return proxy(['data:image/png;base64,AAAA'])
       if (code.startsWith('df = pd.read_csv')) return 3
       if (options.filename === '<cell>') {
         calls.push(`cell (locked: ${network.locked})`)

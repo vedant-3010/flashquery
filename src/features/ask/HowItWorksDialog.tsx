@@ -14,7 +14,7 @@ import { useUiStore } from '@/stores/ui'
 const STEPS = [
   {
     title: 'Your file loads into your browser',
-    text: 'DuckDB, a full SQL database, runs in this tab. Nothing is uploaded to a server; AskData has none.',
+    text: 'DuckDB, a full SQL database, runs in this tab. Nothing is uploaded to a server; flashQuery has none.',
   },
   {
     title: 'The AI sees the shape of your data',
@@ -60,7 +60,7 @@ export function HowItWorksDialog() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>How AskData works</DialogTitle>
+          <DialogTitle>How flashQuery works</DialogTitle>
           <DialogDescription>
             Bring your own AI key; without one, demo mode answers questions about the sample data.
           </DialogDescription>

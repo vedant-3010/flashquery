@@ -60,7 +60,7 @@ export const useHistoryStore = create<HistoryState>()((set) => ({
 async function load() {
   const saved = await loadRecord(HISTORY_RECORD, { onCorrupt: backupCorruptRecord }).catch(
     (error: unknown) => {
-      console.warn('AskData: history could not be loaded', error)
+      console.warn('flashQuery: history could not be loaded', error)
       return []
     },
   )
@@ -72,7 +72,7 @@ async function load() {
   useHistoryStore.subscribe((state, previous) => {
     if (state.entries === previous.entries) return
     saveRecord(HISTORY_RECORD, state.entries).catch((error: unknown) =>
-      console.warn('AskData: history could not be saved', error),
+      console.warn('flashQuery: history could not be saved', error),
     )
   })
 }

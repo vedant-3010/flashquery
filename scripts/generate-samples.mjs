@@ -120,7 +120,7 @@ db.open({})
 const conn = db.connect()
 
 // DuckDB's Node runtime writes COPY output to the real disk: use a temp dir, then copy the result.
-const scratch = mkdtempSync(join(tmpdir(), 'askdata-samples-'))
+const scratch = mkdtempSync(join(tmpdir(), 'flashQuery-samples-'))
 for (const [file, sql] of [
   ['hr_attrition.csv', HR_ATTRITION],
   ['web_traffic.csv', WEB_TRAFFIC],

@@ -148,7 +148,7 @@ export function dashboardHtml({
 </head>
 <body>
 <main>
-<header><h1>${escapeHtml(title)}</h1><p class="meta">Exported from AskData on ${escapeHtml(exportedAt)}${filterLine}. Data as of each tile's snapshot.</p></header>
+<header><h1>${escapeHtml(title)}</h1><p class="meta">Exported from flashQuery on ${escapeHtml(exportedAt)}${filterLine}. Data as of each tile's snapshot.</p></header>
 <div class="grid">
 ${sections}
 </div>

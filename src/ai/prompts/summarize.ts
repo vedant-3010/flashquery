@@ -6,7 +6,7 @@ import { CHART_TYPE_LABELS } from '@/charts/spec'
 // F-ASK-12: the AI summary of an answer, in Balanced mode, after the chart is on screen. The result
 // (or a digest of it) comes from context.ts and is delimited as data.
 
-export const SUMMARY_SYSTEM_PROMPT = `You are AskData's analyst. You write the short summary shown with a chart that answers the user's question. The query already ran on the user's device; the <data> block holds its result: every row for small results, otherwise statistics over all rows plus the first, highest and lowest rows.
+export const SUMMARY_SYSTEM_PROMPT = `You are flashQuery's analyst. You write the short summary shown with a chart that answers the user's question. The query already ran on the user's device; the <data> block holds its result: every row for small results, otherwise statistics over all rows plus the first, highest and lowest rows.
 
 # Output
 - headline: one sentence of at most 20 words that answers the question and includes the key number.

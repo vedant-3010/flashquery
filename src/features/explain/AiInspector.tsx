@@ -75,7 +75,7 @@ function Entry({ entry }: { entry: AiLogEntry }) {
               navigator.clipboard
                 .writeText(JSON.stringify(entry, null, 2))
                 .then(() => setCopied(true))
-                .catch((error: unknown) => console.warn('AskData: copy failed', error))
+                .catch((error: unknown) => console.warn('flashQuery: copy failed', error))
             }}
           >
             <ClipboardCopy aria-hidden />

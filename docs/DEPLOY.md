@@ -1,6 +1,6 @@
-# Deploying AskData
+# Deploying flashQuery
 
-AskData is a static site: `npm run build` writes everything to `dist/`, and there's no server code and
+flashQuery is a static site: `npm run build` writes everything to `dist/`, and there's no server code and
 no secrets. `vercel.json` sets the build and the response headers. Never add an API key as an
 environment variable: users bring their own key in the app.
 
@@ -30,12 +30,18 @@ curl -sI "$APP/" | grep -iE 'content-security-policy|x-content-type-options|x-fr
 
 Then in the browser:
 
+- [ ] `/` shows the landing page; its hero film plays, and "Try it on 1M rows" opens `/app/` with an
+      answer to "Which region grew fastest?".
+- [ ] `/app` redirects to `/app/`, the app itself.
 - [ ] **Try sample data** loads the 1M-row sample; the engine badge says "Engine ready".
 - [ ] A suggested question answers with a chart; the SQL tab opens the editor.
 - [ ] DevTools → Console shows no Content-Security-Policy errors.
 - [ ] DevTools → Network shows only the app's own origin (plus `extensions.duckdb.org` after loading a
       Parquet or JSON file, and `cdn.jsdelivr.net` after running Python).
-- [ ] `/#/bench` runs; copy the results with "Copy as Markdown" if you want numbers from real hardware.
+- [ ] `/app/#/bench` runs; copy the results with "Copy as Markdown" if you want numbers from real
+      hardware.
+- [ ] Set `og:image` in `index.html` to the full URL (`https://<your-domain>/og.png`): some link
+      previews need an absolute URL.
 
 ## Other hosts
 

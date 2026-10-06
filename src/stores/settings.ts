@@ -168,7 +168,7 @@ async function load() {
   const saved = await loadRecord(SETTINGS_RECORD, { onCorrupt: backupCorruptRecord }).catch(
     (error: unknown) => {
       // IndexedDB unavailable (private mode, blocked storage): run with defaults, in memory.
-      console.warn('AskData: settings could not be loaded', error)
+      console.warn('flashQuery: settings could not be loaded', error)
       return SETTINGS_RECORD.fallback()
     },
   )
@@ -196,7 +196,7 @@ async function persist(state: SettingsState) {
     persistFiles: state.persistFiles,
   }
   await saveRecord(SETTINGS_RECORD, record).catch((error: unknown) =>
-    console.warn('AskData: settings could not be saved', error),
+    console.warn('flashQuery: settings could not be saved', error),
   )
 }
 

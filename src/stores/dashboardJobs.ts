@@ -237,7 +237,7 @@ export function exportDashboard(
   const dashboard = store().dashboards.find((d) => d.id === dashboardId)
   if (!dashboard) return null
   const file: DashboardFile = {
-    format: 'askdata-dashboard',
+    format: 'flashQuery-dashboard',
     version: 1,
     exportedAt: Date.now(),
     dashboard: {
@@ -251,7 +251,7 @@ export function exportDashboard(
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '_')
     .replace(/^_|_$/g, '')
-  return { fileName: `${base || 'dashboard'}.askdata.json`, json: JSON.stringify(file, null, 2) }
+  return { fileName: `${base || 'dashboard'}.flashQuery.json`, json: JSON.stringify(file, null, 2) }
 }
 
 /** Reads an exported file; anything that doesn't match the schema is refused (F-DASH-08). */
@@ -270,7 +270,7 @@ export function importDashboard(text: string): string {
   if (!parsed.success) {
     throw new AppError({
       code: 'import_invalid',
-      message: "This isn't an AskData dashboard file (or it is from a newer version).",
+      message: "This isn't an flashQuery dashboard file (or it is from a newer version).",
       detail: parsed.error.issues
         .slice(0, 5)
         .map((issue) => `${issue.path.join('.')}: ${issue.message}`)

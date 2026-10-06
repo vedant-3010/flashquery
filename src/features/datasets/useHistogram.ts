@@ -27,7 +27,7 @@ export function useHistogram(
       })
       .catch((error: unknown) => {
         if (isCancellation(error)) return
-        console.warn('AskData: histogram failed', error)
+        console.warn('flashQuery: histogram failed', error)
         cache.set(key, null)
         setLoaded({ key, histogram: null })
       })

@@ -113,7 +113,7 @@ try {
     return answer
   }
 
-  await page.goto(`http://localhost:${PORT}/`)
+  await page.goto(`http://localhost:${PORT}/app/`)
   await page.getByRole('heading', { name: 'Ask your data anything' }).waitFor()
   await shot(2000)
 
@@ -140,8 +140,8 @@ try {
   await dialog.waitFor({ state: 'hidden', timeout: 30_000 })
   await shot(3200, 1500)
 
-  await page.getByRole('button', { name: 'How AskData works' }).click()
-  await page.getByRole('dialog', { name: 'How AskData works' }).waitFor()
+  await page.getByRole('button', { name: 'How flashQuery works' }).click()
+  await page.getByRole('dialog', { name: 'How flashQuery works' }).waitFor()
   await shot(3200)
   await page.keyboard.press('Escape')
 

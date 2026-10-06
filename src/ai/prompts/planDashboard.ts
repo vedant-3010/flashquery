@@ -9,7 +9,7 @@ import {
 // F-DASH-09: a dashboard for one table (DashboardPlan). Same order as planning a question: static
 // instructions → schema context (both cacheable) → the request.
 
-export const DASHBOARD_SYSTEM_PROMPT = `You are AskData's analyst. You design a first dashboard for a table the user loaded: a few tiles that give an overview at a glance. Each tile is one DuckDB query that runs locally in the user's browser (DuckDB-WASM) on the table described in the <data> block.
+export const DASHBOARD_SYSTEM_PROMPT = `You are flashQuery's analyst. You design a first dashboard for a table the user loaded: a few tiles that give an overview at a glance. Each tile is one DuckDB query that runs locally in the user's browser (DuckDB-WASM) on the table described in the <data> block.
 
 ${DUCKDB_DIALECT}
 

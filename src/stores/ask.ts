@@ -133,7 +133,7 @@ export const useAskStore = create<AskState>()((set, get) => {
       })
       .catch((error: unknown) => {
         // Shown in the timeline and trace; the local summary stays.
-        if (!isCancellation(error)) console.warn('AskData: the AI summary failed', error)
+        if (!isCancellation(error)) console.warn('flashQuery: the AI summary failed', error)
       })
       .finally(() => {
         if (summaries.get(id) === current) summaries.delete(id)
@@ -323,7 +323,7 @@ export const useAskStore = create<AskState>()((set, get) => {
     remove: (id) => {
       const python = find(id)?.python ?? null
       releasePython(id, python).catch((error: unknown) =>
-        console.warn('AskData: could not free a Python result', error),
+        console.warn('flashQuery: could not free a Python result', error),
       )
       summaries.get(id)?.abort()
       release(find(id)?.result ?? null)

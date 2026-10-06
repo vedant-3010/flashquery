@@ -68,7 +68,7 @@ let hydrating: Promise<void> | null = null
 async function load() {
   const saved = await loadRecord(SUGGESTIONS_RECORD, { onCorrupt: backupCorruptRecord }).catch(
     (error: unknown) => {
-      console.warn('AskData: suggestions could not be loaded', error)
+      console.warn('flashQuery: suggestions could not be loaded', error)
       return {}
     },
   )
@@ -76,7 +76,7 @@ async function load() {
   useSuggestionsStore.subscribe((state, previous) => {
     if (state.byKey === previous.byKey) return
     saveRecord(SUGGESTIONS_RECORD, state.byKey).catch((error: unknown) =>
-      console.warn('AskData: suggestions could not be saved', error),
+      console.warn('flashQuery: suggestions could not be saved', error),
     )
   })
 }

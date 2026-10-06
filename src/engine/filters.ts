@@ -59,7 +59,7 @@ export function filterCondition(filter: DashboardFilter): string | null {
 }
 
 /** Name of the filtered view for a table (a temp view; never collides with loaded tables). */
-export const filteredViewName = (table: string) => `askdata_filtered_${table}`
+export const filteredViewName = (table: string) => `flashQuery_filtered_${table}`
 
 /**
  * Creates (or replaces) one temp view per filtered table and returns table → view, for the tables
@@ -130,5 +130,5 @@ export function cteWrapper(sql: string, views: ReadonlyMap<string, string>): str
   const ctes = [...views].map(
     ([table, view]) => `${quoteIdent(table)} AS (SELECT * FROM ${quoteIdent(view)})`,
   )
-  return `WITH ${ctes.join(', ')} SELECT * FROM (\n${sql}\n) AS askdata_q`
+  return `WITH ${ctes.join(', ')} SELECT * FROM (\n${sql}\n) AS flashQuery_q`
 }

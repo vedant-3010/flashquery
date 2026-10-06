@@ -1,12 +1,12 @@
-# AskData
+# flashQuery
 
 **Ask your data questions in plain English. Your file never leaves your browser.**
 
 <!-- Live demo: add the Vercel URL here after the first deploy (see docs/DEPLOY.md). -->
 
-![AskData demo: loading a 1M-row sample, asking "Which region grew fastest?", checking the SQL, a trend chart, a generated dashboard, the privacy model, dark mode](docs/demo.png)
+![flashQuery demo: loading a 1M-row sample, asking "Which region grew fastest?", checking the SQL, a trend chart, a generated dashboard, the privacy model, dark mode](docs/demo.png)
 
-AskData is an AI data analyst that runs entirely in the browser: load a CSV, Excel, Parquet or JSON
+flashQuery is an AI data analyst that runs entirely in the browser: load a CSV, Excel, Parquet or JSON
 file, ask a question, and get a chart, a table and a short explanation. An LLM writes DuckDB SQL from
 your question, and DuckDB-WASM runs it on your device, so the rows stay with you. Only what the
 privacy mode allows (column names, and optionally a few statistics and sample values) goes to the AI
@@ -109,11 +109,12 @@ Requires Node 24.
 
 ```sh
 npm ci
-npm run dev        # http://localhost:5173
+npm run dev        # landing page: http://localhost:5173/ · the app: http://localhost:5173/app/
 ```
 
-Click **Try sample data** and ask one of the suggested questions (demo mode), or add an Anthropic or
-OpenAI key in Settings to ask anything about your own files.
+In the app, click **Try sample data** and ask one of the suggested questions (demo mode), or add an
+Anthropic or OpenAI key in Settings to ask anything about your own files. The landing page's "Try it
+on 1M rows" does both for you.
 
 | Command | What it does |
 |---|---|
@@ -122,6 +123,7 @@ OpenAI key in Settings to ask anything about your own files.
 | `npx playwright install chromium && npm run e2e` | end-to-end tests in demo mode, no key needed |
 | `npm run evals` | NL→SQL evals (see above) |
 | `node scripts/record-demo.mjs` | re-record `docs/demo.png` after `npm run build` |
+| `node scripts/record-og.mjs` | re-record the landing page's link preview, `public/og.png` |
 
 Deploying: [docs/DEPLOY.md](docs/DEPLOY.md) (Vercel; any static host that serves `.wasm` as
 `application/wasm` works).

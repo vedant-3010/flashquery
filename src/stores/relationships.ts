@@ -58,6 +58,6 @@ async function detect(datasets: ReturnType<typeof useDatasetsStore.getState>['da
     const found = await detectRelationships(await getDb(), datasets, current.signal)
     if (controller === current) useRelationshipsStore.setState({ found })
   } catch (error) {
-    if (!isCancellation(error)) console.warn('AskData: join detection failed', error)
+    if (!isCancellation(error)) console.warn('flashQuery: join detection failed', error)
   }
 }

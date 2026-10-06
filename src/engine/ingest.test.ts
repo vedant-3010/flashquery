@@ -15,7 +15,7 @@ const csvFile = (name: string, text: string) => new File([text], name, { type: '
 const rows = async (sql: string) => (await runQuery(engine, sql)).rows
 
 // DuckDB's Node runtime writes COPY output to the real disk, so fixtures go to a temp dir.
-const scratch = mkdtempSync(join(tmpdir(), 'askdata-ingest-'))
+const scratch = mkdtempSync(join(tmpdir(), 'flashQuery-ingest-'))
 
 beforeAll(async () => {
   engine = await createTestEngine()

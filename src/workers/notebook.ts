@@ -36,13 +36,13 @@ import numbers, os
 os.environ["MPLBACKEND"] = "Agg"
 import pandas as pd
 
-def __askdata_cell(v):
+def __flashQuery_cell(v):
     try:
         return "" if pd.isna(v) else str(v)
     except (TypeError, ValueError):
         return str(v)
 
-def __askdata_show(value):
+def __flashQuery_show(value):
     if value is None:
         return None
     if isinstance(value, pd.Series):
@@ -53,14 +53,14 @@ def __askdata_show(value):
         return {
             "kind": "table",
             "columns": [str(c) for c in head.columns],
-            "rows": [[__askdata_cell(v) for v in row] for row in head.itertuples(index=False)],
+            "rows": [[__flashQuery_cell(v) for v in row] for row in head.itertuples(index=False)],
             "totalRows": len(frame),
         }
     # Numbers as a notebook prints them (1100, not np.int64(1100)); anything else as its repr.
     text = str(value) if isinstance(value, numbers.Number) else repr(value)
     return {"kind": "text", "text": text[:${MAX_TEXT}]}
 
-def __askdata_figures():
+def __flashQuery_figures():
     import sys
     if "matplotlib.pyplot" not in sys.modules:
         return []
@@ -107,7 +107,7 @@ export function createNotebook({
   }
 
   async function figures(pyodide: PyodideAPI, globals: PyProxy): Promise<string[]> {
-    const result: unknown = await pyodide.runPythonAsync('__askdata_figures()', { globals })
+    const result: unknown = await pyodide.runPythonAsync('__flashQuery_figures()', { globals })
     return isProxy(result) ? (toJs(result) as string[]) : []
   }
 
@@ -153,7 +153,7 @@ export function createNotebook({
         const raw: unknown = await pyodide.runPythonAsync(code, { globals, filename: '<cell>' })
         let value: NotebookValue | null = null
         if (isProxy(raw)) {
-          const show = globals.get('__askdata_show') as PyCallable
+          const show = globals.get('__flashQuery_show') as PyCallable
           const shown: unknown = show(raw)
           show.destroy()
           raw.destroy()

@@ -1,10 +1,18 @@
-# AskData architecture
+# flashQuery architecture
 
-AskData is a static single-page app with no backend. Your files are loaded into DuckDB-WASM inside the
+flashQuery is a static single-page app with no backend. Your files are loaded into DuckDB-WASM inside the
 browser tab. The only network traffic is the AI provider you pick, with your own key, plus the pinned
 CDNs for Pyodide and DuckDB's parquet/json extensions. This document covers where code runs, what an
 answer goes through, and where data may cross the device boundary. Requirements and feature IDs live
 in [PRD.md](PRD.md); the decisions behind them are in its §12 (`D1`…).
+
+## Two pages
+
+The build has two entries: the landing page at `/` (`index.html`, `src/landing/`) and the app at
+`/app/` (`app/index.html`, `src/main.tsx`). The landing page has its own small Tailwind build and no
+engine code: its hero is a scripted miniature of the app (`src/landing/film/`) using the real query
+and numbers. "Try it on 1M rows" links to `/app/#/try`, which loads the sample and asks the demo
+question. Both pages carry the same Content-Security-Policy.
 
 ## Threading model
 
@@ -165,7 +173,7 @@ replaced by defaults, never half-loaded.
 | `notes` | business notes by schema hash, so re-loading the same file brings them back |
 | `evalCases` | 👍/👎 cases saved from answers, exportable in the evals format |
 | `suggestions` | AI-suggested questions by schema hash |
-| `persistedDatasets` | opt-in only: how to load each kept file again; the bytes live in OPFS (`askdata-files/`) |
+| `persistedDatasets` | opt-in only: how to load each kept file again; the bytes live in OPFS (`flashQuery-files/`) |
 
 Files are stored only if the user turns on "Keep loaded files on this device": then their bytes go
 to the Origin Private File System and are loaded again at startup. Otherwise the user loads them
@@ -176,7 +184,7 @@ handles, re-applies column type overrides and reopens every answer's view.
 
 A tile stores its SQL, chart spec and a snapshot. It renders the snapshot at once, then re-runs
 through `src/dashboard/run.ts` (the same guard) when its tables are loaded. Dashboard filters create
-filtered views (`askdata_filtered_<table>`), and the tile SQL's table references are rewritten through
+filtered views (`flashQuery_filtered_<table>`), and the tile SQL's table references are rewritten through
 the AST to point at them (`src/engine/filters.ts`), so filters work on any tile without string editing.
 Clicking a bar or slice adds such a filter (cross-filtering). A dashboard can be presented full screen
 (read-only), or exported as a standalone HTML file of its snapshots (inline SVG, no scripts) that

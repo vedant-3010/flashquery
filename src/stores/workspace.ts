@@ -13,7 +13,7 @@ import { DatasetNotesSchema, useNotesStore } from '@/stores/notes'
 // unless the user opts in to dashboard snapshots. Clear all local data (F-EXP-04).
 
 export const WorkspaceFileSchema = z.object({
-  format: z.literal('askdata-workspace'),
+  format: z.literal('flashQuery-workspace'),
   version: z.literal(1),
   exportedAt: z.number(),
   history: z.array(HistoryEntrySchema),
@@ -28,7 +28,7 @@ export function exportWorkspace({ snapshots }: { snapshots: boolean }): {
   json: string
 } {
   const file: WorkspaceFile = {
-    format: 'askdata-workspace',
+    format: 'flashQuery-workspace',
     version: 1,
     exportedAt: Date.now(),
     history: useHistoryStore.getState().entries,
@@ -42,7 +42,7 @@ export function exportWorkspace({ snapshots }: { snapshots: boolean }): {
     evalCases: useFeedbackStore.getState().cases,
   }
   const day = new Date(file.exportedAt).toISOString().slice(0, 10)
-  return { fileName: `askdata-workspace-${day}.json`, json: JSON.stringify(file, null, 2) }
+  return { fileName: `flashQuery-workspace-${day}.json`, json: JSON.stringify(file, null, 2) }
 }
 
 /** Adds an exported workspace to this one: history and notes merge, dashboards come in as copies. */
@@ -65,7 +65,7 @@ export function importWorkspace(text: string): {
   if (!parsed.success) {
     throw new AppError({
       code: 'import_invalid',
-      message: "This isn't an AskData workspace file (or it is from a newer version).",
+      message: "This isn't an flashQuery workspace file (or it is from a newer version).",
       detail: parsed.error.issues
         .slice(0, 5)
         .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
@@ -81,7 +81,7 @@ export function importWorkspace(text: string): {
   const dashboards = useDashboardStore.getState()
   for (const dashboard of file.dashboards) {
     dashboards.importDashboard({
-      format: 'askdata-dashboard',
+      format: 'flashQuery-dashboard',
       version: 1,
       exportedAt: file.exportedAt,
       dashboard,
@@ -99,7 +99,7 @@ export function importWorkspace(text: string): {
   }
 }
 
-/** Removes everything AskData saved in this browser, then reloads (F-EXP-04). */
+/** Removes everything flashQuery saved in this browser, then reloads (F-EXP-04). */
 export async function clearLocalData(): Promise<void> {
   await idbStore.clear()
   await clearOpfs()

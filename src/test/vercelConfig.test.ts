@@ -10,6 +10,9 @@ import { z } from '@/lib/zod'
 const VercelConfigSchema = z.object({
   outputDirectory: z.string(),
   buildCommand: z.string(),
+  redirects: z.array(
+    z.object({ source: z.string(), destination: z.string(), permanent: z.boolean() }),
+  ),
   headers: z.array(
     z.object({
       source: z.string(),
@@ -48,5 +51,13 @@ describe('vercel.json', () => {
   it('denies framing and sniffing on every path', () => {
     expect(headerFor('/', 'Content-Security-Policy')).toBe("frame-ancestors 'none'")
     expect(headerFor('/index.html', 'X-Content-Type-Options')).toBe('nosniff')
+  })
+
+  it('sends /app to /app/, where the app lives (the landing page is at /, PRD D99)', () => {
+    expect(config.redirects).toContainEqual({
+      source: '/app',
+      destination: '/app/',
+      permanent: true,
+    })
   })
 })
