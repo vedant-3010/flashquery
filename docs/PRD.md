@@ -1,4 +1,4 @@
-# AskData: Product Requirements Document
+# flashQuery: Product Requirements Document
 
 > Living document. Claude Code: read the relevant section before building a feature. Tick a feature's
 > checkbox only when its acceptance criteria (AC) and the Definition of Done in `CLAUDE.md` are met.
@@ -10,8 +10,8 @@ Version 1.0 · 2026-09-27
 
 ## 1. Summary
 
-AskData is a privacy-first AI data analyst that runs entirely in the browser. Users upload a CSV, Excel,
-Parquet or JSON file and ask questions in plain English. AskData translates the question into DuckDB SQL
+flashQuery is a privacy-first AI data analyst that runs entirely in the browser. Users upload a CSV, Excel,
+Parquet or JSON file and ask questions in plain English. flashQuery translates the question into DuckDB SQL
 with an LLM, executes it locally in DuckDB-WASM, picks an appropriate chart, explains what it did and why,
 and lets the user assemble answers into a drag-and-drop dashboard. Statistical and forecasting questions
 can run as Python (pandas) in the browser via Pyodide.
@@ -577,7 +577,7 @@ multithreading and Pyodide interrupt buffers. Revisit as P2.
 - **D6** LangChain.js for provider abstraction + Zod structured output, hidden behind `LLMProvider` so it
 can be swapped.
 - **D7** Package manager: npm.
-- **D8** Theme preference lives in `localStorage` (`askdata:theme`), not IndexedDB: `public/theme-init.js`
+- **D8** Theme preference lives in `localStorage` (`flashQuery:theme`), not IndexedDB: `public/theme-init.js`
 must read it synchronously in `<head>` to avoid a light flash before first paint. The script is an
 external file, not inline, so the F-SEC-06 CSP can keep `script-src 'self'`. Everything else still
 persists to IndexedDB (F-EXP-02).
@@ -718,7 +718,7 @@ or a table's first rows. Whether a tile is live, refreshing or out of date is pe
 the dashboard's filters. The chart the user picked is kept while it still fits the result,
 otherwise it is chosen again.
 - **D51** Filters (F-DASH-10): one date range and up to 3 value filters, each on one table's column.
-A filtered table becomes a temp view (`askdata_filtered_<table>`); tile SQL is rewritten by
+A filtered table becomes a temp view (`flashQuery_filtered_<table>`); tile SQL is rewritten by
 renaming base-table references in DuckDB's own syntax tree (`json_serialize_sql` →
 `json_deserialize_sql`), which round-trips every demo query; a CTE wrapper is the fallback. Value
 lists come from `SELECT DISTINCT` (≤ 100). Measured on 1M rows: the 5-tile demo dashboard
@@ -738,7 +738,7 @@ full-width trends, then breakdowns in pairs. Demo mode replays a 6-tile fixture 
 (never HTML; only http(s)/mailto links), and toasts are our own. react-grid-layout v2 loads with
 the dashboard (lazy chunk, 27 KB gzip). The tile menu's Size and Move earlier/later are the
 keyboard alternative to dragging and resizing.
-- **D56** Dashboard files (F-DASH-08): `{ format: 'askdata-dashboard', version: 1, dashboard }`,
+- **D56** Dashboard files (F-DASH-08): `{ format: 'flashQuery-dashboard', version: 1, dashboard }`,
 exported with data snapshots or without (layout and SQL only, no data). Imports are validated with
 Zod, get fresh ids and a unique name, and their SQL only ever runs through the guard.
 - **D57** Bundle after M5: initial JS 244 KB gzip (+9 KB for pinning and dashboard state). F-ASK-08 and
@@ -770,7 +770,7 @@ Python answers can't be pinned: refreshing such a tile would mean running Python
 (`@codemirror/lang-python`) would be a new dependency.
 - **D65** Bundle after M6: initial JS 249 KB gzip (+5 KB); the Python worker is a 26 KB chunk, and
 Pyodide itself comes from the CDN.
-- **D66** Production CSP (F-SEC-06) is a `<meta>` tag injected at build by the `askdata:csp` Vite
+- **D66** Production CSP (F-SEC-06) is a `<meta>` tag injected at build by the `flashQuery:csp` Vite
 plugin: `default-src 'self'`; `script-src 'self' 'wasm-unsafe-eval'` (DuckDB and Pyodide compile
 wasm); `worker-src 'self' blob:`; `connect-src 'self'` + api.anthropic.com, api.openai.com,
 cdn.jsdelivr.net (Pyodide), extensions.duckdb.org (parquet/json); `style-src 'self' 'unsafe-inline'` because CodeMirror and Radix's scroll lock inject `<style>` elements; `img-src 'self' data: blob:`; `font-src 'self'`; `object-src 'none'`; `base-uri 'self'`; `form-action 'none'`. Zod runs jitless so no `unsafe-eval` is needed: every module imports `z` from `src/lib/zod.ts`,
@@ -792,7 +792,7 @@ data is loaded, not an overlay: nothing to position or trap focus in. Remembered
 - **D70** Business notes (F-PROF-05) are saved by `schemaHash` (IndexedDB `notes`), so loading the
 same file again restores them. Currency is part of a column's free-text unit. Notes are sent in
 every privacy mode, inside `<data>`, as the user's own text.
-- **D71** Workspace bundle (F-EXP-03): `askdata-workspace` v1 JSON with history, dashboards (tile
+- **D71** Workspace bundle (F-EXP-03): `flashQuery-workspace` v1 JSON with history, dashboards (tile
 snapshots only when the user picks "Export with dashboard data"), notes and eval cases; never
 settings or keys. Import merges: history by id, dashboards as copies with new ids, notes by
 schema. "Clear all local data" (F-EXP-04) clears IndexedDB and the theme key, then reloads.
@@ -898,7 +898,7 @@ renderer, KPIs, the first 50 table rows, markdown text) with its own CSP (no scr
 everything from the data escaped. "Print or save as PDF" opens that file and the browser's print
 dialog. PNG isn't offered: it would need a DOM-to-image dependency.
 - **D95** Kept files (F-DATA-12): an opt-in setting (`persistFiles`, settings v5). Each loaded file's bytes
-go to OPFS (`askdata-files/<dataset id>`), and an IndexedDB manifest (`persistedDatasets` v1) records
+go to OPFS (`flashQuery-files/<dataset id>`), and an IndexedDB manifest (`persistedDatasets` v1) records
 how to load it again (CSV options, sheet, type overrides). Samples are regenerated, not stored. The
 manifest is replayed at startup through the normal ingest jobs; entries survive an engine restart and
 jobs still loading. Turning the setting off, or "Clear all local data", deletes the files.
@@ -916,6 +916,19 @@ matplotlib draws with the Agg backend and figures come back as PNG data URLs (at
 and the timeout reset the session, so `df` has to be loaded again. Cells aren't saved.
 - **D98** Bundle after the stretch items: initial JS 278 KB gzip (+8 KB); the notebook, benchmark and
 dashboard are lazy chunks.
+- **D99** Landing page (2026-10-06): an editorial page at `/` in the style of Hex (warm paper, ink, one
+violet accent, #5500AA, Geist and Geist Mono), with the app moved to `/app/`. Headlines come in two
+lines: an Instrument Serif italic lead-in, then the point in Hubot Sans (semi-expanded, weight 500),
+an open-licence stand-in for PP Formula SemiExtended, which is paid.
+The hero is a scripted miniature of the app (a pure `frameAt(t)` timeline) answering the demo
+question with the real SQL and the real 1M-row numbers; it pauses on request (WCAG 2.2.2),
+off-screen, in a hidden tab and on hover, and holds its final frame with reduced motion. The privacy
+section shows the payload the app's own context builder makes in each mode (a test keeps them equal).
+New dependencies, approved: `motion`, `@fontsource/instrument-serif`, `@fontsource-variable/geist-mono`
+(2026-10-06), `@fontsource-variable/hubot-sans` (2026-10-07).
+A new mark (a speech bubble holding rising bars) replaces Vite's favicon and the app's top-bar icon.
+`/app/#/try` loads the 1M-row sample and asks the demo question. The landing page's initial JS
+budget is 150 KB gzip (134 KB at launch: React DOM, motion with layout animations, the page).
 - **D12** Shared hooks live in `src/hooks/` and shared app components in `src/components/` (outside the
 generated `ui/`), matching the shadcn aliases in `components.json`.
 

@@ -132,7 +132,7 @@ export function ProviderSettings() {
           {validUrl === null ? (
             <p role="alert" className="text-xs text-destructive">
               Use a server on this computer (http://localhost:… or http://127.0.0.1:…).
-              AskData&apos;s security policy blocks other addresses.
+              flashQuery&apos;s security policy blocks other addresses.
             </p>
           ) : (
             <p className="text-xs text-muted-foreground">
@@ -176,7 +176,7 @@ export function ProviderSettings() {
         <p className="text-xs text-muted-foreground">
           {local
             ? 'Sent only to your local server.'
-            : `Sent only to ${PROVIDER_LABELS[provider]}, straight from this browser. Without a key, AskData runs in demo mode.`}
+            : `Sent only to ${PROVIDER_LABELS[provider]}, straight from this browser. Without a key, flashQuery runs in demo mode.`}
         </p>
       </div>
 

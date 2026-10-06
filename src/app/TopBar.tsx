@@ -6,13 +6,14 @@ import {
   PanelLeft,
   PanelRight,
   Settings,
-  Sparkles,
   SquareTerminal,
 } from 'lucide-react'
 import { EngineStatusBadge } from '@/app/EngineStatusBadge'
 import { PrivacyBadge } from '@/app/PrivacyBadge'
 import { ThemeMenu } from '@/app/ThemeMenu'
+import { BrandMark } from '@/components/BrandMark'
 import { IconButton } from '@/components/IconButton'
+import { useResolvedTheme } from '@/hooks/useResolvedTheme'
 import { TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useUiStore } from '@/stores/ui'
 
@@ -27,6 +28,7 @@ export function TopBar({ showSidebarToggle }: TopBarProps) {
   const setSettingsOpen = useUiStore((state) => state.setSettingsOpen)
   const setShortcutsOpen = useUiStore((state) => state.setShortcutsOpen)
   const setHowItWorksOpen = useUiStore((state) => state.setHowItWorksOpen)
+  const theme = useResolvedTheme()
 
   return (
     <header className="flex h-12 shrink-0 items-center gap-3 border-b px-3">
@@ -36,8 +38,8 @@ export function TopBar({ showSidebarToggle }: TopBarProps) {
         </IconButton>
       )}
       <div className="flex items-center gap-1.5 font-semibold">
-        <Sparkles className="size-4 text-primary" aria-hidden />
-        AskData
+        <BrandMark className="size-[18px] text-primary" onDark={theme === 'dark'} />
+        flashQuery
       </div>
       <TabsList aria-label="Views">
         <TabsTrigger value="workspace" className="px-2.5">
@@ -57,7 +59,7 @@ export function TopBar({ showSidebarToggle }: TopBarProps) {
         <PrivacyBadge />
         <EngineStatusBadge />
         <ThemeMenu />
-        <IconButton label="How AskData works" onClick={() => setHowItWorksOpen(true)}>
+        <IconButton label="How flashQuery works" onClick={() => setHowItWorksOpen(true)}>
           <CircleHelp />
         </IconButton>
         <IconButton label="Keyboard shortcuts (?)" onClick={() => setShortcutsOpen(true)}>

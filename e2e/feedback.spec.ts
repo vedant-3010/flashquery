@@ -5,7 +5,7 @@ import { expect, test } from '@playwright/test'
 // the cases as JSON Lines in the evals/ format.
 
 test('a 👎 answer becomes an exportable eval case', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/app/')
   await page.getByRole('button', { name: 'Try sample data', exact: true }).click()
   await page.getByRole('menuitem', { name: 'Global Sales · 10k rows' }).click()
   await page.getByRole('textbox', { name: 'Ask a question' }).fill('Which region grew fastest?')

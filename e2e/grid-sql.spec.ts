@@ -4,7 +4,7 @@ import { expect, test, type Page } from '@playwright/test'
 // M2: virtualized grid (F-GRID-01..03), SQL scratchpad (F-EXPL-07), export (F-EXP-01).
 
 async function loadSample(page: Page, label: string) {
-  await page.goto('/')
+  await page.goto('/app/')
   await page.getByRole('button', { name: 'Try sample data', exact: true }).click()
   await page.getByRole('menuitem', { name: label }).click()
   await expect(page.getByRole('region', { name: label })).toBeVisible({ timeout: 60_000 })

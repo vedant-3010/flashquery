@@ -133,7 +133,7 @@ const forecast = DEMO_FIXTURES.find((f) => f.plan.kind === 'python')
 describe.runIf(process.env.RUN_PYODIDE === '1')('real Pyodide', () => {
   it('runs the demo forecast and returns result + summary', async () => {
     const indexURL = `${dirname(createRequire(import.meta.url).resolve('pyodide/package.json'))}/`
-    const cache = mkdtempSync(join(tmpdir(), 'askdata-pyodide-'))
+    const cache = mkdtempSync(join(tmpdir(), 'flashQuery-pyodide-'))
     const api = createPythonApi({
       indexURL,
       packageBaseUrl: PYODIDE_INDEX_URL,
@@ -172,7 +172,7 @@ describe.runIf(process.env.RUN_PYODIDE === '1')('real Pyodide', () => {
 
   it('runs notebook cells that share variables and draw matplotlib figures (F-PY-06)', async () => {
     const indexURL = `${dirname(createRequire(import.meta.url).resolve('pyodide/package.json'))}/`
-    const cache = mkdtempSync(join(tmpdir(), 'askdata-pyodide-'))
+    const cache = mkdtempSync(join(tmpdir(), 'flashQuery-pyodide-'))
     const api = createPythonApi({
       indexURL,
       packageBaseUrl: PYODIDE_INDEX_URL,

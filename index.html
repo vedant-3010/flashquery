@@ -4,16 +4,23 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>flashQuery · Ask your data anything. It never leaves your browser.</title>
     <meta
       name="description"
-      content="Privacy-first AI data analyst that runs entirely in your browser."
+      content="A private AI data analyst that runs in your browser tab. Ask questions about CSV, Excel, Parquet or JSON files in plain English; DuckDB runs the SQL on your machine."
     />
-    <title>AskData</title>
-    <!-- Applies the saved theme before first paint. External (not inline) so the CSP can stay script-src 'self'. -->
-    <script src="/theme-init.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="flashQuery · Ask your data anything" />
+    <meta
+      property="og:description"
+      content="Ask questions about your files in plain English. The SQL runs in your browser with DuckDB; your file is never uploaded."
+    />
+    <meta property="og:image" content="/og.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="theme-color" content="#F6F3EC" />
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <script type="module" src="/src/landing/main.tsx"></script>
   </body>
 </html>

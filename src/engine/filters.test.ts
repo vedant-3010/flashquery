@@ -63,10 +63,10 @@ describe('filterCondition', () => {
 describe('filtered tiles', () => {
   it('rewrites only real table references and gives the filtered answer', async () => {
     const views = await createFilterViews(engine, [year2025, apac])
-    expect([...views]).toEqual([['global_sales', 'askdata_filtered_global_sales']])
+    expect([...views]).toEqual([['global_sales', 'flashQuery_filtered_global_sales']])
     const sql = 'SELECT round(sum(revenue), 2) AS total FROM global_sales'
     const rewritten = await rewriteTables(engine, sql, views)
-    expect(rewritten).toContain('askdata_filtered_global_sales')
+    expect(rewritten).toContain('flashQuery_filtered_global_sales')
     expect(await value(rewritten)).toEqual(
       await value(
         "SELECT round(sum(revenue), 2) FROM global_sales WHERE year(order_date) = 2025 AND region = 'APAC'",
@@ -75,10 +75,10 @@ describe('filtered tiles', () => {
   })
 
   it('keeps CTEs that share a name, and leaves unfiltered tables alone', async () => {
-    const views = new Map([['global_sales', 'askdata_filtered_global_sales']])
+    const views = new Map([['global_sales', 'flashQuery_filtered_global_sales']])
     const sql =
       'WITH global_sales AS (SELECT 1 AS revenue) SELECT sum(revenue) AS total FROM global_sales'
-    expect(await rewriteTables(engine, sql, views)).not.toContain('askdata_filtered')
+    expect(await rewriteTables(engine, sql, views)).not.toContain('flashQuery_filtered')
     expect(await rewriteTables(engine, 'SELECT 42 AS answer', views)).toBe('SELECT 42 AS answer')
   })
 
@@ -87,7 +87,7 @@ describe('filtered tiles', () => {
     async (_, sql) => {
       const views = await createFilterViews(engine, [year2025])
       const rewritten = await rewriteTables(engine, sql, views)
-      expect(rewritten).toContain('askdata_filtered_global_sales')
+      expect(rewritten).toContain('flashQuery_filtered_global_sales')
       await expect(runQuery(engine, rewritten)).resolves.toBeDefined()
     },
   )
@@ -96,7 +96,7 @@ describe('filtered tiles', () => {
     await createFilterViews(engine, [apac])
     const wrapped = cteWrapper(
       'SELECT count(*) AS n FROM (SELECT * FROM global_sales) AS s',
-      new Map([['global_sales', 'askdata_filtered_global_sales']]),
+      new Map([['global_sales', 'flashQuery_filtered_global_sales']]),
     )
     expect(await value(wrapped)).toEqual(
       await value("SELECT count(*) FROM global_sales WHERE region = 'APAC'"),

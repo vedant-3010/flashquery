@@ -4,7 +4,7 @@ import './index.css'
 import { App } from '@/app/App'
 
 const rootElement = document.getElementById('root')
-if (!rootElement) throw new Error('AskData: #root element missing from index.html')
+if (!rootElement) throw new Error('flashQuery: #root element missing from index.html')
 
 createRoot(rootElement).render(
   <StrictMode>

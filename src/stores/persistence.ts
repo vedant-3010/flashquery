@@ -7,13 +7,13 @@ import type { CorruptRecord } from '@/lib/idb'
  */
 export function backupCorruptRecord(record: CorruptRecord): void {
   console.warn(
-    `AskData: resetting unreadable "${record.key}" data (${record.reason}); backup downloaded.`,
+    `flashQuery: resetting unreadable "${record.key}" data (${record.reason}); backup downloaded.`,
   )
   const json = JSON.stringify({ key: record.key, reason: record.reason, data: record.raw }, null, 2)
   const stamp = new Date().toISOString().slice(0, 10)
   downloadBytes(
     new TextEncoder().encode(json),
-    `askdata-${record.key}-backup-${stamp}.json`,
+    `flashQuery-${record.key}-backup-${stamp}.json`,
     'application/json',
   )
 }

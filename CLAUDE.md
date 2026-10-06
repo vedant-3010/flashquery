@@ -1,7 +1,7 @@
-# AskData
+# flashQuery
 
 Privacy-first AI data analyst that runs entirely in the browser. Users load a CSV / Excel / Parquet / JSON
-file and ask questions in plain English ("Which region grew fastest?"). AskData writes DuckDB SQL with an
+file and ask questions in plain English ("Which region grew fastest?"). flashQuery writes DuckDB SQL with an
 LLM, runs it client-side in DuckDB-WASM, picks a chart, explains its reasoning, and lets users pin answers
 to a drag-and-drop dashboard. Stats/forecast questions can run as Python (pandas) via Pyodide.
 There is no backend. Only what the active privacy mode allows (schema, a few sample values) is sent to
@@ -22,16 +22,17 @@ the LLM provider the user picks with their own API key.
 5. **LLM output is untrusted input**: validate with Zod and the SQL guard before anything executes.
 
 ## Commands
-- `npm run dev`: dev server at http://localhost:5173
+- `npm run dev`: dev server: the landing page at http://localhost:5173/, the app at http://localhost:5173/app/
 - `npm run build`: `tsc -b` + production build
-- `npm run check`: typecheck + lint + unit + build + `npm run size` (initial JS ≤ 350 KB gzip), same as CI
+- `npm run check`: typecheck + lint + unit + build + `npm run size` (initial JS gzip: app ≤ 350 KB, landing ≤ 150 KB), same as CI
 - `npm run typecheck` / `npm run lint` / `npm run format`
 - `npm test`: Vitest (one file: `npx vitest run src/engine/sqlGuard.test.ts`)
 - `npm run e2e`: Playwright; runs in demo mode, no API key needed
 - `ANTHROPIC_API_KEY=… npm run evals`: NL→SQL evals → `evals/report.md` (`EVAL_DRY_RUN=1` checks the
   harness without a key; see `.claude/rules/ai.md`)
-- `http://localhost:5173/#/bench`: benchmark page (§5 budgets on this device; "Copy as Markdown")
+- `http://localhost:5173/app/#/bench`: benchmark page (§5 budgets on this device; "Copy as Markdown")
 - `node scripts/record-demo.mjs` (after `npm run build`): re-records the README demo, `docs/demo.png`
+- `node scripts/record-og.mjs` (after `npm run build`): re-records the landing page's `public/og.png`
 - Deploy: Vercel, configured by `vercel.json`; steps and checks in `docs/DEPLOY.md`
 - `npx shadcn@latest add <component>`: add a shadcn/ui primitive (files in `src/components/ui/` stay
   as generated; they're in `.prettierignore`)
@@ -69,7 +70,8 @@ local summary`, then, in Balanced mode with a key, the AI summary (`narrate`) on
 ## Layout
 ```
 src/
-  app/          shell, layout, providers, view switching (no router; hash for #/bench)
+  landing/      the landing page at / (own entry, own Tailwind build; film/, how/, features/, sections/)
+  app/          shell, layout, providers, view switching (no router; hash for #/bench and #/try)
   components/   shared app components (EmptyState, IconButton); ui/ = shadcn/ui primitives (generated)
   hooks/        shared React hooks (useMediaQuery, useResolvedTheme)
   features/     datasets/ grid/ sql/ ask/ explain/ charts/ dashboard/ python/ settings/ bench/  (React only)
@@ -82,7 +84,7 @@ src/
   stores/       zustand stores      lib/  format, errors, theme, ids, idb      types/  shared types
   test/         setup, fixtures
 docs/           PRD.md, ARCHITECTURE.md, DEPLOY.md, demo.png     evals/ (questions.jsonl, run.eval.ts)
-e2e/ (Playwright)     scripts/ (sample + fixture generators, record-demo)
+e2e/ (Playwright)     scripts/ (sample + fixture generators, record-demo, record-og)
 ```
 
 ## Code conventions
@@ -183,5 +185,9 @@ e2e/ (Playwright)     scripts/ (sample + fixture generators, record-demo)
 - Settings are v5 (local server, kept files). A new saved field needs a migration in `SETTINGS_RECORD`.
 - The Python worker also runs the scratchpad notebook (`src/workers/notebook.ts`, own namespace);
   Stop/timeout reset both. Kept files (`src/stores/persistFiles.ts`) live in OPFS, opt-in only.
+- Two pages (PRD D99): `index.html` is the landing page, `app/index.html` the app (served at
+  `/app/`). e2e tests open the app with `page.goto('/app/')`. `npm run size` checks both budgets
+  (app 350 KB, landing 150 KB gzip). The landing page must not import engine, AI or store code; its
+  CSS (`src/landing/landing.css`) only scans `src/landing/` and `BrandMark.tsx`.
 - Model IDs live only in `src/ai/models.ts` (default `claude-sonnet-5`, fast `claude-haiku-4-5-20251001`).
   Check provider docs before changing them.

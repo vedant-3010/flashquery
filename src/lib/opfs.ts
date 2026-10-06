@@ -1,7 +1,7 @@
 // Origin Private File System helpers (F-DATA-12): files only this site can read, kept by the
 // browser across reloads. Used to keep loaded datasets when the user opts in.
 
-const DIRECTORY = 'askdata-files'
+const DIRECTORY = 'flashQuery-files'
 
 /** OPFS with writable file streams (Chrome, Edge, Firefox; recent Safari). */
 export function opfsSupported(): boolean {

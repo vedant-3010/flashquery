@@ -170,7 +170,7 @@ export function useCommands(): Command[] {
       },
       {
         id: 'how',
-        label: 'How AskData works',
+        label: 'How flashQuery works',
         group: 'Help',
         keywords: 'privacy',
         run: () => ui.setHowItWorksOpen(true),

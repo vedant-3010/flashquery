@@ -33,7 +33,7 @@ export function ShortcutsDialog() {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Keyboard shortcuts</DialogTitle>
-          <DialogDescription>Everything in AskData also works from the keyboard.</DialogDescription>
+          <DialogDescription>Everything in flashQuery also works from the keyboard.</DialogDescription>
         </DialogHeader>
         <dl className="grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-2 text-sm">
           {SHORTCUTS.map(({ keys, action }) => (

@@ -23,7 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 
-# askdata:ignore
+# flashQuery:ignore
 CLAUDE.local.md
 .env
 .env.*

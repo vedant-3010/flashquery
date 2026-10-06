@@ -42,7 +42,7 @@ async function ask(page: Page, question: string) {
 
 test.describe('J4: dashboard (F-DASH-02…10)', () => {
   test('generate, edit, filter, export, reload, re-load the data, refresh', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('/app/')
     await loadSales(page)
     await generateDashboard(page)
 
@@ -108,7 +108,7 @@ test.describe('J4: dashboard (F-DASH-02…10)', () => {
     const download = page.waitForEvent('download')
     await page.getByRole('menuitem', { name: 'Export JSON (with data snapshots)' }).click()
     const file = JSON.parse(readFileSync((await (await download).path()) ?? '', 'utf8'))
-    expect(file).toMatchObject({ format: 'askdata-dashboard', version: 1 })
+    expect(file).toMatchObject({ format: 'flashQuery-dashboard', version: 1 })
     expect(file.dashboard.tiles).toHaveLength(5)
     expect(file.dashboard.filters).toEqual([
       {
@@ -139,7 +139,7 @@ test.describe('J4: dashboard (F-DASH-02…10)', () => {
 
 test.describe('pinning and editing (F-DASH-01, F-DASH-06, F-DASH-07)', () => {
   test('pins an answer, shows it on the dashboard, and edits it', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('/app/')
     await loadSales(page)
     const answer = await ask(page, 'Top 10 products by revenue in 2025')
     await answer.getByRole('button', { name: 'Pin to dashboard' }).click()
@@ -181,7 +181,7 @@ test.describe('pinning and editing (F-DASH-01, F-DASH-06, F-DASH-07)', () => {
   })
 
   test('pins a query from history, as a table', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('/app/')
     await loadSales(page)
     await ask(page, 'What is total revenue by year?')
     await page.getByRole('button', { name: 'Side panel' }).click()
@@ -196,7 +196,7 @@ test.describe('pinning and editing (F-DASH-01, F-DASH-06, F-DASH-07)', () => {
 
 test.describe('dashboards and files (F-DASH-05, F-DASH-08)', () => {
   test('creates, renames and deletes dashboards; imports exported files', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('/app/')
     await loadSales(page)
     await generateDashboard(page)
 
@@ -246,7 +246,7 @@ test.describe('dashboards and files (F-DASH-05, F-DASH-08)', () => {
 
 test.describe('presentation mode (F-DASH-13)', () => {
   test('shows the dashboard full screen, read-only; Esc ends it', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('/app/')
     await loadSales(page)
     await generateDashboard(page)
     await page.getByRole('button', { name: 'Present' }).click()
@@ -268,7 +268,7 @@ test.describe('cross-filtering (F-DASH-11)', () => {
   test('clicking a bar filters every tile; clicking it again clears the filter', async ({
     page,
   }) => {
-    await page.goto('/')
+    await page.goto('/app/')
     await loadSales(page)
     await generateDashboard(page)
     const filters = page.getByRole('group', { name: 'Filters' })
@@ -292,7 +292,7 @@ test.describe('cross-filtering (F-DASH-11)', () => {
 
 test.describe('export as HTML and PDF (F-DASH-12)', () => {
   test('downloads a standalone HTML file and opens it for printing', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('/app/')
     await loadSales(page)
     await generateDashboard(page)
     await expect(tile(page, 'Revenue by region').getByRole('img')).toBeVisible()

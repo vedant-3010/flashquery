@@ -19,7 +19,7 @@ const dataset = (page: Page, label: string) => page.getByRole('region', { name: 
 
 test.describe('sample data (F-DATA-05)', () => {
   test('generates Global Sales, profiles it and previews rows', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('/app/')
     await page.getByRole('button', { name: 'Try sample data', exact: true }).click()
     await page.getByRole('menuitem', { name: 'Global Sales · 10k rows' }).click()
 
@@ -53,7 +53,7 @@ test.describe('sample data (F-DATA-05)', () => {
   })
 
   test('loads a bundled CSV sample', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('/app/')
     await page.getByRole('button', { name: 'Try sample data', exact: true }).click()
     await page.getByRole('menuitem', { name: /HR attrition/ }).click()
     await expect(dataset(page, 'HR attrition (CSV)')).toContainText('hr_attrition · 1.5K rows')
@@ -61,7 +61,7 @@ test.describe('sample data (F-DATA-05)', () => {
   })
 
   test('cancels a running load', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('/app/')
     const menu = page.getByRole('button', { name: 'Try sample data', exact: true })
     await menu.click()
     await page.getByRole('menuitem', { name: 'Global Sales · 1M rows' }).click()
@@ -80,7 +80,7 @@ test.describe('sample data (F-DATA-05)', () => {
 
 test.describe('uploads (F-DATA-01..04)', () => {
   test('dropping three files creates three tables', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('/app/')
     const transfer = await page.evaluateHandle(() => {
       const data = new DataTransfer()
       data.items.add(new File(['id,amount\n1,10\n2,20\n'], 'sales.csv', { type: 'text/csv' }))
@@ -100,7 +100,7 @@ test.describe('uploads (F-DATA-01..04)', () => {
   })
 
   test('rejects unsupported files with a clear error', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('/app/')
     await upload(page, [text('report.pdf', '%PDF-1.7', 'application/pdf')])
     await expect(page.getByRole('alert', { name: 'report.pdf' })).toContainText(
       "report.pdf isn't a supported file",
@@ -108,7 +108,7 @@ test.describe('uploads (F-DATA-01..04)', () => {
   })
 
   test('reports the bad line, then skips bad rows on request (F-DATA-07)', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('/app/')
     // The bad row sits after DuckDB's 20,480-row sniffing sample, so the type is inferred as DOUBLE.
     const rows = Array.from({ length: 20_500 }, (_, i) => `${i},${i}.5`).join('\n')
     await upload(page, [text('prices.csv', `id,price\n${rows}\n99999,n/a\n`, 'text/csv')])
@@ -124,7 +124,7 @@ test.describe('uploads (F-DATA-01..04)', () => {
   })
 
   test('picks a sheet from a multi-sheet workbook (F-DATA-03)', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('/app/')
     await upload(page, [
       {
         name: 'workbook.xlsx',
@@ -144,7 +144,7 @@ test.describe('uploads (F-DATA-01..04)', () => {
   })
 
   test('loads Parquet and keeps nested JSON as text', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('/app/')
     const json = JSON.stringify([
       { id: 1, tags: ['a', 'b'], meta: { ok: true } },
       { id: 2, tags: [], meta: { ok: false } },
@@ -168,7 +168,7 @@ test.describe('uploads (F-DATA-01..04)', () => {
 
 test.describe('managing tables (F-DATA-06)', () => {
   test('renames and removes a table', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('/app/')
     await upload(page, [text('Monthly Sales.csv', 'month,total\n1,10\n2,20\n', 'text/csv')])
     const item = dataset(page, 'Monthly Sales.csv')
     await expect(item).toContainText('monthly_sales · 2 rows')
@@ -199,7 +199,7 @@ test.describe('managing tables (F-DATA-06)', () => {
 
 test.describe('engine status (F-SHELL-03)', () => {
   test('reports DuckDB ready with its version', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('/app/')
     await page.getByRole('button', { name: 'Engine ready' }).click()
     await expect(page.getByRole('dialog')).toContainText(/DuckDB v\d+\.\d+\.\d+ · ready/)
     await expect(page.getByRole('dialog')).toContainText('Python')

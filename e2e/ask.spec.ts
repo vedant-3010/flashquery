@@ -4,7 +4,7 @@ import { expect, test, type Page } from '@playwright/test'
 // through the guard, and history. The fixture answers run live SQL on the generated sample.
 
 async function loadSales(page: Page, label = 'Global Sales · 10k rows') {
-  await page.goto('/')
+  await page.goto('/app/')
   await page.getByRole('button', { name: 'Try sample data', exact: true }).click()
   await page.getByRole('menuitem', { name: label }).click()
   await expect(page.getByRole('region', { name: label })).toBeVisible({ timeout: 60_000 })
@@ -21,7 +21,7 @@ async function ask(page: Page, question: string) {
 
 test.describe('J1: first run without a key (F-SHELL-02, F-AI-03)', () => {
   test('sample data → suggested question → answer with SQL and explanation', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('/app/')
     await expect(page.getByRole('heading', { name: 'Ask your data anything' })).toBeVisible()
     await expect(page.getByText('Your files never leave this browser.')).toBeVisible()
     await expect(page.getByRole('button', { name: 'Demo' })).toBeVisible()
@@ -94,7 +94,7 @@ test.describe('J1: first run without a key (F-SHELL-02, F-AI-03)', () => {
   })
 
   test('without the sample loaded, demo mode says what to load', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('/app/')
     await page.getByRole('button', { name: 'Try sample data', exact: true }).click()
     await page.getByRole('menuitem', { name: /HR attrition/ }).click()
     await expect(page.getByRole('region', { name: 'HR attrition (CSV)' })).toBeVisible()

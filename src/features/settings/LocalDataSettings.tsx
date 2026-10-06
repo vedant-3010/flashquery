@@ -32,7 +32,7 @@ export function LocalDataSettings() {
   }
 
   const downloadCases = () => {
-    const fileName = `askdata-eval-cases-${new Date().toISOString().slice(0, 10)}.jsonl`
+    const fileName = `flashQuery-eval-cases-${new Date().toISOString().slice(0, 10)}.jsonl`
     downloadBytes(new TextEncoder().encode(toJsonl(cases)), fileName, 'application/jsonl')
     toast(`Exported ${fileName}.`)
   }
@@ -102,7 +102,7 @@ export function LocalDataSettings() {
             <AlertDialogTitle>Clear all local data?</AlertDialogTitle>
             <AlertDialogDescription>
               This removes your settings (including a remembered API key), history, dashboards,
-              notes and any kept files from this browser, then reloads AskData. Export your
+              notes and any kept files from this browser, then reloads flashQuery. Export your
               workspace first to keep a copy.
             </AlertDialogDescription>
           </AlertDialogHeader>

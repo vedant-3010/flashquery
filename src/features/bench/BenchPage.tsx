@@ -40,7 +40,7 @@ function format(result: BenchResult): string {
 function environment(rows: number): string {
   const browser = /(Edg|Firefox|Chrome|Safari)\/[\d.]+/.exec(navigator.userAgent)?.[0] ?? 'Browser'
   const version = getEngineState().version ?? ''
-  return `AskData bench · ${new Date().toISOString().slice(0, 10)} · ${browser} · ${navigator.hardwareConcurrency} cores · DuckDB-WASM ${version} · ${rows.toLocaleString('en-US')} rows`
+  return `flashQuery bench · ${new Date().toISOString().slice(0, 10)} · ${browser} · ${navigator.hardwareConcurrency} cores · DuckDB-WASM ${version} · ${rows.toLocaleString('en-US')} rows`
 }
 
 /** `#/bench` (F-PERF-04): measures the PRD §5 budgets on this device. */
@@ -99,14 +99,14 @@ export function BenchPage() {
           className="flex w-fit items-center gap-1 text-xs text-muted-foreground hover:underline"
         >
           <ArrowLeft className="size-3.5" aria-hidden />
-          Back to AskData
+          Back to flashQuery
         </a>
         <h1 className="flex items-center gap-2 text-xl font-semibold">
           <Gauge className="size-5" aria-hidden />
           Benchmark
         </h1>
         <p className="text-muted-foreground">
-          Measures AskData on this device against its performance budgets. Data is generated here;
+          Measures flashQuery on this device against its performance budgets. Data is generated here;
           nothing is sent anywhere. The 1M-row run uses a few hundred MB of memory for a minute.
         </p>
       </header>

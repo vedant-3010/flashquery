@@ -33,7 +33,7 @@ export async function createTestEngine(): Promise<Engine> {
 
   // The Node runtime writes COPY output to the real disk (there are no in-memory files), so
   // createFile() maps each name to a temp dir and readFile() reads it back from there.
-  const scratch = mkdtempSync(join(tmpdir(), 'askdata-engine-'))
+  const scratch = mkdtempSync(join(tmpdir(), 'flashQuery-engine-'))
   const files = new Map<string, string>()
 
   const engine: Engine = {

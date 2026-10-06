@@ -56,8 +56,8 @@ export function everyNthSql(
   const partition = series ? `PARTITION BY ${quoteIdent(series)} ` : ''
   const order = quoteIdent(x)
   return (
-    `SELECT ${selectList(result)} FROM (SELECT *, row_number() OVER (${partition}ORDER BY ${order}) AS askdata_rn ` +
-    `FROM ${result.relation}) AS s WHERE (askdata_rn - 1) % ${step} = 0 ORDER BY ${order}`
+    `SELECT ${selectList(result)} FROM (SELECT *, row_number() OVER (${partition}ORDER BY ${order}) AS flashQuery_rn ` +
+    `FROM ${result.relation}) AS s WHERE (flashQuery_rn - 1) % ${step} = 0 ORDER BY ${order}`
   )
 }
 

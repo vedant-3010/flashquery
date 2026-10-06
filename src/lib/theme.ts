@@ -5,7 +5,7 @@ export type ThemePreference = z.infer<typeof ThemePreferenceSchema>
 export type ResolvedTheme = 'light' | 'dark'
 
 /** Must match public/theme-init.js, which applies the saved theme before first paint. */
-export const THEME_STORAGE_KEY = 'askdata:theme'
+export const THEME_STORAGE_KEY = 'flashQuery:theme'
 export const DARK_SCHEME_QUERY = '(prefers-color-scheme: dark)'
 
 export function resolveTheme(

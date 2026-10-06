@@ -7,7 +7,7 @@ test.describe('benchmark page', () => {
 
   test('measures the budgets on 100k rows and copies the results', async ({ page }) => {
     test.setTimeout(180_000)
-    await page.goto('/#/bench')
+    await page.goto('/app/#/bench')
     await expect(page.getByRole('heading', { name: 'Benchmark' })).toBeVisible()
     await page.getByRole('combobox', { name: 'Rows' }).click()
     await page.getByRole('option', { name: /100k rows/ }).click()
@@ -30,7 +30,7 @@ test.describe('benchmark page', () => {
     expect(markdown).toContain('| Metric | Result | Budget | |')
     expect(markdown).toContain('100,000 rows')
 
-    await page.getByRole('link', { name: 'Back to AskData' }).click()
+    await page.getByRole('link', { name: 'Back to flashQuery' }).click()
     await expect(page.getByRole('heading', { name: 'Ask your data anything' })).toBeVisible()
   })
 })

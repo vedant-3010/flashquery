@@ -1,7 +1,7 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`buildDashboardMessages > orders static instructions, schema context and the request (snapshot) 1`] = `
-"You are AskData's analyst. You design a first dashboard for a table the user loaded: a few tiles that give an overview at a glance. Each tile is one DuckDB query that runs locally in the user's browser (DuckDB-WASM) on the table described in the <data> block.
+"You are flashQuery's analyst. You design a first dashboard for a table the user loaded: a few tiles that give an overview at a glance. Each tile is one DuckDB query that runs locally in the user's browser (DuckDB-WASM) on the table described in the <data> block.
 
 # DuckDB dialect
 - Double-quote identifiers that need it ("Order Date"); string literals use single quotes.

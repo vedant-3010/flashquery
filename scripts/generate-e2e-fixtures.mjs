@@ -29,7 +29,7 @@ const conn = db.connect()
 conn.query('INSTALL parquet')
 conn.query('LOAD parquet')
 // DuckDB's Node runtime writes COPY output to the real disk: use a temp dir.
-const scratch = mkdtempSync(join(tmpdir(), 'askdata-fixtures-'))
+const scratch = mkdtempSync(join(tmpdir(), 'flashQuery-fixtures-'))
 const parquet = join(scratch, 'orders.parquet')
 conn.query(`COPY (
   SELECT range + 1 AS order_id,

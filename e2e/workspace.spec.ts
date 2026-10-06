@@ -13,7 +13,7 @@ async function loadSales(page: Page) {
 }
 
 test('the tour shows once; ? lists the shortcuts', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/app/')
   await loadSales(page)
   const tour = page.getByRole('region', { name: 'Quick tour' })
   await expect(tour).toContainText('1 of 3')
@@ -38,7 +38,7 @@ test('the tour shows once; ? lists the shortcuts', async ({ page }) => {
 test('notes come back with the data; the workspace exports, clears and imports', async ({
   page,
 }) => {
-  await page.goto('/')
+  await page.goto('/app/')
   await loadSales(page)
   const sales = page.getByRole('region', { name: 'Global Sales · 10k rows' })
   await sales.getByRole('button', { name: 'Actions for Global Sales · 10k rows' }).click()
@@ -69,7 +69,7 @@ test('notes come back with the data; the workspace exports, clears and imports',
   await settings.getByRole('button', { name: 'Export workspace' }).click()
   const file = await (await download).path()
   const bundle = JSON.parse(await readFile(file, 'utf8'))
-  expect(bundle.format).toBe('askdata-workspace')
+  expect(bundle.format).toBe('flashQuery-workspace')
   expect(bundle.history[0].text).toBe('Which region grew fastest?')
   expect(Object.values(bundle.notes)).toEqual([
     {
@@ -98,7 +98,7 @@ async function keptCount(page: Page): Promise<number> {
   return page.evaluate(
     () =>
       new Promise<number>((resolve) => {
-        const open = indexedDB.open('askdata')
+        const open = indexedDB.open('flashQuery')
         open.onerror = () => resolve(-1)
         open.onsuccess = () => {
           const db = open.result
@@ -121,7 +121,7 @@ async function keptCount(page: Page): Promise<number> {
 }
 
 test('kept files load again after a reload, until the setting is turned off', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/app/')
   await page.getByRole('button', { name: 'Settings', exact: true }).click()
   await page.getByRole('checkbox', { name: 'Keep loaded files on this device' }).check()
   await page.keyboard.press('Escape')

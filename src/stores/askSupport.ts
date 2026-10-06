@@ -70,5 +70,5 @@ export function release(result: PagedResult | null): void {
   if (!result) return
   getDb()
     .then((engine) => closeResult(engine, result))
-    .catch((error: unknown) => console.warn('AskData: could not drop a result view', error))
+    .catch((error: unknown) => console.warn('flashQuery: could not drop a result view', error))
 }

@@ -240,7 +240,7 @@ let saveTimer: number | undefined
 async function load() {
   const saved = await loadRecord(DASHBOARDS_RECORD, { onCorrupt: backupCorruptRecord }).catch(
     (error: unknown) => {
-      console.warn('AskData: dashboards could not be loaded', error)
+      console.warn('flashQuery: dashboards could not be loaded', error)
       return DASHBOARDS_RECORD.fallback()
     },
   )
@@ -256,7 +256,7 @@ async function load() {
     saveTimer = window.setTimeout(() => {
       const { dashboards, activeId } = useDashboardStore.getState()
       saveRecord(DASHBOARDS_RECORD, { dashboards, activeId }).catch((error: unknown) =>
-        console.warn('AskData: dashboards could not be saved', error),
+        console.warn('flashQuery: dashboards could not be saved', error),
       )
     }, SAVE_DELAY_MS)
   })

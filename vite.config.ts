@@ -1,5 +1,5 @@
 /// <reference types="vitest/config" />
-// askdata:vite-config
+// flashQuery:vite-config
 import { fileURLToPath, URL } from 'node:url'
 import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
@@ -39,7 +39,7 @@ function contentSecurityPolicy(): Plugin {
     .map(([directive, sources]) => `${directive} ${sources.join(' ')}`)
     .join('; ')
   return {
-    name: 'askdata:csp',
+    name: 'flashQuery:csp',
     apply: 'build',
     transformIndexHtml: () => [
       {
@@ -51,8 +51,29 @@ function contentSecurityPolicy(): Plugin {
   }
 }
 
+/** /app → /app/ on the dev and preview servers (Vercel does the same, see vercel.json). */
+function appTrailingSlash(): Plugin {
+  const redirect = (url: string | undefined) =>
+    url === '/app' || url?.startsWith('/app?') || url?.startsWith('/app#')
+  const middleware = (
+    req: { url?: string },
+    res: { statusCode: number; setHeader: (name: string, value: string) => void; end: () => void },
+    next: () => void,
+  ) => {
+    if (!redirect(req.url)) return next()
+    res.statusCode = 308
+    res.setHeader('Location', `/app/${(req.url ?? '').slice(4)}`)
+    res.end()
+  }
+  return {
+    name: 'flashQuery:app-trailing-slash',
+    configureServer: (server) => void server.middlewares.use(middleware),
+    configurePreviewServer: (server) => void server.middlewares.use(middleware),
+  }
+}
+
 export default defineConfig({
-  plugins: [react(), tailwindcss(), contentSecurityPolicy()],
+  plugins: [react(), tailwindcss(), contentSecurityPolicy(), appTrailingSlash()],
   resolve: {
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
   },
@@ -83,7 +104,17 @@ export default defineConfig({
       'xlsx', // imported by the Excel worker
     ],
   },
-  build: { target: 'es2022', chunkSizeWarningLimit: 1500 },
+  build: {
+    target: 'es2022',
+    chunkSizeWarningLimit: 1500,
+    // Two pages: the landing page at / and the app at /app/ (PRD D99).
+    rolldownOptions: {
+      input: {
+        landing: fileURLToPath(new URL('./index.html', import.meta.url)),
+        app: fileURLToPath(new URL('./app/index.html', import.meta.url)),
+      },
+    },
+  },
   // NOTE: no COOP/COEP headers in v1 (see docs/PRD.md decision D5)
   test: {
     environment: 'jsdom',

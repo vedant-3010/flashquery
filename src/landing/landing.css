@@ -1,0 +1,132 @@
+/* The landing page (PRD D99): its own Tailwind build, scanning only the landing's files, so none of
+   the app's CSS ships here. Editorial "paper" look: warm off-white, ink, one accent, hairlines. */
+@import 'tailwindcss' source(none);
+@source './';
+@source '../components/BrandMark.tsx';
+@import '@fontsource-variable/geist';
+@import '@fontsource-variable/geist-mono';
+@import '@fontsource-variable/hubot-sans/wdth.css';
+@import '@fontsource/instrument-serif/latin-400.css';
+@import '@fontsource/instrument-serif/latin-400-italic.css';
+
+@theme {
+  --font-sans: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-serif: 'Instrument Serif', ui-serif, Georgia, serif;
+  /* Headlines' second line: a wide grotesque (an open-licence stand-in for PP Formula). */
+  --font-wide: 'Hubot Sans Variable', ui-sans-serif, system-ui, sans-serif;
+
+  --color-paper: #f6f3ec;
+  --color-paper-deep: #efeae0;
+  --color-panel: #fbfaf6;
+  --color-ink: #151515;
+  --color-ink-soft: #3a3833;
+  --color-ink-muted: #5e5a52;
+  --color-ink-faint: #8c867b;
+  --color-hairline: #ddd7cb;
+  --color-hairline-strong: #c9c1b2;
+  /* The accent: a deep violet, dark enough for small text too (about 10:1 on paper), so accent-ink
+     is the same colour. The wash is its pale tint, for highlights and text selection. */
+  --color-accent: #5500aa;
+  --color-accent-ink: #5500aa;
+  --color-accent-wash: #ebe1f7;
+  --color-ok: #2f6b3f;
+  /* Blocked and failed states (a red, so they never read as the brand colour). */
+  --color-danger: #a3241c;
+  --color-danger-wash: #f8e4e1;
+
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-in-out-cubic: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+@layer base {
+  html {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    font-family: var(--font-sans);
+    /* Paper grain: a fixed SVG noise layer, very faint. */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.08 0 0 0 0 0.07 0 0 0 0 0.05 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-attachment: fixed;
+  }
+  /* Anchor jumps land below the sticky nav. */
+  section[id] {
+    scroll-margin-top: 72px;
+  }
+  ::selection {
+    background: var(--color-accent-wash);
+    color: var(--color-ink);
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+}
+
+@layer utilities {
+  /* A headline's wide line: Hubot Sans, semi-expanded, between regular and semibold. */
+  .headline-wide {
+    font-family: var(--font-wide);
+    font-stretch: 112.5%;
+    font-weight: 500;
+    letter-spacing: -0.025em;
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  .text-balance {
+    text-wrap: balance;
+  }
+  .text-pretty {
+    text-wrap: pretty;
+  }
+  /* A hairline that draws in from the left when its parent is hovered or focused. */
+  .underline-draw {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-size: 0% 1px;
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    transition: background-size 0.35s var(--ease-out-quart);
+  }
+  .group:hover .underline-draw,
+  .group:focus-visible .underline-draw,
+  .underline-draw:hover {
+    background-size: 100% 1px;
+  }
+  /* A dashed line that flows (data moving into DuckDB). */
+  .flow-dash {
+    stroke-dasharray: 4 6;
+    animation: flow 1.2s linear infinite;
+  }
+  @keyframes flow {
+    to {
+      stroke-dashoffset: -20;
+    }
+  }
+  .caret {
+    animation: caret 1s steps(1) infinite;
+  }
+  @keyframes caret {
+    50% {
+      opacity: 0;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

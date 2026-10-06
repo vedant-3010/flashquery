@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useSyncExternalStore } from 'react'
 import { AppShell } from '@/app/AppShell'
 import { PanelErrorBoundary } from '@/app/PanelErrorBoundary'
+import { isTryHash, startTryDemo } from '@/app/tryDemo'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { warmUpEngine } from '@/engine/duckdb'
 import { useResolvedTheme } from '@/hooks/useResolvedTheme'
@@ -38,6 +39,8 @@ export function App() {
       .then(() => {
         startFilePersistence()
         if (useSettingsStore.getState().persistFiles) void restorePersistedDatasets()
+        // "Try it on 1M rows" from the landing page (PRD D99).
+        if (isTryHash(window.location.hash)) startTryDemo()
       })
     void useHistoryStore.getState().hydrate()
     void useDashboardStore.getState().hydrate()
@@ -62,7 +65,7 @@ export function App() {
   return (
     <TooltipProvider>
       {/* Last resort: panels have their own boundaries, this catches the shell itself. */}
-      <PanelErrorBoundary name="AskData">
+      <PanelErrorBoundary name="flashQuery">
         <AppShell />
       </PanelErrorBoundary>
     </TooltipProvider>

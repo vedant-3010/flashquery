@@ -96,7 +96,7 @@ let hydrating: Promise<void> | null = null
 async function load() {
   const saved = await loadRecord(NOTES_RECORD, { onCorrupt: backupCorruptRecord }).catch(
     (error: unknown) => {
-      console.warn('AskData: notes could not be loaded', error)
+      console.warn('flashQuery: notes could not be loaded', error)
       return {}
     },
   )
@@ -104,7 +104,7 @@ async function load() {
   useNotesStore.subscribe((state, previous) => {
     if (state.bySchema === previous.bySchema) return
     saveRecord(NOTES_RECORD, state.bySchema).catch((error: unknown) =>
-      console.warn('AskData: notes could not be saved', error),
+      console.warn('flashQuery: notes could not be saved', error),
     )
   })
 }
