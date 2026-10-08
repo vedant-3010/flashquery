@@ -1,4 +1,5 @@
 import type { AnswerSummary } from '@/ai/schemas'
+import { summarizeKpiTrend, summarizeMore } from '@/ai/chartSummaryMore'
 import { isAdditiveName } from '@/charts/classify'
 import { prepare, type ChartData, type Prepared } from '@/charts/shape'
 import type { ChartSpec } from '@/charts/spec'
@@ -83,9 +84,11 @@ export function summarizeChart(
   const xNoun = humanizeName(spec.x ?? 'category').toLowerCase()
   const notes = 'notes' in prepared ? prepared.notes : []
   const caveats = [...notes]
+  const more = { spec, locale, fmt, measureLower, xNoun, caveats }
 
   switch (prepared.kind) {
     case 'kpi': {
+      if (prepared.period) return summarizeKpiTrend(prepared, more)
       const [first, ...rest] = prepared.items
       if (!first) return null
       const where = prepared.caption ? ` (${prepared.caption})` : ''
@@ -279,5 +282,13 @@ export function summarizeChart(
     }
     case 'table':
       return null
+    case 'combo':
+    case 'waterfall':
+    case 'funnel':
+    case 'treemap':
+    case 'boxplot':
+    case 'sankey':
+    case 'calendar':
+      return summarizeMore(prepared, more)
   }
 }

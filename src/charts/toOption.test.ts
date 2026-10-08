@@ -207,3 +207,192 @@ describe('text alternatives', () => {
     )
   })
 })
+
+describe('v2 chart types (F-VIZ-09, F-VIZ-10)', () => {
+  const regionsByChannel = ['APAC', 'EMEA', 'LATAM'].flatMap((r, i) =>
+    ['Online', 'Retail'].map((c, j): CellValue[] => [r, c, (i + 1) * 10 + j * 5]),
+  )
+
+  it('draws a 100% stacked bar as each bar’s shares (snapshot)', () => {
+    const { spec, prepared, option } = chart(
+      [col('region', 'text'), col('channel', 'text'), col('revenue', 'number')],
+      regionsByChannel,
+      { question: 'What is the channel mix in each region?' },
+    )
+    expect(spec.type).toBe('stacked_100')
+    const series = (option?.series ?? []) as { data: (number | null)[] }[]
+    const firstBar = series.reduce((sum, s) => sum + (s.data[0] ?? 0), 0)
+    expect(firstBar).toBeCloseTo(1)
+    expect(option).toMatchObject({ yAxis: { min: 0, max: 1 } })
+    expect(describeChart(spec, prepared, 'en-US')).toMatch(/^100% stacked bar chart: /)
+    expect(option).toMatchSnapshot()
+  })
+
+  it('draws bars and a line on two axes (snapshot)', () => {
+    const { spec, option } = chart(
+      [col('category', 'text'), col('total_revenue', 'number'), col('profit_margin', 'number')],
+      [
+        ['A', 1e8, 0.31],
+        ['B', 2e8, 0.25],
+        ['C', 3e8, 0.4],
+      ],
+    )
+    expect(spec.type).toBe('combo')
+    expect(option).toMatchObject({
+      yAxis: [{ type: 'value' }, { type: 'value' }],
+      series: [{ type: 'bar' }, { type: 'line', yAxisIndex: 1 }],
+    })
+    expect(option).toMatchSnapshot()
+  })
+
+  it('floats waterfall steps from the running total and ends on the total (snapshot)', () => {
+    const { spec, prepared, option } = chart(
+      [col('driver', 'text'), col('profit_change', 'number')],
+      [
+        ['Price', 120],
+        ['Volume', 80],
+        ['Costs', -260],
+      ],
+      { question: 'What drove the change in profit?' },
+    )
+    expect(spec.type).toBe('waterfall')
+    expect(prepared).toMatchObject({ kind: 'waterfall', total: -60 })
+    const [lows, bars] = (option?.series ?? []) as { data: unknown[]; stackStrategy?: string }[]
+    // 0 → 120 → 200 → -60, then the total from 0 down to -60.
+    expect(lows?.data).toEqual([0, 120, -60, -60])
+    const heights = ((bars?.data ?? []) as { value: number }[]).map((bar) => bar.value)
+    expect(heights).toEqual([120, 80, 260, 60])
+    expect(bars?.stackStrategy).toBe('all')
+    expect(describeChart(spec, prepared, 'en-US')).toContain('3 steps adding up to -60')
+    expect(option).toMatchSnapshot()
+  })
+
+  it('draws a funnel in stage order (snapshot)', () => {
+    const { spec, option } = chart(
+      [col('stage', 'text'), col('users', 'integer')],
+      [
+        ['Visited', 1000],
+        ['Signed up', 400],
+        ['Paid', 80],
+      ],
+    )
+    expect(spec.type).toBe('funnel')
+    expect(option).toMatchObject({
+      series: [
+        {
+          type: 'funnel',
+          sort: 'none',
+          data: [{ name: 'Visited' }, { name: 'Signed up' }, { name: 'Paid' }],
+        },
+      ],
+    })
+    expect(option).toMatchSnapshot()
+  })
+
+  it('draws a treemap of many parts, capped with Other (snapshot)', () => {
+    const rows = Array.from({ length: 240 }, (_, i): CellValue[] => [`City ${i + 1}`, 240 - i])
+    const { spec, prepared, option } = chart([col('city', 'text'), col('revenue', 'number')], rows)
+    expect(spec.type).toBe('treemap')
+    expect(prepared).toMatchObject({ kind: 'treemap' })
+    const nodes = prepared.kind === 'treemap' ? prepared.nodes : []
+    expect(nodes).toHaveLength(200)
+    expect(nodes.at(-1)).toMatchObject({ name: 'Other', other: true })
+    expect(option).toMatchSnapshot()
+  })
+
+  it('draws box plots from quartiles computed in the database (snapshot)', () => {
+    const spec = selectChart({
+      columns: [col('region', 'text'), col('revenue', 'number')],
+      rows: Array.from({ length: 20 }, (_, i): CellValue[] => [i % 2 ? 'A' : 'B', i]),
+      rowCount: 20,
+    })
+    expect(spec.type).toBe('boxplot')
+    const quartiles: ChartData = {
+      columns: [
+        col('group', 'text'),
+        col('low', 'number'),
+        col('q1', 'number'),
+        col('median', 'number'),
+        col('q3', 'number'),
+        col('high', 'number'),
+        col('n', 'integer'),
+        col('groups', 'integer'),
+      ],
+      rows: [
+        ['B', 0, 4, 9, 14, 18, 10, 2],
+        ['A', 1, 5, 10, 15, 19, 10, 2],
+      ],
+      rowCount: 20,
+      sampling: 'quantiles',
+    }
+    const prepared = prepare(spec, quartiles)
+    const option = toOption(spec, prepared, ctx)
+    expect(option).toMatchObject({
+      series: [
+        {
+          type: 'boxplot',
+          data: [
+            [0, 4, 9, 14, 18],
+            [1, 5, 10, 15, 19],
+          ],
+        },
+      ],
+    })
+    expect(describeChart(spec, prepared, 'en-US')).toContain('medians from 9 (B) to 10 (A)')
+    expect(option).toMatchSnapshot()
+  })
+
+  it('keeps sankey sides apart, so a name can flow to itself (snapshot)', () => {
+    const { spec, prepared, option } = chart(
+      [col('source', 'text'), col('target', 'text'), col('customers', 'integer')],
+      [
+        ['Basic', 'Basic', 50],
+        ['Basic', 'Pro', 20],
+        ['Pro', 'Pro', 30],
+      ],
+    )
+    expect(spec.type).toBe('sankey')
+    const nodes = prepared.kind === 'sankey' ? prepared.nodes.map((node) => node.id) : []
+    expect(nodes).toEqual(['from:Basic', 'to:Basic', 'to:Pro', 'from:Pro'])
+    expect(option).toMatchSnapshot()
+  })
+
+  it('lays daily values on calendars, at most a year each (snapshot)', () => {
+    const days = Array.from({ length: 400 }, (_, i): CellValue[] => [
+      new Date(Date.UTC(2024, 0, 1 + i)).toISOString().slice(0, 10),
+      i % 7,
+    ])
+    const { spec, prepared, option } = chart([col('day', 'date'), col('orders', 'integer')], days, {
+      question: 'Which weekdays are busiest?',
+    })
+    expect(spec.type).toBe('calendar')
+    expect(prepared).toMatchObject({
+      kind: 'calendar',
+      ranges: [
+        ['2024-01-01', '2024-12-31'],
+        ['2025-01-01', '2025-02-03'],
+      ],
+    })
+    expect(option).toMatchSnapshot()
+  })
+
+  it('shows a KPI over time as its latest value, the change and the trend', () => {
+    const { spec, prepared } = chart(
+      [col('month', 'date'), col('revenue', 'number')],
+      [
+        ['2025-01-01', 100],
+        ['2025-02-01', 120],
+        ['2025-03-01', 150],
+      ],
+      { question: 'What is revenue so far this year?' },
+    )
+    expect(spec).toMatchObject({ type: 'kpi', x: 'month' })
+    expect(prepared).toMatchObject({
+      kind: 'kpi',
+      items: [{ value: 150, previous: 120, trend: [100, 120, 150] }],
+    })
+    expect(describeChart(spec, prepared, 'en-US')).toBe(
+      'Revenue: 150 (up 25% from the period before)',
+    )
+  })
+})

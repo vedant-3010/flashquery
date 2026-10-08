@@ -13,6 +13,7 @@ import { useDashboardStore } from '@/stores/dashboard'
 import { refreshWhenReady } from '@/stores/dashboardJobs'
 import { useDatasetsStore } from '@/stores/datasets'
 import { useUiStore } from '@/stores/ui'
+import { DashboardPaletteContext } from '@/features/charts/chartPalette'
 
 /**
  * The dashboard (F-DASH-01…10). Tiles appear from their snapshots at once; those whose tables are
@@ -53,7 +54,9 @@ export function DashboardView() {
           </Button>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto p-6">
-          <DashboardGrid dashboard={dashboard} onEdit={() => undefined} readOnly />
+          <DashboardPaletteContext value={dashboard.palette ?? null}>
+            <DashboardGrid dashboard={dashboard} onEdit={() => undefined} readOnly />
+          </DashboardPaletteContext>
         </div>
       </div>
     )
@@ -88,7 +91,9 @@ export function DashboardView() {
             </Button>
           </EmptyState>
         ) : (
-          <DashboardGrid dashboard={dashboard} onEdit={setEditing} />
+          <DashboardPaletteContext value={dashboard.palette ?? null}>
+            <DashboardGrid dashboard={dashboard} onEdit={setEditing} />
+          </DashboardPaletteContext>
         )}
       </div>
       <EditTileSheet tileId={editing} onClose={() => setEditing(null)} />

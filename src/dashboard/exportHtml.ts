@@ -15,7 +15,7 @@ export interface RenderedTile {
   layout: { x: number; y: number; w: number; h: number }
   body:
     | { kind: 'svg'; svg: string; label: string }
-    | { kind: 'kpi'; items: { label: string; value: string }[] }
+    | { kind: 'kpi'; items: { label: string; value: string; change?: string | null }[] }
     | { kind: 'table'; columns: string[]; rows: string[][]; total: number }
     | { kind: 'text'; markdown: string }
     | { kind: 'empty'; message: string }
@@ -82,7 +82,7 @@ function bodyHtml(body: RenderedTile['body']): string {
       return `<dl class="kpis">${body.items
         .map(
           (item) =>
-            `<div>${item.label ? `<dt>${escapeHtml(item.label)}</dt>` : ''}<dd>${escapeHtml(item.value)}</dd></div>`,
+            `<div>${item.label ? `<dt>${escapeHtml(item.label)}</dt>` : ''}<dd>${escapeHtml(item.value)}</dd>${item.change ? `<dd class="change">${escapeHtml(item.change)}</dd>` : ''}</div>`,
         )
         .join('')}</dl>`
     case 'table': {
@@ -109,7 +109,7 @@ main{width:${PAGE_WIDTH}px;margin:24px auto}header{margin-bottom:16px}h1{font-si
 .meta,.note{color:#5f6368;font-size:12px;margin:0}.grid{display:grid;grid-template-columns:repeat(${COLS},1fr);grid-auto-rows:${ROW_HEIGHT}px;gap:${GAP}px}
 section{background:#fff;border:1px solid #e3e3e6;border-radius:12px;padding:8px 10px;overflow:hidden;display:flex;flex-direction:column;break-inside:avoid}
 h2{font-size:14px;font-weight:600;margin:0 0 4px}figure{margin:0;flex:1;min-height:0}figure svg{width:100%;height:100%}
-.kpis{display:flex;flex-wrap:wrap;gap:16px;margin:4px 0}.kpis dt{color:#5f6368;font-size:12px}.kpis dd{margin:0;font-size:26px;font-weight:700}
+.kpis{display:flex;flex-wrap:wrap;gap:16px;margin:4px 0}.kpis dt{color:#5f6368;font-size:12px}.kpis dd{margin:0;font-size:26px;font-weight:700}.kpis dd.change{font-size:12px;font-weight:500;color:#5f6368}
 .table{overflow:auto;flex:1}table{border-collapse:collapse;width:100%;font-size:12px}th,td{border-bottom:1px solid #eee;padding:3px 6px;text-align:left;white-space:nowrap}
 .md h3,.md h4,.md h5{margin:4px 0}.md p,.md ul,.md ol{margin:4px 0}
 @media print{body{background:#fff}main{margin:0 auto}section{border-color:#ccc}}

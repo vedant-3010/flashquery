@@ -1,383 +1,76 @@
-import type { ChartHint } from '@/ai/schemas'
 import {
   analyze,
   isAdditive,
-  pairsUnique,
   valueStyle,
   type ColumnInfo,
   type ResultShape,
 } from '@/charts/classify'
+import {
+  buildBar,
+  buildDonut,
+  buildGroupedOrStacked,
+  buildHeatmap,
+  buildHistogram,
+  buildKpi,
+  buildLine,
+  buildScatter,
+} from '@/charts/build/basic'
+import {
+  buildBoxplot,
+  buildCalendar,
+  buildCombo,
+  buildFunnel,
+  buildSankey,
+  buildStacked100,
+  buildTreemap,
+  buildWaterfall,
+  DAILY_INTENT,
+  flowColumns,
+  FLOW_INTENT,
+  isChange,
+  isFunnel,
+  LATEST_INTENT,
+  quartileColumns,
+  TREND_INTENT,
+} from '@/charts/build/more'
+import {
+  count,
+  CUMULATIVE_NAME,
+  DONUT_INTENT,
+  lowerFirst,
+  MAX_BARS,
+  MAX_DONUT_SLICES,
+  MAX_KPIS,
+  MAX_SERIES,
+  SHARE_NAME,
+  tableSpec,
+  word,
+  askedMeasure,
+  focusMeasure,
+  labelColumns,
+  type BuildResult,
+  type ChartInput,
+  type PreferredColumns,
+  type SpecContext,
+} from '@/charts/build/common'
 import { CHART_TYPE_LABELS, ChartTypeSchema, type ChartSpec, type ChartType } from '@/charts/spec'
-import type { CellValue, ColumnMeta } from '@/engine/types'
-import { formatNumber, humanizeName, pluralize } from '@/lib/format'
+import { humanizeName } from '@/lib/format'
 
 // Chart choice (F-VIZ-01, docs/PRD.md §6): the single source of truth. `buildSpec` makes one chart
 // type fit a result (or says why it can't); `selectChart` applies the §6 rules, then uses the AI's
-// hint only if that chart fits; `chartChoices` powers the chart switcher (F-VIZ-03). Pure.
+// hint only if that chart fits; `chartChoices` powers the chart switcher (F-VIZ-03). Pure. The
+// builders live in src/charts/build/.
 
-/** Charts get at most this many points; bigger results are sampled or binned in SQL (F-VIZ-05). */
-export const CHART_POINT_LIMIT = 5_000
-export const MAX_BARS = 30
-export const MAX_DONUT_SLICES = 6
-export const MAX_SERIES = 8
-const MAX_HEATMAP_SIDE = 50
-const MAX_KPIS = 6
-
-export interface ChartInput {
-  columns: ColumnMeta[]
-  /** The first rows of the result (all of them when it has ≤ CHART_POINT_LIMIT rows). */
-  rows: CellValue[][]
-  rowCount: number
-  question?: string
-  hint?: ChartHint | null
-  /** Chart title; defaults to "<y> by <x>". */
-  title?: string
-  /** Currency for money columns (settings), or null. */
-  currency?: string | null
-}
-
-interface SpecContext {
-  question: string
-  title: string | null
-  currency: string | null
-}
-
-/** Columns to use when they fit: from the AI hint, the current chart, or the settings popover. */
-export interface PreferredColumns {
-  x?: string | null
-  y?: string[]
-  series?: string | null
-  size?: string | null
-}
-
-export type BuildResult = { ok: true; spec: ChartSpec } | { ok: false; reason: string }
-
-const DONUT_INTENT =
-  /\b(share|shares|proportion|percentage|percent|breakdown|composition|split|mix|makes? up|contribut\w*)\b/i
-const SHARE_NAME = /(share|proportion|pct_of|percent_of)/i
-const CUMULATIVE_NAME = /(cumulative|running|cum_|ytd|to_date)/i
-
-const word = (name: string) => humanizeName(name).toLowerCase()
-const lowerFirst = (text: string) => text.charAt(0).toLowerCase() + text.slice(1)
-const count = (n: number, noun: string) =>
-  `${formatNumber(n, 'en-US')} ${n === 1 ? noun : pluralize(noun)}`
-const listOf = (columns: ColumnInfo[]) => {
-  const words = columns.map((column) => word(column.name))
-  return words.length <= 1
-    ? (words[0] ?? '')
-    : `${words.slice(0, -1).join(', ')} and ${words.at(-1)}`
-}
-
-function fail(reason: string): BuildResult {
-  return { ok: false, reason }
-}
-
-function find(columns: ColumnInfo[], name: string | null | undefined): ColumnInfo | undefined {
-  return name ? columns.find((column) => column.name === name) : undefined
-}
-
-/** The measure the question is about ("profit margin" → profit_margin); else the last one. */
-export function focusMeasure(measures: ColumnInfo[], question: string): ColumnInfo | undefined {
-  const asked = question.toLowerCase()
-  let best: { column: ColumnInfo; score: number } | undefined
-  for (const column of measures) {
-    const words = word(column.name)
-      .split(' ')
-      .filter((w) => w.length > 2 && !['total', 'sum', 'avg', 'count'].includes(w))
-    const score = words.filter((w) => asked.includes(w.replace(/s$/, ''))).length
-    if (score > 0 && (!best || score >= best.score)) best = { column, score }
-  }
-  return best?.column ?? measures.at(-1)
-}
-
-function measuresFor(
-  shape: ResultShape,
-  preferred: string[] | undefined,
-  max: number,
-): ColumnInfo[] {
-  const chosen = (preferred ?? [])
-    .map((name) => find(shape.measures, name))
-    .filter((column): column is ColumnInfo => column !== undefined)
-  return (chosen.length > 0 ? chosen : shape.measures).slice(0, max)
-}
-
-function baseSpec(
-  type: ChartType,
-  shape: ResultShape,
-  ctx: SpecContext,
-  parts: {
-    x: ColumnInfo | null
-    y: ColumnInfo[]
-    series?: ColumnInfo | null
-    size?: ColumnInfo | null
-    sort?: ChartSpec['sort']
-    stacked?: boolean
-    reason: string
-  },
-): ChartSpec {
-  const y = parts.y
-  const title =
-    ctx.title ??
-    (parts.x && y[0]
-      ? `${humanizeName(y[0].name)} by ${word(parts.x.name)}`
-      : humanizeName(y[0]?.name ?? 'result'))
-  return {
-    type,
-    x: parts.x?.name ?? null,
-    y: y.map((column) => column.name),
-    series: parts.series?.name ?? null,
-    size: parts.size?.name ?? null,
-    sort: parts.sort ?? 'none',
-    stacked: parts.stacked ?? false,
-    logScale: false,
-    labels: false,
-    format: valueStyle(y[0], shape, ctx.currency),
-    title,
-    reason: parts.reason,
-  }
-}
-
-const labelColumns = (shape: ResultShape) => [...shape.categories, ...shape.temporal]
-
-function buildKpi(shape: ResultShape, ctx: SpecContext, pref: PreferredColumns): BuildResult {
-  if (shape.rowCount !== 1) {
-    return fail(`a KPI needs a single row, and this result has ${count(shape.rowCount, 'row')}.`)
-  }
-  const y = measuresFor(shape, pref.y, MAX_KPIS)
-  if (y.length === 0) return fail('a KPI needs a number column.')
-  const reason =
-    y.length === 1
-      ? 'The answer is a single number, so it is shown as a KPI.'
-      : `The answer is one row of ${y.length} numbers, shown side by side as KPIs.`
-  return { ok: true, spec: baseSpec('kpi', shape, ctx, { x: null, y, reason }) }
-}
-
-function buildLine(
-  type: 'line' | 'area',
-  shape: ResultShape,
-  ctx: SpecContext,
-  pref: PreferredColumns,
-): BuildResult {
-  if (shape.rowCount < 2) return fail('a line needs at least two points.')
-  const axes = [...shape.temporal, ...shape.categories.filter((column) => column.ordinal)]
-  const x = find(axes, pref.x) ?? axes[0]
-  if (!x) return fail('a line needs a time column (or an ordered one) along the x axis.')
-  const series =
-    find(shape.categories, pref.series) ??
-    (pref.series === undefined
-      ? shape.categories.find((column) => column !== x && !column.ordinal)
-      : undefined)
-  const seriesColumn = series && series !== x ? series : null
-  const y = measuresFor(shape, pref.y, seriesColumn ? 1 : 5)
-  if (y.length === 0) return fail('a line needs a number column.')
-  const unique = seriesColumn ? pairsUnique(shape, x, seriesColumn) : x.unique
-  if (!unique) {
-    return fail(`several rows share the same ${word(x.name)}; aggregate them first.`)
-  }
-  const along = x.kind === 'temporal' ? 'a time column' : 'in a natural order'
-  let reason = seriesColumn
-    ? `One line per ${word(seriesColumn.name)} (${count(seriesColumn.distinct, word(seriesColumn.name))}) across ${word(x.name)}.`
-    : `${humanizeName(x.name)} is ${along}, so ${listOf(y)} ${y.length === 1 ? 'is' : 'are'} drawn as ${y.length === 1 ? 'a line' : 'lines'} across it.`
-  if (seriesColumn && seriesColumn.distinct > MAX_SERIES) {
-    reason += ` The top ${MAX_SERIES - 1} are shown; the rest are combined as Other.`
-  }
-  if (!shape.complete) {
-    reason += ` Every n-th of the ${formatNumber(shape.rowCount, 'en-US')} points is drawn.`
-  }
-  const stacked = type === 'area' && seriesColumn !== null && y.every(isAdditive)
-  return {
-    ok: true,
-    spec: baseSpec(type, shape, ctx, {
-      x,
-      y,
-      series: seriesColumn,
-      sort: x.kind === 'temporal' ? 'asc' : 'none',
-      stacked,
-      reason,
-    }),
-  }
-}
-
-function buildBar(
-  type: 'bar' | 'hbar',
-  shape: ResultShape,
-  ctx: SpecContext,
-  pref: PreferredColumns,
-): BuildResult {
-  const labels = labelColumns(shape)
-  const x = find(labels, pref.x) ?? labels[0]
-  if (!x) return fail('a bar chart needs a category column.')
-  const y = find(shape.measures, pref.y?.[0]) ?? focusMeasure(shape.measures, ctx.question)
-  if (!y) return fail('a bar chart needs a number column.')
-  if (!shape.complete || !x.unique) {
-    return fail(`several rows share the same ${word(x.name)}; aggregate them first.`)
-  }
-  if (x.distinct > MAX_BARS) {
-    return fail(`${word(x.name)} has ${x.distinct} values, and bars work up to ${MAX_BARS}.`)
-  }
-  const sort = x.ordinal ? 'none' : 'desc'
-  let reason = `Compares ${word(y.name)} across ${count(x.distinct, word(x.name))}${sort === 'desc' ? ', highest first' : ''}.`
-  if (type === 'hbar') reason += ' Bars run sideways so long or many labels stay readable.'
-  return { ok: true, spec: baseSpec(type, shape, ctx, { x, y: [y], sort, reason }) }
-}
-
-function buildGroupedOrStacked(
-  type: 'grouped_bar' | 'stacked_bar',
-  shape: ResultShape,
-  ctx: SpecContext,
-  pref: PreferredColumns,
-): BuildResult {
-  const labels = labelColumns(shape)
-  const x = find(labels, pref.x) ?? labels[0]
-  if (!x) return fail('this chart needs a category column.')
-  if (!shape.complete) return fail('this result has too many rows for bars.')
-  const bySeries =
-    pref.series !== null &&
-    labels.some((column) => column !== x) &&
-    (pref.series !== undefined || pref.y === undefined || pref.y.length <= 1)
-  const stacked = type === 'stacked_bar'
-
-  if (bySeries) {
-    const series =
-      find(labels, pref.series) ??
-      labels.filter((column) => column !== x).sort((a, b) => a.distinct - b.distinct)[0]
-    const y = find(shape.measures, pref.y?.[0]) ?? focusMeasure(shape.measures, ctx.question)
-    if (!series || series === x || !y) return fail('this chart needs two category columns.')
-    if (!pairsUnique(shape, x, series)) {
-      return fail(`several rows share the same ${word(x.name)} and ${word(series.name)}.`)
-    }
-    if (x.distinct > MAX_BARS) {
-      return fail(`${word(x.name)} has ${x.distinct} values, and bars work up to ${MAX_BARS}.`)
-    }
-    if (stacked && (!isAdditive(y) || !y.nonNegative)) {
-      return fail(`${word(y.name)} doesn't add up across ${pluralize(word(series.name))}.`)
-    }
-    let reason = stacked
-      ? `Stacks ${word(y.name)} by ${word(series.name)} within each ${word(x.name)}, so bar heights show the totals.`
-      : `One bar per ${word(series.name)} within each ${word(x.name)}, to compare ${word(y.name)}.`
-    if (series.distinct > MAX_SERIES) {
-      reason += ` The top ${MAX_SERIES - 1} ${pluralize(word(series.name))} are shown; the rest are combined as Other.`
-    }
-    return {
-      ok: true,
-      spec: baseSpec(type, shape, ctx, {
-        x,
-        y: [y],
-        series,
-        sort: x.ordinal ? 'none' : 'desc',
-        stacked,
-        reason,
-      }),
-    }
-  }
-
-  const y = measuresFor(shape, pref.y, 4)
-  if (y.length < 2) return fail('this chart needs two to four number columns (or a series).')
-  if (!x.unique) return fail(`several rows share the same ${word(x.name)}; aggregate them first.`)
-  if (x.distinct > MAX_BARS) {
-    return fail(`${word(x.name)} has ${x.distinct} values, and bars work up to ${MAX_BARS}.`)
-  }
-  if (stacked && !y.every((column) => isAdditive(column) && column.nonNegative)) {
-    return fail(`${listOf(y)} don't add up to a meaningful total.`)
-  }
-  const reason = stacked
-    ? `Stacks ${listOf(y)} within each ${word(x.name)}, so bar heights show the totals.`
-    : `Puts ${listOf(y)} side by side for each ${word(x.name)}.`
-  return { ok: true, spec: baseSpec(type, shape, ctx, { x, y, stacked, reason }) }
-}
-
-function buildScatter(shape: ResultShape, ctx: SpecContext, pref: PreferredColumns): BuildResult {
-  const x = find(shape.measures, pref.x) ?? shape.measures[0]
-  const y =
-    find(
-      shape.measures.filter((column) => column !== x),
-      pref.y?.[0],
-    ) ?? shape.measures.find((column) => column !== x)
-  if (!x || !y) return fail('a scatter plot needs two number columns.')
-  if (shape.rowCount < 3) return fail('a scatter plot needs at least three points.')
-  const others = shape.measures.filter((column) => column !== x && column !== y)
-  const size = pref.size === null ? undefined : (find(others, pref.size) ?? others[0])
-  const series =
-    pref.series === null
-      ? undefined
-      : (find(shape.categories, pref.series) ??
-        shape.categories.find((column) => column.distinct <= MAX_SERIES))
-  let reason = `Each row is a point: ${word(x.name)} across, ${word(y.name)} up`
-  if (size) reason += `; ${word(size.name)} sets the size`
-  if (series) reason += `; colored by ${word(series.name)}`
-  reason += '.'
-  if (shape.rowCount > CHART_POINT_LIMIT) {
-    reason += ` A random sample of ${formatNumber(CHART_POINT_LIMIT, 'en-US')} of the ${formatNumber(shape.rowCount, 'en-US')} points is shown.`
-  }
-  return {
-    ok: true,
-    spec: baseSpec('scatter', shape, ctx, {
-      x,
-      y: [y],
-      size: size ?? null,
-      series: series ?? null,
-      reason,
-    }),
-  }
-}
-
-function buildHistogram(shape: ResultShape, ctx: SpecContext, pref: PreferredColumns): BuildResult {
-  const measure =
-    find(shape.measures, pref.y?.[0]) ?? find(shape.measures, pref.x) ?? shape.measures[0]
-  if (!measure) return fail('a histogram needs a number column.')
-  if (shape.rowCount < 2) return fail('a histogram needs at least two rows.')
-  const reason = `Shows how ${word(measure.name)} is spread across ${count(shape.rowCount, 'row')}; the bins are counted in the database.`
-  return {
-    ok: true,
-    spec: {
-      ...baseSpec('histogram', shape, ctx, { x: measure, y: [measure], reason }),
-      title: ctx.title ?? `Distribution of ${word(measure.name)}`,
-    },
-  }
-}
-
-function buildDonut(shape: ResultShape, ctx: SpecContext, pref: PreferredColumns): BuildResult {
-  const x = find(shape.categories, pref.x) ?? shape.categories[0]
-  if (!x) return fail('a donut needs a category column.')
-  const y = find(shape.measures, pref.y?.[0]) ?? focusMeasure(shape.measures, ctx.question)
-  if (!y) return fail('a donut needs a number column.')
-  if (!shape.complete || !x.unique) {
-    return fail(`several rows share the same ${word(x.name)}; aggregate them first.`)
-  }
-  if (x.distinct < 2 || x.distinct > MAX_DONUT_SLICES) {
-    return fail(
-      `a donut works for 2–${MAX_DONUT_SLICES} slices, and ${word(x.name)} has ${x.distinct}.`,
-    )
-  }
-  if (!y.nonNegative || (!isAdditive(y) && !SHARE_NAME.test(y.name))) {
-    return fail(`slices must add up to a whole, and ${word(y.name)} doesn't.`)
-  }
-  const of = SHARE_NAME.test(y.name) ? 'the total' : `the total ${word(y.name)}`
-  const reason = `Shows each ${word(x.name)}'s share of ${of} (${count(x.distinct, 'slice')}).`
-  return { ok: true, spec: baseSpec('donut', shape, ctx, { x, y: [y], sort: 'desc', reason }) }
-}
-
-function buildHeatmap(shape: ResultShape, ctx: SpecContext, pref: PreferredColumns): BuildResult {
-  const labels = labelColumns(shape)
-  const x = find(labels, pref.x) ?? [...labels].sort((a, b) => b.distinct - a.distinct)[0]
-  const series = find(labels, pref.series) ?? labels.find((column) => column !== x)
-  const y = find(shape.measures, pref.y?.[0]) ?? focusMeasure(shape.measures, ctx.question)
-  if (!x || !series || series === x || !y) {
-    return fail('a heatmap needs two category columns and a number column.')
-  }
-  if (!shape.complete || !pairsUnique(shape, x, series)) {
-    return fail(`several rows share the same ${word(x.name)} and ${word(series.name)}.`)
-  }
-  if (x.distinct > MAX_HEATMAP_SIDE || series.distinct > MAX_HEATMAP_SIDE) {
-    return fail(`a heatmap works up to ${MAX_HEATMAP_SIDE} values on each side.`)
-  }
-  const reason = `Shows every ${word(x.name)} × ${word(series.name)} combination as a cell, from dark (low) to bright (high) ${word(y.name)}.`
-  return { ok: true, spec: baseSpec('heatmap', shape, ctx, { x, y: [y], series, reason }) }
-}
-
-function tableSpec(shape: ResultShape, ctx: SpecContext, reason: string): ChartSpec {
-  return baseSpec('table', shape, ctx, { x: null, y: [], reason })
-}
+export {
+  CHART_POINT_LIMIT,
+  focusMeasure,
+  MAX_BARS,
+  MAX_DONUT_SLICES,
+  MAX_SERIES,
+  type BuildResult,
+  type ChartInput,
+  type PreferredColumns,
+} from '@/charts/build/common'
 
 function context(input: ChartInput): SpecContext {
   return {
@@ -416,7 +109,40 @@ export function buildSpec(
       return buildHeatmap(shape, ctx, pref)
     case 'table':
       return { ok: true, spec: tableSpec(shape, ctx, 'Shows the result as a table.') }
+    case 'stacked_100':
+      return buildStacked100(shape, ctx, pref)
+    case 'combo':
+      return buildCombo(shape, ctx, pref)
+    case 'waterfall':
+      return buildWaterfall(shape, ctx, pref)
+    case 'funnel':
+      return buildFunnel(shape, ctx, pref)
+    case 'treemap':
+      return buildTreemap(shape, ctx, pref)
+    case 'boxplot':
+      return buildBoxplot(shape, ctx, pref)
+    case 'sankey':
+      return buildSankey(shape, ctx, pref)
+    case 'calendar':
+      return buildCalendar(shape, ctx, pref)
   }
+}
+
+const fail = (): BuildResult => ({ ok: false, reason: '' })
+
+/** The first of these that fits, else null. */
+function firstFit(...results: (() => BuildResult)[]): ChartSpec | null {
+  for (const result of results) {
+    const built = result()
+    if (built.ok) return built.spec
+  }
+  return null
+}
+
+/** Two measures that can't share an axis: very different sizes, or different units. */
+function differentScales(shape: ResultShape, ctx: SpecContext, measures: ColumnInfo[]): boolean {
+  const styles = measures.map((column) => valueStyle(column, shape, ctx.currency).y)
+  return !comparable(measures) || new Set(styles).size > 1
 }
 
 function orTable(result: BuildResult, shape: ResultShape, ctx: SpecContext): ChartSpec {
@@ -435,6 +161,7 @@ function bars(shape: ResultShape, ctx: SpecContext, x: ColumnInfo, y: ColumnInfo
 function ruleSpec(shape: ResultShape, ctx: SpecContext): ChartSpec {
   const { rowCount } = shape
   const { temporal: T, measures: M, categories: C, text } = shape
+  const q = ctx.question
   if (rowCount === 0) return tableSpec(shape, ctx, 'The query returned no rows.')
   const [prose] = text
   if (prose) {
@@ -452,15 +179,43 @@ function ruleSpec(shape: ResultShape, ctx: SpecContext): ChartSpec {
       ? orTable(buildKpi(shape, ctx, {}), shape, ctx)
       : tableSpec(shape, ctx, `One row with ${M.length} numbers reads best as a table.`)
   }
-  // 3: time + measures → line (area for a single cumulative measure).
   const [time] = T
+  const [first] = M
   if (time && T.length === 1 && C.length === 0 && M.length <= 5) {
-    const area = M.length === 1 && M[0] !== undefined && CUMULATIVE_NAME.test(M[0].name)
+    const fit = firstFit(
+      // 12: "what's revenue this month?" over a series → the latest value as a KPI, with its trend.
+      () =>
+        M.length <= 3 && LATEST_INTENT.test(q) && !TREND_INTENT.test(q)
+          ? buildKpi(shape, ctx, { x: time.name })
+          : fail(),
+      // 19: daily values and a question about days → a calendar.
+      () =>
+        M.length === 1 && DAILY_INTENT.test(q)
+          ? buildCalendar(shape, ctx, { x: time.name })
+          : fail(),
+      // 15: signed changes and a question about what drove them → a waterfall.
+      () =>
+        M.length === 1 && first && isChange(first, q)
+          ? buildWaterfall(shape, ctx, { x: time.name })
+          : fail(),
+      // 13: two measures on different scales, neither singled out → bars and a line.
+      () =>
+        M.length === 2 && differentScales(shape, ctx, M) && !askedMeasure(M, q)
+          ? buildCombo(shape, ctx, { x: time.name })
+          : fail(),
+    )
+    if (fit) return fit
+    // 3: time + measures → line (area for a single cumulative measure).
+    const area = M.length === 1 && first !== undefined && CUMULATIVE_NAME.test(first.name)
     return orTable(buildLine(area ? 'area' : 'line', shape, ctx, { series: null }), shape, ctx)
   }
-  // 4: time + category + measure → one line per category.
+  // 4: time + category + measure → one line per category (20: shares of a mix → 100% stacked).
   const [category] = C
   if (time && category && T.length === 1 && C.length === 1 && M.length === 1) {
+    const mix = DONUT_INTENT.test(q)
+      ? buildStacked100(shape, ctx, { x: time.name, series: category.name })
+      : null
+    if (mix?.ok) return mix.spec
     return orTable(
       buildLine('line', shape, ctx, { x: time.name, series: category.name }),
       shape,
@@ -469,21 +224,56 @@ function ruleSpec(shape: ResultShape, ctx: SpecContext): ChartSpec {
   }
   if (T.length === 0 && category && C.length === 1) {
     if (category.unique && shape.complete) {
+      // 17: quartile columns per group → box plots.
+      const stats = quartileColumns(M)
+      if (stats) {
+        const box = buildBoxplot(shape, ctx, { x: category.name })
+        if (box.ok) return box.spec
+      }
+      const focus = focusMeasure(M, q)
       if (category.distinct > MAX_BARS) {
+        // 16: more categories than bars hold, adding up to a whole → treemap.
+        const tiles = focus
+          ? buildTreemap(shape, ctx, { x: category.name, y: [focus.name], series: null })
+          : null
+        if (tiles?.ok) return tiles.spec
         return tableSpec(
           shape,
           ctx,
           `${humanizeName(category.name)} has ${category.distinct} values; more than ${MAX_BARS} categories read best in a table.`,
         )
       }
-      const focus = focusMeasure(M, ctx.question)
-      // 10: a share of a whole across a few categories → donut; 5: otherwise bars.
       if (focus && (M.length === 1 || !comparable(M))) {
-        const share = DONUT_INTENT.test(ctx.question) || SHARE_NAME.test(focus.name)
-        const donut = share ? buildDonut(shape, ctx, { x: category.name, y: [focus.name] }) : null
-        if (donut?.ok) return donut.spec
+        const single = M.length === 1
+        const share = DONUT_INTENT.test(q) || SHARE_NAME.test(focus.name)
+        const fit = firstFit(
+          // 14: ordered stages that shrink → funnel.
+          () =>
+            single && isFunnel(category, focus, shape, q)
+              ? buildFunnel(shape, ctx, { x: category.name, y: [focus.name] })
+              : fail(),
+          // 15: signed contributions → waterfall.
+          () =>
+            single && isChange(focus, q)
+              ? buildWaterfall(shape, ctx, { x: category.name, y: [focus.name] })
+              : fail(),
+          // 10: a share of a whole across a few categories → donut; 16: across more → treemap.
+          () => (share ? buildDonut(shape, ctx, { x: category.name, y: [focus.name] }) : fail()),
+          () =>
+            share && category.distinct > MAX_DONUT_SLICES
+              ? buildTreemap(shape, ctx, { x: category.name, y: [focus.name], series: null })
+              : fail(),
+        )
+        if (fit) return fit
       }
+      // 5: one measure → bars.
       if (M.length === 1 && focus) return orTable(bars(shape, ctx, category, focus), shape, ctx)
+      // 13: two measures on different scales, neither singled out → bars and a line, each with
+      // its own axis. (A question about one of them gets bars of that one, below.)
+      if (M.length === 2 && differentScales(shape, ctx, M) && !askedMeasure(M, q)) {
+        const combo = buildCombo(shape, ctx, { x: category.name })
+        if (combo.ok) return combo.spec
+      }
       // 6: several measures → grouped bars, if they share a scale; else bars of the one asked about.
       if (M.length <= 4 && comparable(M)) {
         return orTable(
@@ -501,6 +291,11 @@ function ruleSpec(shape: ResultShape, ctx: SpecContext): ChartSpec {
         return orTable(result, shape, ctx)
       }
     }
+    // 17: several rows per category and one measure → a box plot of each category's spread.
+    if (M.length === 1 && first) {
+      const box = buildBoxplot(shape, ctx, { x: category.name, y: [first.name] })
+      if (box.ok) return box.spec
+    }
     // 8: repeated categories with 2–3 measures → scatter, colored by category.
     if (M.length >= 2 && M.length <= 3) return orTable(buildScatter(shape, ctx, {}), shape, ctx)
     return tableSpec(
@@ -511,12 +306,24 @@ function ruleSpec(shape: ResultShape, ctx: SpecContext): ChartSpec {
   }
   // 7: two categories + a measure → stacked bars (heatmap when both have many values).
   if (T.length === 0 && C.length === 2 && M.length === 1) {
-    const [a, b] = [...C].sort((p, q) => q.distinct - p.distinct)
+    const [a, b] = [...C].sort((p, q2) => q2.distinct - p.distinct)
     if (a && b) {
-      if (a.distinct > 6 && b.distinct > 6) {
-        const heat = buildHeatmap(shape, ctx, { x: a.name, series: b.name })
-        if (heat.ok) return heat.spec
-      }
+      const fit = firstFit(
+        // 18: amounts flowing from one to the other → sankey.
+        () => (FLOW_INTENT.test(q) || flowColumns(C) ? buildSankey(shape, ctx, {}) : fail()),
+        // 20: shares of a mix → 100% stacked bars; 16: with many parts → a two-level treemap.
+        () =>
+          DONUT_INTENT.test(q) && b.distinct <= MAX_SERIES
+            ? buildStacked100(shape, ctx, { x: a.name, series: b.name })
+            : fail(),
+        () =>
+          DONUT_INTENT.test(q) ? buildTreemap(shape, ctx, { x: a.name, series: b.name }) : fail(),
+        () =>
+          a.distinct > 6 && b.distinct > 6
+            ? buildHeatmap(shape, ctx, { x: a.name, series: b.name })
+            : fail(),
+      )
+      if (fit) return fit
       const [measure] = M
       const additive = measure !== undefined && isAdditive(measure) && measure.nonNegative
       const type = additive && b.distinct <= MAX_SERIES ? 'stacked_bar' : 'grouped_bar'
@@ -705,5 +512,19 @@ export function fieldOptions(type: ChartType, shape: ResultShape): FieldOptions 
       return { x: labels, y: M, multiY: false, series: labels, size: none }
     case 'table':
       return { x: none, y: none, multiY: false, series: none, size: none }
+    case 'stacked_100':
+      return { x: labels, y: M, multiY: true, series: labels, size: none }
+    case 'combo':
+      return { x: labels, y: M, multiY: true, series: none, size: none }
+    case 'waterfall':
+      return { x: labels, y: M, multiY: false, series: none, size: none }
+    case 'funnel':
+    case 'boxplot':
+      return { x: shape.categories, y: M, multiY: false, series: none, size: none }
+    case 'treemap':
+    case 'sankey':
+      return { x: shape.categories, y: M, multiY: false, series: shape.categories, size: none }
+    case 'calendar':
+      return { x: shape.temporal, y: M, multiY: false, series: none, size: none }
   }
 }

@@ -2,6 +2,7 @@ import {
   Download,
   Ellipsis,
   FileCode2,
+  Palette,
   Presentation,
   Printer,
   RefreshCw,
@@ -16,9 +17,16 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { ChartPaletteSchema } from '@/charts/spec'
+import { PALETTES } from '@/charts/theme'
 import type { Dashboard } from '@/dashboard/schema'
 import { DashboardSwitcher } from '@/features/dashboard/DashboardSwitcher'
 import { printDashboardHtml, renderDashboardHtml } from '@/features/dashboard/exportDashboard'
@@ -46,11 +54,13 @@ export function DashboardToolbar({
   )
   const toast = useToastStore((state) => state.show)
   const locale = useSettingsStore((state) => state.locale)
+  const defaultPalette = useSettingsStore((state) => state.chartPalette)
+  const setPalette = useDashboardStore((state) => state.setPalette)
 
   /** Standalone HTML with the tiles' snapshots (F-DASH-12); printing it gives a PDF. */
   const exportHtml = (print: boolean) => {
     if (!dashboard) return
-    renderDashboardHtml(dashboard, locale)
+    renderDashboardHtml(dashboard, locale, dashboard.palette ?? defaultPalette)
       .then(({ fileName, html }) => {
         if (print) {
           if (!printDashboardHtml(html))
@@ -151,6 +161,34 @@ export function DashboardToolbar({
               <Printer aria-hidden />
               Print or save as PDF…
             </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger disabled={!dashboard}>
+                <Palette aria-hidden />
+                Chart colors
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                <DropdownMenuRadioGroup
+                  value={dashboard?.palette ?? 'default'}
+                  onValueChange={(value) =>
+                    dashboard &&
+                    setPalette(
+                      dashboard.id,
+                      value === 'default' ? null : ChartPaletteSchema.parse(value),
+                    )
+                  }
+                >
+                  <DropdownMenuRadioItem value="default">
+                    Default ({PALETTES[defaultPalette].label})
+                  </DropdownMenuRadioItem>
+                  {ChartPaletteSchema.options.map((palette) => (
+                    <DropdownMenuRadioItem key={palette} value={palette}>
+                      {PALETTES[palette].label}
+                    </DropdownMenuRadioItem>
+                  ))}
+                </DropdownMenuRadioGroup>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
             <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={() => input.current?.click()}>
               <Upload aria-hidden />

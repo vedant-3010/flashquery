@@ -307,16 +307,16 @@ Format: `ID (priority) Title: description. AC: acceptance criteria.`
 - [x] **F-VIZ-06 (P1) Chart settings popover**: x / y / series pickers, sort, stack, log scale, labels.
 - [x] **F-VIZ-07 (P1) Export chart** as PNG/SVG; copy image to clipboard.
 - [x] **F-VIZ-08 (P2) Annotations**: max/min markers, average line, target line.
-- [ ] **F-VIZ-09 (P1) More chart types** (v2): combo (bars + line on a second axis), waterfall, funnel,
+- [x] **F-VIZ-09 (P1) More chart types** (v2): combo (bars + line on a second axis), waterfall, funnel,
   treemap, box plot, sankey, calendar heatmap, 100% stacked bar. Each has selection rules (§6), appears
   in the switcher when compatible, accepts the LLM hint, and renders in exported HTML. AC: ≥ 1 select
   case per type plus a "not this type" case; a `toOption` snapshot per type.
-- [ ] **F-VIZ-10 (P1) KPI trend** (v2): a KPI card shows a sparkline and the change versus the previous
+- [x] **F-VIZ-10 (P1) KPI trend** (v2): a KPI card shows a sparkline and the change versus the previous
   period when the result has a time column.
-- [ ] **F-VIZ-11 (P1) Chart style** (v2): a refined default (Geist labels, hairline dashed grids,
+- [x] **F-VIZ-11 (P1) Chart style** (v2): a refined default (Geist labels, hairline dashed grids,
   rounded bars, soft area gradients, hover dims other series, end-of-line labels for ≤ 4 series, a
   redesigned tooltip, entrance animation off with reduced motion).
-- [ ] **F-VIZ-12 (P1) Palettes** (v2): flashQuery (violet-led), Tol bright, Okabe-Ito, Mono; per chart,
+- [x] **F-VIZ-12 (P1) Palettes** (v2): flashQuery (violet-led), Tol bright, Okabe-Ito, Mono; per chart,
   per dashboard, default in Settings. AC: the default is colour-blind-safe; the contrast test covers
   every palette (marks ≥ 3:1).
 
@@ -550,19 +550,20 @@ Column classes after normalization: **temporal** (DATE/TIMESTAMP, or year/month 
 
 An LLM `chartHint` overrides these only when it is compatible with the result shape.
 
-**v2 additions (F-VIZ-09/10; a draft, refined in M10).** Each is checked before the rule it refines.
+**v2 additions (F-VIZ-09/10, M10).** Each is checked before the rule it refines. Intents are
+words in the question (`src/charts/build/more.ts`).
 
-| #   | Result shape                                                            | Chart            | Checked before |
-| --- | ----------------------------------------------------------------------- | ---------------- | -------------- |
-| 12  | 1 row × 1 measure, with a time series behind it                         | KPI with trend   | 1              |
-| 13  | 1 category + 2 measures on different scales (e.g. revenue and margin %) | combo            | 6              |
-| 14  | ordered stages (a stage/step column) + 1 decreasing measure             | funnel           | 5              |
-| 15  | 1 category + 1 signed measure, contribution or change intent            | waterfall        | 5              |
-| 16  | > 12 categories, or 2 nested categories, + 1 non-negative measure       | treemap          | 11             |
-| 17  | 1 category + quantile columns, or distribution-per-group intent         | box plot         | 9              |
-| 18  | 2 categories + 1 non-negative measure, flow intent (≤ 50 links)         | sankey           | 7              |
-| 19  | 1 daily date column + 1 measure, day-of-week or daily-pattern intent    | calendar heatmap | 3              |
-| 20  | 2 categories (or time + category) + 1 measure, share or mix intent      | 100% stacked bar | 7              |
+| #  | Result shape                                                                     | Chart            | Checked before |
+| -- | -------------------------------------------------------------------------------- | ---------------- | -------------- |
+| 12 | time + 1–3 measures, "latest / this month / so far" (not "trend / monthly")      | KPI with trend   | 3              |
+| 13 | category or time + 2 measures on different scales, neither named in the question | bar and line     | 6, 3           |
+| 14 | 3–12 stages (a stage/step name, or "funnel"/"conversion") that shrink in order   | funnel           | 5              |
+| 15 | category or time + 1 measure with negatives, named or asked as a change          | waterfall        | 5, 3           |
+| 16 | > 30 categories of an additive measure, or a share question past 6 parts         | treemap          | 11, 10         |
+| 17 | 1 category + quartile columns, or several rows per category and 1 measure        | box plot         | 8, 11          |
+| 18 | 2 categories + 1 additive measure, "flow / from … to" or source/target names     | sankey (≤ 50)    | 7              |
+| 19 | 1 column of whole days (14 days – 2 years) + 1 measure, a question about days    | calendar heatmap | 3              |
+| 20 | 2 categories (or time + category) + 1 measure, a share or mix question           | 100% stacked bar | 7, 4           |
 
 ---
 
@@ -592,7 +593,10 @@ AiLogEntry     { id, answerId, provider, model, mode, messages, output, usage, m
 // v2
 ChartSpec      + type: …|'combo'|'waterfall'|'funnel'|'treemap'|'boxplot'|'sankey'|'calendar'|'stacked_100',
                  palette
-Settings (v6)  + effort: 'auto'|'low'|'medium'|'high', chartPalette
+Settings (v7)  + effort: 'auto'|'low'|'medium'|'high' (v6), chartPalette (v7)
+Dashboard      + palette?
+ChartSpec      + format2? (the line of a bar-and-line chart)
+ChartData      sampling + 'quantiles' (box plot statistics from DuckDB)
 Project        { id, name, createdAt, updatedAt, lastOpenedAt }                  // local, IndexedDB
 Profile        { id, displayName, avatarUrl, createdAt }                         // Supabase
 CloudDashboard { id, ownerId, name, doc: Dashboard (with snapshots), version, updatedAt }
@@ -1156,6 +1160,36 @@ asked about on-device support only when the mic is first pressed, because Playwr
 and the first press installs the language pack. The listening state follows the recognizer's speech
 events instead of a live audio meter (that would need a second microphone stream). The mic is
 named "Voice input (unavailable)" where on-device recognition is missing, and pressing it says why.
+- **D111** Charts v2 (M10, F-VIZ-09…12).
+  - **Types:** 100% stacked, bar and line, waterfall, funnel, treemap, box plot, sankey and
+    calendar join the switcher, grouped by purpose (Numbers, Compare, Over time, Parts of a whole,
+    Distribution, Rows).
+  - **Rules:** §6 rules 12–20. The bar-and-line rule fires only when the question names neither
+    measure; a question about one measure still gets bars of it.
+  - **Box plots:** quartiles come from DuckDB, with Tukey whiskers (1.5 × IQR); values beyond them
+    are counted in a note, not drawn, so a long tail doesn't flatten the boxes. At most 30 groups.
+  - **Waterfall:** a transparent base series and ECharts' `stackStrategy: 'all'`, so steps can cross
+    zero.
+  - **Sankey:** keeps each side's nodes apart, so "A → A" is no cycle.
+  - **Lines:** sampled lines always keep their last point (the step leaves room, ≤ 5,000 points), so a
+    KPI's latest value is real.
+  - **KPI with trend:** a time series shown as its latest value, the change since the period before
+    (▲/▼ plus words for screen readers) and a sparkline; the HTML export prints the change.
+  - **Style:** dashed hairline grids, no ticks, round legend markers, a card tooltip (escaped), rounded
+    bars, hover focus that dims the rest, end-of-line labels for ≤ 4 lines, soft gradients, an eased
+    entrance (none with reduced motion).
+  - **Treemap tiles:** explicit tints with the theme's text colour (about 5:1 or better), because
+    ECharts' level colour mapping didn't apply to one-level treemaps.
+  - **Palettes:** flashQuery (violet-led, the new default), Tol bright, Okabe-Ito (darkened on white)
+    and Mono. Chosen per chart, per dashboard, or as the default (settings v7).
+  - **Colour-blind safety, tested:** `src/lib/colorVision.ts` simulates protan, deutan and tritan
+    vision (Machado 2009) and measures CIE76 ΔE. Every palette keeps each pair ≥ 6 apart (Tol's own
+    floor); the default keeps ≥ 12 (13.7 at worst). The flashQuery colours came from a search under
+    those constraints plus 3:1 contrast.
+  - **Code layout:** builders moved to `src/charts/build/`, option builders to
+    `src/charts/options/`, and the new shapes to `shapeMore.ts`; public imports are unchanged.
+  - **Bundle:** initial JS 290 KB gzip (+8 KB, the rules ship with chart selection); the lazy ECharts
+    chunk grows from 226 to 253 KB for the five new modules.
 - **D12** Shared hooks live in `src/hooks/` and shared app components in `src/components/` (outside the
 generated `ui/`), matching the shadcn aliases in `components.json`.
 

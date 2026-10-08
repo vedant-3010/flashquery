@@ -3,6 +3,9 @@
 exports[`toOption > draws a donut with percent labels (snapshot) 1`] = `
 {
   "animation": false,
+  "animationDuration": 550,
+  "animationDurationUpdate": 300,
+  "animationEasing": "cubicOut",
   "aria": {
     "decal": {
       "show": true,
@@ -14,13 +17,13 @@ exports[`toOption > draws a donut with percent labels (snapshot) 1`] = `
   },
   "backgroundColor": "transparent",
   "color": [
-    "#4477AA",
-    "#EE6677",
-    "#228833",
-    "#997700",
-    "#1F86A6",
-    "#AA3377",
-    "#808080",
+    "#7C1CCD",
+    "#8D5423",
+    "#348B6D",
+    "#3997E2",
+    "#CA328C",
+    "#987A15",
+    "#494F59",
   ],
   "grid": {
     "bottom": 44,
@@ -33,7 +36,10 @@ exports[`toOption > draws a donut with percent labels (snapshot) 1`] = `
   "legend": {
     "bottom": 0,
     "formatter": [Function],
-    "icon": "roundRect",
+    "icon": "circle",
+    "itemGap": 16,
+    "itemHeight": 8,
+    "itemWidth": 8,
     "pageTextStyle": {
       "color": "#737373",
     },
@@ -66,9 +72,13 @@ exports[`toOption > draws a donut with percent labels (snapshot) 1`] = `
           "value": 20,
         },
       ],
+      "emphasis": {
+        "scaleSize": 4,
+      },
       "itemStyle": {
         "borderColor": "#ffffff",
-        "borderWidth": 2,
+        "borderRadius": 4,
+        "borderWidth": 1,
       },
       "label": {
         "color": "#171717",
@@ -76,13 +86,14 @@ exports[`toOption > draws a donut with percent labels (snapshot) 1`] = `
       },
       "labelLine": {
         "lineStyle": {
-          "color": "#a3a3a3",
+          "color": "#d4d4d4",
         },
       },
       "name": "Revenue",
+      "padAngle": 1.5,
       "radius": [
-        "45%",
-        "70%",
+        "48%",
+        "72%",
       ],
       "type": "pie",
     },
@@ -95,7 +106,13 @@ exports[`toOption > draws a donut with percent labels (snapshot) 1`] = `
   "tooltip": {
     "backgroundColor": "#ffffff",
     "borderColor": "#e5e5e5",
+    "borderWidth": 1,
     "confine": true,
+    "extraCssText": "border-radius:10px;box-shadow:0 10px 30px -12px rgba(0, 0, 0, 0.22);",
+    "padding": [
+      8,
+      12,
+    ],
     "textStyle": {
       "color": "#171717",
       "fontFamily": "'Geist Variable', ui-sans-serif, system-ui, sans-serif",
@@ -111,6 +128,9 @@ exports[`toOption > draws a donut with percent labels (snapshot) 1`] = `
 exports[`toOption > draws a time-axis line in UTC with lttb sampling 1`] = `
 {
   "animation": false,
+  "animationDuration": 550,
+  "animationDurationUpdate": 300,
+  "animationEasing": "cubicOut",
   "aria": {
     "decal": {
       "show": false,
@@ -122,13 +142,13 @@ exports[`toOption > draws a time-axis line in UTC with lttb sampling 1`] = `
   },
   "backgroundColor": "transparent",
   "color": [
-    "#4477AA",
-    "#EE6677",
-    "#228833",
-    "#997700",
-    "#1F86A6",
-    "#AA3377",
-    "#808080",
+    "#7C1CCD",
+    "#8D5423",
+    "#348B6D",
+    "#3997E2",
+    "#CA328C",
+    "#987A15",
+    "#494F59",
   ],
   "grid": {
     "bottom": 12,
@@ -143,7 +163,36 @@ exports[`toOption > draws a time-axis line in UTC with lttb sampling 1`] = `
   },
   "series": [
     {
-      "areaStyle": undefined,
+      "areaStyle": {
+        "color": {
+          "colorStops": [
+            {
+              "color": "rgba(124, 28, 205, 0.12)",
+              "offset": 0,
+            },
+            {
+              "color": "rgba(124, 28, 205, 0)",
+              "offset": 1,
+            },
+          ],
+          "type": "linear",
+          "x": 0,
+          "x2": 0,
+          "y": 0,
+          "y2": 1,
+        },
+      },
+      "blur": {
+        "areaStyle": {
+          "opacity": 0.08,
+        },
+        "itemStyle": {
+          "opacity": 0.25,
+        },
+        "lineStyle": {
+          "opacity": 0.25,
+        },
+      },
       "connectNulls": false,
       "data": [
         [
@@ -246,13 +295,14 @@ exports[`toOption > draws a time-axis line in UTC with lttb sampling 1`] = `
       "emphasis": {
         "focus": "series",
       },
+      "endLabel": undefined,
       "itemStyle": undefined,
       "label": {
         "show": false,
       },
       "lineStyle": {
         "type": "solid",
-        "width": 2,
+        "width": 2.25,
       },
       "name": "Revenue",
       "sampling": "lttb",
@@ -269,16 +319,28 @@ exports[`toOption > draws a time-axis line in UTC with lttb sampling 1`] = `
     "fontSize": 12,
   },
   "tooltip": {
+    "axisPointer": {
+      "lineStyle": {
+        "color": "#d4d4d4",
+      },
+      "type": "line",
+    },
     "backgroundColor": "#ffffff",
     "borderColor": "#e5e5e5",
+    "borderWidth": 1,
     "confine": true,
+    "extraCssText": "border-radius:10px;box-shadow:0 10px 30px -12px rgba(0, 0, 0, 0.22);",
+    "formatter": [Function],
+    "padding": [
+      8,
+      12,
+    ],
     "textStyle": {
       "color": "#171717",
       "fontFamily": "'Geist Variable', ui-sans-serif, system-ui, sans-serif",
       "fontSize": 12,
     },
     "trigger": "axis",
-    "valueFormatter": [Function],
   },
   "useUTC": true,
   "xAxis": {
@@ -289,8 +351,11 @@ exports[`toOption > draws a time-axis line in UTC with lttb sampling 1`] = `
     },
     "axisLine": {
       "lineStyle": {
-        "color": "#a3a3a3",
+        "color": "#d4d4d4",
       },
+    },
+    "axisTick": {
+      "show": false,
     },
     "name": "Month",
     "nameGap": 28,
@@ -308,6 +373,12 @@ exports[`toOption > draws a time-axis line in UTC with lttb sampling 1`] = `
       "color": "#737373",
       "formatter": [Function],
     },
+    "axisLine": {
+      "show": false,
+    },
+    "axisTick": {
+      "show": false,
+    },
     "name": "Revenue",
     "nameTextStyle": {
       "align": "left",
@@ -315,7 +386,11 @@ exports[`toOption > draws a time-axis line in UTC with lttb sampling 1`] = `
     },
     "splitLine": {
       "lineStyle": {
-        "color": "#e5e5e5",
+        "color": "#e8e8e8",
+        "type": [
+          4,
+          4,
+        ],
       },
     },
     "type": "value",
@@ -326,6 +401,9 @@ exports[`toOption > draws a time-axis line in UTC with lttb sampling 1`] = `
 exports[`toOption > draws bars with formatted axes (snapshot) 1`] = `
 {
   "animation": false,
+  "animationDuration": 550,
+  "animationDurationUpdate": 300,
+  "animationEasing": "cubicOut",
   "aria": {
     "decal": {
       "show": false,
@@ -337,13 +415,13 @@ exports[`toOption > draws bars with formatted axes (snapshot) 1`] = `
   },
   "backgroundColor": "transparent",
   "color": [
-    "#4477AA",
-    "#EE6677",
-    "#228833",
-    "#997700",
-    "#1F86A6",
-    "#AA3377",
-    "#808080",
+    "#7C1CCD",
+    "#8D5423",
+    "#348B6D",
+    "#3997E2",
+    "#CA328C",
+    "#987A15",
+    "#494F59",
   ],
   "grid": {
     "bottom": 12,
@@ -358,7 +436,19 @@ exports[`toOption > draws bars with formatted axes (snapshot) 1`] = `
   },
   "series": [
     {
-      "barMaxWidth": 48,
+      "barCategoryGap": "36%",
+      "barMaxWidth": 44,
+      "blur": {
+        "areaStyle": {
+          "opacity": 0.08,
+        },
+        "itemStyle": {
+          "opacity": 0.25,
+        },
+        "lineStyle": {
+          "opacity": 0.25,
+        },
+      },
       "data": [
         137900000,
         80000000,
@@ -367,7 +457,14 @@ exports[`toOption > draws bars with formatted axes (snapshot) 1`] = `
       "emphasis": {
         "focus": "series",
       },
-      "itemStyle": undefined,
+      "itemStyle": {
+        "borderRadius": [
+          4,
+          4,
+          0,
+          0,
+        ],
+      },
       "label": {
         "show": false,
       },
@@ -383,18 +480,27 @@ exports[`toOption > draws bars with formatted axes (snapshot) 1`] = `
   },
   "tooltip": {
     "axisPointer": {
+      "shadowStyle": {
+        "color": "rgba(23, 23, 23, 0.05)",
+      },
       "type": "shadow",
     },
     "backgroundColor": "#ffffff",
     "borderColor": "#e5e5e5",
+    "borderWidth": 1,
     "confine": true,
+    "extraCssText": "border-radius:10px;box-shadow:0 10px 30px -12px rgba(0, 0, 0, 0.22);",
+    "formatter": [Function],
+    "padding": [
+      8,
+      12,
+    ],
     "textStyle": {
       "color": "#171717",
       "fontFamily": "'Geist Variable', ui-sans-serif, system-ui, sans-serif",
       "fontSize": 12,
     },
     "trigger": "axis",
-    "valueFormatter": [Function],
   },
   "useUTC": true,
   "xAxis": {
@@ -406,7 +512,7 @@ exports[`toOption > draws bars with formatted axes (snapshot) 1`] = `
     },
     "axisLine": {
       "lineStyle": {
-        "color": "#a3a3a3",
+        "color": "#d4d4d4",
       },
     },
     "axisTick": {
@@ -431,6 +537,12 @@ exports[`toOption > draws bars with formatted axes (snapshot) 1`] = `
       "color": "#737373",
       "formatter": [Function],
     },
+    "axisLine": {
+      "show": false,
+    },
+    "axisTick": {
+      "show": false,
+    },
     "name": "Total revenue",
     "nameTextStyle": {
       "align": "left",
@@ -438,10 +550,4352 @@ exports[`toOption > draws bars with formatted axes (snapshot) 1`] = `
     },
     "splitLine": {
       "lineStyle": {
-        "color": "#e5e5e5",
+        "color": "#e8e8e8",
+        "type": [
+          4,
+          4,
+        ],
       },
     },
     "type": "value",
+  },
+}
+`;
+
+exports[`v2 chart types (F-VIZ-09, F-VIZ-10) > draws a 100% stacked bar as each bar’s shares (snapshot) 1`] = `
+{
+  "animation": false,
+  "animationDuration": 550,
+  "animationDurationUpdate": 300,
+  "animationEasing": "cubicOut",
+  "aria": {
+    "decal": {
+      "show": true,
+    },
+    "enabled": true,
+    "label": {
+      "enabled": false,
+    },
+  },
+  "backgroundColor": "transparent",
+  "color": [
+    "#7C1CCD",
+    "#8D5423",
+    "#348B6D",
+    "#3997E2",
+    "#CA328C",
+    "#987A15",
+    "#494F59",
+  ],
+  "grid": {
+    "bottom": 44,
+    "left": 12,
+    "outerBoundsContain": "all",
+    "outerBoundsMode": "same",
+    "right": 24,
+    "top": 32,
+  },
+  "legend": {
+    "bottom": 0,
+    "formatter": [Function],
+    "icon": "circle",
+    "itemGap": 16,
+    "itemHeight": 8,
+    "itemWidth": 8,
+    "pageTextStyle": {
+      "color": "#737373",
+    },
+    "textStyle": {
+      "color": "#737373",
+    },
+    "type": "scroll",
+  },
+  "series": [
+    {
+      "barCategoryGap": "28%",
+      "barMaxWidth": 44,
+      "blur": {
+        "areaStyle": {
+          "opacity": 0.08,
+        },
+        "itemStyle": {
+          "opacity": 0.25,
+        },
+        "lineStyle": {
+          "opacity": 0.25,
+        },
+      },
+      "data": [
+        0.46153846153846156,
+        0.4444444444444444,
+        0.4,
+      ],
+      "emphasis": {
+        "focus": "series",
+      },
+      "itemStyle": {
+        "borderColor": "#ffffff",
+        "borderWidth": 1,
+      },
+      "label": {
+        "show": false,
+      },
+      "name": "Online",
+      "stack": "total",
+      "type": "bar",
+    },
+    {
+      "barCategoryGap": "28%",
+      "barMaxWidth": 44,
+      "blur": {
+        "areaStyle": {
+          "opacity": 0.08,
+        },
+        "itemStyle": {
+          "opacity": 0.25,
+        },
+        "lineStyle": {
+          "opacity": 0.25,
+        },
+      },
+      "data": [
+        0.5384615384615384,
+        0.5555555555555556,
+        0.6,
+      ],
+      "emphasis": {
+        "focus": "series",
+      },
+      "itemStyle": {
+        "borderColor": "#ffffff",
+        "borderWidth": 1,
+      },
+      "label": {
+        "show": false,
+      },
+      "name": "Retail",
+      "stack": "total",
+      "type": "bar",
+    },
+  ],
+  "textStyle": {
+    "color": "#171717",
+    "fontFamily": "'Geist Variable', ui-sans-serif, system-ui, sans-serif",
+    "fontSize": 12,
+  },
+  "tooltip": {
+    "axisPointer": {
+      "shadowStyle": {
+        "color": "rgba(23, 23, 23, 0.05)",
+      },
+      "type": "shadow",
+    },
+    "backgroundColor": "#ffffff",
+    "borderColor": "#e5e5e5",
+    "borderWidth": 1,
+    "confine": true,
+    "extraCssText": "border-radius:10px;box-shadow:0 10px 30px -12px rgba(0, 0, 0, 0.22);",
+    "formatter": [Function],
+    "padding": [
+      8,
+      12,
+    ],
+    "textStyle": {
+      "color": "#171717",
+      "fontFamily": "'Geist Variable', ui-sans-serif, system-ui, sans-serif",
+      "fontSize": 12,
+    },
+    "trigger": "axis",
+  },
+  "useUTC": true,
+  "xAxis": {
+    "axisLabel": {
+      "color": "#737373",
+      "formatter": [Function],
+      "hideOverlap": true,
+      "interval": "auto",
+    },
+    "axisLine": {
+      "lineStyle": {
+        "color": "#d4d4d4",
+      },
+    },
+    "axisTick": {
+      "show": false,
+    },
+    "data": [
+      "LATAM",
+      "EMEA",
+      "APAC",
+    ],
+    "inverse": false,
+    "name": "Region",
+    "nameGap": 28,
+    "nameLocation": "middle",
+    "nameTextStyle": {
+      "color": "#737373",
+    },
+    "type": "category",
+  },
+  "yAxis": {
+    "axisLabel": {
+      "color": "#737373",
+      "formatter": [Function],
+    },
+    "axisLine": {
+      "show": false,
+    },
+    "axisTick": {
+      "show": false,
+    },
+    "max": 1,
+    "min": 0,
+    "name": "Share",
+    "nameTextStyle": {
+      "align": "left",
+      "color": "#737373",
+    },
+    "splitLine": {
+      "lineStyle": {
+        "color": "#e8e8e8",
+        "type": [
+          4,
+          4,
+        ],
+      },
+    },
+    "type": "value",
+  },
+}
+`;
+
+exports[`v2 chart types (F-VIZ-09, F-VIZ-10) > draws a funnel in stage order (snapshot) 1`] = `
+{
+  "animation": false,
+  "animationDuration": 550,
+  "animationDurationUpdate": 300,
+  "animationEasing": "cubicOut",
+  "aria": {
+    "decal": {
+      "show": false,
+    },
+    "enabled": false,
+    "label": {
+      "enabled": false,
+    },
+  },
+  "backgroundColor": "transparent",
+  "color": [
+    "#7C1CCD",
+    "#8D5423",
+    "#348B6D",
+    "#3997E2",
+    "#CA328C",
+    "#987A15",
+    "#494F59",
+  ],
+  "grid": {
+    "bottom": 12,
+    "left": 12,
+    "outerBoundsContain": "all",
+    "outerBoundsMode": "same",
+    "right": 24,
+    "top": 32,
+  },
+  "legend": {
+    "show": false,
+  },
+  "series": [
+    {
+      "bottom": 12,
+      "data": [
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 1)",
+          },
+          "name": "Visited",
+          "value": 1000,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.75)",
+          },
+          "name": "Signed up",
+          "value": 400,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.5)",
+          },
+          "name": "Paid",
+          "value": 80,
+        },
+      ],
+      "emphasis": {
+        "label": {
+          "fontWeight": 600,
+        },
+      },
+      "gap": 3,
+      "label": {
+        "color": "#171717",
+        "formatter": [Function],
+        "position": "right",
+        "show": true,
+      },
+      "labelLine": {
+        "lineStyle": {
+          "color": "#d4d4d4",
+        },
+        "show": true,
+      },
+      "left": "2%",
+      "maxSize": "100%",
+      "minSize": "14%",
+      "name": "Users",
+      "right": "38%",
+      "sort": "none",
+      "top": 12,
+      "type": "funnel",
+    },
+  ],
+  "textStyle": {
+    "color": "#171717",
+    "fontFamily": "'Geist Variable', ui-sans-serif, system-ui, sans-serif",
+    "fontSize": 12,
+  },
+  "tooltip": {
+    "backgroundColor": "#ffffff",
+    "borderColor": "#e5e5e5",
+    "borderWidth": 1,
+    "confine": true,
+    "extraCssText": "border-radius:10px;box-shadow:0 10px 30px -12px rgba(0, 0, 0, 0.22);",
+    "formatter": [Function],
+    "padding": [
+      8,
+      12,
+    ],
+    "textStyle": {
+      "color": "#171717",
+      "fontFamily": "'Geist Variable', ui-sans-serif, system-ui, sans-serif",
+      "fontSize": 12,
+    },
+    "trigger": "item",
+  },
+  "useUTC": true,
+}
+`;
+
+exports[`v2 chart types (F-VIZ-09, F-VIZ-10) > draws a treemap of many parts, capped with Other (snapshot) 1`] = `
+{
+  "animation": false,
+  "animationDuration": 550,
+  "animationDurationUpdate": 300,
+  "animationEasing": "cubicOut",
+  "aria": {
+    "decal": {
+      "show": false,
+    },
+    "enabled": false,
+    "label": {
+      "enabled": false,
+    },
+  },
+  "backgroundColor": "transparent",
+  "color": [
+    "#7C1CCD",
+    "#8D5423",
+    "#348B6D",
+    "#3997E2",
+    "#CA328C",
+    "#987A15",
+    "#494F59",
+  ],
+  "grid": {
+    "bottom": 12,
+    "left": 12,
+    "outerBoundsContain": "all",
+    "outerBoundsMode": "same",
+    "right": 24,
+    "top": 32,
+  },
+  "legend": {
+    "show": false,
+  },
+  "series": [
+    {
+      "bottom": 0,
+      "breadcrumb": {
+        "show": false,
+      },
+      "data": [
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.2663736263736264)",
+          },
+          "name": "City 1",
+          "value": 240,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.26583638583638586)",
+          },
+          "name": "City 2",
+          "value": 239,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.26529914529914533)",
+          },
+          "name": "City 3",
+          "value": 238,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.26476190476190475)",
+          },
+          "name": "City 4",
+          "value": 237,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.26422466422466423)",
+          },
+          "name": "City 5",
+          "value": 236,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.2636874236874237)",
+          },
+          "name": "City 6",
+          "value": 235,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.2631501831501831)",
+          },
+          "name": "City 7",
+          "value": 234,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.2626129426129426)",
+          },
+          "name": "City 8",
+          "value": 233,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.2620757020757021)",
+          },
+          "name": "City 9",
+          "value": 232,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.26153846153846155)",
+          },
+          "name": "City 10",
+          "value": 231,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.26100122100122103)",
+          },
+          "name": "City 11",
+          "value": 230,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.26046398046398045)",
+          },
+          "name": "City 12",
+          "value": 229,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.2599267399267399)",
+          },
+          "name": "City 13",
+          "value": 228,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.2593894993894994)",
+          },
+          "name": "City 14",
+          "value": 227,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.2588522588522589)",
+          },
+          "name": "City 15",
+          "value": 226,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.25831501831501835)",
+          },
+          "name": "City 16",
+          "value": 225,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.2577777777777778)",
+          },
+          "name": "City 17",
+          "value": 224,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.25724053724053725)",
+          },
+          "name": "City 18",
+          "value": 223,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.2567032967032967)",
+          },
+          "name": "City 19",
+          "value": 222,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.25616605616605614)",
+          },
+          "name": "City 20",
+          "value": 221,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.2556288156288156)",
+          },
+          "name": "City 21",
+          "value": 220,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.2550915750915751)",
+          },
+          "name": "City 22",
+          "value": 219,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.25455433455433457)",
+          },
+          "name": "City 23",
+          "value": 218,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.25401709401709405)",
+          },
+          "name": "City 24",
+          "value": 217,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.25347985347985347)",
+          },
+          "name": "City 25",
+          "value": 216,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.25294261294261294)",
+          },
+          "name": "City 26",
+          "value": 215,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.2524053724053724)",
+          },
+          "name": "City 27",
+          "value": 214,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.2518681318681319)",
+          },
+          "name": "City 28",
+          "value": 213,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.25133089133089137)",
+          },
+          "name": "City 29",
+          "value": 212,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.2507936507936508)",
+          },
+          "name": "City 30",
+          "value": 211,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.25025641025641027)",
+          },
+          "name": "City 31",
+          "value": 210,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.24971916971916974)",
+          },
+          "name": "City 32",
+          "value": 209,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.2491819291819292)",
+          },
+          "name": "City 33",
+          "value": 208,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.24864468864468864)",
+          },
+          "name": "City 34",
+          "value": 207,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.24810744810744811)",
+          },
+          "name": "City 35",
+          "value": 206,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.24757020757020756)",
+          },
+          "name": "City 36",
+          "value": 205,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.24703296703296704)",
+          },
+          "name": "City 37",
+          "value": 204,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.24649572649572649)",
+          },
+          "name": "City 38",
+          "value": 203,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.24595848595848596)",
+          },
+          "name": "City 39",
+          "value": 202,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.24542124542124544)",
+          },
+          "name": "City 40",
+          "value": 201,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.24488400488400489)",
+          },
+          "name": "City 41",
+          "value": 200,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.24434676434676436)",
+          },
+          "name": "City 42",
+          "value": 199,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.2438095238095238)",
+          },
+          "name": "City 43",
+          "value": 198,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.24327228327228329)",
+          },
+          "name": "City 44",
+          "value": 197,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.24273504273504273)",
+          },
+          "name": "City 45",
+          "value": 196,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.2421978021978022)",
+          },
+          "name": "City 46",
+          "value": 195,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.24166056166056166)",
+          },
+          "name": "City 47",
+          "value": 194,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.24112332112332113)",
+          },
+          "name": "City 48",
+          "value": 193,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.24058608058608058)",
+          },
+          "name": "City 49",
+          "value": 192,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.24004884004884003)",
+          },
+          "name": "City 50",
+          "value": 191,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.2395115995115995)",
+          },
+          "name": "City 51",
+          "value": 190,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.23897435897435898)",
+          },
+          "name": "City 52",
+          "value": 189,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.23843711843711846)",
+          },
+          "name": "City 53",
+          "value": 188,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.2378998778998779)",
+          },
+          "name": "City 54",
+          "value": 187,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.23736263736263735)",
+          },
+          "name": "City 55",
+          "value": 186,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.23682539682539683)",
+          },
+          "name": "City 56",
+          "value": 185,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.2362881562881563)",
+          },
+          "name": "City 57",
+          "value": 184,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.23575091575091575)",
+          },
+          "name": "City 58",
+          "value": 183,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.2352136752136752)",
+          },
+          "name": "City 59",
+          "value": 182,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.23467643467643468)",
+          },
+          "name": "City 60",
+          "value": 181,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.23413919413919415)",
+          },
+          "name": "City 61",
+          "value": 180,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.2336019536019536)",
+          },
+          "name": "City 62",
+          "value": 179,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.23306471306471305)",
+          },
+          "name": "City 63",
+          "value": 178,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.23252747252747252)",
+          },
+          "name": "City 64",
+          "value": 177,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.231990231990232)",
+          },
+          "name": "City 65",
+          "value": 176,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.23145299145299147)",
+          },
+          "name": "City 66",
+          "value": 175,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.23091575091575092)",
+          },
+          "name": "City 67",
+          "value": 174,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.23037851037851037)",
+          },
+          "name": "City 68",
+          "value": 173,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.22984126984126985)",
+          },
+          "name": "City 69",
+          "value": 172,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.22930402930402932)",
+          },
+          "name": "City 70",
+          "value": 171,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.22876678876678877)",
+          },
+          "name": "City 71",
+          "value": 170,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.22822954822954822)",
+          },
+          "name": "City 72",
+          "value": 169,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.2276923076923077)",
+          },
+          "name": "City 73",
+          "value": 168,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.22715506715506717)",
+          },
+          "name": "City 74",
+          "value": 167,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.22661782661782662)",
+          },
+          "name": "City 75",
+          "value": 166,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.22608058608058607)",
+          },
+          "name": "City 76",
+          "value": 165,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.22554334554334554)",
+          },
+          "name": "City 77",
+          "value": 164,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.22500610500610502)",
+          },
+          "name": "City 78",
+          "value": 163,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.2244688644688645)",
+          },
+          "name": "City 79",
+          "value": 162,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.22393162393162394)",
+          },
+          "name": "City 80",
+          "value": 161,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.2233943833943834)",
+          },
+          "name": "City 81",
+          "value": 160,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.22285714285714286)",
+          },
+          "name": "City 82",
+          "value": 159,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.2223199023199023)",
+          },
+          "name": "City 83",
+          "value": 158,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.2217826617826618)",
+          },
+          "name": "City 84",
+          "value": 157,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.22124542124542124)",
+          },
+          "name": "City 85",
+          "value": 156,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.2207081807081807)",
+          },
+          "name": "City 86",
+          "value": 155,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.2201709401709402)",
+          },
+          "name": "City 87",
+          "value": 154,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.21963369963369964)",
+          },
+          "name": "City 88",
+          "value": 153,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.21909645909645908)",
+          },
+          "name": "City 89",
+          "value": 152,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.21855921855921856)",
+          },
+          "name": "City 90",
+          "value": 151,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.21802197802197804)",
+          },
+          "name": "City 91",
+          "value": 150,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.21748473748473748)",
+          },
+          "name": "City 92",
+          "value": 149,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.21694749694749696)",
+          },
+          "name": "City 93",
+          "value": 148,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.2164102564102564)",
+          },
+          "name": "City 94",
+          "value": 147,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.21587301587301588)",
+          },
+          "name": "City 95",
+          "value": 146,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.21533577533577533)",
+          },
+          "name": "City 96",
+          "value": 145,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.2147985347985348)",
+          },
+          "name": "City 97",
+          "value": 144,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.21426129426129426)",
+          },
+          "name": "City 98",
+          "value": 143,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.21372405372405373)",
+          },
+          "name": "City 99",
+          "value": 142,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.2131868131868132)",
+          },
+          "name": "City 100",
+          "value": 141,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.21264957264957265)",
+          },
+          "name": "City 101",
+          "value": 140,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.2121123321123321)",
+          },
+          "name": "City 102",
+          "value": 139,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.21157509157509158)",
+          },
+          "name": "City 103",
+          "value": 138,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.21103785103785105)",
+          },
+          "name": "City 104",
+          "value": 137,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.2105006105006105)",
+          },
+          "name": "City 105",
+          "value": 136,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.20996336996336995)",
+          },
+          "name": "City 106",
+          "value": 135,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.20942612942612943)",
+          },
+          "name": "City 107",
+          "value": 134,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.2088888888888889)",
+          },
+          "name": "City 108",
+          "value": 133,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.20835164835164835)",
+          },
+          "name": "City 109",
+          "value": 132,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.20781440781440783)",
+          },
+          "name": "City 110",
+          "value": 131,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.20727716727716727)",
+          },
+          "name": "City 111",
+          "value": 130,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.20673992673992675)",
+          },
+          "name": "City 112",
+          "value": 129,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.2062026862026862)",
+          },
+          "name": "City 113",
+          "value": 128,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.20566544566544567)",
+          },
+          "name": "City 114",
+          "value": 127,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.20512820512820512)",
+          },
+          "name": "City 115",
+          "value": 126,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.2045909645909646)",
+          },
+          "name": "City 116",
+          "value": 125,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.20405372405372407)",
+          },
+          "name": "City 117",
+          "value": 124,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.20351648351648352)",
+          },
+          "name": "City 118",
+          "value": 123,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.20297924297924297)",
+          },
+          "name": "City 119",
+          "value": 122,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.20244200244200244)",
+          },
+          "name": "City 120",
+          "value": 121,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.20190476190476192)",
+          },
+          "name": "City 121",
+          "value": 120,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.20136752136752137)",
+          },
+          "name": "City 122",
+          "value": 119,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.20083028083028084)",
+          },
+          "name": "City 123",
+          "value": 118,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.2002930402930403)",
+          },
+          "name": "City 124",
+          "value": 117,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.19975579975579977)",
+          },
+          "name": "City 125",
+          "value": 116,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.19921855921855922)",
+          },
+          "name": "City 126",
+          "value": 115,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.1986813186813187)",
+          },
+          "name": "City 127",
+          "value": 114,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.19814407814407814)",
+          },
+          "name": "City 128",
+          "value": 113,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.19760683760683762)",
+          },
+          "name": "City 129",
+          "value": 112,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.1970695970695971)",
+          },
+          "name": "City 130",
+          "value": 111,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.19653235653235654)",
+          },
+          "name": "City 131",
+          "value": 110,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.195995115995116)",
+          },
+          "name": "City 132",
+          "value": 109,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.19545787545787546)",
+          },
+          "name": "City 133",
+          "value": 108,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.19492063492063494)",
+          },
+          "name": "City 134",
+          "value": 107,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.1943833943833944)",
+          },
+          "name": "City 135",
+          "value": 106,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.19384615384615383)",
+          },
+          "name": "City 136",
+          "value": 105,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.1933089133089133)",
+          },
+          "name": "City 137",
+          "value": 104,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.1927716727716728)",
+          },
+          "name": "City 138",
+          "value": 103,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.19223443223443223)",
+          },
+          "name": "City 139",
+          "value": 102,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.19169719169719168)",
+          },
+          "name": "City 140",
+          "value": 101,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.19115995115995116)",
+          },
+          "name": "City 141",
+          "value": 100,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.19062271062271063)",
+          },
+          "name": "City 142",
+          "value": 99,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.19008547008547008)",
+          },
+          "name": "City 143",
+          "value": 98,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.18954822954822956)",
+          },
+          "name": "City 144",
+          "value": 97,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.189010989010989)",
+          },
+          "name": "City 145",
+          "value": 96,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.18847374847374848)",
+          },
+          "name": "City 146",
+          "value": 95,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.18793650793650793)",
+          },
+          "name": "City 147",
+          "value": 94,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.1873992673992674)",
+          },
+          "name": "City 148",
+          "value": 93,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.18686202686202685)",
+          },
+          "name": "City 149",
+          "value": 92,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.18632478632478633)",
+          },
+          "name": "City 150",
+          "value": 91,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.1857875457875458)",
+          },
+          "name": "City 151",
+          "value": 90,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.18525030525030525)",
+          },
+          "name": "City 152",
+          "value": 89,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.18471306471306473)",
+          },
+          "name": "City 153",
+          "value": 88,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.18417582417582418)",
+          },
+          "name": "City 154",
+          "value": 87,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.18363858363858365)",
+          },
+          "name": "City 155",
+          "value": 86,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.1831013431013431)",
+          },
+          "name": "City 156",
+          "value": 85,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.18256410256410258)",
+          },
+          "name": "City 157",
+          "value": 84,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.18202686202686202)",
+          },
+          "name": "City 158",
+          "value": 83,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.1814896214896215)",
+          },
+          "name": "City 159",
+          "value": 82,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.18095238095238095)",
+          },
+          "name": "City 160",
+          "value": 81,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.18041514041514042)",
+          },
+          "name": "City 161",
+          "value": 80,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.17987789987789987)",
+          },
+          "name": "City 162",
+          "value": 79,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.17934065934065935)",
+          },
+          "name": "City 163",
+          "value": 78,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.1788034188034188)",
+          },
+          "name": "City 164",
+          "value": 77,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.17826617826617827)",
+          },
+          "name": "City 165",
+          "value": 76,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.17772893772893772)",
+          },
+          "name": "City 166",
+          "value": 75,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.1771916971916972)",
+          },
+          "name": "City 167",
+          "value": 74,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.17665445665445667)",
+          },
+          "name": "City 168",
+          "value": 73,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.17611721611721612)",
+          },
+          "name": "City 169",
+          "value": 72,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.1755799755799756)",
+          },
+          "name": "City 170",
+          "value": 71,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.17504273504273504)",
+          },
+          "name": "City 171",
+          "value": 70,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.17450549450549452)",
+          },
+          "name": "City 172",
+          "value": 69,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.17396825396825397)",
+          },
+          "name": "City 173",
+          "value": 68,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.17343101343101344)",
+          },
+          "name": "City 174",
+          "value": 67,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.1728937728937729)",
+          },
+          "name": "City 175",
+          "value": 66,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.17235653235653237)",
+          },
+          "name": "City 176",
+          "value": 65,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.17181929181929181)",
+          },
+          "name": "City 177",
+          "value": 64,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.1712820512820513)",
+          },
+          "name": "City 178",
+          "value": 63,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.17074481074481074)",
+          },
+          "name": "City 179",
+          "value": 62,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.1702075702075702)",
+          },
+          "name": "City 180",
+          "value": 61,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.16967032967032966)",
+          },
+          "name": "City 181",
+          "value": 60,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.16913308913308914)",
+          },
+          "name": "City 182",
+          "value": 59,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.16859584859584859)",
+          },
+          "name": "City 183",
+          "value": 58,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.16805860805860806)",
+          },
+          "name": "City 184",
+          "value": 57,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.16752136752136754)",
+          },
+          "name": "City 185",
+          "value": 56,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.16698412698412698)",
+          },
+          "name": "City 186",
+          "value": 55,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.16644688644688646)",
+          },
+          "name": "City 187",
+          "value": 54,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.1659096459096459)",
+          },
+          "name": "City 188",
+          "value": 53,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.16537240537240538)",
+          },
+          "name": "City 189",
+          "value": 52,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.16483516483516483)",
+          },
+          "name": "City 190",
+          "value": 51,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.1642979242979243)",
+          },
+          "name": "City 191",
+          "value": 50,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.16376068376068376)",
+          },
+          "name": "City 192",
+          "value": 49,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.16322344322344323)",
+          },
+          "name": "City 193",
+          "value": 48,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.16268620268620268)",
+          },
+          "name": "City 194",
+          "value": 47,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.16214896214896216)",
+          },
+          "name": "City 195",
+          "value": 46,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.1616117216117216)",
+          },
+          "name": "City 196",
+          "value": 45,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.16107448107448108)",
+          },
+          "name": "City 197",
+          "value": 44,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.16053724053724053)",
+          },
+          "name": "City 198",
+          "value": 43,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(124, 28, 205, 0.16)",
+          },
+          "name": "City 199",
+          "value": 42,
+        },
+        {
+          "itemStyle": {
+            "color": "rgba(125, 130, 140, 0.3)",
+          },
+          "name": "Other",
+          "value": 861,
+        },
+      ],
+      "itemStyle": {
+        "borderColor": "#ffffff",
+        "borderRadius": 4,
+        "borderWidth": 1,
+        "gapWidth": 2,
+      },
+      "label": {
+        "color": "#171717",
+        "fontSize": 12,
+        "formatter": [Function],
+        "overflow": "truncate",
+        "show": true,
+      },
+      "left": 0,
+      "levels": [
+        {
+          "itemStyle": {
+            "gapWidth": 2,
+          },
+        },
+        {
+          "itemStyle": {
+            "gapWidth": 1,
+          },
+        },
+      ],
+      "name": "Revenue",
+      "nodeClick": false,
+      "right": 0,
+      "roam": false,
+      "top": 0,
+      "type": "treemap",
+      "upperLabel": {
+        "show": false,
+      },
+    },
+  ],
+  "textStyle": {
+    "color": "#171717",
+    "fontFamily": "'Geist Variable', ui-sans-serif, system-ui, sans-serif",
+    "fontSize": 12,
+  },
+  "tooltip": {
+    "backgroundColor": "#ffffff",
+    "borderColor": "#e5e5e5",
+    "borderWidth": 1,
+    "confine": true,
+    "extraCssText": "border-radius:10px;box-shadow:0 10px 30px -12px rgba(0, 0, 0, 0.22);",
+    "formatter": [Function],
+    "padding": [
+      8,
+      12,
+    ],
+    "textStyle": {
+      "color": "#171717",
+      "fontFamily": "'Geist Variable', ui-sans-serif, system-ui, sans-serif",
+      "fontSize": 12,
+    },
+    "trigger": "item",
+  },
+  "useUTC": true,
+}
+`;
+
+exports[`v2 chart types (F-VIZ-09, F-VIZ-10) > draws bars and a line on two axes (snapshot) 1`] = `
+{
+  "animation": false,
+  "animationDuration": 550,
+  "animationDurationUpdate": 300,
+  "animationEasing": "cubicOut",
+  "aria": {
+    "decal": {
+      "show": false,
+    },
+    "enabled": false,
+    "label": {
+      "enabled": false,
+    },
+  },
+  "backgroundColor": "transparent",
+  "color": [
+    "#7C1CCD",
+    "#8D5423",
+    "#348B6D",
+    "#3997E2",
+    "#CA328C",
+    "#987A15",
+    "#494F59",
+  ],
+  "grid": {
+    "bottom": 44,
+    "left": 12,
+    "outerBoundsContain": "all",
+    "outerBoundsMode": "same",
+    "right": 24,
+    "top": 32,
+  },
+  "legend": {
+    "bottom": 0,
+    "formatter": [Function],
+    "icon": "circle",
+    "itemGap": 16,
+    "itemHeight": 8,
+    "itemWidth": 8,
+    "pageTextStyle": {
+      "color": "#737373",
+    },
+    "textStyle": {
+      "color": "#737373",
+    },
+    "type": "scroll",
+  },
+  "series": [
+    {
+      "barMaxWidth": 40,
+      "blur": {
+        "areaStyle": {
+          "opacity": 0.08,
+        },
+        "itemStyle": {
+          "opacity": 0.25,
+        },
+        "lineStyle": {
+          "opacity": 0.25,
+        },
+      },
+      "data": [
+        300000000,
+        200000000,
+        100000000,
+      ],
+      "emphasis": {
+        "focus": "series",
+      },
+      "itemStyle": {
+        "borderRadius": [
+          4,
+          4,
+          0,
+          0,
+        ],
+      },
+      "label": {
+        "show": false,
+      },
+      "name": "Total revenue",
+      "type": "bar",
+    },
+    {
+      "blur": {
+        "areaStyle": {
+          "opacity": 0.08,
+        },
+        "itemStyle": {
+          "opacity": 0.25,
+        },
+        "lineStyle": {
+          "opacity": 0.25,
+        },
+      },
+      "connectNulls": false,
+      "data": [
+        0.4,
+        0.25,
+        0.31,
+      ],
+      "emphasis": {
+        "focus": "series",
+      },
+      "itemStyle": {
+        "borderColor": "#ffffff",
+        "borderWidth": 2,
+        "color": "#8D5423",
+      },
+      "label": {
+        "show": false,
+      },
+      "lineStyle": {
+        "color": "#8D5423",
+        "width": 2.5,
+      },
+      "name": "Profit margin",
+      "showSymbol": true,
+      "symbol": "circle",
+      "symbolSize": 7,
+      "type": "line",
+      "yAxisIndex": 1,
+      "z": 3,
+    },
+  ],
+  "textStyle": {
+    "color": "#171717",
+    "fontFamily": "'Geist Variable', ui-sans-serif, system-ui, sans-serif",
+    "fontSize": 12,
+  },
+  "tooltip": {
+    "axisPointer": {
+      "shadowStyle": {
+        "color": "rgba(23, 23, 23, 0.05)",
+      },
+      "type": "shadow",
+    },
+    "backgroundColor": "#ffffff",
+    "borderColor": "#e5e5e5",
+    "borderWidth": 1,
+    "confine": true,
+    "extraCssText": "border-radius:10px;box-shadow:0 10px 30px -12px rgba(0, 0, 0, 0.22);",
+    "formatter": [Function],
+    "padding": [
+      8,
+      12,
+    ],
+    "textStyle": {
+      "color": "#171717",
+      "fontFamily": "'Geist Variable', ui-sans-serif, system-ui, sans-serif",
+      "fontSize": 12,
+    },
+    "trigger": "axis",
+  },
+  "useUTC": true,
+  "xAxis": {
+    "axisLabel": {
+      "color": "#737373",
+      "formatter": [Function],
+      "hideOverlap": true,
+      "interval": "auto",
+    },
+    "axisLine": {
+      "lineStyle": {
+        "color": "#d4d4d4",
+      },
+    },
+    "axisTick": {
+      "show": false,
+    },
+    "data": [
+      "C",
+      "B",
+      "A",
+    ],
+    "inverse": false,
+    "name": "Category",
+    "nameGap": 28,
+    "nameLocation": "middle",
+    "nameTextStyle": {
+      "color": "#737373",
+    },
+    "type": "category",
+  },
+  "yAxis": [
+    {
+      "axisLabel": {
+        "color": "#737373",
+        "formatter": [Function],
+      },
+      "axisLine": {
+        "show": false,
+      },
+      "axisTick": {
+        "show": false,
+      },
+      "name": "Total revenue",
+      "nameTextStyle": {
+        "align": "left",
+        "color": "#737373",
+      },
+      "splitLine": {
+        "lineStyle": {
+          "color": "#e8e8e8",
+          "type": [
+            4,
+            4,
+          ],
+        },
+      },
+      "type": "value",
+    },
+    {
+      "axisLabel": {
+        "color": "#737373",
+        "formatter": [Function],
+      },
+      "axisLine": {
+        "show": false,
+      },
+      "axisTick": {
+        "show": false,
+      },
+      "name": "Profit margin",
+      "nameTextStyle": {
+        "align": "right",
+        "color": "#737373",
+      },
+      "splitLine": {
+        "show": false,
+      },
+      "type": "value",
+    },
+  ],
+}
+`;
+
+exports[`v2 chart types (F-VIZ-09, F-VIZ-10) > draws box plots from quartiles computed in the database (snapshot) 1`] = `
+{
+  "animation": false,
+  "animationDuration": 550,
+  "animationDurationUpdate": 300,
+  "animationEasing": "cubicOut",
+  "aria": {
+    "decal": {
+      "show": false,
+    },
+    "enabled": false,
+    "label": {
+      "enabled": false,
+    },
+  },
+  "backgroundColor": "transparent",
+  "color": [
+    "#7C1CCD",
+    "#8D5423",
+    "#348B6D",
+    "#3997E2",
+    "#CA328C",
+    "#987A15",
+    "#494F59",
+  ],
+  "grid": {
+    "bottom": 12,
+    "left": 12,
+    "outerBoundsContain": "all",
+    "outerBoundsMode": "same",
+    "right": 24,
+    "top": 32,
+  },
+  "legend": {
+    "show": false,
+  },
+  "series": [
+    {
+      "boxWidth": [
+        10,
+        44,
+      ],
+      "data": [
+        [
+          0,
+          4,
+          9,
+          14,
+          18,
+        ],
+        [
+          1,
+          5,
+          10,
+          15,
+          19,
+        ],
+      ],
+      "emphasis": {
+        "itemStyle": {
+          "borderWidth": 2,
+          "color": "rgba(124, 28, 205, 0.32)",
+        },
+      },
+      "itemStyle": {
+        "borderColor": "#7C1CCD",
+        "borderWidth": 1.5,
+        "color": "rgba(124, 28, 205, 0.18)",
+      },
+      "name": "Revenue",
+      "type": "boxplot",
+    },
+  ],
+  "textStyle": {
+    "color": "#171717",
+    "fontFamily": "'Geist Variable', ui-sans-serif, system-ui, sans-serif",
+    "fontSize": 12,
+  },
+  "tooltip": {
+    "backgroundColor": "#ffffff",
+    "borderColor": "#e5e5e5",
+    "borderWidth": 1,
+    "confine": true,
+    "extraCssText": "border-radius:10px;box-shadow:0 10px 30px -12px rgba(0, 0, 0, 0.22);",
+    "formatter": [Function],
+    "padding": [
+      8,
+      12,
+    ],
+    "textStyle": {
+      "color": "#171717",
+      "fontFamily": "'Geist Variable', ui-sans-serif, system-ui, sans-serif",
+      "fontSize": 12,
+    },
+    "trigger": "item",
+  },
+  "useUTC": true,
+  "xAxis": {
+    "axisLabel": {
+      "color": "#737373",
+      "formatter": [Function],
+      "hideOverlap": true,
+      "interval": "auto",
+    },
+    "axisLine": {
+      "lineStyle": {
+        "color": "#d4d4d4",
+      },
+    },
+    "axisTick": {
+      "show": false,
+    },
+    "data": [
+      "B",
+      "A",
+    ],
+    "inverse": false,
+    "name": "Region",
+    "nameGap": 28,
+    "nameLocation": "middle",
+    "nameTextStyle": {
+      "color": "#737373",
+    },
+    "type": "category",
+  },
+  "yAxis": {
+    "axisLabel": {
+      "color": "#737373",
+      "formatter": [Function],
+    },
+    "axisLine": {
+      "show": false,
+    },
+    "axisTick": {
+      "show": false,
+    },
+    "name": "Revenue",
+    "nameTextStyle": {
+      "align": "left",
+      "color": "#737373",
+    },
+    "splitLine": {
+      "lineStyle": {
+        "color": "#e8e8e8",
+        "type": [
+          4,
+          4,
+        ],
+      },
+    },
+    "type": "value",
+  },
+}
+`;
+
+exports[`v2 chart types (F-VIZ-09, F-VIZ-10) > floats waterfall steps from the running total and ends on the total (snapshot) 1`] = `
+{
+  "animation": false,
+  "animationDuration": 550,
+  "animationDurationUpdate": 300,
+  "animationEasing": "cubicOut",
+  "aria": {
+    "decal": {
+      "show": false,
+    },
+    "enabled": false,
+    "label": {
+      "enabled": false,
+    },
+  },
+  "backgroundColor": "transparent",
+  "color": [
+    "#7C1CCD",
+    "#8D5423",
+    "#348B6D",
+    "#3997E2",
+    "#CA328C",
+    "#987A15",
+    "#494F59",
+  ],
+  "grid": {
+    "bottom": 12,
+    "left": 12,
+    "outerBoundsContain": "all",
+    "outerBoundsMode": "same",
+    "right": 24,
+    "top": 32,
+  },
+  "legend": {
+    "show": false,
+  },
+  "series": [
+    {
+      "data": [
+        0,
+        120,
+        -60,
+        -60,
+      ],
+      "emphasis": {
+        "disabled": true,
+      },
+      "itemStyle": {
+        "color": "transparent",
+      },
+      "name": "base",
+      "silent": true,
+      "stack": "steps",
+      "stackStrategy": "all",
+      "tooltip": {
+        "show": false,
+      },
+      "type": "bar",
+    },
+    {
+      "barMaxWidth": 44,
+      "data": [
+        {
+          "itemStyle": {
+            "borderRadius": 3,
+            "color": "#348B6D",
+          },
+          "raw": 120,
+          "running": 120,
+          "value": 120,
+        },
+        {
+          "itemStyle": {
+            "borderRadius": 3,
+            "color": "#348B6D",
+          },
+          "raw": 80,
+          "running": 200,
+          "value": 80,
+        },
+        {
+          "itemStyle": {
+            "borderRadius": 3,
+            "color": "#CA328C",
+          },
+          "raw": -260,
+          "running": -60,
+          "value": 260,
+        },
+        {
+          "itemStyle": {
+            "borderRadius": 3,
+            "color": "#7C1CCD",
+          },
+          "raw": -60,
+          "running": -60,
+          "value": 60,
+        },
+      ],
+      "label": {
+        "color": "#171717",
+        "fontSize": 11,
+        "formatter": [Function],
+        "position": "top",
+        "show": true,
+      },
+      "name": "Profit change",
+      "stack": "steps",
+      "stackStrategy": "all",
+      "type": "bar",
+    },
+  ],
+  "textStyle": {
+    "color": "#171717",
+    "fontFamily": "'Geist Variable', ui-sans-serif, system-ui, sans-serif",
+    "fontSize": 12,
+  },
+  "tooltip": {
+    "backgroundColor": "#ffffff",
+    "borderColor": "#e5e5e5",
+    "borderWidth": 1,
+    "confine": true,
+    "extraCssText": "border-radius:10px;box-shadow:0 10px 30px -12px rgba(0, 0, 0, 0.22);",
+    "formatter": [Function],
+    "padding": [
+      8,
+      12,
+    ],
+    "textStyle": {
+      "color": "#171717",
+      "fontFamily": "'Geist Variable', ui-sans-serif, system-ui, sans-serif",
+      "fontSize": 12,
+    },
+    "trigger": "item",
+  },
+  "useUTC": true,
+  "xAxis": {
+    "axisLabel": {
+      "color": "#737373",
+      "formatter": [Function],
+      "hideOverlap": true,
+      "interval": "auto",
+    },
+    "axisLine": {
+      "lineStyle": {
+        "color": "#d4d4d4",
+      },
+    },
+    "axisTick": {
+      "show": false,
+    },
+    "data": [
+      "Price",
+      "Volume",
+      "Costs",
+      "Total",
+    ],
+    "inverse": false,
+    "name": "Driver",
+    "nameGap": 28,
+    "nameLocation": "middle",
+    "nameTextStyle": {
+      "color": "#737373",
+    },
+    "type": "category",
+  },
+  "yAxis": {
+    "axisLabel": {
+      "color": "#737373",
+      "formatter": [Function],
+    },
+    "axisLine": {
+      "show": false,
+    },
+    "axisTick": {
+      "show": false,
+    },
+    "name": "Profit change",
+    "nameTextStyle": {
+      "align": "left",
+      "color": "#737373",
+    },
+    "splitLine": {
+      "lineStyle": {
+        "color": "#e8e8e8",
+        "type": [
+          4,
+          4,
+        ],
+      },
+    },
+    "type": "value",
+  },
+}
+`;
+
+exports[`v2 chart types (F-VIZ-09, F-VIZ-10) > keeps sankey sides apart, so a name can flow to itself (snapshot) 1`] = `
+{
+  "animation": false,
+  "animationDuration": 550,
+  "animationDurationUpdate": 300,
+  "animationEasing": "cubicOut",
+  "aria": {
+    "decal": {
+      "show": false,
+    },
+    "enabled": false,
+    "label": {
+      "enabled": false,
+    },
+  },
+  "backgroundColor": "transparent",
+  "color": [
+    "#7C1CCD",
+    "#8D5423",
+    "#348B6D",
+    "#3997E2",
+    "#CA328C",
+    "#987A15",
+    "#494F59",
+  ],
+  "grid": {
+    "bottom": 12,
+    "left": 12,
+    "outerBoundsContain": "all",
+    "outerBoundsMode": "same",
+    "right": 24,
+    "top": 32,
+  },
+  "legend": {
+    "show": false,
+  },
+  "series": [
+    {
+      "bottom": 12,
+      "data": [
+        {
+          "itemStyle": {
+            "color": "#7C1CCD",
+          },
+          "name": "from:Basic",
+        },
+        {
+          "itemStyle": {
+            "color": "#7D828C",
+          },
+          "name": "to:Basic",
+        },
+        {
+          "itemStyle": {
+            "color": "#7D828C",
+          },
+          "name": "to:Pro",
+        },
+        {
+          "itemStyle": {
+            "color": "#8D5423",
+          },
+          "name": "from:Pro",
+        },
+      ],
+      "draggable": false,
+      "emphasis": {
+        "focus": "adjacency",
+      },
+      "itemStyle": {
+        "borderWidth": 0,
+      },
+      "label": {
+        "color": "#171717",
+        "fontSize": 12,
+        "formatter": [Function],
+      },
+      "layoutIterations": 32,
+      "left": 8,
+      "lineStyle": {
+        "color": "gradient",
+        "curveness": 0.5,
+        "opacity": 0.35,
+      },
+      "links": [
+        {
+          "source": "from:Basic",
+          "target": "to:Basic",
+          "value": 50,
+        },
+        {
+          "source": "from:Basic",
+          "target": "to:Pro",
+          "value": 20,
+        },
+        {
+          "source": "from:Pro",
+          "target": "to:Pro",
+          "value": 30,
+        },
+      ],
+      "name": "Customers",
+      "nodeAlign": "justify",
+      "nodeGap": 10,
+      "nodeWidth": 12,
+      "right": 112,
+      "top": 12,
+      "type": "sankey",
+    },
+  ],
+  "textStyle": {
+    "color": "#171717",
+    "fontFamily": "'Geist Variable', ui-sans-serif, system-ui, sans-serif",
+    "fontSize": 12,
+  },
+  "tooltip": {
+    "backgroundColor": "#ffffff",
+    "borderColor": "#e5e5e5",
+    "borderWidth": 1,
+    "confine": true,
+    "extraCssText": "border-radius:10px;box-shadow:0 10px 30px -12px rgba(0, 0, 0, 0.22);",
+    "formatter": [Function],
+    "padding": [
+      8,
+      12,
+    ],
+    "textStyle": {
+      "color": "#171717",
+      "fontFamily": "'Geist Variable', ui-sans-serif, system-ui, sans-serif",
+      "fontSize": 12,
+    },
+    "trigger": "item",
+  },
+  "useUTC": true,
+}
+`;
+
+exports[`v2 chart types (F-VIZ-09, F-VIZ-10) > lays daily values on calendars, at most a year each (snapshot) 1`] = `
+{
+  "animation": false,
+  "animationDuration": 550,
+  "animationDurationUpdate": 300,
+  "animationEasing": "cubicOut",
+  "aria": {
+    "decal": {
+      "show": false,
+    },
+    "enabled": false,
+    "label": {
+      "enabled": false,
+    },
+  },
+  "backgroundColor": "transparent",
+  "calendar": [
+    {
+      "cellSize": [
+        "auto",
+        13,
+      ],
+      "dayLabel": {
+        "color": "#737373",
+        "firstDay": 1,
+        "fontSize": 10,
+      },
+      "itemStyle": {
+        "borderColor": "#ffffff",
+        "borderWidth": 2,
+        "color": "#f4f4f5",
+      },
+      "left": 56,
+      "monthLabel": {
+        "color": "#737373",
+        "fontSize": 10,
+      },
+      "orient": "horizontal",
+      "range": [
+        "2024-01-01",
+        "2024-12-31",
+      ],
+      "right": 16,
+      "splitLine": {
+        "show": false,
+      },
+      "top": 28,
+      "yearLabel": {
+        "color": "#737373",
+        "fontSize": 11,
+        "margin": 36,
+        "show": true,
+      },
+    },
+    {
+      "cellSize": [
+        "auto",
+        13,
+      ],
+      "dayLabel": {
+        "color": "#737373",
+        "firstDay": 1,
+        "fontSize": 10,
+      },
+      "itemStyle": {
+        "borderColor": "#ffffff",
+        "borderWidth": 2,
+        "color": "#f4f4f5",
+      },
+      "left": 56,
+      "monthLabel": {
+        "color": "#737373",
+        "fontSize": 10,
+      },
+      "orient": "horizontal",
+      "range": [
+        "2025-01-01",
+        "2025-02-03",
+      ],
+      "right": 16,
+      "splitLine": {
+        "show": false,
+      },
+      "top": 155,
+      "yearLabel": {
+        "color": "#737373",
+        "fontSize": 11,
+        "margin": 36,
+        "show": true,
+      },
+    },
+  ],
+  "color": [
+    "#7C1CCD",
+    "#8D5423",
+    "#348B6D",
+    "#3997E2",
+    "#CA328C",
+    "#987A15",
+    "#494F59",
+  ],
+  "grid": {
+    "bottom": 12,
+    "left": 12,
+    "outerBoundsContain": "all",
+    "outerBoundsMode": "same",
+    "right": 24,
+    "top": 32,
+  },
+  "legend": {
+    "show": false,
+  },
+  "series": [
+    {
+      "calendarIndex": 0,
+      "coordinateSystem": "calendar",
+      "data": [
+        [
+          "2024-01-01",
+          0,
+        ],
+        [
+          "2024-01-02",
+          1,
+        ],
+        [
+          "2024-01-03",
+          2,
+        ],
+        [
+          "2024-01-04",
+          3,
+        ],
+        [
+          "2024-01-05",
+          4,
+        ],
+        [
+          "2024-01-06",
+          5,
+        ],
+        [
+          "2024-01-07",
+          6,
+        ],
+        [
+          "2024-01-08",
+          0,
+        ],
+        [
+          "2024-01-09",
+          1,
+        ],
+        [
+          "2024-01-10",
+          2,
+        ],
+        [
+          "2024-01-11",
+          3,
+        ],
+        [
+          "2024-01-12",
+          4,
+        ],
+        [
+          "2024-01-13",
+          5,
+        ],
+        [
+          "2024-01-14",
+          6,
+        ],
+        [
+          "2024-01-15",
+          0,
+        ],
+        [
+          "2024-01-16",
+          1,
+        ],
+        [
+          "2024-01-17",
+          2,
+        ],
+        [
+          "2024-01-18",
+          3,
+        ],
+        [
+          "2024-01-19",
+          4,
+        ],
+        [
+          "2024-01-20",
+          5,
+        ],
+        [
+          "2024-01-21",
+          6,
+        ],
+        [
+          "2024-01-22",
+          0,
+        ],
+        [
+          "2024-01-23",
+          1,
+        ],
+        [
+          "2024-01-24",
+          2,
+        ],
+        [
+          "2024-01-25",
+          3,
+        ],
+        [
+          "2024-01-26",
+          4,
+        ],
+        [
+          "2024-01-27",
+          5,
+        ],
+        [
+          "2024-01-28",
+          6,
+        ],
+        [
+          "2024-01-29",
+          0,
+        ],
+        [
+          "2024-01-30",
+          1,
+        ],
+        [
+          "2024-01-31",
+          2,
+        ],
+        [
+          "2024-02-01",
+          3,
+        ],
+        [
+          "2024-02-02",
+          4,
+        ],
+        [
+          "2024-02-03",
+          5,
+        ],
+        [
+          "2024-02-04",
+          6,
+        ],
+        [
+          "2024-02-05",
+          0,
+        ],
+        [
+          "2024-02-06",
+          1,
+        ],
+        [
+          "2024-02-07",
+          2,
+        ],
+        [
+          "2024-02-08",
+          3,
+        ],
+        [
+          "2024-02-09",
+          4,
+        ],
+        [
+          "2024-02-10",
+          5,
+        ],
+        [
+          "2024-02-11",
+          6,
+        ],
+        [
+          "2024-02-12",
+          0,
+        ],
+        [
+          "2024-02-13",
+          1,
+        ],
+        [
+          "2024-02-14",
+          2,
+        ],
+        [
+          "2024-02-15",
+          3,
+        ],
+        [
+          "2024-02-16",
+          4,
+        ],
+        [
+          "2024-02-17",
+          5,
+        ],
+        [
+          "2024-02-18",
+          6,
+        ],
+        [
+          "2024-02-19",
+          0,
+        ],
+        [
+          "2024-02-20",
+          1,
+        ],
+        [
+          "2024-02-21",
+          2,
+        ],
+        [
+          "2024-02-22",
+          3,
+        ],
+        [
+          "2024-02-23",
+          4,
+        ],
+        [
+          "2024-02-24",
+          5,
+        ],
+        [
+          "2024-02-25",
+          6,
+        ],
+        [
+          "2024-02-26",
+          0,
+        ],
+        [
+          "2024-02-27",
+          1,
+        ],
+        [
+          "2024-02-28",
+          2,
+        ],
+        [
+          "2024-02-29",
+          3,
+        ],
+        [
+          "2024-03-01",
+          4,
+        ],
+        [
+          "2024-03-02",
+          5,
+        ],
+        [
+          "2024-03-03",
+          6,
+        ],
+        [
+          "2024-03-04",
+          0,
+        ],
+        [
+          "2024-03-05",
+          1,
+        ],
+        [
+          "2024-03-06",
+          2,
+        ],
+        [
+          "2024-03-07",
+          3,
+        ],
+        [
+          "2024-03-08",
+          4,
+        ],
+        [
+          "2024-03-09",
+          5,
+        ],
+        [
+          "2024-03-10",
+          6,
+        ],
+        [
+          "2024-03-11",
+          0,
+        ],
+        [
+          "2024-03-12",
+          1,
+        ],
+        [
+          "2024-03-13",
+          2,
+        ],
+        [
+          "2024-03-14",
+          3,
+        ],
+        [
+          "2024-03-15",
+          4,
+        ],
+        [
+          "2024-03-16",
+          5,
+        ],
+        [
+          "2024-03-17",
+          6,
+        ],
+        [
+          "2024-03-18",
+          0,
+        ],
+        [
+          "2024-03-19",
+          1,
+        ],
+        [
+          "2024-03-20",
+          2,
+        ],
+        [
+          "2024-03-21",
+          3,
+        ],
+        [
+          "2024-03-22",
+          4,
+        ],
+        [
+          "2024-03-23",
+          5,
+        ],
+        [
+          "2024-03-24",
+          6,
+        ],
+        [
+          "2024-03-25",
+          0,
+        ],
+        [
+          "2024-03-26",
+          1,
+        ],
+        [
+          "2024-03-27",
+          2,
+        ],
+        [
+          "2024-03-28",
+          3,
+        ],
+        [
+          "2024-03-29",
+          4,
+        ],
+        [
+          "2024-03-30",
+          5,
+        ],
+        [
+          "2024-03-31",
+          6,
+        ],
+        [
+          "2024-04-01",
+          0,
+        ],
+        [
+          "2024-04-02",
+          1,
+        ],
+        [
+          "2024-04-03",
+          2,
+        ],
+        [
+          "2024-04-04",
+          3,
+        ],
+        [
+          "2024-04-05",
+          4,
+        ],
+        [
+          "2024-04-06",
+          5,
+        ],
+        [
+          "2024-04-07",
+          6,
+        ],
+        [
+          "2024-04-08",
+          0,
+        ],
+        [
+          "2024-04-09",
+          1,
+        ],
+        [
+          "2024-04-10",
+          2,
+        ],
+        [
+          "2024-04-11",
+          3,
+        ],
+        [
+          "2024-04-12",
+          4,
+        ],
+        [
+          "2024-04-13",
+          5,
+        ],
+        [
+          "2024-04-14",
+          6,
+        ],
+        [
+          "2024-04-15",
+          0,
+        ],
+        [
+          "2024-04-16",
+          1,
+        ],
+        [
+          "2024-04-17",
+          2,
+        ],
+        [
+          "2024-04-18",
+          3,
+        ],
+        [
+          "2024-04-19",
+          4,
+        ],
+        [
+          "2024-04-20",
+          5,
+        ],
+        [
+          "2024-04-21",
+          6,
+        ],
+        [
+          "2024-04-22",
+          0,
+        ],
+        [
+          "2024-04-23",
+          1,
+        ],
+        [
+          "2024-04-24",
+          2,
+        ],
+        [
+          "2024-04-25",
+          3,
+        ],
+        [
+          "2024-04-26",
+          4,
+        ],
+        [
+          "2024-04-27",
+          5,
+        ],
+        [
+          "2024-04-28",
+          6,
+        ],
+        [
+          "2024-04-29",
+          0,
+        ],
+        [
+          "2024-04-30",
+          1,
+        ],
+        [
+          "2024-05-01",
+          2,
+        ],
+        [
+          "2024-05-02",
+          3,
+        ],
+        [
+          "2024-05-03",
+          4,
+        ],
+        [
+          "2024-05-04",
+          5,
+        ],
+        [
+          "2024-05-05",
+          6,
+        ],
+        [
+          "2024-05-06",
+          0,
+        ],
+        [
+          "2024-05-07",
+          1,
+        ],
+        [
+          "2024-05-08",
+          2,
+        ],
+        [
+          "2024-05-09",
+          3,
+        ],
+        [
+          "2024-05-10",
+          4,
+        ],
+        [
+          "2024-05-11",
+          5,
+        ],
+        [
+          "2024-05-12",
+          6,
+        ],
+        [
+          "2024-05-13",
+          0,
+        ],
+        [
+          "2024-05-14",
+          1,
+        ],
+        [
+          "2024-05-15",
+          2,
+        ],
+        [
+          "2024-05-16",
+          3,
+        ],
+        [
+          "2024-05-17",
+          4,
+        ],
+        [
+          "2024-05-18",
+          5,
+        ],
+        [
+          "2024-05-19",
+          6,
+        ],
+        [
+          "2024-05-20",
+          0,
+        ],
+        [
+          "2024-05-21",
+          1,
+        ],
+        [
+          "2024-05-22",
+          2,
+        ],
+        [
+          "2024-05-23",
+          3,
+        ],
+        [
+          "2024-05-24",
+          4,
+        ],
+        [
+          "2024-05-25",
+          5,
+        ],
+        [
+          "2024-05-26",
+          6,
+        ],
+        [
+          "2024-05-27",
+          0,
+        ],
+        [
+          "2024-05-28",
+          1,
+        ],
+        [
+          "2024-05-29",
+          2,
+        ],
+        [
+          "2024-05-30",
+          3,
+        ],
+        [
+          "2024-05-31",
+          4,
+        ],
+        [
+          "2024-06-01",
+          5,
+        ],
+        [
+          "2024-06-02",
+          6,
+        ],
+        [
+          "2024-06-03",
+          0,
+        ],
+        [
+          "2024-06-04",
+          1,
+        ],
+        [
+          "2024-06-05",
+          2,
+        ],
+        [
+          "2024-06-06",
+          3,
+        ],
+        [
+          "2024-06-07",
+          4,
+        ],
+        [
+          "2024-06-08",
+          5,
+        ],
+        [
+          "2024-06-09",
+          6,
+        ],
+        [
+          "2024-06-10",
+          0,
+        ],
+        [
+          "2024-06-11",
+          1,
+        ],
+        [
+          "2024-06-12",
+          2,
+        ],
+        [
+          "2024-06-13",
+          3,
+        ],
+        [
+          "2024-06-14",
+          4,
+        ],
+        [
+          "2024-06-15",
+          5,
+        ],
+        [
+          "2024-06-16",
+          6,
+        ],
+        [
+          "2024-06-17",
+          0,
+        ],
+        [
+          "2024-06-18",
+          1,
+        ],
+        [
+          "2024-06-19",
+          2,
+        ],
+        [
+          "2024-06-20",
+          3,
+        ],
+        [
+          "2024-06-21",
+          4,
+        ],
+        [
+          "2024-06-22",
+          5,
+        ],
+        [
+          "2024-06-23",
+          6,
+        ],
+        [
+          "2024-06-24",
+          0,
+        ],
+        [
+          "2024-06-25",
+          1,
+        ],
+        [
+          "2024-06-26",
+          2,
+        ],
+        [
+          "2024-06-27",
+          3,
+        ],
+        [
+          "2024-06-28",
+          4,
+        ],
+        [
+          "2024-06-29",
+          5,
+        ],
+        [
+          "2024-06-30",
+          6,
+        ],
+        [
+          "2024-07-01",
+          0,
+        ],
+        [
+          "2024-07-02",
+          1,
+        ],
+        [
+          "2024-07-03",
+          2,
+        ],
+        [
+          "2024-07-04",
+          3,
+        ],
+        [
+          "2024-07-05",
+          4,
+        ],
+        [
+          "2024-07-06",
+          5,
+        ],
+        [
+          "2024-07-07",
+          6,
+        ],
+        [
+          "2024-07-08",
+          0,
+        ],
+        [
+          "2024-07-09",
+          1,
+        ],
+        [
+          "2024-07-10",
+          2,
+        ],
+        [
+          "2024-07-11",
+          3,
+        ],
+        [
+          "2024-07-12",
+          4,
+        ],
+        [
+          "2024-07-13",
+          5,
+        ],
+        [
+          "2024-07-14",
+          6,
+        ],
+        [
+          "2024-07-15",
+          0,
+        ],
+        [
+          "2024-07-16",
+          1,
+        ],
+        [
+          "2024-07-17",
+          2,
+        ],
+        [
+          "2024-07-18",
+          3,
+        ],
+        [
+          "2024-07-19",
+          4,
+        ],
+        [
+          "2024-07-20",
+          5,
+        ],
+        [
+          "2024-07-21",
+          6,
+        ],
+        [
+          "2024-07-22",
+          0,
+        ],
+        [
+          "2024-07-23",
+          1,
+        ],
+        [
+          "2024-07-24",
+          2,
+        ],
+        [
+          "2024-07-25",
+          3,
+        ],
+        [
+          "2024-07-26",
+          4,
+        ],
+        [
+          "2024-07-27",
+          5,
+        ],
+        [
+          "2024-07-28",
+          6,
+        ],
+        [
+          "2024-07-29",
+          0,
+        ],
+        [
+          "2024-07-30",
+          1,
+        ],
+        [
+          "2024-07-31",
+          2,
+        ],
+        [
+          "2024-08-01",
+          3,
+        ],
+        [
+          "2024-08-02",
+          4,
+        ],
+        [
+          "2024-08-03",
+          5,
+        ],
+        [
+          "2024-08-04",
+          6,
+        ],
+        [
+          "2024-08-05",
+          0,
+        ],
+        [
+          "2024-08-06",
+          1,
+        ],
+        [
+          "2024-08-07",
+          2,
+        ],
+        [
+          "2024-08-08",
+          3,
+        ],
+        [
+          "2024-08-09",
+          4,
+        ],
+        [
+          "2024-08-10",
+          5,
+        ],
+        [
+          "2024-08-11",
+          6,
+        ],
+        [
+          "2024-08-12",
+          0,
+        ],
+        [
+          "2024-08-13",
+          1,
+        ],
+        [
+          "2024-08-14",
+          2,
+        ],
+        [
+          "2024-08-15",
+          3,
+        ],
+        [
+          "2024-08-16",
+          4,
+        ],
+        [
+          "2024-08-17",
+          5,
+        ],
+        [
+          "2024-08-18",
+          6,
+        ],
+        [
+          "2024-08-19",
+          0,
+        ],
+        [
+          "2024-08-20",
+          1,
+        ],
+        [
+          "2024-08-21",
+          2,
+        ],
+        [
+          "2024-08-22",
+          3,
+        ],
+        [
+          "2024-08-23",
+          4,
+        ],
+        [
+          "2024-08-24",
+          5,
+        ],
+        [
+          "2024-08-25",
+          6,
+        ],
+        [
+          "2024-08-26",
+          0,
+        ],
+        [
+          "2024-08-27",
+          1,
+        ],
+        [
+          "2024-08-28",
+          2,
+        ],
+        [
+          "2024-08-29",
+          3,
+        ],
+        [
+          "2024-08-30",
+          4,
+        ],
+        [
+          "2024-08-31",
+          5,
+        ],
+        [
+          "2024-09-01",
+          6,
+        ],
+        [
+          "2024-09-02",
+          0,
+        ],
+        [
+          "2024-09-03",
+          1,
+        ],
+        [
+          "2024-09-04",
+          2,
+        ],
+        [
+          "2024-09-05",
+          3,
+        ],
+        [
+          "2024-09-06",
+          4,
+        ],
+        [
+          "2024-09-07",
+          5,
+        ],
+        [
+          "2024-09-08",
+          6,
+        ],
+        [
+          "2024-09-09",
+          0,
+        ],
+        [
+          "2024-09-10",
+          1,
+        ],
+        [
+          "2024-09-11",
+          2,
+        ],
+        [
+          "2024-09-12",
+          3,
+        ],
+        [
+          "2024-09-13",
+          4,
+        ],
+        [
+          "2024-09-14",
+          5,
+        ],
+        [
+          "2024-09-15",
+          6,
+        ],
+        [
+          "2024-09-16",
+          0,
+        ],
+        [
+          "2024-09-17",
+          1,
+        ],
+        [
+          "2024-09-18",
+          2,
+        ],
+        [
+          "2024-09-19",
+          3,
+        ],
+        [
+          "2024-09-20",
+          4,
+        ],
+        [
+          "2024-09-21",
+          5,
+        ],
+        [
+          "2024-09-22",
+          6,
+        ],
+        [
+          "2024-09-23",
+          0,
+        ],
+        [
+          "2024-09-24",
+          1,
+        ],
+        [
+          "2024-09-25",
+          2,
+        ],
+        [
+          "2024-09-26",
+          3,
+        ],
+        [
+          "2024-09-27",
+          4,
+        ],
+        [
+          "2024-09-28",
+          5,
+        ],
+        [
+          "2024-09-29",
+          6,
+        ],
+        [
+          "2024-09-30",
+          0,
+        ],
+        [
+          "2024-10-01",
+          1,
+        ],
+        [
+          "2024-10-02",
+          2,
+        ],
+        [
+          "2024-10-03",
+          3,
+        ],
+        [
+          "2024-10-04",
+          4,
+        ],
+        [
+          "2024-10-05",
+          5,
+        ],
+        [
+          "2024-10-06",
+          6,
+        ],
+        [
+          "2024-10-07",
+          0,
+        ],
+        [
+          "2024-10-08",
+          1,
+        ],
+        [
+          "2024-10-09",
+          2,
+        ],
+        [
+          "2024-10-10",
+          3,
+        ],
+        [
+          "2024-10-11",
+          4,
+        ],
+        [
+          "2024-10-12",
+          5,
+        ],
+        [
+          "2024-10-13",
+          6,
+        ],
+        [
+          "2024-10-14",
+          0,
+        ],
+        [
+          "2024-10-15",
+          1,
+        ],
+        [
+          "2024-10-16",
+          2,
+        ],
+        [
+          "2024-10-17",
+          3,
+        ],
+        [
+          "2024-10-18",
+          4,
+        ],
+        [
+          "2024-10-19",
+          5,
+        ],
+        [
+          "2024-10-20",
+          6,
+        ],
+        [
+          "2024-10-21",
+          0,
+        ],
+        [
+          "2024-10-22",
+          1,
+        ],
+        [
+          "2024-10-23",
+          2,
+        ],
+        [
+          "2024-10-24",
+          3,
+        ],
+        [
+          "2024-10-25",
+          4,
+        ],
+        [
+          "2024-10-26",
+          5,
+        ],
+        [
+          "2024-10-27",
+          6,
+        ],
+        [
+          "2024-10-28",
+          0,
+        ],
+        [
+          "2024-10-29",
+          1,
+        ],
+        [
+          "2024-10-30",
+          2,
+        ],
+        [
+          "2024-10-31",
+          3,
+        ],
+        [
+          "2024-11-01",
+          4,
+        ],
+        [
+          "2024-11-02",
+          5,
+        ],
+        [
+          "2024-11-03",
+          6,
+        ],
+        [
+          "2024-11-04",
+          0,
+        ],
+        [
+          "2024-11-05",
+          1,
+        ],
+        [
+          "2024-11-06",
+          2,
+        ],
+        [
+          "2024-11-07",
+          3,
+        ],
+        [
+          "2024-11-08",
+          4,
+        ],
+        [
+          "2024-11-09",
+          5,
+        ],
+        [
+          "2024-11-10",
+          6,
+        ],
+        [
+          "2024-11-11",
+          0,
+        ],
+        [
+          "2024-11-12",
+          1,
+        ],
+        [
+          "2024-11-13",
+          2,
+        ],
+        [
+          "2024-11-14",
+          3,
+        ],
+        [
+          "2024-11-15",
+          4,
+        ],
+        [
+          "2024-11-16",
+          5,
+        ],
+        [
+          "2024-11-17",
+          6,
+        ],
+        [
+          "2024-11-18",
+          0,
+        ],
+        [
+          "2024-11-19",
+          1,
+        ],
+        [
+          "2024-11-20",
+          2,
+        ],
+        [
+          "2024-11-21",
+          3,
+        ],
+        [
+          "2024-11-22",
+          4,
+        ],
+        [
+          "2024-11-23",
+          5,
+        ],
+        [
+          "2024-11-24",
+          6,
+        ],
+        [
+          "2024-11-25",
+          0,
+        ],
+        [
+          "2024-11-26",
+          1,
+        ],
+        [
+          "2024-11-27",
+          2,
+        ],
+        [
+          "2024-11-28",
+          3,
+        ],
+        [
+          "2024-11-29",
+          4,
+        ],
+        [
+          "2024-11-30",
+          5,
+        ],
+        [
+          "2024-12-01",
+          6,
+        ],
+        [
+          "2024-12-02",
+          0,
+        ],
+        [
+          "2024-12-03",
+          1,
+        ],
+        [
+          "2024-12-04",
+          2,
+        ],
+        [
+          "2024-12-05",
+          3,
+        ],
+        [
+          "2024-12-06",
+          4,
+        ],
+        [
+          "2024-12-07",
+          5,
+        ],
+        [
+          "2024-12-08",
+          6,
+        ],
+        [
+          "2024-12-09",
+          0,
+        ],
+        [
+          "2024-12-10",
+          1,
+        ],
+        [
+          "2024-12-11",
+          2,
+        ],
+        [
+          "2024-12-12",
+          3,
+        ],
+        [
+          "2024-12-13",
+          4,
+        ],
+        [
+          "2024-12-14",
+          5,
+        ],
+        [
+          "2024-12-15",
+          6,
+        ],
+        [
+          "2024-12-16",
+          0,
+        ],
+        [
+          "2024-12-17",
+          1,
+        ],
+        [
+          "2024-12-18",
+          2,
+        ],
+        [
+          "2024-12-19",
+          3,
+        ],
+        [
+          "2024-12-20",
+          4,
+        ],
+        [
+          "2024-12-21",
+          5,
+        ],
+        [
+          "2024-12-22",
+          6,
+        ],
+        [
+          "2024-12-23",
+          0,
+        ],
+        [
+          "2024-12-24",
+          1,
+        ],
+        [
+          "2024-12-25",
+          2,
+        ],
+        [
+          "2024-12-26",
+          3,
+        ],
+        [
+          "2024-12-27",
+          4,
+        ],
+        [
+          "2024-12-28",
+          5,
+        ],
+        [
+          "2024-12-29",
+          6,
+        ],
+        [
+          "2024-12-30",
+          0,
+        ],
+        [
+          "2024-12-31",
+          1,
+        ],
+      ],
+      "name": "Orders",
+      "type": "heatmap",
+    },
+    {
+      "calendarIndex": 1,
+      "coordinateSystem": "calendar",
+      "data": [
+        [
+          "2025-01-01",
+          2,
+        ],
+        [
+          "2025-01-02",
+          3,
+        ],
+        [
+          "2025-01-03",
+          4,
+        ],
+        [
+          "2025-01-04",
+          5,
+        ],
+        [
+          "2025-01-05",
+          6,
+        ],
+        [
+          "2025-01-06",
+          0,
+        ],
+        [
+          "2025-01-07",
+          1,
+        ],
+        [
+          "2025-01-08",
+          2,
+        ],
+        [
+          "2025-01-09",
+          3,
+        ],
+        [
+          "2025-01-10",
+          4,
+        ],
+        [
+          "2025-01-11",
+          5,
+        ],
+        [
+          "2025-01-12",
+          6,
+        ],
+        [
+          "2025-01-13",
+          0,
+        ],
+        [
+          "2025-01-14",
+          1,
+        ],
+        [
+          "2025-01-15",
+          2,
+        ],
+        [
+          "2025-01-16",
+          3,
+        ],
+        [
+          "2025-01-17",
+          4,
+        ],
+        [
+          "2025-01-18",
+          5,
+        ],
+        [
+          "2025-01-19",
+          6,
+        ],
+        [
+          "2025-01-20",
+          0,
+        ],
+        [
+          "2025-01-21",
+          1,
+        ],
+        [
+          "2025-01-22",
+          2,
+        ],
+        [
+          "2025-01-23",
+          3,
+        ],
+        [
+          "2025-01-24",
+          4,
+        ],
+        [
+          "2025-01-25",
+          5,
+        ],
+        [
+          "2025-01-26",
+          6,
+        ],
+        [
+          "2025-01-27",
+          0,
+        ],
+        [
+          "2025-01-28",
+          1,
+        ],
+        [
+          "2025-01-29",
+          2,
+        ],
+        [
+          "2025-01-30",
+          3,
+        ],
+        [
+          "2025-01-31",
+          4,
+        ],
+        [
+          "2025-02-01",
+          5,
+        ],
+        [
+          "2025-02-02",
+          6,
+        ],
+        [
+          "2025-02-03",
+          0,
+        ],
+      ],
+      "name": "Orders",
+      "type": "heatmap",
+    },
+  ],
+  "textStyle": {
+    "color": "#171717",
+    "fontFamily": "'Geist Variable', ui-sans-serif, system-ui, sans-serif",
+    "fontSize": 12,
+  },
+  "tooltip": {
+    "backgroundColor": "#ffffff",
+    "borderColor": "#e5e5e5",
+    "borderWidth": 1,
+    "confine": true,
+    "extraCssText": "border-radius:10px;box-shadow:0 10px 30px -12px rgba(0, 0, 0, 0.22);",
+    "formatter": [Function],
+    "padding": [
+      8,
+      12,
+    ],
+    "textStyle": {
+      "color": "#171717",
+      "fontFamily": "'Geist Variable', ui-sans-serif, system-ui, sans-serif",
+      "fontSize": 12,
+    },
+    "trigger": "item",
+  },
+  "useUTC": true,
+  "visualMap": {
+    "calculable": false,
+    "formatter": [Function],
+    "inRange": {
+      "color": [
+        "#FCE0FF",
+        "#D5B9FF",
+        "#A689F1",
+        "#795BBF",
+        "#4B2888",
+      ],
+    },
+    "itemHeight": 120,
+    "itemWidth": 10,
+    "left": "center",
+    "max": 6,
+    "min": 0,
+    "orient": "horizontal",
+    "textStyle": {
+      "color": "#737373",
+    },
+    "top": 266,
   },
 }
 `;

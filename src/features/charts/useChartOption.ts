@@ -3,6 +3,7 @@ import { isAdditiveName } from '@/charts/classify'
 import { prepare, type ChartData } from '@/charts/shape'
 import type { ChartSpec } from '@/charts/spec'
 import { chartTheme } from '@/charts/theme'
+import { useChartPalette } from '@/features/charts/chartPalette'
 import { describeChart, toOption } from '@/charts/toOption'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { useResolvedTheme } from '@/hooks/useResolvedTheme'
@@ -11,7 +12,7 @@ import { useSettingsStore } from '@/stores/settings'
 /** Shaped data, the ECharts option and its text alternative, for the current theme and locale. */
 export function useChartOption(spec: ChartSpec, data: ChartData) {
   const locale = useSettingsStore((state) => state.locale)
-  const theme = chartTheme(useResolvedTheme())
+  const theme = chartTheme(useResolvedTheme(), useChartPalette(spec))
   const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)')
   const prepared = useMemo(() => prepare(spec, data, spec.y.every(isAdditiveName)), [spec, data])
   const option = useMemo(

@@ -18,7 +18,7 @@ ${DUCKDB_DIALECT}
 - Skip trends when the table has no date or time column.
 - Pick the most important measures and categories; don't repeat the same breakdown.
 - Titles are short and plain ("Revenue by region"), without the table name.
-- chartHint: 'kpi' for KPIs, 'line' for trends, 'bar' or 'hbar' for breakdowns ('donut' for a share of a whole with at most 6 parts); null when unsure.
+- chartHint: 'kpi' for KPIs (a 'kpi' over months shows the latest month with its change and trend), 'line' for trends, 'bar' or 'hbar' for breakdowns ('donut' for a share of a whole with at most 6 parts, 'treemap' for more parts), 'combo' for two measures on different scales; null when unsure.
 
 # Rules for every tile's SQL
 - Exactly one SELECT statement. CTEs are fine. Never write INSERT, UPDATE, DELETE, CREATE, COPY, ATTACH, SET, PRAGMA or INSTALL.

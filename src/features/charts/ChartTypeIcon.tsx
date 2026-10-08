@@ -2,14 +2,22 @@ import {
   AreaChart,
   BarChart3,
   BarChartHorizontal,
+  CalendarDays,
+  ChartCandlestick,
+  ChartColumnDecreasing,
   ChartColumnStacked,
   ChartNoAxesColumn,
+  ChartNoAxesCombined,
   ChartScatter,
+  Funnel,
   Grid3x3,
   Hash,
+  LayoutGrid,
   LineChart,
+  Percent,
   PieChart,
   Sheet,
+  Waypoints,
   type LucideIcon,
 } from 'lucide-react'
 import type { ChartType } from '@/charts/spec'
@@ -27,6 +35,14 @@ const ICONS: Record<ChartType, LucideIcon> = {
   donut: PieChart,
   heatmap: Grid3x3,
   table: Sheet,
+  stacked_100: Percent,
+  combo: ChartNoAxesCombined,
+  waterfall: ChartColumnDecreasing,
+  funnel: Funnel,
+  treemap: LayoutGrid,
+  boxplot: ChartCandlestick,
+  sankey: Waypoints,
+  calendar: CalendarDays,
 }
 
 export function ChartTypeIcon({ type }: { type: ChartType }) {

@@ -2,6 +2,7 @@ import { z } from '@/lib/zod'
 import { create } from 'zustand'
 import { DEFAULT_LOCAL_URL, LOCAL_NO_KEY, localBaseUrl } from '@/ai/localServer'
 import { DEFAULT_MODEL } from '@/ai/models'
+import { ChartPaletteSchema, type ChartPalette } from '@/charts/spec'
 import {
   EffortSchema,
   PrivacyModeSchema,
@@ -30,6 +31,8 @@ const SavedSettingsSchema = z.object({
   models: z.object({ anthropic: z.string(), openai: z.string(), local: z.string() }),
   /** The planner's reasoning effort, picked in the ask bar (F-ASK-16). */
   effort: EffortSchema,
+  /** Chart colors unless a chart or dashboard picks its own (F-VIZ-12). */
+  chartPalette: ChartPaletteSchema,
   /** Local OpenAI-compatible server (F-AI-06). */
   baseUrl: z.string(),
   privacyMode: PrivacyModeSchema,
@@ -54,7 +57,7 @@ const NO_KEYS: Keys = { anthropic: null, openai: null, local: null }
 
 export const SETTINGS_RECORD: RecordSpec<SavedSettings> = {
   key: 'settings',
-  version: 6,
+  version: 7,
   schema: SavedSettingsSchema,
   migrations: {
     // v2 (M4): number format and currency.
@@ -76,11 +79,14 @@ export const SETTINGS_RECORD: RecordSpec<SavedSettings> = {
     },
     // v6 (M9): reasoning effort, as before (medium), now chosen in the ask bar.
     5: (data) => ({ ...(data as object), effort: 'medium' }),
+    // v7 (M10): chart colors, the new violet-led palette.
+    6: (data) => ({ ...(data as object), chartPalette: 'flashquery' }),
   },
   fallback: () => ({
     provider: 'anthropic',
     models: { ...DEFAULT_MODEL },
     effort: 'medium',
+    chartPalette: 'flashquery',
     privacyMode: 'balanced',
     dateDisplay: 'iso',
     rememberKey: false,
@@ -109,6 +115,7 @@ interface SettingsState {
   provider: ProviderId
   models: Record<ProviderId, string>
   effort: Effort
+  chartPalette: ChartPalette
   /** In memory; see rememberKey. */
   apiKeys: Keys
   /** Base URL of a local OpenAI-compatible server (F-AI-06). */
@@ -121,6 +128,7 @@ interface SettingsState {
   setProvider: (provider: ProviderId) => void
   setModel: (provider: ProviderId, model: string) => void
   setEffort: (effort: Effort) => void
+  setChartPalette: (palette: ChartPalette) => void
   setApiKey: (provider: ProviderId, key: string | null) => void
   setBaseUrl: (url: string) => void
   setRememberKey: (remember: boolean) => void
@@ -146,6 +154,7 @@ export const useSettingsStore = create<SettingsState>()((set, get) => ({
   provider: 'anthropic',
   models: { ...DEFAULT_MODEL },
   effort: 'medium',
+  chartPalette: 'flashquery',
   apiKeys: NO_KEYS,
   baseUrl: DEFAULT_LOCAL_URL,
   rememberKey: false,
@@ -159,6 +168,7 @@ export const useSettingsStore = create<SettingsState>()((set, get) => ({
   setProvider: (provider) => set({ provider }),
   setModel: (provider, model) => set({ models: { ...get().models, [provider]: model.trim() } }),
   setEffort: (effort) => set({ effort }),
+  setChartPalette: (chartPalette) => set({ chartPalette }),
   setApiKey: (provider, key) =>
     set({ apiKeys: { ...get().apiKeys, [provider]: key?.trim() || null } }),
   setBaseUrl: (baseUrl) => set({ baseUrl: baseUrl.trim() }),
@@ -196,6 +206,7 @@ async function persist(state: SettingsState) {
     provider: state.provider,
     models: state.models,
     effort: state.effort,
+    chartPalette: state.chartPalette,
     privacyMode: state.privacyMode,
     dateDisplay: state.dateDisplay,
     rememberKey: state.rememberKey,
