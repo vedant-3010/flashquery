@@ -102,7 +102,8 @@ export function HowItWorksDialog() {
         <p className="text-xs text-muted-foreground">
           {demo
             ? 'Demo mode sends nothing: its answers are pre-recorded and the SQL runs on your device.'
-            : 'Requests go straight from your browser to the AI provider with your key. Your rows and files stay here.'}
+            : 'Requests go straight from your browser to the AI provider with your key. Your rows and files stay here.'}{' '}
+          Voice questions are recognized on this device; no audio leaves it.
         </p>
         <DialogFooter>
           <Button

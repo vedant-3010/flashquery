@@ -20,11 +20,12 @@ export function currentProvider(): Promise<LLMProvider> {
   const model = settings.models[settings.provider]
   const baseUrl =
     settings.provider === 'local' ? (localBaseUrl(settings.baseUrl) ?? undefined) : undefined
-  const cacheKey = `${settings.provider}:${model}:${apiKey}:${baseUrl ?? ''}`
+  const { effort } = settings
+  const cacheKey = `${settings.provider}:${model}:${effort}:${apiKey}:${baseUrl ?? ''}`
   if (providerCache?.key !== cacheKey) {
     providerCache = {
       key: cacheKey,
-      provider: createProvider({ provider: settings.provider, apiKey, model, baseUrl }),
+      provider: createProvider({ provider: settings.provider, apiKey, model, effort, baseUrl }),
     }
   }
   return providerCache.provider

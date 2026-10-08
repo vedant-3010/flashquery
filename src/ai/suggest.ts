@@ -66,6 +66,7 @@ export async function suggestWithAi({
       purpose: 'suggest',
       provider: provider.id,
       model: provider.summaryModel ?? provider.model,
+      effort: provider.summaryEffort ?? null,
       mode: 'balanced',
       dataValues: countDataValues(context),
       messages: messages.map(({ role, content }) => ({ role, content })),

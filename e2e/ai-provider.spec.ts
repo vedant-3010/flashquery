@@ -223,6 +223,41 @@ async function ask(page: Page, question: string) {
   return page.getByRole('article', { name: question }).last()
 }
 
+test.describe('ask bar: model and effort (F-ASK-16)', () => {
+  test('the model and effort picked under the box are what the next request sends', async ({
+    page,
+  }) => {
+    const calls = await mockAnthropic(page, salesAnalyst)
+    await page.goto('/app/')
+    await addKey(page)
+    await page.keyboard.press('Escape')
+    await loadSales(page)
+
+    await page.getByRole('button', { name: 'Model: Claude Sonnet 5' }).click()
+    await page.getByRole('menuitemradio', { name: /Claude Opus 5/ }).click()
+    await page.getByRole('button', { name: 'Effort: Medium' }).click()
+    await page.getByRole('menuitemradio', { name: /^High/ }).click()
+    await expect(page.getByRole('button', { name: 'Effort: High' })).toBeVisible()
+
+    let answer = await ask(page, 'Total revenue')
+    await expect(answer.getByRole('heading', { name: 'Revenue' })).toBeVisible()
+    expect(plansOf(calls).at(-1)?.body).toMatchObject({
+      model: 'claude-opus-5',
+      output_config: { effort: 'high' },
+    })
+
+    // A model that takes no effort hides the control, and the request sends none.
+    await page.getByRole('button', { name: 'Model: Claude Opus 5' }).click()
+    await page.getByRole('menuitemradio', { name: /Claude Haiku 4\.5/ }).click()
+    await expect(page.getByRole('button', { name: /^Effort:/ })).toHaveCount(0)
+    answer = await ask(page, 'Revenue again')
+    await expect(answer.getByRole('heading', { name: 'Revenue' })).toBeVisible()
+    const haiku = plansOf(calls).at(-1)?.raw ?? ''
+    expect(haiku).toContain('"model":"claude-haiku-4-5-20251001"')
+    expect(haiku).not.toContain('"effort"')
+  })
+})
+
 test.describe('J2: own key (F-AI-01, F-ASK-03…09)', () => {
   test('test connection, self-correction and a follow-up', async ({ page }) => {
     const calls = await mockAnthropic(page, salesAnalyst)
@@ -231,7 +266,7 @@ test.describe('J2: own key (F-AI-01, F-ASK-03…09)', () => {
     await dialog.getByRole('button', { name: 'Test connection' }).click()
     await expect(dialog.getByRole('status')).toContainText('Connected')
     await page.keyboard.press('Escape')
-    await expect(page.getByRole('button', { name: 'Demo' })).toBeHidden()
+    await expect(page.getByRole('button', { name: 'Demo', exact: true })).toBeHidden()
 
     await loadSales(page)
     const first = await ask(page, 'Top 5 countries by revenue')
@@ -280,16 +315,16 @@ test.describe('J2: own key (F-AI-01, F-ASK-03…09)', () => {
     await page.goto('/app/')
     await addKey(page)
     await page.keyboard.press('Escape')
-    await expect(page.getByRole('button', { name: 'Demo' })).toBeHidden()
+    await expect(page.getByRole('button', { name: 'Demo', exact: true })).toBeHidden()
     await page.reload()
-    await expect(page.getByRole('button', { name: 'Demo' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Demo', exact: true })).toBeVisible()
 
     const dialog = await addKey(page, { remember: true })
     await expect(dialog).toContainText('anyone using this browser profile could read it')
     await page.keyboard.press('Escape')
     await settingsSaved(page, true)
     await page.reload()
-    await expect(page.getByRole('button', { name: 'Demo' })).toBeHidden()
+    await expect(page.getByRole('button', { name: 'Demo', exact: true })).toBeHidden()
     await page.getByRole('button', { name: 'Settings' }).click()
     await expect(dialog.getByLabel('Anthropic API key')).toHaveValue(KEY)
 
@@ -297,7 +332,7 @@ test.describe('J2: own key (F-AI-01, F-ASK-03…09)', () => {
     await page.keyboard.press('Escape')
     await settingsSaved(page, false)
     await page.reload()
-    await expect(page.getByRole('button', { name: 'Demo' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Demo', exact: true })).toBeVisible()
   })
 })
 
@@ -461,7 +496,7 @@ test.describe('local OpenAI-compatible server (F-AI-06)', () => {
     await dialog.getByRole('button', { name: 'Test connection' }).click()
     await expect(dialog.getByRole('status')).toContainText('Connected')
     await page.keyboard.press('Escape')
-    await expect(page.getByRole('button', { name: 'Demo' })).toBeHidden()
+    await expect(page.getByRole('button', { name: 'Demo', exact: true })).toBeHidden()
 
     await loadSales(page)
     const answer = await ask(page, 'Total revenue')

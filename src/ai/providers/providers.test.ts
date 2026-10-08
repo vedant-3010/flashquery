@@ -123,6 +123,28 @@ describe('Anthropic provider', () => {
     })
   })
 
+  it('sends the effort picked in the ask bar, and reports it (F-ASK-16)', async () => {
+    for (const [chosen, sent] of [
+      ['low', 'low'],
+      ['high', 'high'],
+      ['auto', 'medium'],
+    ] as const) {
+      const { fetch, calls } = fakeFetch(() => anthropicReply.clone())
+      const provider = await createProvider({
+        provider: 'anthropic',
+        apiKey: KEY,
+        model: 'claude-opus-5',
+        effort: chosen,
+        fetch,
+      })
+      await provider.planSql({ question: 'q', messages, tables: [] })
+      expect(calls[0]?.body.output_config).toMatchObject({ effort: sent })
+      expect(provider.effort).toBe(sent)
+      // Summaries stay on the fast model, which takes no effort.
+      expect(provider.summaryEffort).toBeNull()
+    }
+  })
+
   it('maps HTTP errors to actionable messages', async () => {
     for (const [status, code] of [
       [401, 'ai_auth'],
@@ -222,6 +244,47 @@ describe('OpenAI provider', () => {
       json_schema: { name: 'sql_plan', strict: true },
     })
     expect(body.reasoning_effort).toBe('medium')
+  })
+
+  it('sends the chosen reasoning effort, and none to custom models (F-ASK-16)', async () => {
+    const reply = () =>
+      json({
+        id: 'chatcmpl-2',
+        object: 'chat.completion',
+        created: 0,
+        model: 'gpt-6-astra',
+        choices: [
+          {
+            index: 0,
+            message: { role: 'assistant', content: JSON.stringify(plan), refusal: null },
+            finish_reason: 'stop',
+          },
+        ],
+        usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
+      })
+    const high = fakeFetch(reply)
+    const provider = await createProvider({
+      provider: 'openai',
+      apiKey: 'sk-proj-test-1234567890abcdef',
+      model: 'gpt-6-astra',
+      effort: 'high',
+      fetch: high.fetch,
+    })
+    await provider.planSql({ question: 'q', messages, tables: [] })
+    expect(high.calls[0]?.body.reasoning_effort).toBe('high')
+    expect(provider.summaryEffort).toBe('low')
+
+    const custom = fakeFetch(reply)
+    const customProvider = await createProvider({
+      provider: 'openai',
+      apiKey: 'sk-proj-test-1234567890abcdef',
+      model: 'my-fine-model',
+      effort: 'high',
+      fetch: custom.fetch,
+    })
+    await customProvider.planSql({ question: 'q', messages, tables: [] })
+    expect(custom.calls[0]?.body).not.toHaveProperty('reasoning_effort')
+    expect(customProvider.effort).toBeNull()
   })
 })
 

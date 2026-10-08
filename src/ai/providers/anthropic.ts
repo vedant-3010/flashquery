@@ -1,6 +1,6 @@
 import { ChatAnthropic } from '@langchain/anthropic'
 import { HumanMessage } from '@langchain/core/messages'
-import { FAST_MODEL, findModel } from '@/ai/models'
+import { FAST_MODEL, requestEffort } from '@/ai/models'
 import type { LLMProvider, ProviderSettings } from '@/ai/providers'
 import { TEST_PROMPT } from '@/ai/prompts/testConnection'
 import { providerError, toLangChainMessages, usageOf } from '@/ai/providers/langchain'
@@ -18,10 +18,13 @@ import {
 const MAX_TOKENS = 16_000
 const SUMMARY_MAX_TOKENS = 2_000
 
-export function createAnthropicProvider({ apiKey, model, fetch }: ProviderSettings): LLMProvider {
-  const effort = findModel(model)?.supportsEffort
-    ? { outputConfig: { effort: 'medium' as const } }
-    : {}
+export function createAnthropicProvider({
+  apiKey,
+  model,
+  effort: chosen = 'medium',
+  fetch,
+}: ProviderSettings): LLMProvider {
+  const effort = requestEffort(model, chosen)
   const chat = new ChatAnthropic({
     apiKey,
     model,
@@ -31,7 +34,7 @@ export function createAnthropicProvider({ apiKey, model, fetch }: ProviderSettin
     maxRetries: 2,
     // Intentional: the user's own key, in their own browser (BYOK). See CLAUDE.md gotchas.
     clientOptions: { dangerouslyAllowBrowser: true, ...(fetch ? { fetch } : {}) },
-    ...effort,
+    ...(effort ? { outputConfig: { effort } } : {}),
   })
   const planner = chat.withStructuredOutput(SqlPlanSchema, {
     name: 'sql_plan',
@@ -45,15 +48,14 @@ export function createAnthropicProvider({ apiKey, model, fetch }: ProviderSettin
   })
   // Summaries use the fast model: a few sentences about ≤ 50 rows (F-ASK-12, PRD D41).
   const summaryModel = FAST_MODEL.anthropic
+  const summaryEffort = requestEffort(summaryModel, 'low')
   const fast = new ChatAnthropic({
     apiKey,
     model: summaryModel,
     maxTokens: SUMMARY_MAX_TOKENS,
     maxRetries: 2,
     clientOptions: { dangerouslyAllowBrowser: true, ...(fetch ? { fetch } : {}) },
-    ...(findModel(summaryModel)?.supportsEffort
-      ? { outputConfig: { effort: 'low' as const } }
-      : {}),
+    ...(summaryEffort ? { outputConfig: { effort: summaryEffort } } : {}),
   })
   const summarizer = fast.withStructuredOutput(AnswerSummarySchema, {
     name: 'answer_summary',
@@ -70,6 +72,8 @@ export function createAnthropicProvider({ apiKey, model, fetch }: ProviderSettin
     id: 'anthropic',
     model,
     remote: true,
+    effort,
+    summaryEffort,
     async planSql({ messages, signal }) {
       try {
         const result = await planner.invoke(toLangChainMessages(messages, { cacheControl: true }), {

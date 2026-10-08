@@ -13,6 +13,15 @@ export type PrivacyMode = z.infer<typeof PrivacyModeSchema>
 export const ProviderIdSchema = z.enum(['anthropic', 'openai', 'local'])
 export type ProviderId = z.infer<typeof ProviderIdSchema>
 
+/**
+ * How hard the planning model thinks (F-ASK-16, D107), chosen in the ask bar. 'auto' picks per
+ * question (F-ASK-18, M11); until then it means medium.
+ */
+export const EffortSchema = z.enum(['auto', 'low', 'medium', 'high'])
+export type Effort = z.infer<typeof EffortSchema>
+/** The effort a request actually sends (Anthropic `output_config.effort`, OpenAI reasoning effort). */
+export type RequestEffort = Exclude<Effort, 'auto'>
+
 export const ChartHintSchema = z
   .object({
     type: ChartTypeSchema.nullable().describe(

@@ -42,6 +42,9 @@ test('the hero film can be paused, and holds still with reduced motion', async (
   await page.mouse.move(5, 5) // hovering pauses it too; keep the pointer away
   await figure.getByRole('button', { name: 'Pause' }).click()
   await page.mouse.move(5, 5)
+  // Pausing freezes the timeline; a transition already running (say, the loop just restarted and
+  // the question bubble is leaving) still finishes, so let it settle before comparing.
+  await page.waitForTimeout(600)
   const before = await figure.innerText()
   await page.waitForTimeout(900)
   expect(await figure.innerText()).toBe(before)

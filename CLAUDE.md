@@ -201,7 +201,13 @@ e2e/ (Playwright)     scripts/ (sample + fixture generators, record-demo, record
   before the call, never after.
 - The CSP's `connect-src` allows `http://localhost:*` and `http://127.0.0.1:*` for local model servers
   (F-AI-06, D85) and nothing else beyond the named hosts. Never widen it to `https:` (D86).
-- Settings are v5 (local server, kept files). A new saved field needs a migration in `SETTINGS_RECORD`.
+- Settings are v6 (v5: local server, kept files; v6: effort). A new saved field needs a migration in
+  `SETTINGS_RECORD`.
+- Voice input (`src/features/ask/speech.ts`): never call `SpeechRecognition.available()` until the mic
+  is pressed. Playwright's Chromium has the API but crashes the tab on that call (real Chrome answers).
+  e2e uses a fake on-device recognizer (`e2e/voice.spec.ts`); don't click the mic without one.
+- The ask bar's model chip is named "Model: …", so match the top bar's badge with
+  `{ name: 'Demo', exact: true }`.
 - The Python worker also runs the scratchpad notebook (`src/workers/notebook.ts`, own namespace);
   Stop/timeout reset both. Kept files (`src/stores/persistFiles.ts`) live in OPFS, opt-in only.
 - Two pages (PRD D99): `index.html` is the landing page, `app/index.html` the app (served at

@@ -78,6 +78,7 @@ async function plan(input: GenerateInput): Promise<DashboardPlan> {
         purpose: 'dashboard',
         provider: provider.id,
         model: provider.model,
+        effort: provider.effort ?? null,
         mode,
         dataValues: countDataValues(context),
         messages: messages.map(({ role, content }) => ({ role, content })),

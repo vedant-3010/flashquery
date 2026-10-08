@@ -255,12 +255,12 @@ Format: `ID (priority) Title: description. AC: acceptance criteria.`
   (stored locally, exportable to `evals/` format).
 - [x] **F-ASK-15 (P2) Multi-step exploration**: up to 3 exploratory queries (e.g. check distinct values)
   before the final SQL, all visible in the trace.
-- [ ] **F-ASK-16 (P1) Model and effort in the ask bar** (v2): a model picker (models from
+- [x] **F-ASK-16 (P1) Model and effort in the ask bar** (v2): a model picker (models from
   `src/ai/models.ts`, grouped by provider; providers without a key disabled with "Add key"), an effort
   control (Low / Medium / High, hidden for models without effort) and a privacy-mode chip; demo mode
   shows "Demo". Settings keeps providers, keys and the local server. AC: the next request carries the
   chosen model and effort (mocked-provider e2e); summaries keep low effort.
-- [ ] **F-ASK-17 (P1) Voice input** (v2): a mic in the ask bar using on-device speech recognition
+- [x] **F-ASK-17 (P1) Voice input** (v2): a mic in the ask bar using on-device speech recognition
   (`processLocally`); words stream into the box; Esc stops; ⌘/Ctrl+Shift+Space toggles; the language
   follows the number locale. AC: no audio leaves the device; where on-device speech is unavailable the
   mic is disabled and says why.
@@ -1147,6 +1147,15 @@ improve through the evals instead: the idiom sheet, the example library, learned
 only, since SQL literals can be data values), result checks inside the repair budget, and auto effort.
 - **D109** Projects are local: namespaced IndexedDB keys (`p:<id>:…`) and an OPFS folder per project;
 settings and eval cases stay global; existing data migrates into "My first project".
+- **D110** The ask bar (M9, F-ASK-16/17). It's one box: the question on top, then a toolbar with the
+tables and the privacy mode on the left, and the model, effort, mic and send on the right. Picking a
+model from another provider that has a key switches provider. Settings keeps keys, custom model IDs
+and the local server's model name. The inspector shows each request's effort. Voice: the browser is
+asked about on-device support only when the mic is first pressed, because Playwright's Chromium
+(153) crashes the tab on `SpeechRecognition.available()`; real Chrome (155) answers "downloadable",
+and the first press installs the language pack. The listening state follows the recognizer's speech
+events instead of a live audio meter (that would need a second microphone stream). The mic is
+named "Voice input (unavailable)" where on-device recognition is missing, and pressing it says why.
 - **D12** Shared hooks live in `src/hooks/` and shared app components in `src/components/` (outside the
 generated `ui/`), matching the shadcn aliases in `components.json`.
 

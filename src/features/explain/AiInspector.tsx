@@ -49,6 +49,7 @@ function Entry({ entry }: { entry: AiLogEntry }) {
         </span>
         <span className="flex flex-wrap gap-x-2 pl-5 text-muted-foreground">
           <span className="font-mono">{entry.model}</span>
+          {entry.effort && <span>{entry.effort} effort</span>}
           <span>{entry.mode === 'strict' ? 'Strict' : 'Balanced'}</span>
           <span className={cn(entry.dataValues === 0 && 'text-emerald-700 dark:text-emerald-400')}>
             {formatNumber(entry.dataValues, locale)} data{' '}
