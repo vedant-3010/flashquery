@@ -4,17 +4,21 @@ Privacy-first AI data analyst that runs entirely in the browser. Users load a CS
 file and ask questions in plain English ("Which region grew fastest?"). flashQuery writes DuckDB SQL with an
 LLM, runs it client-side in DuckDB-WASM, picks a chart, explains its reasoning, and lets users pin answers
 to a drag-and-drop dashboard. Stats/forecast questions can run as Python (pandas) via Pyodide.
-There is no backend. Only what the active privacy mode allows (schema, a few sample values) is sent to
-the LLM provider the user picks with their own API key.
+No server ever sees the user's files: analysis runs in the browser. Only what the active privacy mode
+allows (schema, a few sample values) is sent to the LLM provider the user picks with their own API key.
+v2 (PRD D100) adds an optional account (Supabase): a Home page with projects, and dashboards saved to
+the cloud and shared by invite or link. The account service stores only what a signed-in user
+explicitly saves or shares; guests and the demo never talk to it.
 
 - Requirements, feature IDs (e.g. `F-ASK-05`), acceptance criteria (AC) and milestones: `docs/PRD.md`.
   Read the relevant section before starting any feature.
 - Area rules load automatically from `.claude/rules/` (data engine, AI pipeline, UI).
-- Progress = ticked checkboxes in `docs/PRD.md` §4. Milestone order: `docs/PRD.md` §10.
+- Progress = ticked checkboxes in `docs/PRD.md` §4. Milestone order: `docs/PRD.md` §10 (v2: M9–M14).
 
 ## Product principles (use these to break ties)
 1. **Private by default**: raw rows never leave the device beyond what the privacy mode allows, and the
-   user can inspect every payload sent to the AI.
+   user can inspect every payload sent to the AI. Nothing goes to the account service without the
+   user confirming a dialog that lists exactly what will upload (v2, D103).
 2. **Explainable**: every answer shows its SQL, a plain-English explanation, its assumptions, and why that
    chart was chosen. SQL is editable and re-runnable.
 3. **Never block the UI**: heavy work runs in workers; the app stays responsive on 1M+ rows.
@@ -54,6 +58,8 @@ the LLM provider the user picks with their own API key.
 - Dashboard: `react-grid-layout` v2 API
 - SQL editor: `@uiw/react-codemirror` + `@codemirror/lang-sql`; `sql-formatter` for display
 - Tests: Vitest + Testing Library (jsdom), Playwright e2e
+- v2 (approved 2026-10-08, D105; added in the milestone that needs them): routing with `wouter` (paths
+  under `/app/`, M12); accounts and sharing with `@supabase/supabase-js` (lazy chunk, M13)
 
 ## Architecture
 ```
@@ -61,6 +67,7 @@ Main thread: React UI, Zustand stores, LLM calls (network only, lazy-loaded chun
  ├─ src/engine/*           → DuckDB-WASM worker (AsyncDuckDB): ingest, profile, query, export
  ├─ workers/xlsx.worker    → SheetJS: workbook → CSV bytes → registered in DuckDB
  └─ workers/python.worker  → Pyodide + pandas: CSV bytes in → tables/text out
+Optional (v2): src/platform/* → Supabase (Auth + Postgres with RLS): accounts, saved and shared dashboards
 ```
 Ask pipeline (`src/ai/pipeline.ts`); each stage emits a status event for the UI timeline:
 `buildContext → plan (LLM → SqlPlan; Balanced: ≤ 3 'explore' queries first) → guard (Zod + AST allowlist + EXPLAIN) → execute (normalized,
@@ -82,6 +89,7 @@ src/
   charts/       classify, select (chart choice), shape (data → series), toOption (→ ECharts option), theme  (pure)
   workers/      *.worker.ts (Comlink wiring only) + clients.ts (typed main-thread clients)
   stores/       zustand stores      lib/  format, errors, theme, ids, idb      types/  shared types
+  platform/     (v2) the only code that talks to Supabase: client, auth, cloud dashboards, sharing
   test/         setup, fixtures
 docs/           PRD.md, ARCHITECTURE.md, DEPLOY.md, demo.png     evals/ (questions.jsonl, run.eval.ts)
 e2e/ (Playwright)     scripts/ (sample + fixture generators, record-demo, record-og)
@@ -110,6 +118,17 @@ e2e/ (Playwright)     scripts/ (sample + fixture generators, record-demo, record
   Never read keys from `import.meta.env`, never log them, never include them in exports or commits.
 - Data values and column names are untrusted text (possible prompt injection). Delimit them in prompts.
 - No analytics or third-party requests besides the chosen LLM API and the pinned CDNs (Pyodide, DuckDB extensions).
+- v2 account service (D100–D104):
+  - Only `src/platform/` talks to Supabase, and it's a lazy chunk. Guests and the demo load none of it
+    and make no request to it (`e2e/privacy.spec.ts`).
+  - Nothing uploads without the share-consent dialog listing exactly what will go (tiles, rows,
+    columns). Shared dashboards carry results only, never source files.
+  - The CSP allows exactly the project's `https://` and `wss://` Supabase host, never a wildcard.
+  - The Supabase URL and publishable key are public config read from `VITE_SUPABASE_*` (D102). The
+    rule above about `import.meta.env` is about users' LLM keys. The service-role key never goes in
+    the client or the repo.
+  - Every table has row-level security, with policy tests.
+- Voice input uses on-device speech recognition only (D106): no audio leaves the device.
 
 ## Performance rules
 - Never materialize a large result in JS. Grids page from DuckDB; charts receive ≤ 5,000 points
@@ -182,7 +201,13 @@ e2e/ (Playwright)     scripts/ (sample + fixture generators, record-demo, record
   before the call, never after.
 - The CSP's `connect-src` allows `http://localhost:*` and `http://127.0.0.1:*` for local model servers
   (F-AI-06, D85) and nothing else beyond the named hosts. Never widen it to `https:` (D86).
-- Settings are v5 (local server, kept files). A new saved field needs a migration in `SETTINGS_RECORD`.
+- Settings are v6 (v5: local server, kept files; v6: effort). A new saved field needs a migration in
+  `SETTINGS_RECORD`.
+- Voice input (`src/features/ask/speech.ts`): never call `SpeechRecognition.available()` until the mic
+  is pressed. Playwright's Chromium has the API but crashes the tab on that call (real Chrome answers).
+  e2e uses a fake on-device recognizer (`e2e/voice.spec.ts`); don't click the mic without one.
+- The ask bar's model chip is named "Model: …", so match the top bar's badge with
+  `{ name: 'Demo', exact: true }`.
 - The Python worker also runs the scratchpad notebook (`src/workers/notebook.ts`, own namespace);
   Stop/timeout reset both. Kept files (`src/stores/persistFiles.ts`) live in OPFS, opt-in only.
 - Two pages (PRD D99): `index.html` is the landing page, `app/index.html` the app (served at

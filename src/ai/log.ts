@@ -1,5 +1,5 @@
 import { z } from '@/lib/zod'
-import { PrivacyModeSchema } from '@/ai/schemas'
+import { EffortSchema, PrivacyModeSchema } from '@/ai/schemas'
 
 // The AI payload log behind "What the AI saw" (F-EXPL-04): every request exactly as sent, the
 // parsed output, token usage and latency. API keys never appear (F-SEC-04): the provider sends them
@@ -25,6 +25,8 @@ export const AiLogEntrySchema = z.object({
   purpose: z.enum(['plan', 'repair', 'summary', 'dashboard', 'suggest', 'test']),
   provider: z.string(),
   model: z.string(),
+  /** The reasoning effort the request sent, or null when the model takes none (F-ASK-16). */
+  effort: EffortSchema.exclude(['auto']).nullable(),
   mode: PrivacyModeSchema,
   /** Values from the data itself in this request (0 in strict mode). */
   dataValues: z.number(),

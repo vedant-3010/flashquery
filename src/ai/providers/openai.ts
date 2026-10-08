@@ -1,6 +1,6 @@
 import { HumanMessage } from '@langchain/core/messages'
 import { ChatOpenAI } from '@langchain/openai'
-import { FAST_MODEL, findModel } from '@/ai/models'
+import { FAST_MODEL, requestEffort } from '@/ai/models'
 import type { LLMProvider, ProviderSettings } from '@/ai/providers'
 import { TEST_PROMPT } from '@/ai/prompts/testConnection'
 import { providerError, toLangChainMessages, usageOf } from '@/ai/providers/langchain'
@@ -39,6 +39,7 @@ export function createOpenAIProvider({
   provider,
   apiKey,
   model,
+  effort: chosen = 'medium',
   baseUrl,
   fetch,
 }: ProviderSettings): LLMProvider {
@@ -53,9 +54,7 @@ export function createOpenAIProvider({
     const appError = providerError(error, failedModel, signal)
     return local && baseUrl ? localError(appError, baseUrl, failedModel) : appError
   }
-  const reasoning = findModel(model)?.supportsEffort
-    ? { reasoning: { effort: 'medium' as const } }
-    : {}
+  const effort = requestEffort(model, chosen)
   const chat = new ChatOpenAI({
     apiKey,
     model,
@@ -63,7 +62,7 @@ export function createOpenAIProvider({
     maxRetries: 2,
     // Intentional: the user's own key, in their own browser (BYOK). See CLAUDE.md gotchas.
     configuration,
-    ...reasoning,
+    ...(effort ? { reasoning: { effort } } : {}),
   })
   const planner = chat.withStructuredOutput(SqlPlanSchema, {
     name: 'sql_plan',
@@ -79,12 +78,13 @@ export function createOpenAIProvider({
   })
   // Summaries use the fast model: a few sentences about ≤ 50 rows (F-ASK-12, PRD D41).
   const summaryModel = local ? model : FAST_MODEL.openai
+  const summaryEffort = requestEffort(summaryModel, 'low')
   const fast = new ChatOpenAI({
     apiKey,
     model: summaryModel,
     maxRetries: 2,
     configuration,
-    ...(findModel(summaryModel)?.supportsEffort ? { reasoning: { effort: 'low' as const } } : {}),
+    ...(summaryEffort ? { reasoning: { effort: summaryEffort } } : {}),
   })
   const summarizer = fast.withStructuredOutput(AnswerSummarySchema, {
     name: 'answer_summary',
@@ -103,6 +103,8 @@ export function createOpenAIProvider({
     id: local ? 'local' : 'openai',
     model,
     remote: true,
+    effort,
+    summaryEffort,
     async planSql({ messages, signal }) {
       try {
         const result = await planner.invoke(

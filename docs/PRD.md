@@ -4,7 +4,7 @@
 > checkbox only when its acceptance criteria (AC) and the Definition of Done in `CLAUDE.md` are met.
 > Record deviations and new decisions in §12.
 
-Version 1.0 · 2026-09-27
+Version 2.0 (draft) · 2026-10-08 · v1: 2026-09-27
 
 ---
 
@@ -16,8 +16,15 @@ with an LLM, executes it locally in DuckDB-WASM, picks an appropriate chart, exp
 and lets the user assemble answers into a drag-and-drop dashboard. Statistical and forecasting questions
 can run as Python (pandas) in the browser via Pyodide.
 
-There is no application server. The only network calls go to the LLM provider the user chooses (with
-their own API key) and to CDNs that serve runtime assets (Pyodide, DuckDB extensions).
+No server ever sees the user's files: ingestion, queries and analysis run in the browser. The only
+network calls go to the LLM provider the user chooses (with their own API key) and to CDNs that serve
+runtime assets (Pyodide, DuckDB extensions).
+
+**v2: private analysis, shareable results.** An optional account (Supabase) adds a Home page with
+projects and lets a signed-in user save dashboards to the cloud and share them by invite or link. The
+account service stores only what the user explicitly saves or shares (a dashboard and its results),
+after a dialog shows exactly what will upload. Guests, and the no-key demo, use everything else with
+no account and no request to the account service (D100).
 
 ### 1.1 Problem
 
@@ -34,6 +41,8 @@ for them are black boxes that require uploading the data.
 - **Fast at scale**: a columnar SQL engine in WebAssembly answers questions over 1M+ rows interactively.
 - **Explainable**: every answer shows its SQL, assumptions and chart rationale; SQL is editable.
 - **Question → dashboard**: pin answers, auto-generate a dashboard, export it as a file.
+- **Shareable (v2)**: share a dashboard's results with teammates by invite or link; the source files
+never leave the device, and viewers need no file and no key.
 
 
 
@@ -46,12 +55,33 @@ for them are black boxes that require uploading the data.
 
 
 
+### 1.3a Goals (v2)
+
+- **G5** A new user signs up and shares a dashboard in under 2 minutes.
+- **G6** A teammate opens a shared link and reads the dashboard with no file, no key and no install,
+in under 2 s for up to 12 tiles.
+- **G7** Voice questions work with no audio leaving the device.
+- **G8** ≥ 90% execution accuracy on the eval set, measured before and after the M11 changes.
+- **G9** Guests and the demo make no request to the account service (automated test).
+
+
+
 ### 1.4 Non-goals (v1)
 
-- Accounts, collaboration, server-side storage, scheduled reports.
+- Accounts, collaboration, server-side storage, scheduled reports. *(Accounts and sharing move into v2:
+§1.4a, §4.17–4.19.)*
 - Live database or warehouse connections (files only).
 - Editing source data (analysis is read-only; derived views are fine).
 - Authoring on mobile (dashboards should be viewable on tablets).
+
+
+
+### 1.4a Non-goals (v2)
+
+- Uploading or storing source files, or running queries on a server.
+- Real-time co-editing (edits save with a version check instead), scheduled refresh, alerts.
+- Live database or warehouse connections (still files only).
+- Fine-tuning a model (D108).
 
 
 
@@ -62,6 +92,8 @@ allowed to use cloud AI tools; strong in Excel, basic SQL.
 - **Rahul, founder/manager**: wants fast answers and a dashboard to screenshot for the weekly review.
 - **Hiring manager (demo persona)**: opens the deployed link with 2 minutes and no API key. Must see
 1M rows, an instant chart and the generated SQL right away.
+- **Meera, teammate (viewer, v2)**: gets a link to Rahul's dashboard; has no file and no API key;
+reads it on a laptop or tablet, and may be asked to tidy its layout as an editor.
 
 ---
 
@@ -84,6 +116,14 @@ file → tiles refresh.
 with "Run" → Pyodide loads with progress → forecast table + line chart + summary.
 - **J6 Privacy check**: open "What the AI saw" → exact JSON payload → switch to Strict → ask again →
 payload contains no values.
+- **J7 Sign up and share (v2)**: landing → "Open the app" → Home → "Sign up" (email or Google) → new
+project → load a file → ask, pin three answers → "Share" → the consent dialog lists the tiles, rows and
+columns that will upload → confirm → invite meera@… as viewer and copy a view-only link.
+- **J8 Open a shared link (v2)**: Meera opens the link → the dashboard renders from its snapshots with
+the owner's name and "updated 2 h ago" → no file, no key, no sign-in needed for a link; signed in, it
+also appears under "Shared with me" on Home.
+- **J9 Ask by voice (v2)**: click the mic (or ⌘/Ctrl+Shift+Space) → "which region grew fastest" → the
+words appear in the box as they're spoken → Enter → answer. The audio is recognized on the device.
 
 ---
 
@@ -215,6 +255,24 @@ Format: `ID (priority) Title: description. AC: acceptance criteria.`
   (stored locally, exportable to `evals/` format).
 - [x] **F-ASK-15 (P2) Multi-step exploration**: up to 3 exploratory queries (e.g. check distinct values)
   before the final SQL, all visible in the trace.
+- [x] **F-ASK-16 (P1) Model and effort in the ask bar** (v2): a model picker (models from
+  `src/ai/models.ts`, grouped by provider; providers without a key disabled with "Add key"), an effort
+  control (Low / Medium / High, hidden for models without effort) and a privacy-mode chip; demo mode
+  shows "Demo". Settings keeps providers, keys and the local server. AC: the next request carries the
+  chosen model and effort (mocked-provider e2e); summaries keep low effort.
+- [x] **F-ASK-17 (P1) Voice input** (v2): a mic in the ask bar using on-device speech recognition
+  (`processLocally`); words stream into the box; Esc stops; ⌘/Ctrl+Shift+Space toggles; the language
+  follows the number locale. AC: no audio leaves the device; where on-device speech is unavailable the
+  mic is disabled and says why.
+- [ ] **F-ASK-18 (P1) Auto effort** (v2): an "Auto" effort picks low, medium or high per question
+  (joins, windows, multi-step → higher); the timeline shows the choice.
+- [ ] **F-ASK-19 (P1) Example library** (v2): a DuckDB idiom sheet and ~20 curated question→SQL pairs;
+  the 3 nearest by intent and keywords go in each planning prompt. AC: eval accuracy doesn't drop.
+- [ ] **F-ASK-20 (P1) Learned examples** (v2): 👍 answers and SQL the user corrected become
+  per-dataset examples, stored locally and used in Balanced mode only (built in `src/ai/context.ts`).
+- [ ] **F-ASK-21 (P1) Result checks** (v2): an empty result, all-null columns, or one row where groups
+  were expected trigger one guided retry, within the ≤ 2 repair budget; visible in the trace.
+- [ ] **F-ASK-22 (P2) Streaming summary** (v2): the AI summary streams into place.
 
 
 
@@ -249,6 +307,18 @@ Format: `ID (priority) Title: description. AC: acceptance criteria.`
 - [x] **F-VIZ-06 (P1) Chart settings popover**: x / y / series pickers, sort, stack, log scale, labels.
 - [x] **F-VIZ-07 (P1) Export chart** as PNG/SVG; copy image to clipboard.
 - [x] **F-VIZ-08 (P2) Annotations**: max/min markers, average line, target line.
+- [ ] **F-VIZ-09 (P1) More chart types** (v2): combo (bars + line on a second axis), waterfall, funnel,
+  treemap, box plot, sankey, calendar heatmap, 100% stacked bar. Each has selection rules (§6), appears
+  in the switcher when compatible, accepts the LLM hint, and renders in exported HTML. AC: ≥ 1 select
+  case per type plus a "not this type" case; a `toOption` snapshot per type.
+- [ ] **F-VIZ-10 (P1) KPI trend** (v2): a KPI card shows a sparkline and the change versus the previous
+  period when the result has a time column.
+- [ ] **F-VIZ-11 (P1) Chart style** (v2): a refined default (Geist labels, hairline dashed grids,
+  rounded bars, soft area gradients, hover dims other series, end-of-line labels for ≤ 4 series, a
+  redesigned tooltip, entrance animation off with reduced motion).
+- [ ] **F-VIZ-12 (P1) Palettes** (v2): flashQuery (violet-led), Tol bright, Okabe-Ito, Mono; per chart,
+  per dashboard, default in Settings. AC: the default is colour-blind-safe; the contrast test covers
+  every palette (marks ≥ 3:1).
 
 
 
@@ -328,6 +398,12 @@ Format: `ID (priority) Title: description. AC: acceptance criteria.`
   the LLM APIs, cdn.jsdelivr.net and extensions.duckdb.org; `script-src 'self' 'wasm-unsafe-eval'` plus
   what Pyodide needs; `worker-src 'self' blob:`. AC: DuckDB and Pyodide still work; every extra directive
   is documented in §12.
+- [ ] **F-SEC-07 (P1) Row-level security** (v2) on every Supabase table, with policy tests for the
+  owner, a member, a link viewer and a stranger.
+- [ ] **F-SEC-08 (P1) Account service in the CSP** (v2): `connect-src` adds exactly the project's
+  `https://` and `wss://` Supabase host (from `VITE_SUPABASE_URL` at build), never a wildcard (D104).
+- [ ] **F-SEC-09 (P1) Guest isolation** (v2): guests and the demo load no Supabase code and make no
+  request to it. AC: `e2e/privacy.spec.ts` asserts it (G9).
 
 
 
@@ -351,6 +427,8 @@ Format: `ID (priority) Title: description. AC: acceptance criteria.`
 - [ ] **F-QA-04 (P1) NL→SQL evals**: ≥ 40 questions over Global Sales + one other dataset; runner + report;
   accuracy in the README. *(Questions, runner and report done (D74); the accuracy needs a run with an
   API key:* `ANTHROPIC_API_KEY=… npm run evals`*.)*
+- [ ] **F-QA-05 (P1) Eval-driven tuning** (v2): an eval report before and after the M11 changes; a drop
+  in accuracy blocks the change (G8).
 
 
 
@@ -364,6 +442,61 @@ Format: `ID (priority) Title: description. AC: acceptance criteria.`
   eval accuracy not measured yet, D83.)*
 - [x] **F-SHIP-03 (P1)** `docs/ARCHITECTURE.md`: threading model + sequence diagram of the ask pipeline.
 - [x] **F-SHIP-04 (P1) In-app "How it works"** modal explaining the privacy model, linking to the inspector.
+
+
+
+### 4.17 Home & projects (F-HOME, v2)
+
+- [ ] **F-HOME-01 (P1) Routes**: real paths under `/app/` with `wouter`: Home, a project's workspace
+  and dashboard, bench, try, login, register, shared link. `#/bench` and `#/try` redirect; Vercel
+  rewrites `/app/(.*)`. AC: every path deep-links and survives a reload.
+- [ ] **F-HOME-02 (P1) Projects**: each project has its own datasets, history, notes, dashboards,
+  suggestions and kept files (IndexedDB keys `p:<id>:…`, OPFS folder per project); create, rename,
+  delete, switch. Existing data migrates into "My first project". AC: switching keeps each project's
+  state; the migration loses nothing.
+- [ ] **F-HOME-03 (P1) Home page**: greeting, quick ask, project cards (datasets, dashboards, last
+  opened), recent questions, start options (upload, the 1M-row sample, import a workspace file), a
+  first-visit empty state, and "Shared with me" when signed in.
+- [ ] **F-HOME-04 (P1) Try link**: `/app/try` opens a "Sample: Global Sales" project and asks the demo
+  question (replaces `#/try`; the landing links to it).
+
+
+
+### 4.18 Accounts (F-ACCT, v2)
+
+- [ ] **F-ACCT-01 (P1) Sign up and log in**: email and password, magic link, Google and GitHub
+  (Supabase Auth, PKCE); forgot and reset password. AC: the sign-up part of J7 works against a mocked
+  Supabase in e2e.
+- [ ] **F-ACCT-02 (P1) Optional accounts**: guests use everything except cloud save and sharing; the
+  demo needs no account (G9).
+- [ ] **F-ACCT-03 (P1) Account menu and profile**: avatar or initials, display name, sign out, delete
+  account (which deletes the user's cloud dashboards).
+- [ ] **F-ACCT-04 (P1) Session**: kept by supabase-js in localStorage; the Supabase chunk loads only when
+  signing in or when a session exists.
+
+
+
+### 4.19 Sharing (F-SHARE, v2)
+
+- [ ] **F-SHARE-01 (P1) Cloud dashboards**: save a dashboard to the account: layout, titles, SQL, chart
+  specs, text tiles and tile snapshots (≤ 5,000 rows each, as stored locally), never source files; a
+  size cap with a clear error.
+- [ ] **F-SHARE-02 (P1) Consent**: before anything uploads, a dialog lists exactly what will (tiles,
+  rows of results, columns). AC: e2e asserts no request before "Confirm" (D103).
+- [ ] **F-SHARE-03 (P1) Invites**: by email, as viewer or editor; an invite resolves when that email
+  signs in; members list; remove a member.
+- [ ] **F-SHARE-04 (P1) Links**: a view-only link (`/app/s/:slug`) with optional expiry; revoke. AC: a
+  revoked or expired link says it's no longer shared.
+- [ ] **F-SHARE-05 (P1) Viewer**: a read-only dashboard from snapshots (the presentation-mode
+  renderer), with the owner and an "updated" time; works with no file and no key; "Shared with me" on
+  Home.
+- [ ] **F-SHARE-06 (P1) Editors**: arrange tiles and edit titles and text tiles; saves with a version
+  check.
+- [ ] **F-SHARE-07 (P1) Update shared copy**: the owner re-runs the tiles locally and re-uploads their
+  snapshots; a prompt on conflict.
+
+**Later (not planned):** comments on tiles, team workspaces, embedding a dashboard, a public gallery,
+refresh from a connected device.
 
 ---
 
@@ -385,6 +518,9 @@ Format: `ID (priority) Title: description. AC: acceptance criteria.`
 | Question → first chart (Balanced, Sonnet-class model) | p50 < 8 s                                                    |
 | Browsers                                              | latest 2 versions of Chrome, Edge, Firefox, Safari (desktop) |
 | Privacy                                               | no requests except LLM API + pinned CDNs; no analytics       |
+| Privacy, v2                                           | account service only when signed in or opening a shared link |
+| Shared link, ≤ 12 tiles (v2)                          | readable < 2 s                                               |
+| Voice input (v2)                                      | no audio leaves the device                                   |
 
 
 ---
@@ -414,6 +550,20 @@ Column classes after normalization: **temporal** (DATE/TIMESTAMP, or year/month 
 
 An LLM `chartHint` overrides these only when it is compatible with the result shape.
 
+**v2 additions (F-VIZ-09/10; a draft, refined in M10).** Each is checked before the rule it refines.
+
+| #   | Result shape                                                            | Chart            | Checked before |
+| --- | ----------------------------------------------------------------------- | ---------------- | -------------- |
+| 12  | 1 row × 1 measure, with a time series behind it                         | KPI with trend   | 1              |
+| 13  | 1 category + 2 measures on different scales (e.g. revenue and margin %) | combo            | 6              |
+| 14  | ordered stages (a stage/step column) + 1 decreasing measure             | funnel           | 5              |
+| 15  | 1 category + 1 signed measure, contribution or change intent            | waterfall        | 5              |
+| 16  | > 12 categories, or 2 nested categories, + 1 non-negative measure       | treemap          | 11             |
+| 17  | 1 category + quantile columns, or distribution-per-group intent         | box plot         | 9              |
+| 18  | 2 categories + 1 non-negative measure, flow intent (≤ 50 links)         | sankey           | 7              |
+| 19  | 1 daily date column + 1 measure, day-of-week or daily-pattern intent    | calendar heatmap | 3              |
+| 20  | 2 categories (or time + category) + 1 measure, share or mix intent      | 100% stacked bar | 7              |
+
 ---
 
 
@@ -438,6 +588,17 @@ TraceStep      { stage: 'context'|'plan'|'guard'|'explain'|'execute'|'retry'|'ch
   status, startedAt, ms, sql, error, tokens }
 Dashboard      { id, name, tiles: DashboardTile[], filters, version, createdAt, updatedAt }
 AiLogEntry     { id, answerId, provider, model, mode, messages, output, usage, ms, at }
+
+// v2
+ChartSpec      + type: …|'combo'|'waterfall'|'funnel'|'treemap'|'boxplot'|'sankey'|'calendar'|'stacked_100',
+                 palette
+Settings (v6)  + effort: 'auto'|'low'|'medium'|'high', chartPalette
+Project        { id, name, createdAt, updatedAt, lastOpenedAt }                  // local, IndexedDB
+Profile        { id, displayName, avatarUrl, createdAt }                         // Supabase
+CloudDashboard { id, ownerId, name, doc: Dashboard (with snapshots), version, updatedAt }
+Membership     { dashboardId, userId, role: 'viewer'|'editor' }
+Invite         { dashboardId, email, role, createdAt }
+ShareLink      { slug, dashboardId, expiresAt, revokedAt, createdAt }
 ```
 
 ---
@@ -467,6 +628,12 @@ FROM yearly
 GROUP BY region
 ORDER BY growth_pct DESC
 ```
+
+**v2 (D107, D108).** The user picks the model and effort in the ask bar; "Auto" chooses effort per
+question. No fine-tuning: answers improve through the evals instead. A DuckDB idiom sheet, the nearest
+curated examples, and (Balanced only) the user's own approved or corrected SQL go into the planning
+prompt, all built by `src/ai/context.ts`. A suspicious result (empty, all-null, one row where groups
+were expected) earns one guided retry inside the existing repair budget.
 
 ---
 
@@ -540,6 +707,21 @@ F-PROF-04…06, F-SHELL-05, F-SHELL-06, F-EXPL-08. DoD: all §5 budgets met; eva
 - **M8 Ship**: F-SHIP-01…04. DoD: public URL, README with real numbers, demo GIF.
 - **Stretch**: all P2 items, in any order.
 
+v2 (2026-10-08). Same rules; each milestone on its own branch.
+
+- **M9 Ask bar**: F-ASK-16, F-ASK-17. DoD: J9 works in Chrome; a mocked request carries the chosen model
+and effort.
+- **M10 Charts**: F-VIZ-09…12. DoD: every new type renders in the app and in exported HTML; ≥ 8 new
+select cases; the contrast test covers every palette.
+- **M11 Better answers**: F-ASK-18…22, F-QA-04, F-QA-05. DoD: eval report before and after; ≥ 90% (G8),
+or the gap explained in §12.
+- **M12 Home & projects**: F-HOME-01…04. DoD: existing data migrates; every route deep-links; the demo
+and guests are unaffected.
+- **M13 Accounts**: F-ACCT-01…04, F-SEC-08, F-SEC-09. DoD: sign-up and login work against a mocked
+Supabase; the guest privacy e2e passes.
+- **M14 Sharing**: F-SHARE-01…07, F-SEC-07. DoD: J7 and J8 work end to end; revoke works; nothing
+uploads before consent.
+
 ---
 
 
@@ -556,6 +738,11 @@ F-PROF-04…06, F-SHELL-05, F-SHELL-06, F-EXPL-08. DoD: all §5 budgets met; eva
 | Prompt injection via data                      | data delimiting, AST SQL guard, extension lockdown, CSP                            |
 | Library churn (duckdb-wasm, RGL v2, LangChain) | isolate behind `engine/` and `ai/` modules; lockfile; upgrade deliberately         |
 | Safari differences (workers, OPFS, WebGPU)     | test Safari at the end of each milestone                                           |
+| v2: the "nothing leaves" story weakens         | optional accounts, consent dialog listing what uploads, guests isolated (G9)       |
+| v2: shared results are sensitive               | RLS with policy tests, view-only links that expire and revoke, size cap            |
+| v2: Supabase free projects pause when idle     | documented in `docs/DEPLOY.md`; upgrade or keep active before sharing widely        |
+| v2: on-device speech is Chrome-first           | mic disabled with the reason elsewhere; typing always works                        |
+| v2: routing and projects churn the e2e suite   | an `openProject` helper; migrate specs mechanically in M12                         |
 
 
 ---
@@ -929,6 +1116,46 @@ New dependencies, approved: `motion`, `@fontsource/instrument-serif`, `@fontsour
 A new mark (a speech bubble holding rising bars) replaces Vite's favicon and the app's top-bar icon.
 `/app/#/try` loads the 1M-row sample and asks the demo question. The landing page's initial JS
 budget is 150 KB gzip (134 KB at launch: React DOM, motion with layout animations, the page).
+- **D100** v2 direction (2026-10-08): "private analysis, shareable results". Accounts are optional. An
+account service holds only accounts and what a user explicitly saves or shares; source files, queries
+and analysis stay on the device; guests and the demo make no request to it. LLM calls stay BYOK from
+the browser (D3 still holds: no proxy).
+- **D101** Supabase for accounts and sharing: Auth plus Postgres with row-level security, called from the
+browser, so there's no API of our own to write and secure. Open source and self-hostable. Rejected:
+Firebase (proprietary, NoSQL rules instead of SQL policies) and an own API on Vercel (most code).
+Free projects pause after 7 days idle (`docs/DEPLOY.md`).
+- **D102** The Supabase URL and publishable key are public client configuration, read at build from
+`VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`; access control is RLS. The rule "never read
+keys from `import.meta.env`" is about users' LLM keys and is unchanged. The service-role key is never
+used in the client or committed.
+- **D103** Sharing consent: nothing goes to the account service without a dialog listing exactly what
+will upload (the dashboard document and its tile snapshots, as tiles, rows and columns). Shared
+dashboards carry results, never source files, under a size cap (5 MB per dashboard, adjustable in M14).
+- **D104** CSP for the account service: `connect-src` adds the single project host, `https://` and
+`wss://`, from the env at build; never a wildcard (D86 still holds). The Supabase client is a lazy chunk,
+loaded only to sign in or when a session exists.
+- **D105** Routing: `wouter` (~2 KB) for paths under `/app/`, instead of React Router or TanStack Router,
+to keep the initial bundle small. Vercel rewrites `/app/(.*)` to the app; the old hashes redirect.
+New dependencies approved 2026-10-08: `wouter`, `@supabase/supabase-js`.
+- **D106** Voice input uses the Web Speech API with on-device recognition (`processLocally`) only; where
+it isn't available, the mic is disabled with the reason. No cloud speech service and no in-browser
+Whisper download.
+- **D107** Model and effort move to the ask bar (settings v6: `effort` 'auto' | 'low' | 'medium' |
+'high'). The planner uses the chosen effort; summaries stay at low.
+- **D108** No fine-tuning: it isn't offered for Claude through its API, and it would break BYOK. Answers
+improve through the evals instead: the idiom sheet, the example library, learned examples (Balanced
+only, since SQL literals can be data values), result checks inside the repair budget, and auto effort.
+- **D109** Projects are local: namespaced IndexedDB keys (`p:<id>:…`) and an OPFS folder per project;
+settings and eval cases stay global; existing data migrates into "My first project".
+- **D110** The ask bar (M9, F-ASK-16/17). It's one box: the question on top, then a toolbar with the
+tables and the privacy mode on the left, and the model, effort, mic and send on the right. Picking a
+model from another provider that has a key switches provider. Settings keeps keys, custom model IDs
+and the local server's model name. The inspector shows each request's effort. Voice: the browser is
+asked about on-device support only when the mic is first pressed, because Playwright's Chromium
+(153) crashes the tab on `SpeechRecognition.available()`; real Chrome (155) answers "downloadable",
+and the first press installs the language pack. The listening state follows the recognizer's speech
+events instead of a live audio meter (that would need a second microphone stream). The mic is
+named "Voice input (unavailable)" where on-device recognition is missing, and pressing it says why.
 - **D12** Shared hooks live in `src/hooks/` and shared app components in `src/components/` (outside the
 generated `ui/`), matching the shadcn aliases in `components.json`.
 
@@ -949,3 +1176,5 @@ Talking points to be ready for: why DuckDB-WASM over sql.js / SQLite-WASM (colum
 how the AST-based SQL guard works and why prompt injection matters here; what each privacy mode sends and
 how it's tested; how the grid pages 1M rows without materializing them; chart selection rules vs. LLM
 hints; eval methodology (execution accuracy, not string match); trade-offs of BYOK and no COOP/COEP.
+v2: how sharing works without a server ever seeing the files (consent, snapshots only, RLS), and why
+accounts are optional.

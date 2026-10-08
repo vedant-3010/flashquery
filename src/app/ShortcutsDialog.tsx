@@ -14,6 +14,10 @@ const SHORTCUTS: { keys: string[]; action: string }[] = [
   { keys: ['/'], action: 'Focus the ask box' },
   { keys: ['Enter'], action: 'Ask the question' },
   { keys: ['Shift', 'Enter'], action: 'New line in the question' },
+  {
+    keys: [MOD, 'Shift', 'Space'],
+    action: 'Ask by voice: start or stop listening (on this device)',
+  },
   { keys: ['Esc'], action: 'Cancel a running question, or close a dialog or menu' },
   { keys: [MOD, 'Enter'], action: 'Run the SQL editor, or the Python code' },
   { keys: ['Tab'], action: 'Move between controls (editors never trap Tab)' },
@@ -33,7 +37,9 @@ export function ShortcutsDialog() {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Keyboard shortcuts</DialogTitle>
-          <DialogDescription>Everything in flashQuery also works from the keyboard.</DialogDescription>
+          <DialogDescription>
+            Everything in flashQuery also works from the keyboard.
+          </DialogDescription>
         </DialogHeader>
         <dl className="grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-2 text-sm">
           {SHORTCUTS.map(({ keys, action }) => (

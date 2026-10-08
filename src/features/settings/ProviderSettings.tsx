@@ -1,7 +1,7 @@
 import { CircleCheck, Eye, EyeOff, LoaderCircle } from 'lucide-react'
 import { useState } from 'react'
 import { LOCAL_PRESETS, localBaseUrl } from '@/ai/localServer'
-import { MODELS, modelsFor, PROVIDER_LABELS } from '@/ai/models'
+import { DEFAULT_MODEL, findModel, MODELS, PROVIDER_LABELS, requestEffort } from '@/ai/models'
 import { TEST_PROMPT } from '@/ai/prompts/testConnection'
 import { createProvider } from '@/ai/providers'
 import { ProviderIdSchema } from '@/ai/schemas'
@@ -21,13 +21,14 @@ import { toAppError } from '@/lib/errors'
 import { useAiLogStore } from '@/stores/aiLog'
 import { activeApiKey, useSettingsStore } from '@/stores/settings'
 
-const CUSTOM = '__custom__'
-
 type TestState = { status: 'idle' | 'testing' | 'ok' } | { status: 'error'; message: string }
 
-/** Provider, key, model and "Test connection" (F-AI-01). */
+/**
+ * Provider, key and "Test connection" (F-AI-01). Listed models and the effort are picked in the ask
+ * bar (F-ASK-16); a custom model ID and a local server's model name stay here.
+ */
 export function ProviderSettings() {
-  const { provider, models, apiKeys, rememberKey, baseUrl } = useSettingsStore()
+  const { provider, models, effort, apiKeys, rememberKey, baseUrl } = useSettingsStore()
   const { setProvider, setModel, setApiKey, setRememberKey, setBaseUrl } = useSettingsStore()
   const credential = useSettingsStore(activeApiKey)
   const local = provider === 'local'
@@ -48,6 +49,7 @@ export function ProviderSettings() {
         provider,
         apiKey: credential ?? key,
         model,
+        effort,
         baseUrl: validUrl ?? undefined,
       })
       await client.testConnection(AbortSignal.timeout(30_000))
@@ -64,6 +66,7 @@ export function ProviderSettings() {
         purpose: 'test',
         provider,
         model,
+        effort: requestEffort(model, effort),
         mode: useSettingsStore.getState().privacyMode,
         dataValues: 0,
         messages: [{ role: 'user', content: TEST_PROMPT }],
@@ -199,41 +202,49 @@ export function ProviderSettings() {
           </p>
         </div>
       ) : (
-        <div className="grid gap-2">
-          <Label htmlFor="ai-model">Model</Label>
-          <Select
-            value={custom ? CUSTOM : model}
-            onValueChange={(value) => {
-              setTest({ status: 'idle' })
-              if (value === CUSTOM) {
-                setCustom(true)
-                return
-              }
-              setCustom(false)
-              setModel(provider, value)
-            }}
-          >
-            <SelectTrigger id="ai-model" className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {modelsFor(provider).map((option) => (
-                <SelectItem key={option.id} value={option.id}>
-                  <span>{option.label}</span>
-                  <span className="text-xs text-muted-foreground">{option.description}</span>
-                </SelectItem>
-              ))}
-              <SelectItem value={CUSTOM}>Custom model ID…</SelectItem>
-            </SelectContent>
-          </Select>
-          {custom && (
-            <Input
-              aria-label="Custom model ID"
-              className="font-mono"
-              spellCheck={false}
-              value={model}
-              onChange={(event) => setModel(provider, event.target.value)}
-            />
+        <div className="grid gap-1.5">
+          <span className="text-sm font-medium">Model</span>
+          {custom ? (
+            <>
+              <Input
+                aria-label="Custom model ID"
+                className="font-mono"
+                spellCheck={false}
+                value={model}
+                onChange={(event) => {
+                  setModel(provider, event.target.value)
+                  setTest({ status: 'idle' })
+                }}
+              />
+              <p className="text-xs text-muted-foreground">
+                Any {PROVIDER_LABELS[provider]} model ID.{' '}
+                <Button
+                  size="xs"
+                  variant="link"
+                  className="h-auto px-0"
+                  onClick={() => {
+                    setCustom(false)
+                    setModel(provider, DEFAULT_MODEL[provider])
+                    setTest({ status: 'idle' })
+                  }}
+                >
+                  Back to the listed models
+                </Button>
+              </p>
+            </>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              {findModel(model)?.label ?? model}. Choose the model and its effort in the ask bar,
+              under the question box.{' '}
+              <Button
+                size="xs"
+                variant="link"
+                className="h-auto px-0"
+                onClick={() => setCustom(true)}
+              >
+                Use a custom model ID
+              </Button>
+            </p>
           )}
         </div>
       )}

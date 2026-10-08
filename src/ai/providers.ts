@@ -1,6 +1,13 @@
 import type { Usage } from '@/ai/log'
 import type { PromptMessage } from '@/ai/prompts/planSql'
-import type { AnswerSummary, DashboardPlan, ProviderId, SqlPlan } from '@/ai/schemas'
+import type {
+  AnswerSummary,
+  DashboardPlan,
+  Effort,
+  ProviderId,
+  RequestEffort,
+  SqlPlan,
+} from '@/ai/schemas'
 
 // LLMProvider hides LangChain (PRD D6): the pipeline only sees planSql(). Real providers load on
 // first use (dynamic import keeps LangChain out of the initial bundle, F-PERF-01).
@@ -50,6 +57,10 @@ export interface LLMProvider {
   model: string
   /** True when planSql sends `messages` to a remote API (and so should be logged). */
   remote: boolean
+  /** The effort planning and dashboard requests send, or null (shown in the inspector). */
+  effort?: RequestEffort | null
+  /** The effort summary and suggestion requests send, or null. */
+  summaryEffort?: RequestEffort | null
   planSql(request: PlanRequest): Promise<PlanResponse>
   /** The model that writes AI summaries (F-ASK-12): the provider's fast one. Null without summaries. */
   summaryModel: string | null
@@ -66,6 +77,8 @@ export interface ProviderSettings {
   provider: ProviderId
   apiKey: string
   model: string
+  /** The planner's effort (F-ASK-16); medium when left out. Summaries always use low. */
+  effort?: Effort
   /** Local OpenAI-compatible server (F-AI-06), already checked by localBaseUrl(). */
   baseUrl?: string
   /** For tests: stands in for the network. */

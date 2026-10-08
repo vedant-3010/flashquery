@@ -11,8 +11,12 @@ paths:
 ## Providers
 - `src/ai/providers.ts` defines `LLMProvider { id, model, remote, planSql({ question, messages, tables,
   signal }), summaryModel, summarize?({ messages, signal }), suggestQuestions?({ messages, signal }),
-  planDashboard({ messages, table, signal }), testConnection(signal) }`. Summaries use the provider's fast model (PRD D41); dashboards the chosen one. Implementations: `src/ai/providers/anthropic.ts`, `openai.ts` (LangChain) and `fixture.ts`
+  planDashboard({ messages, table, signal }), testConnection(signal), effort?, summaryEffort? }`. Summaries use the provider's fast model (PRD D41); dashboards the chosen one. Implementations: `src/ai/providers/anthropic.ts`, `openai.ts` (LangChain) and `fixture.ts`
   (demo mode + tests; replays JSON in `src/ai/fixtures/`, validated by the same schemas).
+- Effort (F-ASK-16, D107): `createProvider({ …, effort })` with the ask bar's choice (settings v6);
+  `requestEffort(model, effort)` in `models.ts` decides what's sent: nothing for models without
+  `supportsEffort`, medium for 'auto' until F-ASK-18. Summaries and suggestions use low. Every log
+  entry records the effort it sent (`AiLogEntry.effort`), and the inspector shows it.
 - Use `model.withStructuredOutput(Schema, { name, method: 'jsonSchema', includeRaw: true })` so token
   usage can be logged from the raw message (PRD D29). Pass `{ signal }` to `invoke` for cancellation.
 - `src/ai/` must not import React, DOM APIs or `src/features/**`: it also runs in Node for the eval runner.

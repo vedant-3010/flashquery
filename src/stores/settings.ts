@@ -3,8 +3,10 @@ import { create } from 'zustand'
 import { DEFAULT_LOCAL_URL, LOCAL_NO_KEY, localBaseUrl } from '@/ai/localServer'
 import { DEFAULT_MODEL } from '@/ai/models'
 import {
+  EffortSchema,
   PrivacyModeSchema,
   ProviderIdSchema,
+  type Effort,
   type PrivacyMode,
   type ProviderId,
 } from '@/ai/schemas'
@@ -26,6 +28,8 @@ type Keys = z.infer<typeof KeysSchema>
 const SavedSettingsSchema = z.object({
   provider: ProviderIdSchema,
   models: z.object({ anthropic: z.string(), openai: z.string(), local: z.string() }),
+  /** The planner's reasoning effort, picked in the ask bar (F-ASK-16). */
+  effort: EffortSchema,
   /** Local OpenAI-compatible server (F-AI-06). */
   baseUrl: z.string(),
   privacyMode: PrivacyModeSchema,
@@ -50,7 +54,7 @@ const NO_KEYS: Keys = { anthropic: null, openai: null, local: null }
 
 export const SETTINGS_RECORD: RecordSpec<SavedSettings> = {
   key: 'settings',
-  version: 5,
+  version: 6,
   schema: SavedSettingsSchema,
   migrations: {
     // v2 (M4): number format and currency.
@@ -70,10 +74,13 @@ export const SETTINGS_RECORD: RecordSpec<SavedSettings> = {
         persistFiles: false,
       }
     },
+    // v6 (M9): reasoning effort, as before (medium), now chosen in the ask bar.
+    5: (data) => ({ ...(data as object), effort: 'medium' }),
   },
   fallback: () => ({
     provider: 'anthropic',
     models: { ...DEFAULT_MODEL },
+    effort: 'medium',
     privacyMode: 'balanced',
     dateDisplay: 'iso',
     rememberKey: false,
@@ -101,6 +108,7 @@ interface SettingsState {
   dateDisplay: DateDisplay
   provider: ProviderId
   models: Record<ProviderId, string>
+  effort: Effort
   /** In memory; see rememberKey. */
   apiKeys: Keys
   /** Base URL of a local OpenAI-compatible server (F-AI-06). */
@@ -112,6 +120,7 @@ interface SettingsState {
   setPrivacyMode: (mode: PrivacyMode) => void
   setProvider: (provider: ProviderId) => void
   setModel: (provider: ProviderId, model: string) => void
+  setEffort: (effort: Effort) => void
   setApiKey: (provider: ProviderId, key: string | null) => void
   setBaseUrl: (url: string) => void
   setRememberKey: (remember: boolean) => void
@@ -136,6 +145,7 @@ export const useSettingsStore = create<SettingsState>()((set, get) => ({
   dateDisplay: 'iso',
   provider: 'anthropic',
   models: { ...DEFAULT_MODEL },
+  effort: 'medium',
   apiKeys: NO_KEYS,
   baseUrl: DEFAULT_LOCAL_URL,
   rememberKey: false,
@@ -148,6 +158,7 @@ export const useSettingsStore = create<SettingsState>()((set, get) => ({
   setPrivacyMode: (privacyMode) => set({ privacyMode }),
   setProvider: (provider) => set({ provider }),
   setModel: (provider, model) => set({ models: { ...get().models, [provider]: model.trim() } }),
+  setEffort: (effort) => set({ effort }),
   setApiKey: (provider, key) =>
     set({ apiKeys: { ...get().apiKeys, [provider]: key?.trim() || null } }),
   setBaseUrl: (baseUrl) => set({ baseUrl: baseUrl.trim() }),
@@ -184,6 +195,7 @@ async function persist(state: SettingsState) {
   const record: SavedSettings = {
     provider: state.provider,
     models: state.models,
+    effort: state.effort,
     privacyMode: state.privacyMode,
     dateDisplay: state.dateDisplay,
     rememberKey: state.rememberKey,

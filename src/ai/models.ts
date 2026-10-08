@@ -1,4 +1,4 @@
-import type { ProviderId } from '@/ai/schemas'
+import type { Effort, ProviderId, RequestEffort } from '@/ai/schemas'
 
 // The only place model IDs live (CLAUDE.md). Prices are USD per million tokens, for the usage meter
 // (F-AI-04). Sources: Anthropic model table (Claude API skill, 2026-06) and
@@ -99,4 +99,33 @@ export function modelsFor(provider: ProviderId): ModelInfo[] {
 
 export function findModel(id: string): ModelInfo | undefined {
   return MODELS.find((model) => model.id === id)
+}
+
+/** A model's short name for tight spaces (the ask bar): "Sonnet 5", "GPT-6 Sol", or the raw ID. */
+export function shortModelLabel(id: string): string {
+  return findModel(id)?.label.replace(/^Claude /, '') ?? id
+}
+
+/** The efforts offered in the ask bar (F-ASK-16), with their trade-off. */
+export const EFFORT_OPTIONS: { id: RequestEffort; label: string; description: string }[] = [
+  {
+    id: 'low',
+    label: 'Low',
+    description: 'Fastest and cheapest; fine for totals and simple lookups.',
+  },
+  { id: 'medium', label: 'Medium', description: 'Recommended: careful SQL at a normal pace.' },
+  {
+    id: 'high',
+    label: 'High',
+    description: 'Thinks longest; for multi-table or tricky questions.',
+  },
+]
+
+/**
+ * The effort a request to `model` sends: none for models that reject it (Haiku 4.5, unknown and
+ * local models), and medium for 'auto' until auto effort lands (F-ASK-18).
+ */
+export function requestEffort(model: string, effort: Effort): RequestEffort | null {
+  if (!findModel(model)?.supportsEffort) return null
+  return effort === 'auto' ? 'medium' : effort
 }

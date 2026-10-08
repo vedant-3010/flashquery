@@ -24,7 +24,7 @@ test.describe('J1: first run without a key (F-SHELL-02, F-AI-03)', () => {
     await page.goto('/app/')
     await expect(page.getByRole('heading', { name: 'Ask your data anything' })).toBeVisible()
     await expect(page.getByText('Your files never leave this browser.')).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Demo' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Demo', exact: true })).toBeVisible()
 
     await page.getByRole('button', { name: 'Try sample data (1M rows)' }).click()
     const suggestions = page.getByRole('list', { name: 'Suggested questions' })
