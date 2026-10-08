@@ -1182,6 +1182,9 @@ named "Voice input (unavailable)" where on-device recognition is missing, and pr
     ECharts' level colour mapping didn't apply to one-level treemaps.
   - **Palettes:** flashQuery (violet-led, the new default), Tol bright, Okabe-Ito (darkened on white)
     and Mono. Chosen per chart, per dashboard, or as the default (settings v7).
+  - **Keeping choices:** a chart's own colors and annotations carry through re-fitting its columns,
+    switching type and re-running a dashboard tile (`keepChoices` in `select.ts`). Before this,
+    a tile edit or refresh reset them to the default.
   - **Colour-blind safety, tested:** `src/lib/colorVision.ts` simulates protan, deutan and tritan
     vision (Machado 2009) and measures CIE76 ΔE. Every palette keeps each pair ≥ 6 apart (Tol's own
     floor); the default keeps ≥ 12 (13.7 at worst). The flashQuery colours came from a search under

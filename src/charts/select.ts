@@ -53,7 +53,13 @@ import {
   type PreferredColumns,
   type SpecContext,
 } from '@/charts/build/common'
-import { CHART_TYPE_LABELS, ChartTypeSchema, type ChartSpec, type ChartType } from '@/charts/spec'
+import {
+  ANNOTATABLE,
+  CHART_TYPE_LABELS,
+  ChartTypeSchema,
+  type ChartSpec,
+  type ChartType,
+} from '@/charts/spec'
 import { humanizeName } from '@/lib/format'
 
 // Chart choice (F-VIZ-01, docs/PRD.md §6): the single source of truth. `buildSpec` makes one chart
@@ -406,6 +412,19 @@ export function selectFor(
   }
 }
 
+/**
+ * The user's own choices on a chart, kept through re-fits, type switches and dashboard re-runs: its
+ * colors (F-VIZ-12) and, where the new type takes them, its annotations (F-VIZ-08).
+ */
+export function keepChoices(from: ChartSpec, to: ChartSpec): ChartSpec {
+  const { palette, annotations } = from
+  return {
+    ...to,
+    ...(palette ? { palette } : {}),
+    ...(annotations && ANNOTATABLE.has(to.type) ? { annotations } : {}),
+  }
+}
+
 export interface ChartChoice {
   type: ChartType
   spec: ChartSpec | null
@@ -433,7 +452,11 @@ export function chartChoices(
       const reason = built.reason
       return { type, spec: null, reason: reason.charAt(0).toUpperCase() + reason.slice(1) }
     }
-    return { type, spec: { ...built.spec, format: current.format }, reason: null }
+    return {
+      type,
+      spec: keepChoices(current, { ...built.spec, format: current.format }),
+      reason: null,
+    }
   })
 }
 
@@ -449,13 +472,13 @@ export function respec(
   if (!built.ok) return built
   return {
     ok: true,
-    spec: {
+    spec: keepChoices(current, {
       ...built.spec,
       sort: current.sort,
       logScale: current.logScale,
       labels: current.labels,
       stacked: built.spec.type === 'area' ? current.stacked : built.spec.stacked,
-    },
+    }),
   }
 }
 

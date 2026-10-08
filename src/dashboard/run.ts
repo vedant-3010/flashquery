@@ -1,6 +1,6 @@
 import type { ChartHint } from '@/ai/schemas'
 import { analyze } from '@/charts/classify'
-import { respec, selectFor } from '@/charts/select'
+import { keepChoices, respec, selectFor } from '@/charts/select'
 import type { ChartSpec } from '@/charts/spec'
 import type { DatasetRef, Snapshot, TileType } from '@/dashboard/schema'
 import { loadChartData, readChartRows } from '@/engine/chartData'
@@ -131,7 +131,9 @@ export async function runTile(runner: SqlRunner, input: TileRunInput): Promise<T
             context,
           )
         : null
-    const spec = kept?.ok ? kept.spec : selectFor(shape, { ...context, hint: input.hint })
+    // The chart the user chose, while it still fits; else a fresh pick that keeps their colors.
+    const fresh = () => selectFor(shape, { ...context, hint: input.hint })
+    const spec = kept?.ok ? kept.spec : input.spec ? keepChoices(input.spec, fresh()) : fresh()
     const data = await loadChartData(runner, result, spec, rows, signal)
     return {
       ...base,

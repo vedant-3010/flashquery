@@ -617,3 +617,34 @@ describe('chart switcher (F-VIZ-03)', () => {
     expect(respec(s, bar, { x: 'cost' }).ok).toBe(true)
   })
 })
+
+describe('keeping the user’s choices (F-VIZ-12, F-VIZ-08)', () => {
+  const regionRows = zip(['A', 'B', 'C'], [3, 1, 2], [9, 8, 7])
+  const columns = [col('region', 'text'), col('revenue', 'number'), col('orders', 'integer')]
+  const shape = analyze(columns, regionRows, 3)
+  const auto = selectChart(input(columns, regionRows))
+  const bar = chartChoices(shape, auto).find((choice) => choice.type === 'bar')?.spec ?? auto
+  const chosen: ChartSpec = {
+    ...bar,
+    palette: 'mono',
+    annotations: { extremes: false, average: true, target: null },
+  }
+
+  it('re-fitting the columns keeps the colors and the annotations', () => {
+    const refit = respec(shape, chosen, { x: 'region', y: ['orders'] })
+    expect(refit.ok && refit.spec).toMatchObject({
+      y: ['orders'],
+      palette: 'mono',
+      annotations: { average: true },
+    })
+  })
+
+  it('switching type keeps the colors, and annotations where the type takes them', () => {
+    const choices = chartChoices(shape, chosen)
+    const donut = choices.find((choice) => choice.type === 'donut')?.spec
+    const hbar = choices.find((choice) => choice.type === 'hbar')?.spec
+    expect(hbar).toMatchObject({ palette: 'mono', annotations: { average: true } })
+    expect(donut?.palette).toBe('mono')
+    expect(donut).not.toHaveProperty('annotations')
+  })
+})
