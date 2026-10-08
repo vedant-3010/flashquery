@@ -104,6 +104,20 @@ describe('runTile', () => {
     expect(changed.spec?.type).toBe('kpi')
   })
 
+  it('keeps the tile’s own colors through re-runs, and when the chart is re-picked', async () => {
+    const first = await runTile(engine, { ...base, sql: BY_REGION, datasets: [sales] })
+    const mono = first.spec && { ...first.spec, palette: 'mono' as const }
+    const rerun = await runTile(engine, { ...base, sql: BY_REGION, spec: mono, datasets: [sales] })
+    expect(rerun.spec?.palette).toBe('mono')
+    const repicked = await runTile(engine, {
+      ...base,
+      sql: 'SELECT round(sum(revenue), 2) AS total FROM global_sales',
+      spec: mono,
+      datasets: [sales],
+    })
+    expect(repicked.spec).toMatchObject({ type: 'kpi', palette: 'mono' })
+  })
+
   it('snapshots table tiles as rows', async () => {
     const tile = await runTile(engine, {
       ...base,

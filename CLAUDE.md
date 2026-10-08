@@ -86,7 +86,8 @@ src/
                 chartData, filters (dashboard filter views + AST table rewrite)
   ai/           models, providers, prompts/, schemas, context, pipeline, dashboard, fixtures/  (no React/DOM)
   dashboard/    schema (Zod), layout (placement), run (guarded, filtered tile runs)  (no React/DOM)
-  charts/       classify, select (chart choice), shape (data → series), toOption (→ ECharts option), theme  (pure)
+  charts/       classify, select (rules; builders in build/), shape + shapeMore (data → series), toOption
+                (→ ECharts option; builders in options/), theme (palettes)  (pure)
   workers/      *.worker.ts (Comlink wiring only) + clients.ts (typed main-thread clients)
   stores/       zustand stores      lib/  format, errors, theme, ids, idb      types/  shared types
   platform/     (v2) the only code that talks to Supabase: client, auth, cloud dashboards, sharing
@@ -201,8 +202,12 @@ e2e/ (Playwright)     scripts/ (sample + fixture generators, record-demo, record
   before the call, never after.
 - The CSP's `connect-src` allows `http://localhost:*` and `http://127.0.0.1:*` for local model servers
   (F-AI-06, D85) and nothing else beyond the named hosts. Never widen it to `https:` (D86).
-- Settings are v6 (v5: local server, kept files; v6: effort). A new saved field needs a migration in
-  `SETTINGS_RECORD`.
+- Settings are v7 (v5: local server, kept files; v6: effort; v7: chart palette). A new saved field
+  needs a migration in `SETTINGS_RECORD`.
+- Chart palettes (`src/charts/theme.ts`) must pass `src/lib/contrast.test.ts` (marks ≥ 3:1) and
+  `src/lib/colorVision.test.ts` (each pair ≥ 6 ΔE under protan/deutan/tritan; the default ≥ 12).
+- Dropdowns and popovers that can grow long cap their height at Radix's
+  `--radix-*-content-available-height`, or they run off short screens (D111).
 - Voice input (`src/features/ask/speech.ts`): never call `SpeechRecognition.available()` until the mic
   is pressed. Playwright's Chromium has the API but crashes the tab on that call (real Chrome answers).
   e2e uses a fake on-device recognizer (`e2e/voice.spec.ts`); don't click the mic without one.

@@ -1,5 +1,5 @@
 import { z } from '@/lib/zod'
-import { ChartSpecSchema } from '@/charts/spec'
+import { ChartPaletteSchema, ChartSpecSchema } from '@/charts/spec'
 import { DashboardFilterSchema } from '@/engine/filters'
 import { CellValueSchema, ColumnMetaSchema } from '@/engine/types'
 
@@ -36,7 +36,7 @@ export const SnapshotSchema = z.object({
   columns: z.array(ColumnMetaSchema),
   rows: z.array(z.array(CellValueSchema)).max(MAX_SNAPSHOT_ROWS),
   rowCount: z.number(),
-  sampling: z.enum(['none', 'sample', 'step', 'bins', 'head']),
+  sampling: z.enum(['none', 'sample', 'step', 'bins', 'quantiles', 'head']),
   at: z.number(),
   /** Taken with the dashboard's filters applied. */
   filtered: z.boolean(),
@@ -67,6 +67,8 @@ export const DashboardSchema = z.object({
   name: z.string().min(1).max(100),
   tiles: z.array(DashboardTileSchema).max(MAX_TILES),
   filters: z.array(DashboardFilterSchema).max(4),
+  /** Colors for its charts (F-VIZ-12); absent: the default in Settings. */
+  palette: ChartPaletteSchema.optional(),
   createdAt: z.number(),
   updatedAt: z.number(),
 })

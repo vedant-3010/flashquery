@@ -16,6 +16,15 @@ export const ChartTypeSchema = z.enum([
   'donut',
   'heatmap',
   'table',
+  // v2 (F-VIZ-09)
+  'stacked_100',
+  'combo',
+  'waterfall',
+  'funnel',
+  'treemap',
+  'boxplot',
+  'sankey',
+  'calendar',
 ])
 export type ChartType = z.infer<typeof ChartTypeSchema>
 
@@ -32,7 +41,32 @@ export const CHART_TYPE_LABELS: Record<ChartType, string> = {
   donut: 'Donut',
   heatmap: 'Heatmap',
   table: 'Table',
+  stacked_100: '100% stacked bar',
+  combo: 'Bar and line',
+  waterfall: 'Waterfall',
+  funnel: 'Funnel',
+  treemap: 'Treemap',
+  boxplot: 'Box plot',
+  sankey: 'Sankey',
+  calendar: 'Calendar',
 }
+
+/** The chart switcher's sections (F-VIZ-03), by what a chart is for. */
+export const CHART_GROUPS: { label: string; types: ChartType[] }[] = [
+  { label: 'Numbers', types: ['kpi'] },
+  {
+    label: 'Compare',
+    types: ['bar', 'hbar', 'grouped_bar', 'stacked_bar', 'stacked_100', 'combo', 'waterfall'],
+  },
+  { label: 'Over time', types: ['line', 'area', 'calendar'] },
+  { label: 'Parts of a whole', types: ['donut', 'treemap', 'funnel', 'sankey'] },
+  { label: 'Distribution', types: ['histogram', 'boxplot', 'scatter', 'heatmap'] },
+  { label: 'Rows', types: ['table'] },
+]
+
+/** Chart colors (F-VIZ-12): set per chart, per dashboard, or as the default in Settings. */
+export const ChartPaletteSchema = z.enum(['flashquery', 'tol', 'okabe', 'mono'])
+export type ChartPalette = z.infer<typeof ChartPaletteSchema>
 
 export const ValueFormatSchema = z.enum(['number', 'percent', 'currency'])
 export type ValueFormat = z.infer<typeof ValueFormatSchema>
@@ -80,6 +114,10 @@ export const ChartSpecSchema = z.object({
     /** ISO 4217 code when format.y is 'currency'. */
     currency: z.string().nullable(),
   }),
+  /** Bar and line (combo): how the line's values read, on its own axis. */
+  format2: z.object({ y: ValueFormatSchema, currency: z.string().nullable() }).optional(),
+  /** This chart's colors; absent: the dashboard's, else the default in Settings. */
+  palette: ChartPaletteSchema.optional(),
   title: z.string(),
   /** Why this chart, in plain English (F-EXPL-03). */
   reason: z.string(),

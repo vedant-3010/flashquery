@@ -1,6 +1,7 @@
 import { isAdditiveName } from '@/charts/classify'
 import { prepare } from '@/charts/shape'
-import { LIGHT_THEME } from '@/charts/theme'
+import type { ChartPalette } from '@/charts/spec'
+import { chartTheme } from '@/charts/theme'
 import { describeChart, toOption } from '@/charts/toOption'
 import { describeFilter } from '@/dashboard/describeFilter'
 import { dashboardHtml, tileSize, type RenderedTile } from '@/dashboard/exportHtml'
@@ -12,10 +13,26 @@ import { formatCell, formatMoment, formatValue } from '@/lib/format'
 // renderer, server-side style, no DOM) into the standalone HTML of dashboard/exportHtml.ts.
 
 const TABLE_ROWS = 50
+
+/** A KPI with a trend (F-VIZ-10): "▲ 8% vs the period before", or null. */
+function changeText(
+  value: number | null,
+  previous: number | null | undefined,
+  locale: string,
+): string | null {
+  if (value === null || previous === null || previous === undefined || previous === 0) return null
+  const ratio = (value - previous) / Math.abs(previous)
+  const size = formatValue(Math.abs(ratio), { y: 'percent', currency: null }, locale)
+  return `${ratio > 0 ? '▲' : ratio < 0 ? '▼' : '='} ${size} vs the period before`
+}
 /** Room for the tile's title and note around the chart. */
 const CHROME_HEIGHT = 58
 
-async function renderTile(tile: DashboardTile, locale: string): Promise<RenderedTile> {
+async function renderTile(
+  tile: DashboardTile,
+  locale: string,
+  palette: ChartPalette,
+): Promise<RenderedTile> {
   const base = { title: tile.title, layout: tile.layout }
   if (tile.type === 'text')
     return { ...base, body: { kind: 'text', markdown: tile.text ?? '' }, note: null }
@@ -62,11 +79,13 @@ async function renderTile(tile: DashboardTile, locale: string): Promise<Rendered
           // One KPI: the tile title already says what it is (as in the app).
           label: prepared.items.length === 1 ? '' : item.label,
           value: formatValue(item.value, spec.format, locale, { compact: true }),
+          change: changeText(item.value, item.previous, locale),
         })),
       },
     }
   }
-  const option = toOption(spec, prepared, { theme: LIGHT_THEME, locale, animation: false })
+  const theme = chartTheme('light', spec.palette ?? palette)
+  const option = toOption(spec, prepared, { theme, locale, animation: false })
   if (!option) return table()
   const { echarts } = await import('@/features/charts/echarts')
   const size = tileSize(tile.layout)
@@ -96,11 +115,12 @@ async function renderTile(tile: DashboardTile, locale: string): Promise<Rendered
 export async function renderDashboardHtml(
   dashboard: Dashboard,
   locale: string,
+  palette: ChartPalette,
 ): Promise<{ fileName: string; html: string }> {
   const tiles = [...dashboard.tiles].sort(
     (a, b) => a.layout.y - b.layout.y || a.layout.x - b.layout.x,
   )
-  const rendered = await Promise.all(tiles.map((tile) => renderTile(tile, locale)))
+  const rendered = await Promise.all(tiles.map((tile) => renderTile(tile, locale, palette)))
   const html = dashboardHtml({
     title: dashboard.name,
     tiles: rendered,

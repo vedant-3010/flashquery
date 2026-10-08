@@ -21,7 +21,8 @@ paths:
 
 ## Charts
 - `src/charts/select.ts` is the single source of truth: `selectChart({ columns, rows, rowCount, question,
-  hint, title, currency }) → ChartSpec` with a human-readable `reason` (column classes in `classify.ts`).
+  hint, title, currency }) → ChartSpec` with a human-readable `reason` (column classes in `classify.ts`;
+  one builder per type in `src/charts/build/`: `basic.ts` for v1, `more.ts` for v2, D111).
   Rules table in `docs/PRD.md` §6, refinements in D44. Pure; table-driven unit tests. `buildSpec`,
   `chartChoices` and `respec` power the switcher (F-VIZ-03) and the settings popover (F-VIZ-06).
 - An LLM `chartHint` is used only if it is compatible with the result shape; otherwise fall back to the rules
@@ -36,7 +37,10 @@ paths:
 - Above 5,000 points: aggregate in SQL first; lines use `sampling: 'lttb'`; scatter uses `large: true`.
 - Numbers via `src/lib/format.ts`: Intl, compact notation, user-selectable locale (incl. `en-IN`
   lakh/crore grouping), currency from column metadata or settings.
-- Colour-blind-safe categorical palette; never encode meaning by colour alone.
+- Colour-blind-safe categorical palette; never encode meaning by colour alone. Palettes live in
+  `src/charts/theme.ts` (per chart, per dashboard, default in Settings) and are tested for contrast and
+  for colour vision (`src/lib/colorVision.test.ts`). Option builders share one style in
+  `src/charts/options/common.ts` (tooltips via `tooltipRow`, which escapes data).
 
 ## Grid
 - TanStack Table in manual mode (`manualSorting`, `manualFiltering`, `manualPagination`) + TanStack Virtual

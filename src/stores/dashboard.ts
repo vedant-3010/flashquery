@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import type { ChartPalette } from '@/charts/spec'
 import {
   DEFAULT_SIZES,
   moveTile as moveInLayout,
@@ -48,6 +49,8 @@ interface DashboardState {
   status: Record<string, TileStatus>
   createDashboard: (name?: string, tiles?: DashboardTile[]) => string
   renameDashboard: (id: string, name: string) => void
+  /** Colors for the dashboard's charts (F-VIZ-12); null: the default in Settings. */
+  setPalette: (id: string, palette: ChartPalette | null) => void
   deleteDashboard: (id: string) => void
   setActive: (id: string) => void
   /** The active dashboard's id, creating "My dashboard" when there is none. */
@@ -124,6 +127,9 @@ export const useDashboardStore = create<DashboardState>()((set, get) => {
     renameDashboard: (id, name) => {
       if (name.trim()) patchDashboard(id, (d) => ({ ...d, name: name.trim().slice(0, 100) }))
     },
+
+    setPalette: (id, palette) =>
+      patchDashboard(id, ({ palette: _drop, ...d }) => (palette ? { ...d, palette } : d)),
 
     deleteDashboard: (id) =>
       set((state) => {

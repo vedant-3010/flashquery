@@ -1,7 +1,8 @@
 // @vitest-environment node
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { DARK_THEME, LIGHT_THEME } from '@/charts/theme'
+import { ChartPaletteSchema } from '@/charts/spec'
+import { chartTheme, DARK_THEME, LIGHT_THEME } from '@/charts/theme'
 import { contrast } from './contrast'
 
 // F-A11Y-02: WCAG AA contrast in both themes, checked on the real tokens. Text needs 4.5:1; chart
@@ -46,6 +47,16 @@ describe.each([
     expect(contrast(chart.muted, chart.background)).toBeGreaterThanOrEqual(4.5)
     for (const color of [...chart.palette, chart.other]) {
       expect(contrast(color, chart.background), color).toBeGreaterThanOrEqual(3)
+    }
+  })
+})
+
+describe.each(ChartPaletteSchema.options)('%s palette (F-VIZ-12)', (palette) => {
+  it.each(['light', 'dark'] as const)('every mark is at least 3:1 on the %s card', (mode) => {
+    const theme = chartTheme(mode, palette)
+    const marks = [...theme.palette, theme.other, theme.increase, theme.decrease]
+    for (const color of marks) {
+      expect(contrast(color, theme.background), color).toBeGreaterThanOrEqual(3)
     }
   })
 })

@@ -1,459 +1,18 @@
 import type { EChartsOption } from 'echarts'
-import { describeAnnotations, seriesMarks } from '@/charts/annotations'
-import { OTHER, type Prepared } from '@/charts/shape'
-import type { ChartSpec } from '@/charts/spec'
-import { FONT_FAMILY, SYMBOLS, type ChartTheme } from '@/charts/theme'
-import { CHART_TYPE_LABELS } from '@/charts/spec'
-import { formatDateTick, formatNumber, formatValue, humanizeName } from '@/lib/format'
+import { describeAnnotations } from '@/charts/annotations'
+import { categoryOption, comboOption, waterfallOption } from '@/charts/options/bars'
+import type { OptionContext } from '@/charts/options/common'
+import { binsOption, boxplotOption, heatmapOption, scatterOption } from '@/charts/options/spread'
+import { calendarOption, timeOption } from '@/charts/options/time'
+import { funnelOption, pieOption, sankeyOption, treemapOption } from '@/charts/options/whole'
+import type { Prepared } from '@/charts/shape'
+import { CHART_TYPE_LABELS, type ChartSpec } from '@/charts/spec'
+import { formatValue } from '@/lib/format'
 
-// (spec, prepared data, theme, locale) → ECharts option (ui rules). Pure; snapshot-tested.
-// Category names and values come from the user's data: they're drawn on canvas, and the only HTML
-// tooltips (scatter, heatmap) escape them.
+// (spec, prepared data, theme, locale) → ECharts option (ui rules). Pure; snapshot-tested. The
+// option builders live in src/charts/options/, by family; the shared style is options/common.ts.
 
-export interface OptionContext {
-  theme: ChartTheme
-  locale: string
-  /** False when the user prefers reduced motion. */
-  animation: boolean
-}
-
-type Param = { value?: unknown; name?: unknown; seriesName?: unknown; marker?: unknown }
-
-const MAX_LABEL = 22
-const PERCENT = { y: 'percent' as const, currency: null }
-const truncate = (text: string, max = MAX_LABEL) =>
-  text.length > max ? `${text.slice(0, max - 1)}…` : text
-
-export function escapeHtml(text: string): string {
-  return text.replace(
-    /[&<>"']/g,
-    (char) =>
-      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char] ?? char,
-  )
-}
-
-const numberOf = (value: unknown): number | null =>
-  typeof value === 'number' && Number.isFinite(value) ? value : null
-
-function base(ctx: OptionContext, legend: boolean, decals: boolean): EChartsOption {
-  const { theme } = ctx
-  return {
-    animation: ctx.animation,
-    useUTC: true,
-    color: theme.palette,
-    backgroundColor: 'transparent',
-    textStyle: { color: theme.text, fontFamily: FONT_FAMILY, fontSize: 12 },
-    // Decal patterns tell series apart without color; ECharts' own aria text is replaced by ours.
-    aria: { enabled: decals, label: { enabled: false }, decal: { show: decals } },
-    tooltip: {
-      confine: true,
-      backgroundColor: theme.tooltipBackground,
-      borderColor: theme.tooltipBorder,
-      textStyle: { color: theme.text, fontSize: 12, fontFamily: FONT_FAMILY },
-    },
-    legend: legend
-      ? {
-          type: 'scroll',
-          bottom: 0,
-          icon: 'roundRect',
-          textStyle: { color: theme.muted },
-          pageTextStyle: { color: theme.muted },
-          formatter: (name: string) => truncate(name),
-        }
-      : { show: false },
-    // Axis labels and names stay inside the chart (ECharts 6 outer bounds; replaces containLabel).
-    grid: {
-      left: 12,
-      right: 24,
-      top: 32,
-      bottom: legend ? 44 : 12,
-      outerBoundsMode: 'same',
-      outerBoundsContain: 'all',
-    },
-  }
-}
-
-/** 1,234 → 2,000; 630,000 → 700,000: a round axis end just past `value`. */
-function niceCeil(value: number): number {
-  if (value <= 0) return 0
-  const magnitude = 10 ** Math.floor(Math.log10(value))
-  return Math.ceil(value / magnitude) * magnitude
-}
-
-/** A target line outside the data (F-VIZ-08) stretches the axis so the line stays visible. */
-function targetRange(spec: ChartSpec, values: number[]): { max?: number; min?: number } {
-  const target = spec.annotations?.target ?? null
-  if (target === null || values.length === 0) return {}
-  const max = Math.max(...values)
-  const min = Math.min(...values)
-  if (target > max) return { max: niceCeil(target * 1.05) }
-  if (target < min && target < 0) return { min: -niceCeil(-target * 1.05) }
-  return {}
-}
-
-function valueAxis(
-  spec: ChartSpec,
-  ctx: OptionContext,
-  name: string | null,
-  values: number[],
-  horizontal = false,
-) {
-  const log = spec.logScale && values.length > 0 && values.every((value) => value > 0)
-  return {
-    type: log ? ('log' as const) : ('value' as const),
-    ...(log ? {} : targetRange(spec, values)),
-    name: name ?? undefined,
-    // Vertical axes carry their title on top; horizontal ones below, centered.
-    ...(horizontal
-      ? { nameLocation: 'middle' as const, nameGap: 28, nameTextStyle: { color: ctx.theme.muted } }
-      : { nameTextStyle: { color: ctx.theme.muted, align: 'left' as const } }),
-    axisLabel: {
-      color: ctx.theme.muted,
-      formatter: (value: number) => formatValue(value, spec.format, ctx.locale, { compact: true }),
-    },
-    splitLine: { lineStyle: { color: ctx.theme.grid } },
-  }
-}
-
-function categoryAxis(
-  ctx: OptionContext,
-  data: string[],
-  name: string | null,
-  horizontal: boolean,
-) {
-  return {
-    type: 'category' as const,
-    data,
-    name: name ?? undefined,
-    nameLocation: 'middle' as const,
-    nameGap: horizontal ? 0 : 28,
-    nameTextStyle: { color: ctx.theme.muted },
-    inverse: horizontal,
-    axisTick: { show: false },
-    axisLine: { lineStyle: { color: ctx.theme.axis } },
-    axisLabel: {
-      color: ctx.theme.muted,
-      hideOverlap: !horizontal,
-      interval: horizontal ? 0 : ('auto' as const),
-      formatter: (value: string) => truncate(value, horizontal ? 28 : 16),
-    },
-  }
-}
-
-function labelOf(spec: ChartSpec, ctx: OptionContext, position: 'top' | 'right' | 'inside') {
-  return spec.labels
-    ? {
-        show: true,
-        position,
-        color: position === 'inside' ? '#ffffff' : ctx.theme.text,
-        formatter: (params: Param | Param[]) => {
-          const param = (Array.isArray(params) ? params[0] : params) ?? {}
-          const value = Array.isArray(param.value) ? param.value.at(-1) : param.value
-          return formatValue(numberOf(value), spec.format, ctx.locale, { compact: true })
-        },
-      }
-    : { show: false }
-}
-
-const yName = (spec: ChartSpec) =>
-  spec.y.length === 1 && spec.y[0] ? humanizeName(spec.y[0]) : null
-const xName = (spec: ChartSpec) => (spec.x ? humanizeName(spec.x) : null)
-const valueFormatter = (spec: ChartSpec, ctx: OptionContext) => (value: unknown) =>
-  formatValue(numberOf(value), spec.format, ctx.locale)
-
-function categoryOption(
-  spec: ChartSpec,
-  prepared: Extract<Prepared, { kind: 'category' }>,
-  ctx: OptionContext,
-): EChartsOption {
-  const horizontal = spec.type === 'hbar'
-  const multi = prepared.series.length > 1
-  const values = prepared.series.flatMap((s) => s.values.filter((v): v is number => v !== null))
-  const cats = categoryAxis(ctx, prepared.categories, horizontal ? null : xName(spec), horizontal)
-  const vals = valueAxis(spec, ctx, yName(spec), values, horizontal)
-  return {
-    ...base(ctx, multi, multi),
-    tooltip: {
-      ...base(ctx, multi, multi).tooltip,
-      trigger: 'axis',
-      axisPointer: { type: 'shadow' },
-      valueFormatter: valueFormatter(spec, ctx),
-    },
-    xAxis: horizontal ? vals : cats,
-    yAxis: horizontal ? cats : vals,
-    series: prepared.series.map((s, i) => ({
-      type: 'bar' as const,
-      name: s.name,
-      data: s.values,
-      stack: spec.stacked ? 'total' : undefined,
-      barMaxWidth: 48,
-      emphasis: { focus: 'series' as const },
-      itemStyle: s.other ? { color: ctx.theme.other } : undefined,
-      label: labelOf(spec, ctx, spec.stacked ? 'inside' : horizontal ? 'right' : 'top'),
-      ...seriesMarks(spec, ctx, { horizontal, first: i === 0 }),
-    })),
-  }
-}
-
-function timeOption(
-  spec: ChartSpec,
-  prepared: Extract<Prepared, { kind: 'time' }>,
-  ctx: OptionContext,
-): EChartsOption {
-  const multi = prepared.series.length > 1
-  const values = prepared.series.flatMap((s) =>
-    s.points.map(([, y]) => y).filter((y): y is number => y !== null),
-  )
-  const xAxis =
-    prepared.axis === 'time'
-      ? {
-          type: 'time' as const,
-          name: xName(spec) ?? undefined,
-          nameLocation: 'middle' as const,
-          nameGap: 28,
-          nameTextStyle: { color: ctx.theme.muted },
-          axisLine: { lineStyle: { color: ctx.theme.axis } },
-          splitLine: { show: false },
-          axisLabel: {
-            color: ctx.theme.muted,
-            hideOverlap: true,
-            formatter: (value: number) => formatDateTick(value, ctx.locale, prepared.spanMs),
-          },
-        }
-      : { ...categoryAxis(ctx, prepared.categories, xName(spec), false), boundaryGap: false }
-  return {
-    ...base(ctx, multi, false),
-    tooltip: {
-      ...base(ctx, multi, false).tooltip,
-      trigger: 'axis',
-      valueFormatter: valueFormatter(spec, ctx),
-    },
-    xAxis,
-    yAxis: valueAxis(spec, ctx, yName(spec), values),
-    series: prepared.series.map((s, i) => {
-      const data =
-        prepared.axis === 'time'
-          ? s.points
-          : (() => {
-              const byX = new Map(s.points.map(([x, y]) => [String(x), y]))
-              return prepared.categories.map((x) => byX.get(x) ?? null)
-            })()
-      return {
-        type: 'line' as const,
-        name: s.name,
-        data,
-        showSymbol: s.points.length <= 60,
-        symbol: SYMBOLS[i % SYMBOLS.length],
-        symbolSize: 6,
-        sampling: 'lttb' as const,
-        connectNulls: false,
-        stack: spec.stacked ? 'total' : undefined,
-        emphasis: { focus: 'series' as const },
-        lineStyle: { width: 2, type: s.other ? ('dashed' as const) : ('solid' as const) },
-        itemStyle: s.other ? { color: ctx.theme.other } : undefined,
-        areaStyle: spec.type === 'area' ? { opacity: spec.stacked ? 0.7 : 0.25 } : undefined,
-        label: labelOf(spec, ctx, 'top'),
-        ...seriesMarks(spec, ctx, { horizontal: false, first: i === 0 }),
-      }
-    }),
-  }
-}
-
-function pieOption(
-  spec: ChartSpec,
-  prepared: Extract<Prepared, { kind: 'pie' }>,
-  ctx: OptionContext,
-): EChartsOption {
-  return {
-    ...base(ctx, true, true),
-    tooltip: {
-      ...base(ctx, true, true).tooltip,
-      trigger: 'item',
-      valueFormatter: valueFormatter(spec, ctx),
-    },
-    series: [
-      {
-        type: 'pie',
-        name: yName(spec) ?? '',
-        radius: ['45%', '70%'],
-        center: ['50%', '46%'],
-        avoidLabelOverlap: true,
-        itemStyle: { borderColor: ctx.theme.background, borderWidth: 2 },
-        label: {
-          color: ctx.theme.text,
-          formatter: (param: Param & { percent?: number }) =>
-            `${truncate(String(param.name ?? ''), 18)}\n${formatValue((param.percent ?? 0) / 100, PERCENT, ctx.locale)}`,
-        },
-        labelLine: { lineStyle: { color: ctx.theme.axis } },
-        data: prepared.slices.map((slice) => ({
-          name: slice.name,
-          value: slice.value,
-          itemStyle: slice.name === OTHER ? { color: ctx.theme.other } : undefined,
-        })),
-      },
-    ],
-  }
-}
-
-function sizeScale(range: [number, number] | null) {
-  if (!range) return 7
-  const [min, max] = range
-  return (value: number[]) => {
-    const v = value[2]
-    if (typeof v !== 'number' || max === min) return 10
-    return 6 + 24 * Math.sqrt((v - min) / (max - min))
-  }
-}
-
-function scatterOption(
-  spec: ChartSpec,
-  prepared: Extract<Prepared, { kind: 'scatter' }>,
-  ctx: OptionContext,
-): EChartsOption {
-  const multi = prepared.series.length > 1
-  const xs = prepared.series.flatMap((s) => s.points.map(([x]) => x))
-  const ys = prepared.series.flatMap((s) => s.points.map(([, y]) => y))
-  const xStyle = { y: 'number' as const, currency: null }
-  const size = spec.size ? humanizeName(spec.size) : null
-  return {
-    ...base(ctx, multi, false),
-    tooltip: {
-      ...base(ctx, multi, false).tooltip,
-      trigger: 'item',
-      formatter: (params: Param | Param[]) => {
-        const param = (Array.isArray(params) ? params[0] : params) ?? {}
-        const [x, y, z] = Array.isArray(param.value) ? (param.value as unknown[]) : []
-        const lines = [
-          multi ? `<b>${escapeHtml(String(param.seriesName ?? ''))}</b>` : null,
-          `${escapeHtml(xName(spec) ?? 'x')}: ${formatValue(numberOf(x), xStyle, ctx.locale)}`,
-          `${escapeHtml(yName(spec) ?? 'y')}: ${formatValue(numberOf(y), spec.format, ctx.locale)}`,
-          size ? `${escapeHtml(size)}: ${formatValue(numberOf(z), xStyle, ctx.locale)}` : null,
-        ]
-        return lines.filter(Boolean).join('<br/>')
-      },
-    },
-    xAxis: {
-      ...valueAxis({ ...spec, format: xStyle, logScale: false }, ctx, xName(spec), xs, true),
-      splitLine: { show: false },
-      scale: true,
-    },
-    yAxis: { ...valueAxis(spec, ctx, yName(spec), ys), scale: true },
-    series: prepared.series.map((s) => ({
-      type: 'scatter' as const,
-      name: s.name,
-      data: s.points,
-      symbolSize: sizeScale(prepared.sizeRange),
-      large: s.points.length > 2_000,
-      largeThreshold: 2_000,
-      // Points on the axis edges are drawn whole rather than cut in half.
-      clip: false,
-      itemStyle: { opacity: 0.75 },
-      emphasis: { focus: 'series' as const },
-    })),
-  }
-}
-
-function binsOption(
-  spec: ChartSpec,
-  prepared: Extract<Prepared, { kind: 'bins' }>,
-  ctx: OptionContext,
-): EChartsOption {
-  const edge = (value: number) => formatValue(value, spec.format, ctx.locale, { compact: true })
-  const counts = prepared.bins.map((bin) => bin.count)
-  const countStyle = { y: 'number' as const, currency: null }
-  return {
-    ...base(ctx, false, false),
-    tooltip: {
-      ...base(ctx, false, false).tooltip,
-      trigger: 'axis',
-      axisPointer: { type: 'shadow' },
-      valueFormatter: (value: unknown) => formatNumber(numberOf(value), ctx.locale),
-    },
-    xAxis: categoryAxis(
-      ctx,
-      prepared.bins.map((bin) => `${edge(bin.start)}–${edge(bin.end)}`),
-      yName(spec),
-      false,
-    ),
-    yAxis: valueAxis({ ...spec, format: countStyle }, ctx, 'Rows', counts),
-    series: [
-      {
-        type: 'bar',
-        name: 'Rows',
-        data: counts,
-        barCategoryGap: '4%',
-        label: labelOf({ ...spec, format: countStyle }, ctx, 'top'),
-      },
-    ],
-  }
-}
-
-function heatmapOption(
-  spec: ChartSpec,
-  prepared: Extract<Prepared, { kind: 'heatmap' }>,
-  ctx: OptionContext,
-): EChartsOption {
-  const compact = (value: unknown) =>
-    formatValue(numberOf(value), spec.format, ctx.locale, { compact: true })
-  return {
-    ...base(ctx, false, false),
-    grid: {
-      left: 12,
-      right: 24,
-      top: 32,
-      bottom: 56,
-      outerBoundsMode: 'same',
-      outerBoundsContain: 'all',
-    },
-    tooltip: {
-      ...base(ctx, false, false).tooltip,
-      trigger: 'item',
-      formatter: (params: Param | Param[]) => {
-        const param = (Array.isArray(params) ? params[0] : params) ?? {}
-        const [xi, yi, v] = Array.isArray(param.value) ? (param.value as unknown[]) : []
-        const x = prepared.xs[Number(xi)] ?? ''
-        const y = prepared.ys[Number(yi)] ?? ''
-        return `${escapeHtml(x)} × ${escapeHtml(y)}<br/><b>${formatValue(numberOf(v), spec.format, ctx.locale)}</b>`
-      },
-    },
-    xAxis: { ...categoryAxis(ctx, prepared.xs, xName(spec), false), splitArea: { show: true } },
-    yAxis: {
-      ...categoryAxis(ctx, prepared.ys, spec.series ? humanizeName(spec.series) : null, false),
-      nameLocation: 'end',
-      nameGap: 8,
-      splitArea: { show: true },
-    },
-    visualMap: {
-      min: prepared.min,
-      max: prepared.max,
-      calculable: true,
-      orient: 'horizontal',
-      left: 'center',
-      bottom: 0,
-      itemHeight: 120,
-      inRange: { color: ctx.theme.sequential },
-      textStyle: { color: ctx.theme.muted },
-      formatter: (value: unknown) => compact(value),
-    },
-    series: [
-      {
-        type: 'heatmap',
-        name: yName(spec) ?? '',
-        data: prepared.cells,
-        itemStyle: { borderColor: ctx.theme.background, borderWidth: 1 },
-        label: spec.labels
-          ? {
-              show: true,
-              color: '#ffffff',
-              formatter: (param: Param) =>
-                compact(Array.isArray(param.value) ? param.value[2] : null),
-            }
-          : { show: false },
-        emphasis: { itemStyle: { borderColor: ctx.theme.text, borderWidth: 1 } },
-      },
-    ],
-  }
-}
+export { escapeHtml, type OptionContext } from '@/charts/options/common'
 
 /** The ECharts option for a chart, or null for KPIs and tables (drawn by React). */
 export function toOption(
@@ -474,10 +33,34 @@ export function toOption(
       return binsOption(spec, prepared, ctx)
     case 'heatmap':
       return heatmapOption(spec, prepared, ctx)
+    case 'combo':
+      return comboOption(spec, prepared, ctx)
+    case 'waterfall':
+      return waterfallOption(spec, prepared, ctx)
+    case 'funnel':
+      return funnelOption(spec, prepared, ctx)
+    case 'treemap':
+      return treemapOption(spec, prepared, ctx)
+    case 'boxplot':
+      return boxplotOption(spec, prepared, ctx)
+    case 'sankey':
+      return sankeyOption(spec, prepared, ctx)
+    case 'calendar':
+      return calendarOption(spec, prepared, ctx)
     case 'kpi':
     case 'table':
       return null
   }
+}
+
+const PERCENT = { y: 'percent' as const, currency: null }
+
+/** "up 8%" / "down 3%" / "unchanged", for a KPI's trend. */
+function moved(value: number | null, previous: number | null | undefined, locale: string): string {
+  if (value === null || previous === null || previous === undefined || previous === 0) return ''
+  if (value === previous) return ' (unchanged)'
+  const ratio = (value - previous) / Math.abs(previous)
+  return ` (${ratio > 0 ? 'up' : 'down'} ${formatValue(Math.abs(ratio), PERCENT, locale)} from the period before)`
 }
 
 /** A one-sentence text alternative for the chart (aria-label; ui rules). */
@@ -522,8 +105,55 @@ export function describeChart(spec: ChartSpec, prepared: Prepared, locale: strin
       return `${kind}: ${spec.title}. ${prepared.bins.length} bins.`
     case 'heatmap':
       return `${kind}: ${spec.title}. ${prepared.xs.length} × ${prepared.ys.length} cells, from ${fmt(prepared.min)} to ${fmt(prepared.max)}.`
+    case 'combo': {
+      const top = prepared.categories
+        .map((name, i) => ({ name, value: prepared.bars.values[i] ?? null }))
+        .filter((pair): pair is { name: string; value: number } => pair.value !== null)
+        .sort((a, b) => b.value - a.value)[0]
+      return `${kind}: ${spec.title}. ${prepared.categories.length} categories; bars show ${prepared.bars.name.toLowerCase()}${top ? ` (highest ${top.name}, ${fmt(top.value)})` : ''}, the line ${prepared.line.name.toLowerCase()} on its own axis.`
+    }
+    case 'waterfall': {
+      const sorted = [...prepared.steps].sort((a, b) => b.value - a.value)
+      const up = sorted[0]
+      const down = sorted.at(-1)
+      return `${kind}: ${spec.title}. ${prepared.steps.length} steps adding up to ${fmt(prepared.total)}.${up && up.value > 0 ? ` Biggest rise ${up.name} (${fmt(up.value)}).` : ''}${down && down.value < 0 ? ` Biggest fall ${down.name} (${fmt(down.value)}).` : ''}`
+    }
+    case 'funnel':
+      return `${kind}: ${spec.title}. ${prepared.stages
+        .map((stage) => `${stage.name} ${fmt(stage.value)}`)
+        .join(', ')}.`
+    case 'treemap': {
+      const leaves = prepared.nodes
+        .flatMap((node) => node.children ?? [node])
+        .sort((a, b) => b.value - a.value)
+      const top = leaves
+        .slice(0, 3)
+        .map((leaf) => `${leaf.name} (${fmt(leaf.value)})`)
+        .join(', ')
+      return `${kind}: ${spec.title}. ${leaves.length} tiles${top ? `; largest ${top}` : ''}.`
+    }
+    case 'boxplot': {
+      const byMedian = [...prepared.groups].sort((a, b) => b.stats[2] - a.stats[2])
+      const high = byMedian[0]
+      const low = byMedian.at(-1)
+      return `${kind}: ${spec.title}. ${prepared.groups.length} groups${high && low ? `; medians from ${fmt(low.stats[2])} (${low.name}) to ${fmt(high.stats[2])} (${high.name})` : ''}.`
+    }
+    case 'sankey': {
+      const names = new Map(prepared.nodes.map((node) => [node.id, node.name]))
+      const top = [...prepared.links].sort((a, b) => b.value - a.value)[0]
+      return `${kind}: ${spec.title}. ${prepared.links.length} flows${top ? `; the largest is ${names.get(top.source) ?? ''} to ${names.get(top.target) ?? ''} (${fmt(top.value)})` : ''}.`
+    }
+    case 'calendar': {
+      const first = prepared.days[0]?.[0] ?? ''
+      const last = prepared.days.at(-1)?.[0] ?? ''
+      return `${kind}: ${spec.title}. ${prepared.days.length} days from ${first} to ${last}; values from ${fmt(prepared.min)} to ${fmt(prepared.max)}.`
+    }
     case 'kpi':
-      return prepared.items.map((item) => `${item.label}: ${fmt(item.value)}`).join('. ')
+      return prepared.items
+        .map(
+          (item) => `${item.label}: ${fmt(item.value)}${moved(item.value, item.previous, locale)}`,
+        )
+        .join('. ')
     case 'table':
       return spec.reason
   }

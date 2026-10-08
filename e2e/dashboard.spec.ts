@@ -317,3 +317,41 @@ test.describe('export as HTML and PDF (F-DASH-12)', () => {
     expect(printTab.url()).toMatch(/^blob:/)
   })
 })
+
+test.describe('chart colors on a dashboard (F-VIZ-12)', () => {
+  test('a tile keeps the colors picked for it: saved, exported, and after a reload', async ({
+    page,
+  }) => {
+    await page.goto('/app/')
+    await loadSales(page)
+    await generateDashboard(page)
+    const revenue = tile(page, 'Revenue by region')
+    await expect(revenue.getByRole('img')).toBeVisible()
+
+    await tileAction(page, 'Revenue by region', 'Edit…')
+    const sheet = page.getByRole('dialog', { name: 'Edit tile' })
+    await sheet.getByRole('button', { name: 'Chart settings' }).click()
+    await page.getByRole('combobox', { name: 'Colors' }).click()
+    await page.getByRole('option', { name: 'Mono' }).click()
+    await page.keyboard.press('Escape')
+    await expect(sheet.getByRole('button', { name: 'Save' })).toBeEnabled()
+    await sheet.getByRole('button', { name: 'Save' }).click()
+    await expect(sheet).toBeHidden()
+
+    // The export draws the tile with its own colors (Mono's darkest violet).
+    const exported = async () => {
+      await page.getByRole('button', { name: 'More dashboard actions' }).click()
+      const download = page.waitForEvent('download')
+      await page.getByRole('menuitem', { name: 'Download as HTML (standalone)' }).click()
+      return readFileSync(await (await download).path(), 'utf8').toLowerCase()
+    }
+    expect(await exported()).toContain('#4d2090')
+
+    // Saved with the tile: drawn in Mono after a reload too, from its snapshot.
+    await page.waitForTimeout(700)
+    await page.reload()
+    await page.getByRole('tab', { name: 'Dashboard' }).click()
+    await expect(revenue.getByRole('img')).toBeVisible()
+    expect(await exported()).toContain('#4d2090')
+  })
+})

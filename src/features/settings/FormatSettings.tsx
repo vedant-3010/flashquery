@@ -7,6 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { PaletteSelect } from '@/features/charts/PaletteSelect'
 import { formatCompact, formatValue } from '@/lib/format'
 import { useSettingsStore } from '@/stores/settings'
 
@@ -25,12 +26,13 @@ const LOCALES = [
 
 const CURRENCIES = ['USD', 'EUR', 'GBP', 'INR', 'JPY', 'CNY', 'AUD', 'CAD', 'CHF']
 
-/** Number format and currency for charts, KPIs, summaries and grids (F-VIZ-04). */
+/** Number format, currency and chart colors for charts, KPIs, summaries and grids (F-VIZ-04, F-VIZ-12). */
 export function FormatSettings() {
-  const { numberLocale, currency, locale } = useSettingsStore()
-  const { setNumberLocale, setCurrency } = useSettingsStore()
+  const { numberLocale, currency, locale, chartPalette } = useSettingsStore()
+  const { setNumberLocale, setCurrency, setChartPalette } = useSettingsStore()
   const localeId = useId()
   const currencyId = useId()
+  const paletteId = useId()
   const sample = 12_345_678.9
   const preview = [
     formatValue(sample, { y: currency ? 'currency' : 'number', currency }, locale),
@@ -78,6 +80,18 @@ export function FormatSettings() {
         </Select>
         <p className="text-xs text-muted-foreground">
           Applies to columns like revenue, price or cost in charts and KPIs. Preview: {preview}
+        </p>
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor={paletteId}>Chart colors</Label>
+        <PaletteSelect
+          id={paletteId}
+          value={chartPalette}
+          onChange={(palette) => palette && setChartPalette(palette)}
+        />
+        <p className="text-xs text-muted-foreground">
+          Every palette stays distinct with each kind of colour blindness. A dashboard or a single
+          chart can pick its own.
         </p>
       </div>
     </div>

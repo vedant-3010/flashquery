@@ -4,7 +4,7 @@ import { loadRecord, memoryStore } from '@/lib/idb'
 import { activeApiKey, SETTINGS_RECORD } from './settings'
 
 // Settings v5 (F-AI-06): a local OpenAI-compatible server needs a localhost URL and a model, no key.
-// Settings v6 (F-ASK-16): the planner's effort, chosen in the ask bar.
+// Settings v6 (F-ASK-16): the planner's effort, chosen in the ask bar. v7 (F-VIZ-12): chart colors.
 
 const keys = { anthropic: null, openai: null, local: null }
 const models = { anthropic: 'claude-sonnet-5', openai: 'gpt-6-sol', local: 'qwen2.5-coder:7b' }
@@ -33,6 +33,7 @@ describe('settings', () => {
       baseUrl: 'http://localhost:11434/v1',
       persistFiles: false,
       effort: 'medium',
+      chartPalette: 'flashquery',
     })
   })
 
@@ -52,7 +53,11 @@ describe('settings', () => {
       persistFiles: false,
     }
     const store = memoryStore({ settings: { version: 5, savedAt: 0, data: v5 } })
-    expect(await loadRecord(SETTINGS_RECORD, { store })).toEqual({ ...v5, effort: 'medium' })
+    expect(await loadRecord(SETTINGS_RECORD, { store })).toEqual({
+      ...v5,
+      effort: 'medium',
+      chartPalette: 'flashquery',
+    })
   })
 
   it('treats a local server as ready with a localhost URL and a model', () => {

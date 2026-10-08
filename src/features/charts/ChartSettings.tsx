@@ -1,5 +1,5 @@
 import { SlidersHorizontal } from 'lucide-react'
-import { useId, useState } from 'react'
+import { useContext, useId, useState } from 'react'
 import type { ResultShape } from '@/charts/classify'
 import { fieldOptions, respec, type PreferredColumns } from '@/charts/select'
 import { ANNOTATABLE, type ChartSpec } from '@/charts/spec'
@@ -15,10 +15,33 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { AnnotationSettings } from '@/features/charts/AnnotationSettings'
+import { DashboardPaletteContext } from '@/features/charts/chartPalette'
+import { PaletteSelect } from '@/features/charts/PaletteSelect'
+import { useSettingsStore } from '@/stores/settings'
 import { humanizeName } from '@/lib/format'
 
 const NONE = '__none__'
-const VALUE_AXIS = new Set(['bar', 'hbar', 'grouped_bar', 'stacked_bar', 'line', 'area', 'scatter'])
+const VALUE_AXIS = new Set([
+  'bar',
+  'hbar',
+  'grouped_bar',
+  'stacked_bar',
+  'line',
+  'area',
+  'scatter',
+  'combo',
+])
+/** What the x and series fields mean for each chart type, where it isn't "X axis" / "Series". */
+const FIELD_LABELS: Partial<Record<ChartSpec['type'], { x?: string; series?: string }>> = {
+  funnel: { x: 'Stages' },
+  waterfall: { x: 'Steps' },
+  boxplot: { x: 'Group by' },
+  treemap: { x: 'Tiles', series: 'Group by' },
+  sankey: { x: 'From', series: 'To' },
+  calendar: { x: 'Day' },
+  scatter: { series: 'Color by' },
+}
+const NO_SERIES_NONE = new Set(['heatmap', 'sankey'])
 const SORTABLE = new Set(['bar', 'hbar', 'grouped_bar', 'stacked_bar', 'donut'])
 
 interface ChartSettingsProps {
@@ -89,6 +112,10 @@ function Toggle({
 export function ChartSettings({ spec, shape, question, currency, onChange }: ChartSettingsProps) {
   const [error, setError] = useState<string | null>(null)
   const options = fieldOptions(spec.type, shape)
+  const labels = FIELD_LABELS[spec.type] ?? {}
+  const dashboardPalette = useContext(DashboardPaletteContext)
+  const defaultPalette = useSettingsStore((state) => state.chartPalette)
+  const paletteId = useId()
 
   const refit = (pref: PreferredColumns) => {
     const result = respec(
@@ -119,10 +146,18 @@ export function ChartSettings({ spec, shape, question, currency, onChange }: Cha
           Chart settings
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="grid w-72 gap-3">
+      <PopoverContent
+        align="start"
+        className="grid max-h-(--radix-popover-content-available-height) w-72 gap-3 overflow-y-auto"
+      >
         <p className="text-sm font-medium">Chart settings</p>
         {options.x.length > 0 && (
-          <Field label="X axis" value={spec.x} options={options.x} onChange={(x) => refit({ x })} />
+          <Field
+            label={labels.x ?? 'X axis'}
+            value={spec.x}
+            options={options.x}
+            onChange={(x) => refit({ x })}
+          />
         )}
         {options.y.length > 0 &&
           (options.multiY && !spec.series ? (
@@ -154,10 +189,10 @@ export function ChartSettings({ spec, shape, question, currency, onChange }: Cha
           ))}
         {options.series.length > 0 && (
           <Field
-            label={spec.type === 'scatter' ? 'Color by' : 'Series'}
+            label={labels.series ?? 'Series'}
             value={spec.series}
             options={options.series.filter((column) => column.name !== spec.x)}
-            allowNone={spec.type !== 'heatmap'}
+            allowNone={!NO_SERIES_NONE.has(spec.type)}
             onChange={(series) => refit({ series })}
           />
         )}
@@ -210,6 +245,24 @@ export function ChartSettings({ spec, shape, question, currency, onChange }: Cha
           />
         </div>
         {ANNOTATABLE.has(spec.type) && <AnnotationSettings spec={spec} onChange={onChange} />}
+        <div className="grid grid-cols-[4.5rem_1fr] items-center gap-2 border-t pt-3">
+          <Label htmlFor={paletteId} className="text-xs">
+            Colors
+          </Label>
+          <PaletteSelect
+            id={paletteId}
+            size="sm"
+            value={spec.palette ?? null}
+            auto={{
+              label: dashboardPalette ? 'Dashboard colors' : 'Default colors',
+              palette: dashboardPalette ?? defaultPalette,
+            }}
+            onChange={(palette) => {
+              const { palette: _drop, ...rest } = spec
+              onChange(palette ? { ...rest, palette } : rest)
+            }}
+          />
+        </div>
         {error && (
           <p role="alert" className="text-xs text-destructive">
             {error}

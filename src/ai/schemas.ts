@@ -25,7 +25,14 @@ export type RequestEffort = Exclude<Effort, 'auto'>
 export const ChartHintSchema = z
   .object({
     type: ChartTypeSchema.nullable().describe(
-      'Preferred chart type, or null to let the app choose.',
+      'Preferred chart type, or null to let the app choose. Besides the usual ones: ' +
+        "'stacked_100' for the mix of parts across groups; 'combo' for two measures on different " +
+        "scales (bars and a line); 'waterfall' for signed steps that add up to a total; 'funnel' " +
+        "for ordered stages that shrink; 'treemap' for a whole with many parts (or two nested " +
+        "categories); 'boxplot' for the spread of a measure within groups (raw rows, or columns " +
+        "low, q1, median, q3, high); 'sankey' for amounts flowing from one category to another; " +
+        "'calendar' for daily values over up to two years. A 'kpi' over a time series shows the " +
+        'latest value with its change and trend.',
     ),
     x: z.string().nullable().describe('Result column for the x axis / categories.'),
     y: z.array(z.string()).describe('Result columns to plot as values.'),

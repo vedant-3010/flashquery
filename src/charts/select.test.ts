@@ -27,6 +27,7 @@ const range = (n: number) => Array.from({ length: n }, (_, i) => i)
 const months = (n: number) =>
   range(n).map((i) => `${2024 + Math.floor(i / 12)}-${String((i % 12) + 1).padStart(2, '0')}-01`)
 const labels = (prefix: string, n: number) => range(n).map((i) => `${prefix} ${i + 1}`)
+const DAYS_60 = range(60).map((i) => new Date(Date.UTC(2025, 0, 1 + i)).toISOString().slice(0, 10))
 
 function input(
   columns: ColumnMeta[],
@@ -145,12 +146,12 @@ const cases: Case[] = [
     expect: { type: 'hbar' },
   },
   {
-    name: '13. more than 30 categories → table',
+    name: '13. more than 30 categories that add up → treemap',
     input: input(
       [col('city', 'text'), col('revenue', 'number')],
       zip(labels('City', 40), range(40)),
     ),
-    expect: { type: 'table' },
+    expect: { type: 'treemap', x: 'city', series: null },
   },
   {
     name: '14. month names keep their order',
@@ -170,13 +171,13 @@ const cases: Case[] = [
     expect: { type: 'donut', x: 'segment' },
   },
   {
-    name: '16. share question, nine categories → bar (donuts stop at 6)',
+    name: '16. share question, nine categories → treemap (donuts stop at 6)',
     input: input(
       [col('segment', 'text'), col('revenue', 'number')],
       zip(labels('S', 9), range(9)),
       { question: 'What share of revenue comes from each segment?' },
     ),
-    expect: { type: 'bar' },
+    expect: { type: 'treemap' },
   },
   {
     name: '17. a share-named measure → donut without a question',
@@ -300,12 +301,12 @@ const cases: Case[] = [
     expect: { type: 'scatter', series: 'region' },
   },
   {
-    name: '32. repeated categories + one measure → table',
+    name: '32. repeated categories + one measure → box plot of each spread',
     input: input(
       [col('region', 'text'), col('revenue', 'number')],
       range(20).map((i) => [['A', 'B'][i % 2] ?? 'A', i]),
     ),
-    expect: { type: 'table' },
+    expect: { type: 'boxplot', x: 'region', y: ['revenue'] },
   },
   {
     name: '33. ids label a top-N list → bar',
@@ -354,6 +355,157 @@ const cases: Case[] = [
       rowCount: 1_000_000,
     },
     expect: { type: 'scatter' },
+  },
+  // v2 rules (F-VIZ-09/10, docs/PRD.md §6 rules 12–20), each with a "not this type" twin.
+  {
+    name: '38. rule 12: "this month" over a series → KPI with its trend',
+    input: input([col('month', 'date'), col('revenue', 'number')], zip(months(12), range(12)), {
+      question: 'What is revenue this month?',
+    }),
+    expect: { type: 'kpi', x: 'month', y: ['revenue'], title: 'Revenue' },
+  },
+  {
+    name: '39. rule 12, not: a monthly trend question stays a line',
+    input: input([col('month', 'date'), col('revenue', 'number')], zip(months(12), range(12)), {
+      question: 'Show the monthly revenue trend this year',
+    }),
+    expect: { type: 'line' },
+  },
+  {
+    name: '40. rule 13: two measures on different scales, neither asked → bar and line',
+    input: input(
+      [col('category', 'text'), col('total_revenue', 'number'), col('profit_margin', 'number')],
+      zip(['A', 'B', 'C'], [1e8, 2e8, 3e8], [0.31, 0.25, 0.4]),
+    ),
+    expect: {
+      type: 'combo',
+      x: 'category',
+      y: ['total_revenue', 'profit_margin'],
+      format2: { y: 'percent', currency: null },
+    },
+  },
+  {
+    name: '41. rule 13 over time: monthly revenue and margin → bar and line',
+    input: input(
+      [col('month', 'date'), col('revenue', 'number'), col('margin_pct', 'number')],
+      zip(months(6), [1e6, 2e6, 1.5e6, 3e6, 2.5e6, 4e6], [0.2, 0.25, 0.22, 0.3, 0.28, 0.33]),
+    ),
+    expect: { type: 'combo', x: 'month', sort: 'asc' },
+  },
+  {
+    name: '42. rule 14: stages that shrink → funnel',
+    input: input(
+      [col('stage', 'text'), col('users', 'integer')],
+      zip(['Visited', 'Signed up', 'Activated', 'Paid'], [1000, 400, 250, 80]),
+    ),
+    expect: { type: 'funnel', x: 'stage', y: ['users'] },
+  },
+  {
+    name: '43. rule 14, not: stages that grow → bar',
+    input: input(
+      [col('stage', 'text'), col('users', 'integer')],
+      zip(['Visited', 'Signed up', 'Activated', 'Paid'], [10, 40, 250, 800]),
+    ),
+    expect: { type: 'bar' },
+  },
+  {
+    name: '44. rule 15: signed steps and a "what drove" question → waterfall',
+    input: input(
+      [col('driver', 'text'), col('profit_change', 'number')],
+      zip(['Price', 'Volume', 'Mix', 'Costs'], [120, 80, -30, -60]),
+      { question: 'What drove the change in profit?' },
+    ),
+    expect: { type: 'waterfall', x: 'driver', labels: true, sort: 'none' },
+  },
+  {
+    name: '45. rule 15, not: signed values with no change in sight → bar',
+    input: input(
+      [col('region', 'text'), col('profit', 'number')],
+      zip(['A', 'B', 'C', 'D'], [120, 80, -30, -60]),
+    ),
+    expect: { type: 'bar' },
+  },
+  {
+    name: '46. rule 16, not: more than 30 categories of an average → table',
+    input: input(
+      [col('city', 'text'), col('avg_price', 'number')],
+      zip(labels('City', 40), range(40)),
+    ),
+    expect: { type: 'table' },
+  },
+  {
+    name: '47. rule 16: two categories with many parts + a share question → treemap',
+    input: input(
+      [col('country', 'text'), col('product', 'text'), col('revenue', 'number')],
+      labels('Country', 12).flatMap((c) => labels('Product', 10).map((p) => [c, p, 5])),
+      { question: 'What share of revenue does each product make up?' },
+    ),
+    expect: { type: 'treemap' },
+  },
+  {
+    name: '48. rule 17: quartile columns per group → box plot',
+    input: input(
+      [
+        col('region', 'text'),
+        col('min_price', 'number'),
+        col('q1_price', 'number'),
+        col('median_price', 'number'),
+        col('q3_price', 'number'),
+        col('max_price', 'number'),
+      ],
+      zip(['A', 'B', 'C'], [1, 2, 1], [3, 4, 2], [5, 6, 4], [7, 9, 6], [12, 15, 9]),
+    ),
+    expect: {
+      type: 'boxplot',
+      y: ['min_price', 'q1_price', 'median_price', 'q3_price', 'max_price'],
+    },
+  },
+  {
+    name: '49. rule 18: a "from … to" question over two categories → sankey',
+    input: input(
+      [col('region', 'text'), col('channel', 'text'), col('revenue', 'number')],
+      ['A', 'B', 'C'].flatMap((r) => ['Online', 'Retail'].map((c) => [r, c, 10])),
+      { question: 'How does revenue flow from region to channel?' },
+    ),
+    expect: { type: 'sankey', x: 'region', series: 'channel' },
+  },
+  {
+    name: '50. rule 18: source and target columns → sankey without a question',
+    input: input(
+      [col('source_page', 'text'), col('target_page', 'text'), col('visits', 'integer')],
+      zip(['Home', 'Home', 'Pricing'], ['Pricing', 'Docs', 'Signup'], [500, 300, 120]),
+    ),
+    expect: { type: 'sankey', x: 'source_page', series: 'target_page' },
+  },
+  {
+    name: '51. rule 19: daily values and a weekday question → calendar',
+    input: input([col('day', 'date'), col('orders', 'integer')], zip(DAYS_60, range(60)), {
+      question: 'Which days of the week are busiest?',
+    }),
+    expect: { type: 'calendar', x: 'day', y: ['orders'] },
+  },
+  {
+    name: '52. rule 19, not: daily values without a question about days → line',
+    input: input([col('day', 'date'), col('orders', 'integer')], zip(DAYS_60, range(60))),
+    expect: { type: 'line' },
+  },
+  {
+    name: '53. rule 20: time + category + a mix question → 100% stacked bar',
+    input: input(
+      [col('month', 'date'), col('channel', 'text'), col('revenue', 'number')],
+      months(6).flatMap((m) => ['Online', 'Retail', 'Partner'].map((c) => [m, c, 10])),
+      { question: 'How did the channel mix shift by month?' },
+    ),
+    expect: { type: 'stacked_100', x: 'month', series: 'channel' },
+  },
+  {
+    name: '54. rule 20: two categories + a share question, few series → 100% stacked bar',
+    input: input(
+      [col('region', 'text'), col('channel', 'text'), col('revenue', 'number')],
+      ['A', 'B', 'C', 'D'].flatMap((r) => ['Online', 'Retail', 'Partner'].map((c) => [r, c, 1])),
+      { question: 'What is the channel mix in each region?' },
+    ),
+    expect: { type: 'stacked_100', x: 'region', series: 'channel' },
   },
 ]
 
@@ -463,5 +615,36 @@ describe('chart switcher (F-VIZ-03)', () => {
     const result = respec(s, bar, { x: 'region', y: ['cost'] })
     expect(result.ok && result.spec).toMatchObject({ y: ['cost'], sort: 'asc' })
     expect(respec(s, bar, { x: 'cost' }).ok).toBe(true)
+  })
+})
+
+describe('keeping the user’s choices (F-VIZ-12, F-VIZ-08)', () => {
+  const regionRows = zip(['A', 'B', 'C'], [3, 1, 2], [9, 8, 7])
+  const columns = [col('region', 'text'), col('revenue', 'number'), col('orders', 'integer')]
+  const shape = analyze(columns, regionRows, 3)
+  const auto = selectChart(input(columns, regionRows))
+  const bar = chartChoices(shape, auto).find((choice) => choice.type === 'bar')?.spec ?? auto
+  const chosen: ChartSpec = {
+    ...bar,
+    palette: 'mono',
+    annotations: { extremes: false, average: true, target: null },
+  }
+
+  it('re-fitting the columns keeps the colors and the annotations', () => {
+    const refit = respec(shape, chosen, { x: 'region', y: ['orders'] })
+    expect(refit.ok && refit.spec).toMatchObject({
+      y: ['orders'],
+      palette: 'mono',
+      annotations: { average: true },
+    })
+  })
+
+  it('switching type keeps the colors, and annotations where the type takes them', () => {
+    const choices = chartChoices(shape, chosen)
+    const donut = choices.find((choice) => choice.type === 'donut')?.spec
+    const hbar = choices.find((choice) => choice.type === 'hbar')?.spec
+    expect(hbar).toMatchObject({ palette: 'mono', annotations: { average: true } })
+    expect(donut?.palette).toBe('mono')
+    expect(donut).not.toHaveProperty('annotations')
   })
 })

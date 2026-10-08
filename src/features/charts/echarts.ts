@@ -1,6 +1,17 @@
-import { BarChart, HeatmapChart, LineChart, PieChart, ScatterChart } from 'echarts/charts'
+import {
+  BarChart,
+  BoxplotChart,
+  FunnelChart,
+  HeatmapChart,
+  LineChart,
+  PieChart,
+  SankeyChart,
+  ScatterChart,
+  TreemapChart,
+} from 'echarts/charts'
 import {
   AriaComponent,
+  CalendarComponent,
   GridComponent,
   LegendComponent,
   MarkLineComponent,
@@ -17,11 +28,16 @@ import { CanvasRenderer, SVGRenderer } from 'echarts/renderers'
 
 echarts.use([
   BarChart,
+  BoxplotChart,
+  FunnelChart,
   HeatmapChart,
   LineChart,
   PieChart,
+  SankeyChart,
   ScatterChart,
+  TreemapChart,
   AriaComponent,
+  CalendarComponent,
   GridComponent,
   LegendComponent,
   MarkLineComponent,

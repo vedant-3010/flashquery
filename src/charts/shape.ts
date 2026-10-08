@@ -1,114 +1,38 @@
+import { MAX_SERIES } from '@/charts/build/common'
+import {
+  index,
+  label,
+  MAX_CATEGORIES,
+  num,
+  OTHER,
+  sortCategories,
+  timeValue,
+  topN,
+  type ChartData,
+  type NamedValues,
+  type Prepared,
+} from '@/charts/prepared'
+import { boxplot, calendar, combo, funnel, sankey, treemap, waterfall } from '@/charts/shapeMore'
 import type { ChartSpec } from '@/charts/spec'
-import { MAX_SERIES } from '@/charts/select'
-import type { CellValue, ColumnMeta } from '@/engine/types'
-import { formatNumber, humanizeName, parseIsoUtc, pluralize } from '@/lib/format'
+import type { CellValue } from '@/engine/types'
+import { formatNumber, humanizeName, pluralize } from '@/lib/format'
 
 // Chart data (≤ 5,000 points, from engine/chartData.ts) shaped for one chart: series pivoted,
 // categories sorted, top-N + "Other" for long tails (F-VIZ-04). Pure; toOption.ts draws the result.
+// The v2 types are shaped in shapeMore.ts.
 
-export interface ChartData {
-  columns: ColumnMeta[]
-  rows: CellValue[][]
-  /** Rows the whole query result has. */
-  rowCount: number
-  /**
-   * How `rows` relate to the result: all of it, a random sample (scatter), every n-th row (long
-   * lines), histogram bins (columns bin_start, bin_end, count), or just the first rows.
-   */
-  sampling: 'none' | 'sample' | 'step' | 'bins' | 'head'
-}
-
-/** Beyond this many x categories, grouped and stacked bars keep the top ones and add "Other". */
-export const MAX_CATEGORIES = 12
-export const OTHER = 'Other'
-
-export interface NamedValues {
-  name: string
-  values: (number | null)[]
-  other: boolean
-}
-
-export type Prepared =
-  | { kind: 'kpi'; items: { label: string; value: number | null }[]; caption: string | null }
-  | { kind: 'category'; categories: string[]; series: NamedValues[]; notes: string[] }
-  | {
-      kind: 'time'
-      axis: 'time' | 'category'
-      /** Category axis only. */
-      categories: string[]
-      series: { name: string; points: [number | string, number | null][]; other: boolean }[]
-      /** Time axis: first to last point, in ms. */
-      spanMs: number
-      notes: string[]
-    }
-  | { kind: 'pie'; slices: { name: string; value: number }[]; notes: string[] }
-  | {
-      kind: 'scatter'
-      series: { name: string; points: [number, number, number | null][] }[]
-      sizeRange: [number, number] | null
-      notes: string[]
-    }
-  | { kind: 'bins'; bins: { start: number; end: number; count: number }[]; notes: string[] }
-  | {
-      kind: 'heatmap'
-      xs: string[]
-      ys: string[]
-      cells: [number, number, number | null][]
-      min: number
-      max: number
-      notes: string[]
-    }
-  | { kind: 'table' }
-
-const index = (data: ChartData, name: string | null) =>
-  name === null ? -1 : data.columns.findIndex((column) => column.name === name)
-
-const num = (value: CellValue | undefined): number | null =>
-  typeof value === 'number' && Number.isFinite(value) ? value : null
-
-export function label(value: CellValue | undefined): string {
-  if (value === null || value === undefined) return '(blank)'
-  return String(value)
-}
-
-const ISO = /^\d{4}-\d{2}(-\d{2})?([T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?)?$/
-
-/** Epoch ms for dates, timestamps and ISO text; null for anything else (years stay labels). */
-export function timeValue(
-  value: CellValue | undefined,
-  column: ColumnMeta | undefined,
-): number | null {
-  if (typeof value !== 'string' || !column) return null
-  if (column.logicalType !== 'date' && column.logicalType !== 'timestamp' && !ISO.test(value)) {
-    return null
-  }
-  const date = parseIsoUtc(value.length === 7 ? `${value}-01` : value)
-  return date ? date.getTime() : null
-}
-
-function sortCategories(
-  categories: string[],
-  totals: Map<string, number>,
-  sort: ChartSpec['sort'],
-): string[] {
-  if (sort === 'none') return categories
-  const sign = sort === 'desc' ? -1 : 1
-  return [...categories].sort((a, b) => sign * ((totals.get(a) ?? 0) - (totals.get(b) ?? 0)))
-}
-
-/** Keeps the `keep` largest names; the rest become one "Other" (summed when additive). */
-function topN(
-  names: string[],
-  weight: (name: string) => number,
-  keep: number,
-): { kept: string[]; rest: Set<string> } {
-  if (names.length <= keep + 1) return { kept: names, rest: new Set() }
-  const ranked = [...names].sort((a, b) => Math.abs(weight(b)) - Math.abs(weight(a)))
-  const kept = new Set(ranked.slice(0, keep))
-  return { kept: names.filter((name) => kept.has(name)), rest: new Set(ranked.slice(keep)) }
-}
+export {
+  label,
+  MAX_CATEGORIES,
+  OTHER,
+  timeValue,
+  type ChartData,
+  type NamedValues,
+  type Prepared,
+} from '@/charts/prepared'
 
 function kpi(spec: ChartSpec, data: ChartData): Prepared {
+  if (spec.x) return kpiTrend(spec, data)
   const [row] = data.rows
   const items = spec.y.map((name) => ({
     label: humanizeName(name),
@@ -124,6 +48,42 @@ function kpi(spec: ChartSpec, data: ChartData): Prepared {
     .map(({ value }) => label(value))
     .join(' · ')
   return { kind: 'kpi', items, caption: caption || null }
+}
+
+/** A KPI over time (F-VIZ-10): the latest value of each measure, the one before, and the trend. */
+function kpiTrend(spec: ChartSpec, data: ChartData): Prepared {
+  const xi = index(data, spec.x)
+  const xColumn = data.columns[xi]
+  const when = (row: CellValue[]) => timeValue(row[xi], xColumn) ?? label(row[xi])
+  const rows = [...data.rows].sort((a, b) => {
+    const [p, q] = [when(a), when(b)]
+    return typeof p === 'number' && typeof q === 'number'
+      ? p - q
+      : String(p).localeCompare(String(q))
+  })
+  const last = rows.at(-1)
+  const before = rows.at(-2)
+  const items = spec.y.map((name) => {
+    const yi = index(data, name)
+    return {
+      label: humanizeName(name),
+      value: num(last?.[yi]),
+      previous: before ? num(before[yi]) : null,
+      trend: rows.map((row) => num(row[yi])),
+    }
+  })
+  const first = rows[0] ? when(rows[0]) : 0
+  const latest = last ? when(last) : 0
+  return {
+    kind: 'kpi',
+    items,
+    caption: null,
+    period: {
+      latest,
+      previous: before ? when(before) : null,
+      spanMs: typeof first === 'number' && typeof latest === 'number' ? latest - first : 0,
+    },
+  }
 }
 
 /** Bars: one series per measure, or per value of `series`; long tails → top N + Other. */
@@ -148,6 +108,11 @@ function categorical(spec: ChartSpec, data: ChartData, additive: boolean): Prepa
       for (const y of spec.y) cells.get(x)?.set(y, num(row[index(data, y)]))
     }
   }
+  // Dates along x stay in time order and keep their moment, for date labels.
+  const xColumn = data.columns[xi]
+  const moments = new Map(order.map((x) => [x, timeValue(x, xColumn)]))
+  const timed = order.length > 0 && [...moments.values()].every((t) => t !== null)
+  if (timed) order.sort((a, b) => (moments.get(a) ?? 0) - (moments.get(b) ?? 0))
   const seriesNames = si >= 0 ? seriesOrder : spec.y
   const value = (x: string, s: string) => cells.get(x)?.get(s) ?? null
   const rowTotal = (x: string) => seriesNames.reduce((sum, s) => sum + (value(x, s) ?? 0), 0)
@@ -215,7 +180,13 @@ function categorical(spec: ChartSpec, data: ChartData, additive: boolean): Prepa
       other: true,
     })
   }
-  return { kind: 'category', categories, series, notes }
+  return {
+    kind: 'category',
+    categories,
+    series,
+    notes,
+    ...(timed ? { times: categories.map((x) => moments.get(x) ?? 0) } : {}),
+  }
 }
 
 function timeSeries(spec: ChartSpec, data: ChartData, additive: boolean): Prepared {
@@ -410,5 +381,21 @@ export function prepare(spec: ChartSpec, data: ChartData, additive = true): Prep
       return heatmap(spec, data)
     case 'table':
       return { kind: 'table' }
+    case 'stacked_100':
+      return categorical(spec, data, additive)
+    case 'combo':
+      return combo(spec, data)
+    case 'waterfall':
+      return waterfall(spec, data)
+    case 'funnel':
+      return funnel(spec, data)
+    case 'treemap':
+      return treemap(spec, data)
+    case 'boxplot':
+      return boxplot(spec, data)
+    case 'sankey':
+      return sankey(spec, data)
+    case 'calendar':
+      return calendar(spec, data)
   }
 }
