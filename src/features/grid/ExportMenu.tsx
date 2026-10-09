@@ -88,7 +88,7 @@ export function ExportMenu({
           {busy ? 'Exporting…' : 'Export'}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align="end" className="w-auto">
         <DropdownMenuItem onSelect={() => void download('csv')}>
           <FileDown aria-hidden />
           Download CSV

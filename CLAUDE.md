@@ -208,6 +208,8 @@ e2e/ (Playwright)     scripts/ (sample + fixture generators, record-demo, record
   `src/lib/colorVision.test.ts` (each pair ≥ 6 ΔE under protan/deutan/tritan; the default ≥ 12).
 - Dropdowns and popovers that can grow long cap their height at Radix's
   `--radix-*-content-available-height`, or they run off short screens (D111).
+- The generated `DropdownMenuContent` is as wide as its trigger: give every menu a width
+  (`w-auto` to fit its items, or e.g. `w-72`), and `truncate` long names (table names) with a `title`.
 - Voice input (`src/features/ask/speech.ts`): never call `SpeechRecognition.available()` until the mic
   is pressed. Playwright's Chromium has the API but crashes the tab on that call (real Chrome answers).
   e2e uses a fake on-device recognizer (`e2e/voice.spec.ts`); don't click the mic without one.

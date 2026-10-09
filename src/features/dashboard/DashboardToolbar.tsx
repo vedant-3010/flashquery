@@ -138,7 +138,7 @@ export function DashboardToolbar({
               <Ellipsis />
             </IconButton>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent align="end" className="w-auto">
             <DropdownMenuItem disabled={!dashboard} onSelect={() => download(true)}>
               <Download aria-hidden />
               Export JSON (with data snapshots)
