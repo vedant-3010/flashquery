@@ -15,8 +15,11 @@ paths:
   (demo mode + tests; replays JSON in `src/ai/fixtures/`, validated by the same schemas).
 - Effort (F-ASK-16, D107): `createProvider({ …, effort })` with the ask bar's choice (settings v6);
   `requestEffort(model, effort)` in `models.ts` decides what's sent: nothing for models without
-  `supportsEffort`, medium for 'auto' until F-ASK-18. Summaries and suggestions use low. Every log
-  entry records the effort it sent (`AiLogEntry.effort`), and the inspector shows it.
+  `supportsEffort`. Summaries and suggestions use low. Every log entry records the effort it sent
+  (`AiLogEntry.effort`), and the inspector shows it.
+- Auto effort (F-ASK-18, D112): `autoEffort(question, …)` in `src/ai/effort.ts` picks low, medium or
+  high for the planning call (`currentProvider(effort)` in `askSupport.ts`); the plan step's `note`
+  shows it. Anything else that gets 'auto' (dashboards, Python fixes) sends medium.
 - Use `model.withStructuredOutput(Schema, { name, method: 'jsonSchema', includeRaw: true })` so token
   usage can be logged from the raw message (PRD D29). Pass `{ signal }` to `invoke` for cancellation.
 - `src/ai/` must not import React, DOM APIs or `src/features/**`: it also runs in Node for the eval runner.
@@ -36,6 +39,9 @@ paths:
 - Exploration (`src/ai/explore.ts`, F-ASK-15, D96): kind 'explore' only in Balanced mode; guarded,
   ≤ 20 rows, results back inside `<data>`, at most 3, then the model must answer.
 - Suggested joins (F-PROF-07, D91) go in the context as `suggestedJoins` (match % in Balanced only).
+- Learned examples (F-ASK-20, D112): 👍 answers and corrected SQL (eval cases), picked by
+  `pickLearned` (`src/ai/learned.ts`: table in scope, same schema hash, shared words), rendered by
+  `renderLearnedExamples` in `context.ts` inside `<data>`, Balanced only; one data value each.
 - Provider `local` (F-AI-06, D85): an OpenAI-compatible server on localhost through the OpenAI client.
 
 ## Schemas (src/ai/schemas.ts, Zod v4; `.describe()` every field)
@@ -50,9 +56,13 @@ paths:
 
 ## Prompting
 - Prompts are pure functions in `src/ai/prompts/` that return message arrays; snapshot-test them.
-- The system prompt contains: role; DuckDB dialect notes (double-quoted identifiers, `date_trunc`,
-  `strftime`, `year()`, `GROUP BY ALL`, `QUALIFY`, `FILTER (WHERE ...)`, `TRY_CAST`, `ILIKE`, `//` integer
-  division); the rules below; the schema context; 3–4 few-shot examples on a toy schema.
+- The system prompt contains: role; DuckDB dialect notes and idioms (`DUCKDB_DIALECT`: double-quoted
+  identifiers, dates, `GROUP BY ALL`, `QUALIFY` (not with `GROUP BY ALL`), `FILTER (WHERE ...)`,
+  `TRY_CAST`, `NULLIF`, `ILIKE`, `//`, windows, percentiles); the rules below; the schema context;
+  4 few-shot examples on the toy schema (`TOY_SCHEMA` in `src/ai/examples.ts`).
+- Example library (F-ASK-19, D112): `src/ai/examples.ts`, ~20 question→SQL pairs on the toy schema.
+  `pickExamples` puts up to 3 in the user message (after the cached prefix) by shared intent words.
+  Every example must pass the guard and run in `examples.test.ts`; add one there with each new pattern.
 - Rules for the model: one SELECT (CTEs allowed); only listed tables/columns; alias computed columns in
   snake_case; ORDER BY for rankings and time series; LIMIT for top-N; aggregate before returning (≤ 5,000
   rows); growth = (last − first) / first with the compared periods stated in `assumptions`; never invent
@@ -78,6 +88,10 @@ paths:
    only the first page reaches JS. Charts (M4) aggregate to ≤ 5,000 rows.
 5. On failure in 2–4: send the error text + failing SQL back to the model (≤ 2 retries), then show the
    error with the last SQL editable.
+6. Result check (F-ASK-21, `src/ai/resultCheck.ts`): no rows, a column NULL in every row, or one row
+   for a breakdown sends the plan back once (`buildResultCheckMessages`, column names in `<data>`),
+   within the same budget, remote providers only, never on the last attempt. The first result is kept
+   unless the retry produces new SQL that runs; the `check` trace step carries the finding as `note`.
 - Record every attempt in the answer trace: stage, SQL, error, elapsed ms, tokens.
 
 ## Demo mode
@@ -94,5 +108,6 @@ paths:
 - The runner is `evals/run.eval.ts` under Vitest (`npm run evals`, `vitest.evals.config.ts`) with the
   DuckDB-WASM Node build (`src/test/evalData.ts` loads Global Sales 10k + HR attrition). It runs the
   real `runPipeline` in Balanced mode. `EVAL_DRY_RUN=1` answers with the reference SQL (harness check,
-  no key); `EVAL_ONLY=<id prefix>` runs a subset; `EVAL_MODEL` picks the model.
+  no key); `EVAL_ONLY=<id prefix>` runs a subset; `EVAL_MODEL` picks the model; `EVAL_EFFORT` the
+  effort (default medium; `auto` per question, as in the app).
 - The runner reads `ANTHROPIC_API_KEY` from the shell environment: the only place an env key is allowed.

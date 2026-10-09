@@ -264,15 +264,16 @@ Format: `ID (priority) Title: description. AC: acceptance criteria.`
   (`processLocally`); words stream into the box; Esc stops; ⌘/Ctrl+Shift+Space toggles; the language
   follows the number locale. AC: no audio leaves the device; where on-device speech is unavailable the
   mic is disabled and says why.
-- [ ] **F-ASK-18 (P1) Auto effort** (v2): an "Auto" effort picks low, medium or high per question
+- [x] **F-ASK-18 (P1) Auto effort** (v2): an "Auto" effort picks low, medium or high per question
   (joins, windows, multi-step → higher); the timeline shows the choice.
 - [ ] **F-ASK-19 (P1) Example library** (v2): a DuckDB idiom sheet and ~20 curated question→SQL pairs;
   the 3 nearest by intent and keywords go in each planning prompt. AC: eval accuracy doesn't drop.
-- [ ] **F-ASK-20 (P1) Learned examples** (v2): 👍 answers and SQL the user corrected become
+  *(Built (D112); the AC needs the eval run in F-QA-05.)*
+- [x] **F-ASK-20 (P1) Learned examples** (v2): 👍 answers and SQL the user corrected become
   per-dataset examples, stored locally and used in Balanced mode only (built in `src/ai/context.ts`).
-- [ ] **F-ASK-21 (P1) Result checks** (v2): an empty result, all-null columns, or one row where groups
+- [x] **F-ASK-21 (P1) Result checks** (v2): an empty result, all-null columns, or one row where groups
   were expected trigger one guided retry, within the ≤ 2 repair budget; visible in the trace.
-- [ ] **F-ASK-22 (P2) Streaming summary** (v2): the AI summary streams into place.
+- [ ] **F-ASK-22 (P2) Streaming summary** (v2): the AI summary streams into place. *(Deferred, D112.)*
 
 
 
@@ -1193,6 +1194,44 @@ named "Voice input (unavailable)" where on-device recognition is missing, and pr
     `src/charts/options/`, and the new shapes to `shapeMore.ts`; public imports are unchanged.
   - **Bundle:** initial JS 290 KB gzip (+8 KB, the rules ship with chart selection); the lazy ECharts
     chunk grows from 226 to 253 KB for the five new modules.
+- **D112** Better answers (M11, F-ASK-18…22).
+  - **Idiom sheet:** `DUCKDB_DIALECT` (shared with dashboards) gains windows (`lag`, moving
+    averages, running totals, share of total), top N per group with `QUALIFY`, `median` and
+    `quantile_cont`, `NULLIF` division, `dayname`/`isodow` and `date_diff`. DuckDB rejects `QUALIFY`
+    with `GROUP BY ALL`, so the sheet says to list the columns.
+  - **Example library:** 21 question→SQL pairs on a wider toy schema (`src/ai/examples.ts`).
+    `examples.test.ts` runs each one through the guard and DuckDB, which is how the `QUALIFY` rule
+    was found. Up to 3 go in each planning request, picked by shared intent words; the toy schema's
+    nouns (order, revenue, region…) don't count, so a plain "Revenue by region?" gets none. They go
+    in the user message, after the cached system prompt and context.
+  - **Learned examples:** 👍 now saves the answer as an eval case directly (the "Save as eval case"
+    button is gone). Taking the 👍 back removes it in the same session, and Settings has "Delete
+    saved answers…". A case qualifies when it was 👍 or its SQL was corrected, on a table in scope
+    with the same schema hash. Up to 3 are picked by shared words, then newest
+    (`src/ai/learned.ts`). `context.ts` renders them inside `<data>` in Balanced mode only, since SQL
+    can hold values; the inspector counts each as one data value. No new setting.
+  - **Result checks:** no rows, a column NULL in every row (judged only when every row is in
+    hand, and never on a single row, where changes are NULL by design), an all-NULL single row, or
+    one row for a question asking for a breakdown ("by", "per", "each", "top 5", "trend") without
+    `LIMIT 1`. A finding sends the plan back once with a hint; column names go inside `<data>`. It
+    counts as a repair, never runs on the last attempt or for demo fixtures, and keeps the first
+    result when the model returns the same SQL, no SQL, or a retry that fails. The timeline shows
+    "Checking result" with a warning icon and the finding, then "Fixing SQL (2)".
+  - **Auto effort:** `src/ai/effort.ts`.
+    - **High:** cohorts, running windows, growth, comparisons, statistics, rankings, shares and
+      forecasts, or more than 25 words.
+    - **Low:** totals and counts of 10 words or fewer.
+    - **Medium:** everything else, including several tables in scope, and follow-ups (worded "and…",
+      "what about…", or 4 words or fewer after an answer).
+    - Only the planning call follows it. Dashboards and Python fixes send medium, and summaries
+      send low.
+    - The planning step shows the choice ("High effort: growth").
+    - Medium stays the default until the evals compare Auto with it (`EVAL_EFFORT=auto`).
+  - **Streaming summary (F-ASK-22), deferred:** the summary is a structured-output call
+    (`withStructuredOutput`, JSON schema), so streaming it means parsing partial JSON for the
+    headline and bullets. It's short and arrives about a second after the answer, which already shows
+    the local summary, so streaming isn't worth that yet.
+  - **Bundle:** initial JS 294.5 KB gzip (+4.5 KB: the example library ships with the pipeline).
 - **D12** Shared hooks live in `src/hooks/` and shared app components in `src/components/` (outside the
 generated `ui/`), matching the shadcn aliases in `components.json`.
 

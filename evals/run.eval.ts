@@ -3,12 +3,14 @@ import { writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { expect, test } from 'vitest'
 import { totalUsage } from '@/ai/cost'
+import { autoEffort } from '@/ai/effort'
 import { renderReport, accuracy, type EvalResult, type Outcome } from '@/ai/evalReport'
 import { compareResults, hasTopLevelOrderBy, type EvalQuestion } from '@/ai/evals'
 import type { AiLogEntry } from '@/ai/log'
 import { DEFAULT_MODEL, PROVIDER_LABELS } from '@/ai/models'
 import { runPipeline } from '@/ai/pipeline'
 import { createProvider, type LLMProvider } from '@/ai/providers'
+import { EffortSchema, type RequestEffort } from '@/ai/schemas'
 import type { Engine } from '@/engine/connection'
 import { runQuery } from '@/engine/query'
 import type { DatasetProfile } from '@/engine/types'
@@ -20,13 +22,15 @@ import { EVAL_ROWS, loadEvalDatasets, loadQuestions } from '@/test/evalData'
 // evals/questions.jsonl through the real pipeline (same prompts, guard and self-correction as the
 // app, Balanced mode), runs the reference SQL on the same data, compares the results and writes
 // evals/report.md. The key comes from the shell environment: the only place an env key is read.
-// EVAL_MODEL picks the model; EVAL_ONLY=<id prefix> runs a subset. EVAL_DRY_RUN=1 needs no key: a
-// stand-in provider answers with the reference SQL, which checks the harness (expect 100%).
+// EVAL_MODEL picks the model; EVAL_EFFORT the effort (low, medium (default, as in the app), high,
+// or auto: per question, F-ASK-18); EVAL_ONLY=<id prefix> runs a subset. EVAL_DRY_RUN=1 needs no
+// key: a stand-in provider answers with the reference SQL, which checks the harness (expect 100%).
 
 const apiKey = process.env.ANTHROPIC_API_KEY ?? ''
 const dryRun = process.env.EVAL_DRY_RUN === '1'
 const model = process.env.EVAL_MODEL ?? DEFAULT_MODEL.anthropic
 const only = process.env.EVAL_ONLY ?? ''
+const effort = EffortSchema.parse(process.env.EVAL_EFFORT ?? 'medium')
 const TODAY = '2026-01-15'
 const CONCURRENCY = 4
 const MAX_ROWS = 10_000
@@ -171,22 +175,35 @@ test.skipIf(apiKey === '' && !dryRun)(
     const questions = loadQuestions().filter((q) => q.id.startsWith(only))
     const engine = await createTestEngine()
     const datasets = await loadEvalDatasets(engine)
-    const provider = dryRun
-      ? referenceProvider(questions)
-      : await createProvider({ provider: 'anthropic', apiKey, model })
+    // One provider per effort; with auto, each question gets the effort the app would pick.
+    const providers = new Map<RequestEffort, Promise<LLMProvider>>()
+    const providerFor = (question: string): Promise<LLMProvider> => {
+      const chosen =
+        effort === 'auto' ? autoEffort(question, { tables: 1, hasHistory: false }).effort : effort
+      let provider = providers.get(chosen)
+      if (!provider) {
+        provider = dryRun
+          ? Promise.resolve(referenceProvider(questions))
+          : createProvider({ provider: 'anthropic', apiKey, model, effort: chosen })
+        providers.set(chosen, provider)
+      }
+      return provider
+    }
 
     const results = await pool(questions, CONCURRENCY, async (question) => {
       const dataset = datasets.get(question.dataset)
       if (!dataset) throw new Error(`Unknown eval dataset ${question.dataset}`)
-      const result = await evaluate(question, engine, dataset, provider)
+      const asked = await providerFor(question.question)
+      const result = await evaluate(question, engine, dataset, asked)
       console.log(`${result.outcome === 'pass' ? '✓' : '✗'} ${result.id} ${result.reason ?? ''}`)
       return result
     })
 
     const report = renderReport(results, {
-      model: provider.model,
+      model: dryRun ? 'reference' : model,
       provider: dryRun ? 'Dry run' : PROVIDER_LABELS.anthropic,
       mode: 'balanced',
+      effort,
       rows: EVAL_ROWS,
       date: new Date().toISOString().slice(0, 10),
     })

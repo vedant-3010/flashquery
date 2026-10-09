@@ -1,3 +1,4 @@
+import type { LearnedExample } from '@/ai/learned'
 import type { PrivacyMode } from '@/ai/schemas'
 import type { SqlRunner } from '@/engine/connection'
 import { quoteIdent } from '@/engine/naming'
@@ -15,6 +16,7 @@ import { AppError } from '@/lib/errors'
 // Everything is data from the user's files and is rendered as JSON inside a <data> block.
 // The AI summary (F-ASK-12, balanced only) also sees the answer's result: every row when there are
 // at most 50, else column statistics plus the first, highest and lowest rows (ResultDigest).
+// Learned examples (F-ASK-20, balanced only): the user's confirmed questions and SQL on these tables.
 
 export const TEXT_LIMIT = 40
 export const SAMPLE_ROWS = 3
@@ -153,6 +155,26 @@ export function renderContext(context: AiContext): string {
   const lines = context.tables.map((table) => dataJson(table))
   if (context.joins?.length) lines.push(dataJson({ suggestedJoins: context.joins }))
   return `<data>\n${lines.join('\n')}\n</data>`
+}
+
+/**
+ * The user's confirmed answers on these tables (F-ASK-20), one JSON line each inside a <data> block.
+ * Balanced only: their SQL can hold values from the data (a filter on a customer's name).
+ */
+export function renderLearnedExamples(
+  mode: PrivacyMode,
+  examples: readonly LearnedExample[],
+): string | null {
+  if (mode !== 'balanced' || examples.length === 0) return null
+  const lines = examples.map((example) =>
+    dataJson({ question: example.question, sql: example.sql }),
+  )
+  return `<data>\n${lines.join('\n')}\n</data>`
+}
+
+/** Learned examples sent, for the inspector's count of data values (each may hold some). */
+export function countLearnedValues(mode: PrivacyMode, examples: readonly LearnedExample[]): number {
+  return mode === 'balanced' ? examples.length : 0
 }
 
 /** First rows of each table, for balanced mode. Never called in strict mode. */

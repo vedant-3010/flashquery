@@ -26,9 +26,11 @@ describe('eval report (F-QA-04)', () => {
       model: 'claude-sonnet-5',
       provider: 'Anthropic',
       mode: 'balanced',
+      effort: 'auto',
       rows: 10_000,
       date: '2026-10-02',
     })
+    expect(report).toContain('balanced mode · auto effort ·')
     expect(report).toContain('**Execution accuracy: 2/3 (66.7%)**')
     expect(report).toContain('| global_sales | 1/2 | 50.0% |')
     expect(report).toContain('| Wrong result | 1 |')

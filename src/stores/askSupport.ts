@@ -3,6 +3,7 @@ import type { AiLogEntry } from '@/ai/log'
 import type { Turn } from '@/ai/prompts/planSql'
 import { createProvider, type LLMProvider } from '@/ai/providers'
 import { fixtureProvider } from '@/ai/providers/fixture'
+import type { RequestEffort } from '@/ai/schemas'
 import { getDb } from '@/engine/duckdb'
 import { closeResult, type PagedResult } from '@/engine/paging'
 import { useAiLogStore } from '@/stores/aiLog'
@@ -12,15 +13,18 @@ import { activeApiKey, useSettingsStore } from '@/stores/settings'
 
 let providerCache: { key: string; provider: Promise<LLMProvider> } | null = null
 
-/** The configured provider, or demo fixtures when there's no key (F-AI-03). */
-export function currentProvider(): Promise<LLMProvider> {
+/**
+ * The configured provider, or demo fixtures when there's no key (F-AI-03). `chosen`: the effort Auto
+ * picked for this question (F-ASK-18), in place of the setting.
+ */
+export function currentProvider(chosen?: RequestEffort): Promise<LLMProvider> {
   const settings = useSettingsStore.getState()
   const apiKey = activeApiKey(settings)
   if (!apiKey) return Promise.resolve(fixtureProvider)
   const model = settings.models[settings.provider]
   const baseUrl =
     settings.provider === 'local' ? (localBaseUrl(settings.baseUrl) ?? undefined) : undefined
-  const { effort } = settings
+  const effort = chosen ?? settings.effort
   const cacheKey = `${settings.provider}:${model}:${effort}:${apiKey}:${baseUrl ?? ''}`
   if (providerCache?.key !== cacheKey) {
     providerCache = {

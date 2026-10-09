@@ -218,7 +218,8 @@ export function DataGrid({
       aria-multiselectable
       tabIndex={0}
       onKeyDown={selection.onKeyDown}
-      className="relative min-h-0 flex-1 overflow-auto text-xs outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-inset"
+      // contain-inline-size: the rows' pixel width scrolls inside; it never widens the page around it.
+      className="relative min-h-0 flex-1 overflow-auto text-xs outline-none contain-inline-size focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-inset"
     >
       <div className="relative" style={{ width: contentWidth, height: spacerHeight }}>
         <div

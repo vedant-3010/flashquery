@@ -1,6 +1,7 @@
 import type { EChartsOption } from 'echarts'
 import { useEffect, useRef, type RefObject } from 'react'
 import { echarts, type ECharts } from '@/features/charts/echarts'
+import { cn } from '@/lib/utils'
 
 interface EChartProps {
   option: EChartsOption
@@ -15,7 +16,9 @@ interface EChartProps {
 
 /**
  * The only ECharts wrapper (ui rules): init once per mount (canvas), setOption without merging on
- * every change, resize with the container, dispose on unmount.
+ * every change, resize with the container, dispose on unmount. The host's width ignores the canvas
+ * (`contain: inline-size`): otherwise the canvas, sized in pixels, holds every grid around it at its
+ * old width when the window narrows, and the chart never sees its container shrink.
  */
 export function EChart({ option, label, className, instanceRef, onSelect }: EChartProps) {
   const container = useRef<HTMLDivElement>(null)
@@ -49,5 +52,12 @@ export function EChart({ option, label, className, instanceRef, onSelect }: ECha
     chart.current?.setOption(option, { notMerge: true })
   }, [option])
 
-  return <div ref={container} role="img" aria-label={label} className={className} />
+  return (
+    <div
+      ref={container}
+      role="img"
+      aria-label={label}
+      className={cn('contain-inline-size', className)}
+    />
+  )
 }

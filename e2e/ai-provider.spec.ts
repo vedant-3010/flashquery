@@ -591,3 +591,86 @@ test.describe('multi-step exploration (F-ASK-15)', () => {
     expect(followUp).toContain('Online')
   })
 })
+
+test.describe('better answers (F-ASK-18, F-ASK-20, F-ASK-21)', () => {
+  test('Auto effort picks per question and says so in the timeline', async ({ page }) => {
+    const calls = await mockAnthropic(page, salesAnalyst)
+    await page.goto('/app/')
+    await addKey(page)
+    await page.keyboard.press('Escape')
+    await loadSales(page)
+
+    await page.getByRole('button', { name: 'Effort: Medium' }).click()
+    await page.getByRole('menuitemradio', { name: /^Auto/ }).click()
+    await expect(page.getByRole('button', { name: 'Effort: Auto' })).toBeVisible()
+
+    // The note shows while the model plans; wait for the answer before reading the request.
+    let answer = await ask(page, 'Total revenue')
+    await expect(answer.getByRole('heading', { name: 'Revenue' })).toBeVisible()
+    await expect(answer.getByRole('list', { name: 'Progress' })).toContainText(
+      'Low effort: simple total',
+    )
+    expect(plansOf(calls).at(-1)?.body).toMatchObject({ output_config: { effort: 'low' } })
+
+    answer = await ask(page, 'Which region grew fastest?')
+    await expect(answer.getByRole('heading', { name: 'Revenue' })).toBeVisible()
+    await expect(answer.getByRole('list', { name: 'Progress' })).toContainText(
+      'High effort: growth',
+    )
+    expect(plansOf(calls).at(-1)?.body).toMatchObject({ output_config: { effort: 'high' } })
+  })
+
+  test('a result with no rows goes back to the model once', async ({ page }) => {
+    const calls = await mockAnthropic(page, (call) => {
+      if (kindOf(call) !== 'plan') return salesAnalyst(call)
+      const region = call.user.includes('the result looks wrong') ? "ILIKE 'apac'" : "= 'apac'"
+      return {
+        plan: {
+          title: 'APAC revenue by country',
+          sql: `SELECT country, round(sum(revenue), 2) AS revenue FROM global_sales WHERE region ${region} GROUP BY ALL ORDER BY revenue DESC`,
+        },
+      }
+    })
+    await page.goto('/app/')
+    await addKey(page)
+    await page.keyboard.press('Escape')
+    await loadSales(page)
+
+    const answer = await ask(page, 'Revenue by country in apac')
+    await expect(answer.getByRole('heading', { name: 'APAC revenue by country' })).toBeVisible()
+    const progress = answer.getByRole('list', { name: 'Progress' })
+    await expect(progress).toContainText('Checking result')
+    await expect(progress).toContainText('No rows came back')
+    await expect(progress).toContainText('Fixing SQL (2)')
+    expect(plansOf(calls)).toHaveLength(2)
+    expect(plansOf(calls)[1]?.user).toContain('No rows came back')
+  })
+
+  test('a 👍 answer guides similar questions on the same data', async ({ page }) => {
+    const calls = await mockAnthropic(page, salesAnalyst)
+    await page.goto('/app/')
+    await addKey(page)
+    await page.keyboard.press('Escape')
+    await loadSales(page)
+
+    await ask(page, 'Total revenue')
+    // ask() matches names by substring; later questions start with the same words.
+    const first = page.getByRole('article', { name: 'Total revenue', exact: true })
+    await expect(first.getByRole('heading', { name: 'Revenue' })).toBeVisible()
+    await first.getByRole('button', { name: 'Good answer' }).click()
+    await expect(first).toContainText('Saved as an example')
+
+    const second = await ask(page, 'Total revenue in 2025')
+    await expect(second.getByRole('heading', { name: 'Revenue' })).toBeVisible()
+    const user = plansOf(calls).at(-1)?.user ?? ''
+    expect(user).toContain('Questions the user asked before on these tables')
+    expect(user).toMatch(/<data>\n\{"question":"Total revenue","sql":"SELECT sum\(revenue\)/)
+
+    // Taking the 👍 back forgets it.
+    await first.getByRole('button', { name: 'Good answer' }).click()
+    await expect(first).not.toContainText('Saved as an example')
+    const third = await ask(page, 'Total revenue in 2024')
+    await expect(third.getByRole('heading', { name: 'Revenue' })).toBeVisible()
+    expect(plansOf(calls).at(-1)?.user).not.toContain('Questions the user asked before')
+  })
+})

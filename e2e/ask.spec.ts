@@ -192,6 +192,33 @@ test.describe('answers (F-ASK-08, F-EXPL-01)', () => {
   })
 })
 
+test('the answer card follows the window when it narrows (tablets, split screen)', async ({
+  page,
+}) => {
+  await loadSales(page)
+  const answer = await ask(page, 'Which region grew fastest?')
+  const chart = answer.getByRole('img', { name: /^Bar chart/ })
+  await expect(chart).toBeVisible({ timeout: 30_000 })
+  const width = async (locator: ReturnType<Page['locator']>) =>
+    (await locator.boundingBox())?.width ?? Number.POSITIVE_INFINITY
+
+  // The chart and the grid are sized in pixels; they used to hold the card at its first width.
+  await page.setViewportSize({ width: 420, height: 900 })
+  await expect.poll(() => width(answer)).toBeLessThanOrEqual(420)
+  await expect.poll(() => width(chart)).toBeLessThan(await width(answer))
+  await answer.getByRole('tab', { name: 'Table' }).click()
+  const grid = answer.getByRole('grid')
+  await expect(grid).toBeVisible()
+  expect(await width(grid)).toBeLessThan(await width(answer))
+  expect(
+    await page.evaluate(() => document.querySelector('article')?.closest('section')?.scrollWidth),
+  ).toBeLessThanOrEqual(420)
+
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await answer.getByRole('tab', { name: 'Chart' }).click()
+  await expect.poll(() => width(chart)).toBeGreaterThan(600)
+})
+
 test.describe('history (F-EXPL-05, F-EXP-02)', () => {
   test('lists questions and queries, re-runs them and survives a reload', async ({ page }) => {
     await loadSales(page)

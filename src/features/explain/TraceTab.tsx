@@ -40,6 +40,7 @@ export function TraceTab({ trace }: { trace: TraceStep[] }) {
               </span>
             )}
           </div>
+          {step.note && <p className="mt-1 text-muted-foreground">{step.note}</p>}
           {step.error && <p className="mt-1 text-destructive">{step.error}</p>}
           {/* Each attempt's SQL, once: where it was checked; and every exploration query. */}
           {step.sql && (step.stage === 'guard' || step.stage === 'explore') && (
