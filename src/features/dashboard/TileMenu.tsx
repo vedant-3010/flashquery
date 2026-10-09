@@ -33,7 +33,7 @@ export function TileMenu({ tile, onEdit }: { tile: DashboardTile; onEdit: () => 
           <MoreHorizontal />
         </IconButton>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align="end" className="w-auto">
         {tile.type !== 'text' && (
           <DropdownMenuItem onSelect={() => void refreshTile(tile.id)}>
             <RefreshCw aria-hidden />

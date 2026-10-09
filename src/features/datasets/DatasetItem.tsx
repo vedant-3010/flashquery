@@ -101,7 +101,7 @@ export function DatasetItem({ dataset }: { dataset: DatasetProfile }) {
               <MoreHorizontal />
             </IconButton>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent align="end" className="w-auto">
             <DropdownMenuItem onSelect={() => showPreview(dataset.table)}>
               <Eye aria-hidden />
               Preview rows

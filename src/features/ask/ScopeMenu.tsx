@@ -38,7 +38,8 @@ export function ScopeMenu() {
           <span className="max-w-32 truncate">{label}</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start">
+      {/* Sized to the table names (up to 20rem), not to the small trigger. */}
+      <DropdownMenuContent align="start" className="w-auto max-w-80 min-w-48">
         <DropdownMenuLabel>Ask about</DropdownMenuLabel>
         <DropdownMenuCheckboxItem
           checked={selected.length === tables.length}
@@ -55,8 +56,9 @@ export function ScopeMenu() {
             disabled={selected.length === 1 && selected[0] === dataset.table}
             onSelect={(event) => event.preventDefault()}
             onCheckedChange={(checked) => toggle(dataset.table, checked === true)}
+            title={dataset.table}
           >
-            <span className="font-mono text-xs">{dataset.table}</span>
+            <span className="truncate font-mono text-xs">{dataset.table}</span>
           </DropdownMenuCheckboxItem>
         ))}
       </DropdownMenuContent>
