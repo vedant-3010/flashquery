@@ -51,29 +51,40 @@ function contentSecurityPolicy(): Plugin {
   }
 }
 
-/** /app → /app/ on the dev and preview servers (Vercel does the same, see vercel.json). */
-function appTrailingSlash(): Plugin {
-  const redirect = (url: string | undefined) =>
-    url === '/app' || url?.startsWith('/app?') || url?.startsWith('/app#')
+/**
+ * The app's routes on the dev and preview servers, as Vercel serves them (vercel.json): /app → /app/,
+ * and every path under /app/ without a file extension (/app/p/x/dashboard) gets the app's page,
+ * which routes it (F-HOME-01).
+ */
+function appRoutes(): Plugin {
   const middleware = (
     req: { url?: string },
     res: { statusCode: number; setHeader: (name: string, value: string) => void; end: () => void },
     next: () => void,
   ) => {
-    if (!redirect(req.url)) return next()
-    res.statusCode = 308
-    res.setHeader('Location', `/app/${(req.url ?? '').slice(4)}`)
-    res.end()
+    const url = req.url ?? ''
+    if (url === '/app' || url.startsWith('/app?') || url.startsWith('/app#')) {
+      res.statusCode = 308
+      res.setHeader('Location', `/app/${url.slice(4)}`)
+      res.end()
+      return
+    }
+    const path = url.split(/[?#]/, 1)[0] ?? ''
+    const lastSegment = path.slice(path.lastIndexOf('/') + 1)
+    if (path.startsWith('/app/') && path !== '/app/' && !lastSegment.includes('.')) {
+      req.url = `/app/${url.slice(path.length)}`
+    }
+    next()
   }
   return {
-    name: 'flashQuery:app-trailing-slash',
+    name: 'flashQuery:app-routes',
     configureServer: (server) => void server.middlewares.use(middleware),
     configurePreviewServer: (server) => void server.middlewares.use(middleware),
   }
 }
 
 export default defineConfig({
-  plugins: [react(), tailwindcss(), contentSecurityPolicy(), appTrailingSlash()],
+  plugins: [react(), tailwindcss(), contentSecurityPolicy(), appRoutes()],
   resolve: {
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
   },

@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { openProject } from './app.ts'
 
 // M6 in demo mode (J5): a forecast question gets a Python plan, the code waits for Run, Pyodide
 // loads from its pinned CDN (~20 MB the first time), and the result is charted and summarized.
@@ -14,7 +15,7 @@ async function loadSales(page: Page) {
 }
 
 test('J5: forecast with Python, run only after approval (F-PY-01…04)', async ({ page }) => {
-  await page.goto('/app/')
+  await openProject(page)
   await loadSales(page)
   const question = 'Forecast revenue for the next 3 months'
   await page.getByRole('textbox', { name: 'Ask a question' }).fill(question)
@@ -45,7 +46,7 @@ test('J5: forecast with Python, run only after approval (F-PY-01…04)', async (
 })
 
 test('notebook cells share a session and show matplotlib figures (F-PY-06)', async ({ page }) => {
-  await page.goto('/app/')
+  await openProject(page)
   await loadSales(page)
   await page.getByRole('tablist', { name: 'Views' }).getByRole('tab', { name: 'SQL' }).click()
   await page.getByRole('tab', { name: 'Python notebook' }).click()

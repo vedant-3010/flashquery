@@ -138,7 +138,8 @@ test('“Try it on 1M rows” opens the app on a real answer', async ({ page }) 
   test.setTimeout(120_000)
   await page.goto('/')
   await page.getByRole('link', { name: 'Try it on 1M rows' }).click()
-  await expect(page).toHaveURL(/\/app\/$/)
+  // /app/try opens the "Sample: Global Sales" project (F-HOME-04).
+  await expect(page).toHaveURL(/\/app\/p\/[\w-]+$/)
   await expect(page.getByRole('region', { name: 'Global Sales · 1M rows' })).toBeVisible({
     timeout: 60_000,
   })

@@ -84,5 +84,7 @@ describe('pickExamples', () => {
 
   it('returns nothing for a question that shares no words', () => {
     expect(pickExamples('zzz qqq')).toEqual([])
+    // A year is no shape: it used to pull in every example that mentions 2025.
+    expect(pickExamples('Quarterly revenue in 2025')).toEqual([])
   })
 })

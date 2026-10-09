@@ -13,6 +13,7 @@ const VercelConfigSchema = z.object({
   redirects: z.array(
     z.object({ source: z.string(), destination: z.string(), permanent: z.boolean() }),
   ),
+  rewrites: z.array(z.object({ source: z.string(), destination: z.string() })),
   headers: z.array(
     z.object({
       source: z.string(),
@@ -58,6 +59,13 @@ describe('vercel.json', () => {
       source: '/app',
       destination: '/app/',
       permanent: true,
+    })
+  })
+
+  it('serves the app for every path under /app/, which routes it (F-HOME-01)', () => {
+    expect(config.rewrites).toContainEqual({
+      source: '/app/(.*)',
+      destination: '/app/index.html',
     })
   })
 })

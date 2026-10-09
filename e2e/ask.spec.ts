@@ -1,10 +1,11 @@
 import { expect, test, type Page } from '@playwright/test'
+import { openProject } from './app.ts'
 
 // M3 in demo mode (no API key): J1, answer cards, the SQL/Explanation/Trace tabs, edited SQL
 // through the guard, and history. The fixture answers run live SQL on the generated sample.
 
 async function loadSales(page: Page, label = 'Global Sales · 10k rows') {
-  await page.goto('/app/')
+  await openProject(page)
   await page.getByRole('button', { name: 'Try sample data', exact: true }).click()
   await page.getByRole('menuitem', { name: label }).click()
   await expect(page.getByRole('region', { name: label })).toBeVisible({ timeout: 60_000 })
@@ -94,7 +95,7 @@ test.describe('J1: first run without a key (F-SHELL-02, F-AI-03)', () => {
   })
 
   test('without the sample loaded, demo mode says what to load', async ({ page }) => {
-    await page.goto('/app/')
+    await openProject(page)
     await page.getByRole('button', { name: 'Try sample data', exact: true }).click()
     await page.getByRole('menuitem', { name: /HR attrition/ }).click()
     await expect(page.getByRole('region', { name: 'HR attrition (CSV)' })).toBeVisible()
@@ -113,7 +114,7 @@ test.describe('J1: first run without a key (F-SHELL-02, F-AI-03)', () => {
 
 test.describe('table scope (F-ASK-01)', () => {
   test('long table names fit the menu without running under the checks', async ({ page }) => {
-    await page.goto('/app/')
+    await openProject(page)
     const csv = (name: string) => ({
       name: `${name}.csv`,
       mimeType: 'text/csv',

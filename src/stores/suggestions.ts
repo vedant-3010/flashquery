@@ -7,6 +7,7 @@ import { loadRecord, saveRecord, type RecordSpec } from '@/lib/idb'
 import { isCancellation, toAppError } from '@/lib/errors'
 import { currentProvider, logRequest } from '@/stores/askSupport'
 import { backupCorruptRecord } from '@/stores/persistence'
+import { inProject } from '@/stores/projectScope'
 
 // AI-suggested questions (F-PROF-04), cached per schema in IndexedDB so the same file gets the
 // same chips after a reload without another request.
@@ -66,16 +67,16 @@ export const useSuggestionsStore = create<SuggestionsState>()((set, get) => ({
 let hydrating: Promise<void> | null = null
 
 async function load() {
-  const saved = await loadRecord(SUGGESTIONS_RECORD, { onCorrupt: backupCorruptRecord }).catch(
-    (error: unknown) => {
-      console.warn('flashQuery: suggestions could not be loaded', error)
-      return {}
-    },
-  )
+  const saved = await loadRecord(inProject(SUGGESTIONS_RECORD), {
+    onCorrupt: backupCorruptRecord,
+  }).catch((error: unknown) => {
+    console.warn('flashQuery: suggestions could not be loaded', error)
+    return {}
+  })
   useSuggestionsStore.setState((state) => ({ byKey: { ...saved, ...state.byKey } }))
   useSuggestionsStore.subscribe((state, previous) => {
     if (state.byKey === previous.byKey) return
-    saveRecord(SUGGESTIONS_RECORD, state.byKey).catch((error: unknown) =>
+    saveRecord(inProject(SUGGESTIONS_RECORD), state.byKey).catch((error: unknown) =>
       console.warn('flashQuery: suggestions could not be saved', error),
     )
   })

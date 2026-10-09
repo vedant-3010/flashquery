@@ -3,11 +3,12 @@ import type { DatasetInput } from '@/engine/load'
 import { CsvOptionsSchema } from '@/engine/ingest'
 import { TypeOverrideSchema } from '@/engine/retype'
 import { SAMPLES } from '@/engine/samples'
-import { loadRecord, saveRecord, type RecordSpec } from '@/lib/idb'
+import { idbStore, loadRecord, saveRecord, type KeyValueStore, type RecordSpec } from '@/lib/idb'
 import { clearOpfs, opfsSupported, readOpfsFile, removeOpfsFile, writeOpfsFile } from '@/lib/opfs'
 import { inputs, type StoredInput } from '@/stores/datasetInputs'
 import { useDatasetsStore } from '@/stores/datasets'
 import { backupCorruptRecord } from '@/stores/persistence'
+import { inProject, projectKey, projectScope } from '@/stores/projectScope'
 import { useSettingsStore } from '@/stores/settings'
 
 // Keep datasets across reloads (F-DATA-12, opt-in): each loaded file's bytes go to the Origin
@@ -113,7 +114,7 @@ let loaded: Promise<void> | null = null
 let queue: Promise<void> = Promise.resolve()
 
 const loadManifest = () =>
-  (loaded ??= loadRecord(PERSISTED_RECORD, { onCorrupt: backupCorruptRecord })
+  (loaded ??= loadRecord(inProject(PERSISTED_RECORD), { onCorrupt: backupCorruptRecord })
     .then((saved) => {
       manifest = saved
     })
@@ -127,6 +128,8 @@ const enqueue = (task: () => Promise<void>) => {
 }
 
 async function sync(): Promise<void> {
+  // Home has no project: its datasets (none) have no manifest to update.
+  if (projectScope() === null) return
   await loadManifest()
   const { datasets, jobs, restarting } = useDatasetsStore.getState()
   if (restarting) return
@@ -155,19 +158,37 @@ async function sync(): Promise<void> {
     if (entry.stored && !next.some((kept) => kept.id === entry.id)) await removeOpfsFile(entry.id)
   }
   manifest = next
-  await saveRecord(PERSISTED_RECORD, manifest)
+  await saveRecord(inProject(PERSISTED_RECORD), manifest)
 }
 
+/** Turning the setting off (it's global): every project's kept files and their lists go. */
 async function forgetAll(): Promise<void> {
-  await loadManifest()
   await clearOpfs()
   manifest = []
-  await saveRecord(PERSISTED_RECORD, manifest)
+  for (const key of await idbStore.keys()) {
+    if (key.endsWith(`:${PERSISTED_RECORD.key}`)) await idbStore.del(key)
+  }
+}
+
+/** Deletes a project's kept files (when the project is deleted). */
+export async function forgetProjectFiles(
+  projectId: string,
+  { store = idbStore }: { store?: KeyValueStore } = {},
+): Promise<void> {
+  const spec = { ...PERSISTED_RECORD, key: projectKey(projectId, PERSISTED_RECORD.key) }
+  if (!opfsSupported()) return
+  const kept = await loadRecord(spec, { store }).catch(() => [])
+  for (const entry of kept) if (entry.stored) await removeOpfsFile(entry.id)
+}
+
+/** Resolves once kept files have been written (before the page reloads for another project). */
+export function whenFilesSaved(): Promise<void> {
+  return queue
 }
 
 let started = false
 
-/** Follows dataset and setting changes (once, from App, after settings are loaded). */
+/** Follows dataset and setting changes (once, from App, after settings are loaded; Home too). */
 export function startFilePersistence(): void {
   if (started || !opfsSupported()) return
   started = true

@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { openProject } from './app.ts'
 
 declare global {
   interface Window {
@@ -9,7 +10,7 @@ declare global {
 test.describe('app shell (F-SHELL-01)', () => {
   test('docks the sidebar at 1280 px and wider', async ({ page }) => {
     await page.setViewportSize({ width: 1366, height: 800 })
-    await page.goto('/app/')
+    await openProject(page)
 
     await expect(page.getByRole('complementary', { name: 'Datasets' })).toBeVisible()
     await expect(page.getByRole('button', { name: 'Show datasets' })).toBeHidden()
@@ -17,7 +18,7 @@ test.describe('app shell (F-SHELL-01)', () => {
 
   test('collapses the sidebar below 1280 px and stays usable at 1024 px', async ({ page }) => {
     await page.setViewportSize({ width: 1024, height: 768 })
-    await page.goto('/app/')
+    await openProject(page)
 
     await expect(page.getByRole('complementary', { name: 'Datasets' })).toBeHidden()
     await page.getByRole('button', { name: 'Side panel' }).click()
@@ -41,7 +42,7 @@ test.describe('app shell (F-SHELL-01)', () => {
   })
 
   test('switches between workspace and dashboard', async ({ page }) => {
-    await page.goto('/app/')
+    await openProject(page)
 
     await expect(page.getByRole('heading', { name: 'Ask your data anything' })).toBeVisible()
     await page.getByRole('tab', { name: 'Dashboard' }).click()
@@ -50,7 +51,7 @@ test.describe('app shell (F-SHELL-01)', () => {
   })
 
   test('toggles the side panel and its tabs', async ({ page }) => {
-    await page.goto('/app/')
+    await openProject(page)
     const panel = page.getByRole('complementary', { name: 'Side panel' })
 
     await expect(panel).toBeHidden()
@@ -73,7 +74,7 @@ test.describe('theme (F-SHELL-04)', () => {
       }).observe(document, { childList: true, subtree: true })
     })
     await page.emulateMedia({ colorScheme: 'light' })
-    await page.goto('/app/')
+    await openProject(page)
     await expect(page.locator('html')).not.toHaveClass(/dark/)
 
     await page.getByRole('button', { name: 'Theme' }).click()
@@ -87,7 +88,7 @@ test.describe('theme (F-SHELL-04)', () => {
 
   test('follows the OS in system mode', async ({ page }) => {
     await page.emulateMedia({ colorScheme: 'dark' })
-    await page.goto('/app/')
+    await openProject(page)
     await expect(page.locator('html')).toHaveClass(/dark/)
 
     await page.emulateMedia({ colorScheme: 'light' })
@@ -97,7 +98,7 @@ test.describe('theme (F-SHELL-04)', () => {
 
 test.describe('how it works (F-SHIP-04)', () => {
   test('explains the privacy modes and opens the AI inspector', async ({ page }) => {
-    await page.goto('/app/')
+    await openProject(page)
     await page.getByRole('button', { name: 'How flashQuery works' }).click()
     const dialog = page.getByRole('dialog', { name: 'How flashQuery works' })
     const modes = dialog.getByRole('table', { name: 'What the AI receives in each privacy mode' })
@@ -118,7 +119,7 @@ test.describe('how it works (F-SHIP-04)', () => {
 
 test.describe('command palette (F-SHELL-07)', () => {
   test('goes anywhere, loads data and asks questions from the keyboard', async ({ page }) => {
-    await page.goto('/app/')
+    await openProject(page)
     const palette = page.getByRole('dialog', { name: 'Command palette' })
     const search = palette.getByRole('combobox', { name: 'Search commands' })
 

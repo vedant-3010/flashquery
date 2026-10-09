@@ -1,4 +1,5 @@
 import { expect, test, type Page, type Route } from '@playwright/test'
+import { openProject } from './app.ts'
 
 // J2 and J6 with a real provider code path (LangChain + the Anthropic SDK in the browser) against a
 // mocked https://api.anthropic.com. A live call with a real key stays a manual check.
@@ -228,7 +229,7 @@ test.describe('ask bar: model and effort (F-ASK-16)', () => {
     page,
   }) => {
     const calls = await mockAnthropic(page, salesAnalyst)
-    await page.goto('/app/')
+    await openProject(page)
     await addKey(page)
     await page.keyboard.press('Escape')
     await loadSales(page)
@@ -261,7 +262,7 @@ test.describe('ask bar: model and effort (F-ASK-16)', () => {
 test.describe('J2: own key (F-AI-01, F-ASK-03…09)', () => {
   test('test connection, self-correction and a follow-up', async ({ page }) => {
     const calls = await mockAnthropic(page, salesAnalyst)
-    await page.goto('/app/')
+    await openProject(page)
     const dialog = await addKey(page)
     await dialog.getByRole('button', { name: 'Test connection' }).click()
     await expect(dialog.getByRole('status')).toContainText('Connected')
@@ -297,7 +298,7 @@ test.describe('J2: own key (F-AI-01, F-ASK-03…09)', () => {
 
   test('Esc cancels a running question', async ({ page }) => {
     await mockAnthropic(page, salesAnalyst)
-    await page.goto('/app/')
+    await openProject(page)
     await addKey(page)
     await page.keyboard.press('Escape')
     await loadSales(page)
@@ -312,7 +313,7 @@ test.describe('J2: own key (F-AI-01, F-ASK-03…09)', () => {
   test('the key is forgotten on reload unless "Remember on this device" is on', async ({
     page,
   }) => {
-    await page.goto('/app/')
+    await openProject(page)
     await addKey(page)
     await page.keyboard.press('Escape')
     await expect(page.getByRole('button', { name: 'Demo', exact: true })).toBeHidden()
@@ -339,7 +340,7 @@ test.describe('J2: own key (F-AI-01, F-ASK-03…09)', () => {
 test.describe('AI summary (F-ASK-12)', () => {
   test('replaces the local summary in Balanced mode, from the result rows', async ({ page }) => {
     const calls = await mockAnthropic(page, salesAnalyst)
-    await page.goto('/app/')
+    await openProject(page)
     await addKey(page)
     await page.keyboard.press('Escape')
     await loadSales(page)
@@ -366,7 +367,7 @@ test.describe('AI summary (F-ASK-12)', () => {
 test.describe('J6: privacy check (F-AI-02, F-EXPL-04, F-SEC-03, F-SEC-04)', () => {
   test('the inspector shows each payload; Strict sends no data values', async ({ page }) => {
     const calls = await mockAnthropic(page, salesAnalyst)
-    await page.goto('/app/')
+    await openProject(page)
     await addKey(page)
     await page.keyboard.press('Escape')
     await loadSales(page)
@@ -421,7 +422,7 @@ test.describe('J6: privacy check (F-AI-02, F-EXPL-04, F-SEC-03, F-SEC-04)', () =
   test('suggests questions with AI on request, cached per schema (F-PROF-04)', async ({ page }) => {
     const calls = await mockAnthropic(page, salesAnalyst)
     const suggestions = () => calls.filter((call) => kindOf(call) === 'suggest')
-    await page.goto('/app/')
+    await openProject(page)
     await addKey(page, { remember: true })
     await page.keyboard.press('Escape')
     await loadSales(page)
@@ -480,7 +481,7 @@ test.describe('local OpenAI-compatible server (F-AI-06)', () => {
 
   test('answers through a server on this computer, without a key', async ({ page }) => {
     const bodies = await mockLocalServer(page)
-    await page.goto('/app/')
+    await openProject(page)
     await page.getByRole('button', { name: 'Settings', exact: true }).click()
     const dialog = page.getByRole('dialog', { name: 'Settings' })
     await dialog.getByRole('combobox', { name: 'Provider' }).click()
@@ -516,7 +517,7 @@ test.describe('suggested joins (F-PROF-07)', () => {
         ? { plan: { title: 'Revenue', sql: 'SELECT sum(amount) AS revenue FROM orders' } }
         : salesAnalyst(call),
     )
-    await page.goto('/app/')
+    await openProject(page)
     await addKey(page)
     await page.keyboard.press('Escape')
 
@@ -576,7 +577,7 @@ test.describe('multi-step exploration (F-ASK-15)', () => {
         },
       }
     })
-    await page.goto('/app/')
+    await openProject(page)
     await addKey(page)
     await page.keyboard.press('Escape')
     await loadSales(page)
@@ -595,7 +596,7 @@ test.describe('multi-step exploration (F-ASK-15)', () => {
 test.describe('better answers (F-ASK-18, F-ASK-20, F-ASK-21)', () => {
   test('Auto effort picks per question and says so in the timeline', async ({ page }) => {
     const calls = await mockAnthropic(page, salesAnalyst)
-    await page.goto('/app/')
+    await openProject(page)
     await addKey(page)
     await page.keyboard.press('Escape')
     await loadSales(page)
@@ -631,7 +632,7 @@ test.describe('better answers (F-ASK-18, F-ASK-20, F-ASK-21)', () => {
         },
       }
     })
-    await page.goto('/app/')
+    await openProject(page)
     await addKey(page)
     await page.keyboard.press('Escape')
     await loadSales(page)
@@ -648,7 +649,7 @@ test.describe('better answers (F-ASK-18, F-ASK-20, F-ASK-21)', () => {
 
   test('a 👍 answer guides similar questions on the same data', async ({ page }) => {
     const calls = await mockAnthropic(page, salesAnalyst)
-    await page.goto('/app/')
+    await openProject(page)
     await addKey(page)
     await page.keyboard.press('Escape')
     await loadSales(page)

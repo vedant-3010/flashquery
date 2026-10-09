@@ -18,6 +18,7 @@ import {
 import type { DashboardFilter } from '@/engine/filters'
 import { loadRecord, saveRecord, type RecordSpec } from '@/lib/idb'
 import { backupCorruptRecord } from '@/stores/persistence'
+import { inProject } from '@/stores/projectScope'
 
 // Dashboards (F-DASH-01…10): tiles with their SQL, chart and last snapshot, saved in IndexedDB
 // (F-DASH-03, debounced 500 ms). Running tiles lives in stores/dashboardJobs.ts.
@@ -244,12 +245,12 @@ let saveTimer: number | undefined
 
 /** Loads saved dashboards once, then saves (debounced) on every change. */
 async function load() {
-  const saved = await loadRecord(DASHBOARDS_RECORD, { onCorrupt: backupCorruptRecord }).catch(
-    (error: unknown) => {
-      console.warn('flashQuery: dashboards could not be loaded', error)
-      return DASHBOARDS_RECORD.fallback()
-    },
-  )
+  const saved = await loadRecord(inProject(DASHBOARDS_RECORD), {
+    onCorrupt: backupCorruptRecord,
+  }).catch((error: unknown) => {
+    console.warn('flashQuery: dashboards could not be loaded', error)
+    return DASHBOARDS_RECORD.fallback()
+  })
   // Keep anything created before loading finished (e.g. a tile pinned right away).
   useDashboardStore.setState((state) => ({
     dashboards: [...saved.dashboards, ...state.dashboards],
@@ -259,11 +260,21 @@ async function load() {
   useDashboardStore.subscribe((state, previous) => {
     if (state.dashboards === previous.dashboards && state.activeId === previous.activeId) return
     window.clearTimeout(saveTimer)
-    saveTimer = window.setTimeout(() => {
-      const { dashboards, activeId } = useDashboardStore.getState()
-      saveRecord(DASHBOARDS_RECORD, { dashboards, activeId }).catch((error: unknown) =>
-        console.warn('flashQuery: dashboards could not be saved', error),
-      )
-    }, SAVE_DELAY_MS)
+    saveTimer = window.setTimeout(saveNow, SAVE_DELAY_MS)
   })
+}
+
+function saveNow() {
+  saveTimer = undefined
+  const { dashboards, activeId } = useDashboardStore.getState()
+  saveRecord(inProject(DASHBOARDS_RECORD), { dashboards, activeId }).catch((error: unknown) =>
+    console.warn('flashQuery: dashboards could not be saved', error),
+  )
+}
+
+/** Starts a waiting save now, before the page reloads for another project (D113). */
+export function flushDashboardSave(): void {
+  if (saveTimer === undefined) return
+  window.clearTimeout(saveTimer)
+  saveNow()
 }

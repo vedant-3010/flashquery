@@ -1,4 +1,4 @@
-import { clear, createStore, del, get, set } from 'idb-keyval'
+import { clear, createStore, del, get, keys, set } from 'idb-keyval'
 import type { z } from '@/lib/zod'
 
 // Local persistence (F-EXP-02): each record is stored as { version, savedAt, data }, validated with
@@ -9,6 +9,8 @@ export interface KeyValueStore {
   get(key: string): Promise<unknown>
   set(key: string, value: unknown): Promise<void>
   del(key: string): Promise<void>
+  /** Every saved key (a project's records share a prefix, F-HOME-02). */
+  keys(): Promise<string[]>
   /** Removes every record (F-EXP-04). */
   clear(): Promise<void>
 }
@@ -20,6 +22,8 @@ export const idbStore: KeyValueStore = {
   get: (key) => get(key, idbDatabase()),
   set: (key, value) => set(key, value, idbDatabase()),
   del: (key) => del(key, idbDatabase()),
+  keys: async () =>
+    (await keys(idbDatabase())).filter((key): key is string => typeof key === 'string'),
   clear: () => clear(idbDatabase()),
 }
 
@@ -60,12 +64,19 @@ export async function loadRecord<T>(
   {
     store = idbStore,
     onCorrupt,
-  }: { store?: KeyValueStore; onCorrupt?: (record: CorruptRecord) => void } = {},
+    readOnly = false,
+  }: {
+    store?: KeyValueStore
+    onCorrupt?: (record: CorruptRecord) => void
+    /** Peek without resetting an unreadable record (Home reading other projects' history). */
+    readOnly?: boolean
+  } = {},
 ): Promise<T> {
   const raw = await store.get(spec.key)
   if (raw === undefined) return spec.fallback()
 
   const reset = async (reason: string) => {
+    if (readOnly) return spec.fallback()
     onCorrupt?.({ key: spec.key, reason, raw })
     await store.del(spec.key)
     return spec.fallback()
@@ -90,6 +101,9 @@ export async function loadRecord<T>(
   return parsed.data
 }
 
+/** Saves still being written, so a page that is about to reload can wait for them (D113). */
+const writing = new Set<Promise<void>>()
+
 export async function saveRecord<T>(
   spec: RecordSpec<T>,
   value: T,
@@ -100,7 +114,18 @@ export async function saveRecord<T>(
     savedAt: Date.now(),
     data: spec.schema.parse(value),
   }
-  await store.set(spec.key, envelope)
+  const write = store.set(spec.key, envelope)
+  writing.add(write)
+  try {
+    await write
+  } finally {
+    writing.delete(write)
+  }
+}
+
+/** Resolves once every save started so far has finished (or failed). */
+export async function whenSaved(): Promise<void> {
+  await Promise.allSettled([...writing])
 }
 
 /** An in-memory KeyValueStore (tests, and a fallback when IndexedDB is unavailable). */
@@ -110,6 +135,7 @@ export function memoryStore(initial: Record<string, unknown> = {}): KeyValueStor
     get: async (key) => values.get(key),
     set: async (key, value) => void values.set(key, value),
     del: async (key) => void values.delete(key),
+    keys: async () => [...values.keys()],
     clear: async () => values.clear(),
   }
 }

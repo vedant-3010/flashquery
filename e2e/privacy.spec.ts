@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { openProject } from './app.ts'
 
 // §5 Privacy: no requests except the LLM API and the pinned CDNs; F-SEC-06: the production CSP.
 
@@ -16,7 +17,7 @@ test('a demo session only talks to this origin and the pinned CDNs', async ({ pa
     const url = new URL(request.url())
     if (url.protocol === 'http:' || url.protocol === 'https:') hosts.add(url.hostname)
   })
-  await page.goto('/app/')
+  await openProject(page)
   await page.getByRole('button', { name: 'Try sample data', exact: true }).click()
   await page.getByRole('menuitem', { name: 'Global Sales · 10k rows' }).click()
   await page.getByRole('textbox', { name: 'Ask a question' }).fill('Which region grew fastest?')
@@ -38,7 +39,7 @@ test('the production build enforces its Content-Security-Policy', async ({ page 
       window.__cspViolations?.push(`${event.violatedDirective} ${event.blockedURI}`),
     )
   })
-  await page.goto('/app/')
+  await openProject(page)
   const policy = await page
     .locator('meta[http-equiv="Content-Security-Policy"]')
     .getAttribute('content')

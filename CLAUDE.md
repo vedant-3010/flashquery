@@ -32,9 +32,9 @@ explicitly saves or shares; guests and the demo never talk to it.
 - `npm run typecheck` / `npm run lint` / `npm run format`
 - `npm test`: Vitest (one file: `npx vitest run src/engine/sqlGuard.test.ts`)
 - `npm run e2e`: Playwright; runs in demo mode, no API key needed
-- `ANTHROPIC_API_KEY=… npm run evals`: NL→SQL evals → `evals/report.md` (`EVAL_DRY_RUN=1` checks the
+- `ANTHROPIC_API_KEY=… npm run evals` (or `OPENAI_API_KEY=…`): NL→SQL evals → `evals/report.md` (`EVAL_DRY_RUN=1` checks the
   harness without a key; see `.claude/rules/ai.md`)
-- `http://localhost:5173/app/#/bench`: benchmark page (§5 budgets on this device; "Copy as Markdown")
+- `http://localhost:5173/app/bench`: benchmark page (§5 budgets on this device; "Copy as Markdown")
 - `node scripts/record-demo.mjs` (after `npm run build`): re-records the README demo, `docs/demo.png`
 - `node scripts/record-og.mjs` (after `npm run build`): re-records the landing page's `public/og.png`
 - Deploy: Vercel, configured by `vercel.json`; steps and checks in `docs/DEPLOY.md`
@@ -80,10 +80,10 @@ The planning request carries up to 3 curated examples and, in Balanced mode, up 
 ```
 src/
   landing/      the landing page at / (own entry, own Tailwind build; film/, how/, features/, sections/)
-  app/          shell, layout, providers, view switching (no router; hash for #/bench and #/try)
+  app/          routes (wouter, base /app: Home, /p/:id[/view], /try, /new, /bench), shell, top bar
   components/   shared app components (EmptyState, IconButton); ui/ = shadcn/ui primitives (generated)
   hooks/        shared React hooks (useMediaQuery, useResolvedTheme)
-  features/     datasets/ grid/ sql/ ask/ explain/ charts/ dashboard/ python/ settings/ bench/  (React only)
+  features/     home/ datasets/ grid/ sql/ ask/ explain/ charts/ dashboard/ python/ settings/ bench/  (React only)
   engine/       duckdb init, ingest, catalog, profile, query, normalize, sqlGuard, samples, export,
                 chartData, filters (dashboard filter views + AST table rewrite)
   ai/           models, providers, prompts/, schemas, context, pipeline, dashboard, fixtures/  (no React/DOM)
@@ -192,6 +192,16 @@ e2e/ (Playwright)     scripts/ (sample + fixture generators, record-demo, record
   can't parse oklch colors: chart colors are hex in `src/charts/theme.ts`.
 - `sr-only` (and any absolutely positioned) elements inside a scrolling container need a positioned
   ancestor (`relative`), or they stretch the page and `scrollIntoView` scrolls the whole document.
+- Projects (D113): project data (history, dashboards, notes, suggestions, the kept-file manifest)
+  loads and saves through `inProject(spec)` (`p:<id>:<key>` in IndexedDB), which throws when no
+  project is open; settings, eval cases and the project list stay global. A page holds one project:
+  `openProject` (`src/stores/projectSession.ts`) loads it once, and opening another one reloads the
+  page after `whenSaved()`. Home never loads project stores. A new per-project record goes in
+  `PROJECT_RECORD_KEYS` (the v1 migration moves it).
+- Routes: wouter with base `/app`, so `Link`/`navigate` take `/p/x` and rendered hrefs include
+  `/app`. The dev and preview servers serve the app for any path under `/app/` (`appRoutes` in
+  vite.config.ts), as Vercel does (`vercel.json` rewrites). e2e: `/app/` is Home; specs open the
+  workspace with `openProject(page)` from `e2e/app.ts` (it visits `/app/new`).
 - Content sized in pixels (the ECharts canvas, the grid's rows) sets the minimum width of every grid
   and flex item around it, so the page can't shrink when the window narrows. Its host gets
   `contain-inline-size` (`EChart.tsx`, `DataGrid.tsx`) and takes its width from its container;

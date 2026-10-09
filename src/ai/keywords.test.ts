@@ -13,6 +13,12 @@ describe('keywords', () => {
     expect(overlap(keywords('total orders'), keywords('order totals'))).toBe(2)
   })
 
+  it('drops bare numbers (years, counts) but keeps words with digits', () => {
+    expect(keywords('Quarterly revenue in 2025, top 5, p90')).toEqual(
+      new Set(['quarterly', 'revenue', 'top', 'p90']),
+    )
+  })
+
   it('keeps short words and "ss" endings whole', () => {
     expect(keywords('sales class yoy')).toEqual(new Set(['sale', 'class', 'yoy']))
   })

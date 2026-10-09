@@ -16,8 +16,11 @@ import { PRIVACY_MODES } from '@/features/settings/privacyText'
 import { useSettingsStore } from '@/stores/settings'
 import { useUiStore } from '@/stores/ui'
 
-/** AI provider, key and privacy mode (F-AI-01, F-AI-02). */
-export function SettingsDialog() {
+/**
+ * AI provider, key and privacy mode (F-AI-01, F-AI-02). `inProject`: workspace export and import
+ * work on the open project, so Home leaves them out.
+ */
+export function SettingsDialog({ inProject = true }: { inProject?: boolean }) {
   const open = useUiStore((state) => state.settingsOpen)
   const setOpen = useUiStore((state) => state.setSettingsOpen)
   const privacyMode = useSettingsStore((state) => state.privacyMode)
@@ -104,7 +107,7 @@ export function SettingsDialog() {
           <h3 id="settings-data" className="text-sm font-medium">
             Your data on this device
           </h3>
-          <LocalDataSettings />
+          <LocalDataSettings inProject={inProject} />
         </section>
       </DialogContent>
     </Dialog>

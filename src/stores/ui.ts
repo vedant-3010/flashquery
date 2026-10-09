@@ -38,6 +38,9 @@ interface UiState {
   /** A dashboard tile to scroll to and flash (after pinning, F-DASH-01). */
   focusTile: { id: string; at: number } | null
   setFocusTile: (id: string | null) => void
+  /** A question for the ask box to take, unsent (from Home when the project has no data yet). */
+  draftQuestion: string | null
+  setDraftQuestion: (text: string | null) => void
 }
 
 export const useUiStore = create<UiState>()((set) => ({
@@ -70,4 +73,6 @@ export const useUiStore = create<UiState>()((set) => ({
   setPasteText: (pasteText) => set({ pasteText }),
   focusTile: null,
   setFocusTile: (id) => set({ focusTile: id ? { id, at: Date.now() } : null }),
+  draftQuestion: null,
+  setDraftQuestion: (draftQuestion) => set({ draftQuestion }),
 }))

@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { z } from '@/lib/zod'
-import { loadRecord, memoryStore, saveRecord, type CorruptRecord, type RecordSpec } from './idb'
+import {
+  loadRecord,
+  memoryStore,
+  saveRecord,
+  whenSaved,
+  type CorruptRecord,
+  type RecordSpec,
+} from './idb'
 
 const spec: RecordSpec<{ name: string; count: number }> = {
   key: 'things',
@@ -50,5 +57,35 @@ describe('persistence (F-EXP-02)', () => {
         store: memoryStore(),
       }),
     ).rejects.toThrow()
+  })
+
+  it('peeks read-only without resetting an unreadable record', async () => {
+    const store = memoryStore({ things: 'garbage' })
+    const corrupt: CorruptRecord[] = []
+    const value = await loadRecord(spec, {
+      store,
+      readOnly: true,
+      onCorrupt: (record) => corrupt.push(record),
+    })
+    expect(value).toEqual({ name: 'default', count: 0 })
+    expect(corrupt).toEqual([])
+    expect(await store.get('things')).toBe('garbage')
+  })
+
+  it('lists keys, and waits for saves in progress', async () => {
+    let finish = () => {}
+    const slow = {
+      ...memoryStore(),
+      set: () => new Promise<void>((resolve) => (finish = resolve)),
+    }
+    void saveRecord(spec, { name: 'a', count: 1 }, { store: slow })
+    let done = false
+    const waiting = whenSaved().then(() => (done = true))
+    await new Promise((resolve) => setTimeout(resolve, 10))
+    expect(done).toBe(false)
+    finish()
+    await waiting
+    expect(done).toBe(true)
+    expect(await memoryStore({ a: 1, b: 2 }).keys()).toEqual(['a', 'b'])
   })
 })

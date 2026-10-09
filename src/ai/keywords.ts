@@ -1,5 +1,7 @@
 // Keywords of a question, for picking related examples (F-ASK-19, F-ASK-20): lowercase words,
-// without stop words, with plurals and common endings trimmed, so "orders" meets "order". Pure.
+// without stop words or bare numbers, with plurals and common endings trimmed, so "orders" meets
+// "order". Numbers say nothing about a question's shape: "in 2025" once matched unrelated examples
+// that happened to mention 2025 and cost an eval question (D112). Pure.
 
 const STOP_WORDS = new Set(
   'a an and are as at be by did do does for from had has have how i in is it its me my of on or our show tell that the their them there these this to us was we were what when where which who why will with you your give list find get'.split(
@@ -23,7 +25,7 @@ export function keywords(text: string): Set<string> {
     .toLowerCase()
     .replace(/[^a-z0-9%\s]/g, ' ')
     .split(/\s+/)
-    .filter((word) => word.length > 1 && !STOP_WORDS.has(word))
+    .filter((word) => word.length > 1 && !STOP_WORDS.has(word) && !/^\d+$/.test(word))
   return new Set(words.map(stem))
 }
 

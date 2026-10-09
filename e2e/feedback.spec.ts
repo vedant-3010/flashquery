@@ -1,11 +1,12 @@
 import { readFile } from 'node:fs/promises'
 import { expect, test } from '@playwright/test'
+import { openProject } from './app.ts'
 
 // F-ASK-14: 👎 asks what was wrong and saves an eval case with the corrected SQL; Settings exports
 // the cases as JSON Lines in the evals/ format.
 
 test('a 👎 answer becomes an exportable eval case', async ({ page }) => {
-  await page.goto('/app/')
+  await openProject(page)
   await page.getByRole('button', { name: 'Try sample data', exact: true }).click()
   await page.getByRole('menuitem', { name: 'Global Sales · 10k rows' }).click()
   await page.getByRole('textbox', { name: 'Ask a question' }).fill('Which region grew fastest?')

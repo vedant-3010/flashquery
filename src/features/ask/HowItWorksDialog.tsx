@@ -45,9 +45,10 @@ const MODES = [
 
 /**
  * A plain-language tour of the privacy model (F-SHELL-02, F-SHIP-04), from the first-run screen and
- * the top bar; links to the AI inspector, where every request is shown as sent.
+ * the top bar; links to the AI inspector, where every request is shown as sent (inside a project:
+ * `inspector`).
  */
-export function HowItWorksDialog() {
+export function HowItWorksDialog({ inspector = true }: { inspector?: boolean }) {
   const open = useUiStore((state) => state.howItWorksOpen)
   const setOpen = useUiStore((state) => state.setHowItWorksOpen)
   const setSidePanelOpen = useUiStore((state) => state.setSidePanelOpen)
@@ -116,16 +117,18 @@ export function HowItWorksDialog() {
             <Settings aria-hidden />
             Privacy settings
           </Button>
-          <Button
-            onClick={() => {
-              setOpen(false)
-              setSidePanelTab('inspector')
-              setSidePanelOpen(true)
-            }}
-          >
-            <ScanEye aria-hidden />
-            Open the AI inspector
-          </Button>
+          {inspector && (
+            <Button
+              onClick={() => {
+                setOpen(false)
+                setSidePanelTab('inspector')
+                setSidePanelOpen(true)
+              }}
+            >
+              <ScanEye aria-hidden />
+              Open the AI inspector
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

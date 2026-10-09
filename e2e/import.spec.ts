@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { openProject } from './app.ts'
 
 // M7 data import: paste cells (F-DATA-10), change a column's type (F-DATA-09) and re-import a CSV
 // with options (F-DATA-08).
@@ -8,7 +9,7 @@ const dataset = (page: Page, label: string) => page.getByRole('region', { name: 
 const CELLS = 'city\tday\tsales\nPune\t03/01/2024\t1200\nGoa\t25/12/2024\tn/a\n'
 
 test('pasted cells become a table; a column changes type with a preview', async ({ page }) => {
-  await page.goto('/app/')
+  await openProject(page)
   await page.getByRole('button', { name: 'Paste data' }).click()
   const dialog = page.getByRole('dialog', { name: 'Paste data' })
   await dialog.getByRole('textbox', { name: /^Cells/ }).fill(CELLS)
@@ -45,7 +46,7 @@ test('pasted cells become a table; a column changes type with a preview', async 
 })
 
 test('re-imports a CSV with a delimiter, header and skipped rows', async ({ page }) => {
-  await page.goto('/app/')
+  await openProject(page)
   await page
     .getByTestId('file-input')
     .first()

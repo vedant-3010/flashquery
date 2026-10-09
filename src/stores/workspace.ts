@@ -1,4 +1,5 @@
 import { z } from '@/lib/zod'
+import { appUrl, paths } from '@/app/paths'
 import { DashboardSchema, type DashboardTile } from '@/dashboard/schema'
 import { idbStore } from '@/lib/idb'
 import { clearOpfs } from '@/lib/opfs'
@@ -99,10 +100,10 @@ export function importWorkspace(text: string): {
   }
 }
 
-/** Removes everything flashQuery saved in this browser, then reloads (F-EXP-04). */
+/** Removes everything flashQuery saved in this browser, then starts again on Home (F-EXP-04). */
 export async function clearLocalData(): Promise<void> {
   await idbStore.clear()
   await clearOpfs()
   localStorage.removeItem(THEME_STORAGE_KEY)
-  window.location.reload()
+  window.location.assign(appUrl(paths.home))
 }
