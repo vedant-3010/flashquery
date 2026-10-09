@@ -33,7 +33,7 @@ export function PinMenu({ answer }: { answer: Answer }) {
           <Pin />
         </IconButton>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align="end" className="w-auto">
         <DropdownMenuLabel>Pin to dashboard</DropdownMenuLabel>
         {chartType && chartType !== 'table' && (
           <DropdownMenuItem onSelect={() => pin(false)}>

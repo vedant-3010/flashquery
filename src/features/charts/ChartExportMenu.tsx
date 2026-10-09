@@ -69,7 +69,7 @@ export function ChartExportMenu({ chartRef, option, theme, title }: ChartExportM
             Export chart
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start">
+        <DropdownMenuContent align="start" className="w-auto">
           <DropdownMenuItem
             onSelect={() =>
               void run(() => {

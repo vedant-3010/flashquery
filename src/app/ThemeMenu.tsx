@@ -27,7 +27,7 @@ export function ThemeMenu() {
       <DropdownMenuTrigger asChild>
         <IconButton label="Theme">{resolved === 'dark' ? <Moon /> : <Sun />}</IconButton>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align="end" className="w-auto">
         <DropdownMenuRadioGroup
           value={preference}
           onValueChange={(value) => setTheme(ThemePreferenceSchema.parse(value))}

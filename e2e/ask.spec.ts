@@ -111,6 +111,41 @@ test.describe('J1: first run without a key (F-SHELL-02, F-AI-03)', () => {
   })
 })
 
+test.describe('table scope (F-ASK-01)', () => {
+  test('long table names fit the menu without running under the checks', async ({ page }) => {
+    await page.goto('/app/')
+    const csv = (name: string) => ({
+      name: `${name}.csv`,
+      mimeType: 'text/csv',
+      buffer: Buffer.from('order_id,amount\n1,10\n'),
+    })
+    const tables = ['t_90days_exchange_orders', 't_90days_return_orders', 't_90days_normal_orders']
+    await page.getByTestId('file-input').first().setInputFiles(tables.map(csv))
+    for (const table of tables) {
+      await expect(page.getByRole('region', { name: `${table}.csv` })).toBeVisible()
+    }
+
+    await page.getByRole('button', { name: 'Ask about: All tables' }).click()
+    for (const table of tables) {
+      const item = page.getByRole('menuitemcheckbox', { name: table })
+      await expect(item).toBeChecked()
+      // The whole name shows, and ends before the check mark starts.
+      const name = item.getByText(table, { exact: true })
+      expect(await name.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true)
+      const nameBox = await name.boundingBox()
+      const checkBox = await item.locator('svg').boundingBox()
+      expect((nameBox?.x ?? 0) + (nameBox?.width ?? 0)).toBeLessThanOrEqual(checkBox?.x ?? 0)
+    }
+
+    await page.getByRole('menuitemcheckbox', { name: 't_90days_normal_orders' }).click()
+    await page.getByRole('menuitemcheckbox', { name: 't_90days_return_orders' }).click()
+    await page.keyboard.press('Escape')
+    await expect(
+      page.getByRole('button', { name: 'Ask about: t_90days_exchange_orders' }),
+    ).toBeVisible()
+  })
+})
+
 test.describe('answers (F-ASK-08, F-EXPL-01)', () => {
   test('edited SQL goes through the guard and marks the answer edited', async ({ page }) => {
     await loadSales(page)

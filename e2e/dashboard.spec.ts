@@ -105,8 +105,11 @@ test.describe('J4: dashboard (F-DASH-02…10)', () => {
 
     // Export with snapshots.
     await page.getByRole('button', { name: 'More dashboard actions' }).click()
+    // The menu is as wide as its items, not as its icon trigger: one line each.
+    const exportItem = page.getByRole('menuitem', { name: 'Export JSON (with data snapshots)' })
+    expect((await exportItem.boundingBox())?.height).toBeLessThan(36)
     const download = page.waitForEvent('download')
-    await page.getByRole('menuitem', { name: 'Export JSON (with data snapshots)' }).click()
+    await exportItem.click()
     const file = JSON.parse(readFileSync((await (await download).path()) ?? '', 'utf8'))
     expect(file).toMatchObject({ format: 'flashQuery-dashboard', version: 1 })
     expect(file.dashboard.tiles).toHaveLength(5)
