@@ -6,7 +6,7 @@ import { profileTable } from '@/engine/profile'
 import { createGlobalSalesSql } from '@/engine/samples'
 import { abortError } from '@/lib/errors'
 
-// Benchmark (F-PERF-04, `#/bench`): the engine half, also runnable in Node. Times generating the
+// Benchmark (F-PERF-04, `/app/bench`): the engine half, also runnable in Node. Times generating the
 // Global Sales sample, profiling it, exporting and re-ingesting it as CSV, and a fixed set of
 // aggregation queries (p50/p95). The browser half (chart render, grid scroll, memory) lives in
 // features/bench. Budgets are PRD §5's, which are stated for 1M rows.

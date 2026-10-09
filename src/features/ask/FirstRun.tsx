@@ -1,4 +1,4 @@
-import { FlaskConical, KeyRound, Loader2, ShieldCheck } from 'lucide-react'
+import { FlaskConical, KeyRound, Loader2, MessageSquareText, ShieldCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { UploadButton } from '@/features/datasets/UploadButton'
 import { useDatasetsStore } from '@/stores/datasets'
@@ -12,6 +12,8 @@ export function FirstRun() {
   const hasKey = useSettingsStore((state) => activeApiKey(state) !== null)
   const openSettings = useUiStore((state) => state.setSettingsOpen)
   const openHowItWorks = useUiStore((state) => state.setHowItWorksOpen)
+  // A question asked from Home before this project had data; the ask box takes it once data loads.
+  const waiting = useUiStore((state) => state.draftQuestion)
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-6 p-6 text-center">
@@ -22,6 +24,15 @@ export function FirstRun() {
           Your files never leave this browser. Queries run on your device.
         </p>
       </div>
+      {waiting && (
+        <p className="flex max-w-md items-start gap-2 rounded-lg border bg-card px-3 py-2 text-left text-sm">
+          <MessageSquareText className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
+          <span>
+            Load data to ask <span className="font-medium">“{waiting}”</span>: it waits in the ask
+            box.
+          </span>
+        </p>
+      )}
       <div className="flex flex-wrap justify-center gap-2">
         <Button disabled={loading} onClick={() => loadSample('global-sales-1m')}>
           {loading ? (

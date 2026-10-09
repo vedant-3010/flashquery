@@ -11,8 +11,13 @@ in [PRD.md](PRD.md); the decisions behind them are in its §12 (`D1`…).
 The build has two entries: the landing page at `/` (`index.html`, `src/landing/`) and the app at
 `/app/` (`app/index.html`, `src/main.tsx`). The landing page has its own small Tailwind build and no
 engine code: its hero is a scripted miniature of the app (`src/landing/film/`) using the real query
-and numbers. "Try it on 1M rows" links to `/app/#/try`, which loads the sample and asks the demo
-question. Both pages carry the same Content-Security-Policy.
+and numbers. "Try it on 1M rows" links to `/app/try`, which opens the "Sample: Global Sales" project,
+loads the sample and asks the demo question. Both pages carry the same Content-Security-Policy.
+
+Inside the app, `wouter` routes paths under `/app/` (PRD D105, D113): Home at `/app/`, a project's
+workspace, SQL and dashboard at `/app/p/<id>[/sql|/dashboard]`, `/app/try`, `/app/new` and
+`/app/bench`. A page holds one project: its records live under `p:<id>:…` keys in IndexedDB, and
+opening another project reloads the page, so no tables, answers or jobs carry over.
 
 ## Threading model
 
@@ -197,4 +202,4 @@ also prints to PDF.
 | Unit (~600) | Vitest; real DuckDB via its Node build | guard, normalization, paging, profiling, chart rules, prompt snapshots, privacy context per mode, stores |
 | End-to-end (60+) | Playwright, Chromium, demo mode | the user journeys, a mocked Anthropic API (real LangChain + SDK in the browser), CSP and network allow-list, lazy loading |
 | Evals | `npm run evals` (Vitest + DuckDB Node) | NL→SQL execution accuracy on 53 questions over two datasets, through the real pipeline |
-| Benchmark | `#/bench` in the browser | the §5 budgets on the user's machine |
+| Benchmark | `/app/bench` in the browser | the §5 budgets on the user's machine |

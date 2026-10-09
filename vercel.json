@@ -64,5 +64,11 @@
       "destination": "/app/",
       "permanent": true
     }
+  ],
+  "rewrites": [
+    {
+      "source": "/app/(.*)",
+      "destination": "/app/index.html"
+    }
   ]
 }

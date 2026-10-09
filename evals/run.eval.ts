@@ -18,7 +18,7 @@ import { toAppError } from '@/lib/errors'
 import { createTestEngine } from '@/test/duckdb'
 import { EVAL_ROWS, loadEvalDatasets, loadQuestions } from '@/test/evalData'
 
-// NL→SQL eval runner (F-QA-04): `ANTHROPIC_API_KEY=… npm run evals`. Runs every question in
+// NL→SQL eval runner (F-QA-04): `ANTHROPIC_API_KEY=… npm run evals` (or `OPENAI_API_KEY=…`). Runs every question in
 // evals/questions.jsonl through the real pipeline (same prompts, guard and self-correction as the
 // app, Balanced mode), runs the reference SQL on the same data, compares the results and writes
 // evals/report.md. The key comes from the shell environment: the only place an env key is read.
@@ -26,9 +26,16 @@ import { EVAL_ROWS, loadEvalDatasets, loadQuestions } from '@/test/evalData'
 // or auto: per question, F-ASK-18); EVAL_ONLY=<id prefix> runs a subset. EVAL_DRY_RUN=1 needs no
 // key: a stand-in provider answers with the reference SQL, which checks the harness (expect 100%).
 
-const apiKey = process.env.ANTHROPIC_API_KEY ?? ''
+// The provider whose key is in the shell; EVAL_PROVIDER=openai picks OpenAI when both keys are set.
+const providerId: 'anthropic' | 'openai' =
+  process.env.EVAL_PROVIDER === 'openai' ||
+  (!process.env.ANTHROPIC_API_KEY && Boolean(process.env.OPENAI_API_KEY))
+    ? 'openai'
+    : 'anthropic'
+const apiKey =
+  (providerId === 'openai' ? process.env.OPENAI_API_KEY : process.env.ANTHROPIC_API_KEY) ?? ''
 const dryRun = process.env.EVAL_DRY_RUN === '1'
-const model = process.env.EVAL_MODEL ?? DEFAULT_MODEL.anthropic
+const model = process.env.EVAL_MODEL ?? DEFAULT_MODEL[providerId]
 const only = process.env.EVAL_ONLY ?? ''
 const effort = EffortSchema.parse(process.env.EVAL_EFFORT ?? 'medium')
 const TODAY = '2026-01-15'
@@ -184,7 +191,7 @@ test.skipIf(apiKey === '' && !dryRun)(
       if (!provider) {
         provider = dryRun
           ? Promise.resolve(referenceProvider(questions))
-          : createProvider({ provider: 'anthropic', apiKey, model, effort: chosen })
+          : createProvider({ provider: providerId, apiKey, model, effort: chosen })
         providers.set(chosen, provider)
       }
       return provider
@@ -201,7 +208,7 @@ test.skipIf(apiKey === '' && !dryRun)(
 
     const report = renderReport(results, {
       model: dryRun ? 'reference' : model,
-      provider: dryRun ? 'Dry run' : PROVIDER_LABELS.anthropic,
+      provider: dryRun ? 'Dry run' : PROVIDER_LABELS[providerId],
       mode: 'balanced',
       effort,
       rows: EVAL_ROWS,

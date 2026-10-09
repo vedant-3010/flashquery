@@ -183,5 +183,5 @@ export function columnFields(): PayloadField[][] {
 }
 
 export const APP_URL = '/app/'
-export const TRY_URL = '/app/#/try'
-export const BENCH_URL = '/app/#/bench'
+export const TRY_URL = '/app/try'
+export const BENCH_URL = '/app/bench'

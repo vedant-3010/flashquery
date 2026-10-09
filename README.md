@@ -71,7 +71,7 @@ checks it on the built app.
 
 ## Performance
 
-Measured with the in-app benchmark (`/#/bench`) on the production build, on localhost: headless
+Measured with the in-app benchmark (`/app/bench`) on the production build, on localhost: headless
 Chrome 153, 10 cores, 1,000,000 rows (14 columns).
 
 | Metric | Result | Budget |
@@ -86,7 +86,7 @@ Chrome 153, 10 cores, 1,000,000 rows (14 columns).
 
 Download time over a real network isn't included (DuckDB's wasm is about 8 MB gzipped, cached
 after the first visit). Run the
-benchmark on your machine at `/#/bench` and copy the results as Markdown.
+benchmark on your machine at `/app/bench` and copy the results as Markdown.
 
 ## NL→SQL evaluation
 
@@ -98,10 +98,14 @@ order don't matter, extra columns are allowed, and numbers match within 1e-6 or 
 
 ```sh
 ANTHROPIC_API_KEY=sk-ant-… npm run evals   # writes evals/report.md
+OPENAI_API_KEY=sk-… EVAL_MODEL=gpt-6-luna npm run evals   # or with OpenAI
 EVAL_DRY_RUN=1 npm run evals               # checks the harness itself, no key: 53/53
 ```
 
-Accuracy with a real model hasn't been measured yet.
+With GPT-6 Luna (OpenAI's smallest model) at medium effort, accuracy averages **93.7%** over three
+runs (49, 49 and 51 of 53), against 93.1% (50, 49, 49) before the example library and result checks.
+The difference is within run-to-run noise. `evals/report.md` has the latest run's details. Each run
+costs about $0.02 with Luna.
 
 ## Run it
 

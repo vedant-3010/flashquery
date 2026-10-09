@@ -266,9 +266,9 @@ Format: `ID (priority) Title: description. AC: acceptance criteria.`
   mic is disabled and says why.
 - [x] **F-ASK-18 (P1) Auto effort** (v2): an "Auto" effort picks low, medium or high per question
   (joins, windows, multi-step → higher); the timeline shows the choice.
-- [ ] **F-ASK-19 (P1) Example library** (v2): a DuckDB idiom sheet and ~20 curated question→SQL pairs;
+- [x] **F-ASK-19 (P1) Example library** (v2): a DuckDB idiom sheet and ~20 curated question→SQL pairs;
   the 3 nearest by intent and keywords go in each planning prompt. AC: eval accuracy doesn't drop.
-  *(Built (D112); the AC needs the eval run in F-QA-05.)*
+  *(93.7% vs 93.1% before, three runs each on GPT-6 Luna; D112.)*
 - [x] **F-ASK-20 (P1) Learned examples** (v2): 👍 answers and SQL the user corrected become
   per-dataset examples, stored locally and used in Balanced mode only (built in `src/ai/context.ts`).
 - [x] **F-ASK-21 (P1) Result checks** (v2): an empty result, all-null columns, or one row where groups
@@ -425,11 +425,10 @@ Format: `ID (priority) Title: description. AC: acceptance criteria.`
 - [x] **F-QA-02 (P0) E2E (demo mode)**: J1; upload a CSV fixture → profile visible; demo question → chart +
   SQL tab; pin → tile persists after reload.
 - [x] **F-QA-03 (P0) CI** (GitHub Actions): install, typecheck, lint, unit, build, bundle-size check, e2e (Chromium).
-- [ ] **F-QA-04 (P1) NL→SQL evals**: ≥ 40 questions over Global Sales + one other dataset; runner + report;
-  accuracy in the README. *(Questions, runner and report done (D74); the accuracy needs a run with an
-  API key:* `ANTHROPIC_API_KEY=… npm run evals`*.)*
-- [ ] **F-QA-05 (P1) Eval-driven tuning** (v2): an eval report before and after the M11 changes; a drop
-  in accuracy blocks the change (G8).
+- [x] **F-QA-04 (P1) NL→SQL evals**: ≥ 40 questions over Global Sales + one other dataset; runner + report;
+  accuracy in the README. *(93.7% on GPT-6 Luna, the average of three runs; D112.)*
+- [x] **F-QA-05 (P1) Eval-driven tuning** (v2): an eval report before and after the M11 changes; a drop
+  in accuracy blocks the change (G8). *(No drop: 93.1% → 93.7%; one drop found and fixed; D112.)*
 
 
 
@@ -448,17 +447,18 @@ Format: `ID (priority) Title: description. AC: acceptance criteria.`
 
 ### 4.17 Home & projects (F-HOME, v2)
 
-- [ ] **F-HOME-01 (P1) Routes**: real paths under `/app/` with `wouter`: Home, a project's workspace
+- [x] **F-HOME-01 (P1) Routes**: real paths under `/app/` with `wouter`: Home, a project's workspace
   and dashboard, bench, try, login, register, shared link. `#/bench` and `#/try` redirect; Vercel
   rewrites `/app/(.*)`. AC: every path deep-links and survives a reload.
-- [ ] **F-HOME-02 (P1) Projects**: each project has its own datasets, history, notes, dashboards,
+- [x] **F-HOME-02 (P1) Projects**: each project has its own datasets, history, notes, dashboards,
   suggestions and kept files (IndexedDB keys `p:<id>:…`, OPFS folder per project); create, rename,
   delete, switch. Existing data migrates into "My first project". AC: switching keeps each project's
-  state; the migration loses nothing.
-- [ ] **F-HOME-03 (P1) Home page**: greeting, quick ask, project cards (datasets, dashboards, last
+  state; the migration loses nothing. *(Kept files share one OPFS folder, named by dataset id; D113.)*
+- [x] **F-HOME-03 (P1) Home page**: greeting, quick ask, project cards (datasets, dashboards, last
   opened), recent questions, start options (upload, the 1M-row sample, import a workspace file), a
-  first-visit empty state, and "Shared with me" when signed in.
-- [ ] **F-HOME-04 (P1) Try link**: `/app/try` opens a "Sample: Global Sales" project and asks the demo
+  first-visit empty state, and "Shared with me" when signed in. *("Shared with me" arrives with
+  accounts in M13, D113.)*
+- [x] **F-HOME-04 (P1) Try link**: `/app/try` opens a "Sample: Global Sales" project and asks the demo
   question (replaces `#/try`; the landing links to it).
 
 
@@ -598,7 +598,8 @@ Settings (v7)  + effort: 'auto'|'low'|'medium'|'high' (v6), chartPalette (v7)
 Dashboard      + palette?
 ChartSpec      + format2? (the line of a bar-and-line chart)
 ChartData      sampling + 'quantiles' (box plot statistics from DuckDB)
-Project        { id, name, createdAt, updatedAt, lastOpenedAt }                  // local, IndexedDB
+Project        { id, name, createdAt, updatedAt, lastOpenedAt,                   // local, IndexedDB
+                 datasets: string[], dashboards, questions }                       // Home's card (D113)
 Profile        { id, displayName, avatarUrl, createdAt }                         // Supabase
 CloudDashboard { id, ownerId, name, doc: Dashboard (with snapshots), version, updatedAt }
 Membership     { dashboardId, userId, role: 'viewer'|'editor' }
@@ -1232,6 +1233,57 @@ named "Voice input (unavailable)" where on-device recognition is missing, and pr
     headline and bullets. It's short and arrives about a second after the answer, which already shows
     the local summary, so streaming isn't worth that yet.
   - **Bundle:** initial JS 294.5 KB gzip (+4.5 KB: the example library ships with the pipeline).
+  - **Evals (F-QA-04/05, 2026-10-10):** run on OpenAI's GPT-6 Luna at medium effort, the key the
+    user gave (the runner now also reads `OPENAI_API_KEY`). Before M11 (fe1deb1): 50, 49, 49 of 53
+    (93.1% on average); after: 49, 49, 51 (93.7%). Above G8's 90% and within run-to-run noise.
+    - **A drop found and fixed:** the first run after M11 lost "Quarterly revenue in 2025" (2 of 5
+      repeats right, against 5 of 5 before). Years counted as keywords, so it pulled in three examples
+      that only shared "2025". Bare numbers are no longer keywords; the question then got 4 of 5.
+    - **Tried and dropped:** a rule to group by `quarter(d)`/`month(d)` within one year fixed that
+      question but broke "orders per month in 2025", whose reference uses `date_trunc`. The references
+      disagree on how to label periods, so no rule satisfies both (46/53 with it).
+    - **Still missed on both sides:** the HR attrition questions, where the model names or scales
+      the rate differently from the reference.
+    - Auto effort wasn't measured; Medium stays the default.
+- **D113** Home and projects (M12, F-HOME-01…04).
+  - **One project per page:** the open project's stores load once from its records, and the engine
+    holds its tables. Opening another project saves what's pending (`whenSaved()`, the dashboard's
+    debounced save, kept files) and reloads the page at the new URL. Nothing carries over (tables,
+    answers, running jobs, the Python session), and no store needs reset code. The cost is a page
+    load (DuckDB restarts in well under a second, files come back only if kept). Returning to the
+    project already open in the page is instant.
+  - **Storage:** history, dashboards, notes, suggestions and the kept-file manifest live under
+    `p:<id>:<key>` (`inProject`, which throws without an open project). Settings, eval cases and
+    the project list (`projects`) stay global.
+  - **Migration:** v1 records move into "My first project" with a fixed id (`my-first-project`):
+    each is copied as saved (its own version migrates on load), the list is saved, then the old keys
+    go. A run cut short can simply run again. Its card is filled from the moved records.
+  - **Kept files:** OPFS keeps one folder, not one per project: files are named by dataset id, which
+    is unique, so the migration moves no files. Deleting a project deletes the files its manifest
+    lists. "Keep files" stays one global setting; turning it off clears every project's list.
+  - **Routes** (wouter, base `/app`): `/` Home, `/p/:id`, `/p/:id/sql`, `/p/:id/dashboard`, `/new`
+    (creates a project), `/try`, `/bench`, and placeholders for `/login`, `/register` (M13) and
+    `/s/:slug` (M14). Anything else shows "Page not found"; an unknown project, "Project not found".
+    The view and the URL follow each other, so Back switches views. `#/bench` and `#/try` redirect.
+    Vercel rewrites `/app/(.*)` to the app; the dev and preview servers do the same.
+  - **Home:** a greeting, then a quick ask into the project opened last, the project cards (datasets
+    last loaded, dashboards, questions, when opened; rename and delete), start options and recent
+    questions across projects (read without opening them, and without ever resetting a record).
+    Before any project exists, a welcome with the same start options. Home's Settings leaves out
+    workspace export and import (they act on a project), and How it works has no inspector button.
+  - **Starting from Home:** what to do on arrival (load a sample or files, import a workspace, ask,
+    try) waits in memory, and also in IndexedDB when the page must reload first; Files are stored as
+    they are. A question for a project with no data waits: the first-run panel shows it and the ask
+    box takes it once data loads. The sample option and `/app/try` share the "Sample: Global Sales"
+    project.
+  - **Top bar:** the logo links Home, the project's name opens a menu (switch, rename, new, all
+    projects). Below 1024 px the view tabs show icons only (names stay for screen readers), the
+    shortcuts button is dropped (`?` and the command palette open them), and a long project name
+    truncates, so the bar fits a 768 px tablet.
+  - **"Clear all local data"** goes to Home afterwards, since the open project is gone.
+  - **e2e:** `openProject(page)` (`e2e/app.ts`, via `/app/new`) replaces `page.goto('/app/')`, and
+    `home.spec.ts` covers the migration, separate project data, deep links and starting from Home.
+  - **Bundle:** initial JS 303.7 KB gzip (+9 KB: wouter, Home and the project store).
 - **D12** Shared hooks live in `src/hooks/` and shared app components in `src/components/` (outside the
 generated `ui/`), matching the shadcn aliases in `components.json`.
 

@@ -196,6 +196,22 @@ export function formatEventTime(epochMs: number, locale: string, now = Date.now(
     : dateFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(date)
 }
 
+const MINUTE: [Intl.RelativeTimeFormatUnit, number] = ['minute', 60_000]
+const AGO_STEPS = [MINUTE, ['hour', 3_600_000], ['day', 86_400_000]] satisfies [
+  Intl.RelativeTimeFormatUnit,
+  number,
+][]
+
+/** How long ago, for lists: "just now", "5 minutes ago", "yesterday"; a date after a month. */
+export function formatAgo(epochMs: number, locale: string, now = Date.now()): string {
+  const elapsed = Math.max(0, now - epochMs)
+  if (elapsed < 60_000) return 'just now'
+  if (elapsed >= 30 * 86_400_000) return dateFormat(locale, { dateStyle: 'medium' }).format(epochMs)
+  const relative = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' })
+  const [unit, size] = AGO_STEPS.findLast(([, step]) => elapsed >= step) ?? MINUTE
+  return relative.format(-Math.floor(elapsed / size), unit)
+}
+
 /** A moment in the reader's time zone, with the date: "Oct 6, 2026, 1:39 AM". */
 export function formatMoment(epochMs: number, locale: string): string {
   return dateFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(epochMs))

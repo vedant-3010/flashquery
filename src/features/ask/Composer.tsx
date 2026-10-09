@@ -49,6 +49,17 @@ export function Composer({ inputRef }: { inputRef?: Ref<HTMLTextAreaElement> }) 
   const hasData = datasets.length > 0
   const listening = speech.state === 'listening'
 
+  // A question from Home that couldn't be asked yet (no data in the project): it waits here.
+  const draft = useUiStore((state) => state.draftQuestion)
+  const [takenDraft, setTakenDraft] = useState<string | null>(null)
+  if (draft !== takenDraft) {
+    setTakenDraft(draft)
+    if (draft !== null) setText(draft)
+  }
+  useEffect(() => {
+    if (draft !== null) useUiStore.getState().setDraftQuestion(null)
+  }, [draft])
+
   const scoped = useMemo(
     () => (scope === null ? datasets : datasets.filter((d) => scope.includes(d.table))),
     [datasets, scope],

@@ -1,4 +1,6 @@
 import { useMemo } from 'react'
+import { useLocation } from 'wouter'
+import { paths } from '@/app/paths'
 import { DEMO_TABLE } from '@/ai/fixtures'
 import { DEMO_QUESTIONS } from '@/ai/providers/fixture'
 import { SAMPLES } from '@/engine/samples'
@@ -27,6 +29,7 @@ export function useCommands(): Command[] {
   const dashboards = useDashboardStore((state) => state.dashboards)
   const demo = useSettingsStore((state) => activeApiKey(state) === null)
   const privacyMode = useSettingsStore((state) => state.privacyMode)
+  const [, navigate] = useLocation()
 
   return useMemo(() => {
     const ui = useUiStore.getState()
@@ -54,6 +57,20 @@ export function useCommands(): Command[] {
         label: 'Go to Dashboard',
         group: 'Go to',
         run: () => ui.setView('dashboard'),
+      },
+      {
+        id: 'go-home',
+        label: 'Go to Home',
+        group: 'Go to',
+        keywords: 'projects switch',
+        run: () => navigate(paths.home),
+      },
+      {
+        id: 'new-project',
+        label: 'New project',
+        group: 'Go to',
+        keywords: 'create',
+        run: () => navigate(paths.newProject),
       },
     ]
 
@@ -186,11 +203,9 @@ export function useCommands(): Command[] {
         label: 'Run the benchmark',
         group: 'Help',
         keywords: 'performance speed',
-        run: () => {
-          window.location.hash = '#/bench'
-        },
+        run: () => navigate(paths.bench),
       },
     )
     return commands
-  }, [datasets, history, dashboards, demo, privacyMode])
+  }, [datasets, history, dashboards, demo, privacyMode, navigate])
 }

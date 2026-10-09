@@ -22,7 +22,7 @@ import { clearLocalData, exportWorkspace, importWorkspace } from '@/stores/works
  * Kept files (F-DATA-12), workspace export/import (F-EXP-03), saved answers (eval cases and learned
  * examples, F-ASK-14/20) and "Clear all local data" (F-EXP-04).
  */
-export function LocalDataSettings() {
+export function LocalDataSettings({ inProject = true }: { inProject?: boolean }) {
   const input = useRef<HTMLInputElement>(null)
   const [confirming, setConfirming] = useState<'everything' | 'cases' | null>(null)
   const toast = useToastStore((state) => state.show)
@@ -55,36 +55,43 @@ export function LocalDataSettings() {
   return (
     <div className="grid gap-3 text-sm">
       <p className="text-xs text-muted-foreground">
-        Settings, history, dashboards, notes and eval cases are saved in this browser only. Files
-        are saved only if you choose to keep them.
+        Settings, projects (history, dashboards, notes) and eval cases are saved in this browser
+        only. Files are saved only if you choose to keep them.
       </p>
       <KeepFilesSetting />
-      <div className="flex flex-wrap gap-2">
-        <Button size="sm" variant="outline" onClick={() => download(false)}>
-          <Download aria-hidden />
-          Export workspace
-        </Button>
-        <Button size="sm" variant="outline" onClick={() => download(true)}>
-          <Download aria-hidden />
-          Export with dashboard data
-        </Button>
-        <Button size="sm" variant="outline" onClick={() => input.current?.click()}>
-          <Upload aria-hidden />
-          Import workspace…
-        </Button>
-        <input
-          ref={input}
-          type="file"
-          accept=".json,application/json"
-          className="hidden"
-          data-testid="workspace-import"
-          onChange={(event) => {
-            const file = event.target.files?.[0]
-            event.target.value = ''
-            if (file) void load(file)
-          }}
-        />
-      </div>
+      {!inProject && (
+        <p className="text-xs text-muted-foreground">
+          Open a project to export its workspace, or import one into a new project from Home.
+        </p>
+      )}
+      {inProject && (
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" variant="outline" onClick={() => download(false)}>
+            <Download aria-hidden />
+            Export workspace
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => download(true)}>
+            <Download aria-hidden />
+            Export with dashboard data
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => input.current?.click()}>
+            <Upload aria-hidden />
+            Import workspace…
+          </Button>
+          <input
+            ref={input}
+            type="file"
+            accept=".json,application/json"
+            className="hidden"
+            data-testid="workspace-import"
+            onChange={(event) => {
+              const file = event.target.files?.[0]
+              event.target.value = ''
+              if (file) void load(file)
+            }}
+          />
+        </div>
+      )}
       <div className="flex flex-wrap items-center gap-2">
         <Button size="sm" variant="outline" disabled={cases.length === 0} onClick={downloadCases}>
           <Download aria-hidden />

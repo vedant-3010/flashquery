@@ -1,5 +1,7 @@
 import { ArrowLeft, ClipboardCopy, Gauge } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+import { Link } from 'wouter'
+import { paths } from '@/app/paths'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -43,7 +45,7 @@ function environment(rows: number): string {
   return `flashQuery bench · ${new Date().toISOString().slice(0, 10)} · ${browser} · ${navigator.hardwareConcurrency} cores · DuckDB-WASM ${version} · ${rows.toLocaleString('en-US')} rows`
 }
 
-/** `#/bench` (F-PERF-04): measures the PRD §5 budgets on this device. */
+/** `/app/bench` (F-PERF-04): measures the PRD §5 budgets on this device. */
 export function BenchPage() {
   const [rows, setRows] = useState(1_000_000)
   const [readyAt, setReadyAt] = useState<number | null>(null)
@@ -94,20 +96,21 @@ export function BenchPage() {
   return (
     <main className="mx-auto grid max-w-3xl gap-6 px-4 py-8 text-sm">
       <header className="grid gap-2">
-        <a
-          href="#/"
+        <Link
+          href={paths.home}
           className="flex w-fit items-center gap-1 text-xs text-muted-foreground hover:underline"
         >
           <ArrowLeft className="size-3.5" aria-hidden />
           Back to flashQuery
-        </a>
+        </Link>
         <h1 className="flex items-center gap-2 text-xl font-semibold">
           <Gauge className="size-5" aria-hidden />
           Benchmark
         </h1>
         <p className="text-muted-foreground">
-          Measures flashQuery on this device against its performance budgets. Data is generated here;
-          nothing is sent anywhere. The 1M-row run uses a few hundred MB of memory for a minute.
+          Measures flashQuery on this device against its performance budgets. Data is generated
+          here; nothing is sent anywhere. The 1M-row run uses a few hundred MB of memory for a
+          minute.
         </p>
       </header>
       <div className="flex flex-wrap items-center gap-2">

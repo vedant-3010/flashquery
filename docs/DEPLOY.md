@@ -32,13 +32,16 @@ Then in the browser:
 
 - [ ] `/` shows the landing page; its hero film plays, and "Try it on 1M rows" opens `/app/` with an
       answer to "Which region grew fastest?".
-- [ ] `/app` redirects to `/app/`, the app itself.
-- [ ] **Try sample data** loads the 1M-row sample; the engine badge says "Engine ready".
+- [ ] `/app` redirects to `/app/`, the app's Home.
+- [ ] **Try sample data** opens a project and loads the 1M-row sample; the engine badge says
+      "Engine ready".
+- [ ] Reloading a project's page (`/app/p/<id>/dashboard`) keeps it open: Vercel rewrites every
+      path under `/app/` to the app (`vercel.json`).
 - [ ] A suggested question answers with a chart; the SQL tab opens the editor.
 - [ ] DevTools → Console shows no Content-Security-Policy errors.
 - [ ] DevTools → Network shows only the app's own origin (plus `extensions.duckdb.org` after loading a
       Parquet or JSON file, and `cdn.jsdelivr.net` after running Python).
-- [ ] `/app/#/bench` runs; copy the results with "Copy as Markdown" if you want numbers from real
+- [ ] `/app/bench` runs; copy the results with "Copy as Markdown" if you want numbers from real
       hardware.
 - [ ] Set `og:image` in `index.html` to the full URL (`https://<your-domain>/og.png`): some link
       previews need an absolute URL.

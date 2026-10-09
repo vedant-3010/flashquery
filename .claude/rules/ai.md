@@ -109,5 +109,7 @@ paths:
   DuckDB-WASM Node build (`src/test/evalData.ts` loads Global Sales 10k + HR attrition). It runs the
   real `runPipeline` in Balanced mode. `EVAL_DRY_RUN=1` answers with the reference SQL (harness check,
   no key); `EVAL_ONLY=<id prefix>` runs a subset; `EVAL_MODEL` picks the model; `EVAL_EFFORT` the
-  effort (default medium; `auto` per question, as in the app).
-- The runner reads `ANTHROPIC_API_KEY` from the shell environment: the only place an env key is allowed.
+  effort (default medium; `auto` per question, as in the app). Add `--silent=false` to see each
+  question's result. One run varies by a question or two: compare averages of several runs.
+- The runner reads `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` (`EVAL_PROVIDER=openai` when both are set)
+  from the shell environment: the only place an env key is allowed.

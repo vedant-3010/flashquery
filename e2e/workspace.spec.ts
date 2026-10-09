@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises'
 import { expect, test, type Page } from '@playwright/test'
+import { openProject } from './app.ts'
 
 // M7 polish: the quick tour (F-SHELL-05), the shortcuts dialog (F-SHELL-06), business notes
 // (F-PROF-05), workspace export/import (F-EXP-03) and clearing local data (F-EXP-04).
@@ -13,7 +14,7 @@ async function loadSales(page: Page) {
 }
 
 test('the tour shows once; ? lists the shortcuts', async ({ page }) => {
-  await page.goto('/app/')
+  await openProject(page)
   await loadSales(page)
   const tour = page.getByRole('region', { name: 'Quick tour' })
   await expect(tour).toContainText('1 of 3')
@@ -38,7 +39,7 @@ test('the tour shows once; ? lists the shortcuts', async ({ page }) => {
 test('notes come back with the data; the workspace exports, clears and imports', async ({
   page,
 }) => {
-  await page.goto('/app/')
+  await openProject(page)
   await loadSales(page)
   const sales = page.getByRole('region', { name: 'Global Sales · 10k rows' })
   await sales.getByRole('button', { name: 'Actions for Global Sales · 10k rows' }).click()
@@ -80,7 +81,10 @@ test('notes come back with the data; the workspace exports, clears and imports',
 
   await settings.getByRole('button', { name: 'Clear all local data…' }).click()
   await page.getByRole('alertdialog').getByRole('button', { name: 'Clear everything' }).click()
+  // Everything went, projects too: Home welcomes a first visit.
+  await expect(page).toHaveURL(/\/app\/$/)
   await expect(page.getByRole('heading', { name: 'Ask your data anything' })).toBeVisible()
+  await openProject(page)
   await loadSales(page)
   await expect(sales).not.toContainText('Notes:')
   // The tour is back too: everything was cleared.
@@ -93,20 +97,18 @@ test('notes come back with the data; the workspace exports, clears and imports',
   ).toBeVisible()
 })
 
-/** Datasets listed in the kept-files manifest (F-DATA-12), read straight from IndexedDB. */
+/** Datasets in the open project's kept-files manifest (F-DATA-12), read from IndexedDB. */
 async function keptCount(page: Page): Promise<number> {
+  const projectId = new URL(page.url()).pathname.split('/')[3] ?? ''
   return page.evaluate(
-    () =>
+    (key) =>
       new Promise<number>((resolve) => {
         const open = indexedDB.open('flashQuery')
         open.onerror = () => resolve(-1)
         open.onsuccess = () => {
           const db = open.result
           try {
-            const request = db
-              .transaction('records')
-              .objectStore('records')
-              .get('persistedDatasets')
+            const request = db.transaction('records').objectStore('records').get(key)
             request.onsuccess = () => {
               resolve(request.result?.data?.length ?? 0)
               db.close()
@@ -117,11 +119,12 @@ async function keptCount(page: Page): Promise<number> {
           }
         }
       }),
+    `p:${projectId}:persistedDatasets`,
   )
 }
 
 test('kept files load again after a reload, until the setting is turned off', async ({ page }) => {
-  await page.goto('/app/')
+  await openProject(page)
   await page.getByRole('button', { name: 'Settings', exact: true }).click()
   await page.getByRole('checkbox', { name: 'Keep loaded files on this device' }).check()
   await page.keyboard.press('Escape')

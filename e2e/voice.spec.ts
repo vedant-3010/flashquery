@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { openProject } from './app.ts'
 
 // J9 (F-ASK-17, D106): voice questions with on-device recognition only. A fake recognizer stands in
 // for the browser's (the test Chromium has the API but no speech service) and records its setup.
@@ -65,7 +66,7 @@ async function fakeRecognizer(page: Page, words: string) {
 }
 
 async function loadSales(page: Page) {
-  await page.goto('/app/')
+  await openProject(page)
   await page.getByRole('button', { name: 'Try sample data', exact: true }).click()
   await page.getByRole('menuitem', { name: 'Global Sales · 10k rows' }).click()
   await expect(page.getByRole('region', { name: 'Global Sales · 10k rows' })).toBeVisible({

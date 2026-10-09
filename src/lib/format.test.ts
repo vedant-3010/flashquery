@@ -9,6 +9,7 @@ import {
   formatDate,
   formatDateTime,
   formatDuration,
+  formatAgo,
   formatEventTime,
   formatNumber,
   formatPercent,
@@ -170,5 +171,19 @@ describe('formatUsd', () => {
     expect(formatUsd(0.00001, 'en-US')).toBe('<$0.0001')
     expect(formatUsd(0, 'en-US')).toBe('$0')
     expect(formatUsd(null, 'en-US')).toBe(EMPTY)
+  })
+})
+
+describe('formatAgo', () => {
+  const now = new Date(2026, 9, 9, 18).getTime()
+  it.each([
+    [now - 10_000, 'just now'],
+    [now - 5 * 60_000, '5 minutes ago'],
+    [now - 3 * 3_600_000, '3 hours ago'],
+    [now - 26 * 3_600_000, 'yesterday'],
+    [now - 4 * 86_400_000, '4 days ago'],
+    [now - 40 * 86_400_000, 'Aug 30, 2026'],
+  ])('%s → %s', (at, expected) => {
+    expect(formatAgo(at, 'en-US', now)).toBe(expected)
   })
 })

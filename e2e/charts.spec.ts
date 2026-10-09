@@ -1,11 +1,12 @@
 import { readFileSync } from 'node:fs'
 import { expect, test, type Page } from '@playwright/test'
+import { openProject } from './app.ts'
 
 // M4 in demo mode: automatic charts, the switcher and settings, export, KPIs, currency, and the
 // SQL scratchpad's chart (F-VIZ-01…07, F-EXPL-03, F-EXPL-07).
 
 async function loadSales(page: Page) {
-  await page.goto('/app/')
+  await openProject(page)
   await page.getByRole('button', { name: 'Try sample data', exact: true }).click()
   await page.getByRole('menuitem', { name: 'Global Sales · 10k rows' }).click()
   await expect(page.getByRole('region', { name: 'Global Sales · 10k rows' })).toBeVisible({

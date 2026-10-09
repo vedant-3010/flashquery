@@ -3,6 +3,7 @@ import { create } from 'zustand'
 import type { DatasetProfile } from '@/engine/types'
 import { loadRecord, saveRecord, type RecordSpec } from '@/lib/idb'
 import { backupCorruptRecord } from '@/stores/persistence'
+import { inProject } from '@/stores/projectScope'
 
 // Business notes (F-PROF-05): free text per dataset, a description and unit per column ("fiscal year
 // starts in April", "amounts are INR"). Saved by schemaHash, so re-uploading the same file brings
@@ -94,7 +95,7 @@ export const useNotesStore = create<NotesState>()((set, get) => ({
 let hydrating: Promise<void> | null = null
 
 async function load() {
-  const saved = await loadRecord(NOTES_RECORD, { onCorrupt: backupCorruptRecord }).catch(
+  const saved = await loadRecord(inProject(NOTES_RECORD), { onCorrupt: backupCorruptRecord }).catch(
     (error: unknown) => {
       console.warn('flashQuery: notes could not be loaded', error)
       return {}
@@ -103,7 +104,7 @@ async function load() {
   useNotesStore.setState((state) => ({ bySchema: { ...saved, ...state.bySchema }, hydrated: true }))
   useNotesStore.subscribe((state, previous) => {
     if (state.bySchema === previous.bySchema) return
-    saveRecord(NOTES_RECORD, state.bySchema).catch((error: unknown) =>
+    saveRecord(inProject(NOTES_RECORD), state.bySchema).catch((error: unknown) =>
       console.warn('flashQuery: notes could not be saved', error),
     )
   })

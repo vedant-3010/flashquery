@@ -2,6 +2,7 @@ import { z } from '@/lib/zod'
 import { create } from 'zustand'
 import { loadRecord, saveRecord, type RecordSpec } from '@/lib/idb'
 import { backupCorruptRecord } from '@/stores/persistence'
+import { inProject } from '@/stores/projectScope'
 
 // History (F-EXPL-05): every question and SQL-editor query with its time and outcome, persisted
 // in IndexedDB (F-EXP-02). No result rows are stored.
@@ -58,12 +59,12 @@ export const useHistoryStore = create<HistoryState>()((set) => ({
 
 /** Loads saved history once, then saves on every change. */
 async function load() {
-  const saved = await loadRecord(HISTORY_RECORD, { onCorrupt: backupCorruptRecord }).catch(
-    (error: unknown) => {
-      console.warn('flashQuery: history could not be loaded', error)
-      return []
-    },
-  )
+  const saved = await loadRecord(inProject(HISTORY_RECORD), {
+    onCorrupt: backupCorruptRecord,
+  }).catch((error: unknown) => {
+    console.warn('flashQuery: history could not be loaded', error)
+    return []
+  })
   // Keep anything added before hydration finished.
   useHistoryStore.setState((state) => ({
     entries: [...state.entries, ...saved].slice(0, MAX_ENTRIES),
@@ -71,7 +72,7 @@ async function load() {
   }))
   useHistoryStore.subscribe((state, previous) => {
     if (state.entries === previous.entries) return
-    saveRecord(HISTORY_RECORD, state.entries).catch((error: unknown) =>
+    saveRecord(inProject(HISTORY_RECORD), state.entries).catch((error: unknown) =>
       console.warn('flashQuery: history could not be saved', error),
     )
   })
