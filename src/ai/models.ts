@@ -107,7 +107,12 @@ export function shortModelLabel(id: string): string {
 }
 
 /** The efforts offered in the ask bar (F-ASK-16), with their trade-off. */
-export const EFFORT_OPTIONS: { id: RequestEffort; label: string; description: string }[] = [
+export const EFFORT_OPTIONS: { id: Effort; label: string; description: string }[] = [
+  {
+    id: 'auto',
+    label: 'Auto',
+    description: 'Picks low, medium or high per question; the progress line says which.',
+  },
   {
     id: 'low',
     label: 'Low',
@@ -123,7 +128,8 @@ export const EFFORT_OPTIONS: { id: RequestEffort; label: string; description: st
 
 /**
  * The effort a request to `model` sends: none for models that reject it (Haiku 4.5, unknown and
- * local models), and medium for 'auto' until auto effort lands (F-ASK-18).
+ * local models). 'auto' is resolved per question before asking (F-ASK-18); anything that still
+ * gets it (dashboards, Python fixes) sends medium.
  */
 export function requestEffort(model: string, effort: Effort): RequestEffort | null {
   if (!findModel(model)?.supportsEffort) return null

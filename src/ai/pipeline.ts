@@ -1,6 +1,7 @@
 import {
   buildContext,
   countDataValues,
+  countLearnedValues,
   countResultValues,
   fetchResultDigest,
   fetchSamples,
@@ -12,16 +13,19 @@ import {
   exploreQuery,
   MAX_EXPLORATIONS,
 } from '@/ai/explore'
+import type { LearnedExample } from '@/ai/learned'
 import {
   buildExploreMessages,
   buildNoExploreMessages,
   buildPlanMessages,
   buildRepairMessages,
+  buildResultCheckMessages,
   type PromptMessage,
   type Turn,
 } from '@/ai/prompts/planSql'
 import { buildSummaryMessages } from '@/ai/prompts/summarize'
 import type { LLMProvider, PlanResponse } from '@/ai/providers'
+import { checkResult, describeFinding } from '@/ai/resultCheck'
 import type { AnswerSummary, ChartHint, PrivacyMode, SqlPlan } from '@/ai/schemas'
 import { summarizeLocally } from '@/ai/summary'
 import { Trace, type TraceStep } from '@/ai/trace'
@@ -30,7 +34,7 @@ import type { ChartData } from '@/charts/shape'
 import type { ChartSpec } from '@/charts/spec'
 import { loadChartData, readChartRows } from '@/engine/chartData'
 import type { Engine } from '@/engine/connection'
-import { openQuery, type PagedResult } from '@/engine/paging'
+import { closeResult, openQuery, type PagedResult } from '@/engine/paging'
 import { DEFAULT_TIMEOUT_MS } from '@/engine/query'
 import { guardSql } from '@/engine/sqlGuard'
 import type { Relationship } from '@/engine/relationships'
@@ -40,7 +44,9 @@ import { AppError, isCancellation, toAppError, type AppErrorData } from '@/lib/e
 // The ask pipeline (F-ASK-02…11), in a fixed order that never skips the checks:
 // context → plan (LLM) → guard → EXPLAIN → execute → chart → local summary, and on a failure in
 // guard/explain/execute the error goes back to the model for a corrected plan, at most twice
-// (F-ASK-05). In Balanced mode the AI summary (narrate, F-ASK-12) follows once the answer is shown.
+// (F-ASK-05). A result that ran but looks wrong (no rows, NULL columns, one row for a breakdown)
+// goes back once too, within the same budget, and is kept if the retry does no better (F-ASK-21).
+// In Balanced mode the AI summary (narrate, F-ASK-12) follows once the answer is shown.
 
 export const MAX_ATTEMPTS = 3
 const LLM_TIMEOUT_MS = 120_000
@@ -61,6 +67,10 @@ export interface PipelineInput {
   today: string
   /** Currency for money columns in charts (settings), or null. */
   currency: string | null
+  /** The user's confirmed answers on these tables (F-ASK-20); sent in Balanced mode only. */
+  learned?: readonly LearnedExample[]
+  /** Shown on the planning step: the effort Auto chose and why (F-ASK-18). */
+  effortNote?: string
   signal: AbortSignal
   onTrace?: (steps: TraceStep[]) => void
   onLog?: (entry: AiLogEntry) => void
@@ -392,13 +402,14 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineOutcome
     return buildContext({ datasets, mode, samples, relationships: input.relationships })
   })
 
+  const learned = input.learned ?? []
   const call: PlanCall = {
     provider,
     answerId: input.answerId,
     question: input.question,
     mode,
     tables,
-    dataValues: countDataValues(context),
+    dataValues: countDataValues(context) + countLearnedValues(mode, learned),
     signal,
     onLog: input.onLog,
   }
@@ -407,127 +418,176 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineOutcome
     question: input.question,
     history: input.history,
     today: input.today,
+    learned,
   })
   let current: SqlPlan | null = null
   let lastSql: string | null = null
   let explorations = 0
   let toldToAnswer = false
+  /** The result the check sent back (F-ASK-21): the answer unless the retry produces a new one. */
+  let held: ({ plan: SqlPlan } & SqlResult) | null = null
+  const answerOf = (plan: SqlPlan, executed: SqlResult): PipelineOutcome => ({
+    kind: 'answer',
+    plan,
+    trace: trace.steps,
+    ...executed,
+  })
+  const keepHeld = (kept: { plan: SqlPlan } & SqlResult): PipelineOutcome => {
+    held = null
+    return answerOf(kept.plan, kept)
+  }
 
-  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
-    try {
-      const response = await trace.step('plan', attempt, async (step) => {
-        const planned = await planCall(call, messages, attempt === 1 ? 'plan' : 'repair')
-        step.usage = planned.usage
-        step.sql = planned.plan.sql
-        return planned
-      })
-      current = response.plan
-    } catch (error) {
-      if (isCancellation(error)) throw error
-      return {
-        kind: 'failed',
-        plan: current,
-        sql: lastSql,
-        error: toAppError(error).toJSON(),
-        trace: trace.steps,
-      }
-    }
-
-    // Exploration (F-ASK-15): look at the data, then plan again. Doesn't use up a repair attempt.
-    if (current.kind === 'explore') {
-      attempt -= 1
-      if (mode === 'balanced' && current.sql && explorations < MAX_EXPLORATIONS) {
-        explorations += 1
-        const n = explorations
-        const sql = current.sql
-        let observation: string
-        try {
-          const result = await trace.step(
-            'explore',
-            n,
-            () => exploreQuery(engine, sql, tables, signal),
-            sql,
-          )
-          call.dataValues += explorationValues(result)
-          observation = describeExploration(n, { result })
-        } catch (error) {
-          if (isCancellation(error)) throw error
-          observation = describeExploration(n, { error: describeFailure(toAppError(error)) })
+  try {
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
+      try {
+        const response = await trace.step(
+          'plan',
+          attempt,
+          async (step) => {
+            const planned = await planCall(call, messages, attempt === 1 ? 'plan' : 'repair')
+            step.usage = planned.usage
+            step.sql = planned.plan.sql
+            return planned
+          },
+          null,
+          attempt === 1 && explorations === 0 ? input.effortNote : undefined,
+        )
+        current = response.plan
+      } catch (error) {
+        if (isCancellation(error)) throw error
+        if (held) return keepHeld(held)
+        return {
+          kind: 'failed',
+          plan: current,
+          sql: lastSql,
+          error: toAppError(error).toJSON(),
+          trace: trace.steps,
         }
-        messages = buildExploreMessages(messages, current, observation, MAX_EXPLORATIONS - n)
+      }
+
+      // Exploration (F-ASK-15): look at the data, then plan again. Doesn't use up a repair attempt.
+      if (current.kind === 'explore') {
+        attempt -= 1
+        if (mode === 'balanced' && current.sql && explorations < MAX_EXPLORATIONS) {
+          explorations += 1
+          const n = explorations
+          const sql = current.sql
+          let observation: string
+          try {
+            const result = await trace.step(
+              'explore',
+              n,
+              () => exploreQuery(engine, sql, tables, signal),
+              sql,
+            )
+            call.dataValues += explorationValues(result)
+            observation = describeExploration(n, { result })
+          } catch (error) {
+            if (isCancellation(error)) throw error
+            observation = describeExploration(n, { error: describeFailure(toAppError(error)) })
+          }
+          messages = buildExploreMessages(messages, current, observation, MAX_EXPLORATIONS - n)
+          continue
+        }
+        if (toldToAnswer) {
+          return {
+            kind: 'failed',
+            plan: current,
+            sql: lastSql,
+            error: new AppError({
+              code: 'ai_bad_output',
+              message: 'The AI kept exploring the data instead of answering. Try rephrasing.',
+              detail: null,
+            }).toJSON(),
+            trace: trace.steps,
+          }
+        }
+        toldToAnswer = true
+        messages = buildNoExploreMessages(
+          messages,
+          current,
+          mode === 'balanced'
+            ? 'That was the last exploration.'
+            : 'Exploring is not available in Strict privacy mode.',
+        )
         continue
       }
-      if (toldToAnswer) {
-        return {
-          kind: 'failed',
-          plan: current,
-          sql: lastSql,
-          error: new AppError({
-            code: 'ai_bad_output',
-            message: 'The AI kept exploring the data instead of answering. Try rephrasing.',
-            detail: null,
-          }).toJSON(),
-          trace: trace.steps,
-        }
-      }
-      toldToAnswer = true
-      messages = buildNoExploreMessages(
-        messages,
-        current,
-        mode === 'balanced'
-          ? 'That was the last exploration.'
-          : 'Exploring is not available in Strict privacy mode.',
-      )
-      continue
-    }
 
-    const python = current.kind === 'python' && Boolean(current.sql) && Boolean(current.python)
-    if (current.kind !== 'sql' && !python) {
-      return { kind: 'no-sql', plan: current, trace: trace.steps }
-    }
-    lastSql = current.sql ?? ''
-    try {
-      if (python) {
-        // The input rows for df; the code itself runs only after the user approves it.
-        const opened = await openChecked(lastSql, { engine, tables, signal, trace, attempt })
-        return {
-          kind: 'python',
-          plan: current,
-          sql: opened.sql,
-          input: opened.result,
-          messages,
-          trace: trace.steps,
-        }
+      // After a check, only new SQL replaces the result: the same query, or no query, keeps it.
+      if (held && (current.kind !== 'sql' || sameSql(current.sql, held.sql))) return keepHeld(held)
+
+      const python = current.kind === 'python' && Boolean(current.sql) && Boolean(current.python)
+      if (current.kind !== 'sql' && !python) {
+        return { kind: 'no-sql', plan: current, trace: trace.steps }
       }
-      const executed = await executeSql(lastSql, {
-        engine,
-        tables,
-        locale: input.locale,
-        signal,
-        trace,
-        attempt,
-        chartContext: {
-          question: input.question,
-          hint: current.chartHint,
-          title: current.title,
-          currency: input.currency,
-        },
-      })
-      return { kind: 'answer', plan: current, trace: trace.steps, ...executed }
-    } catch (error) {
-      if (isCancellation(error)) throw error
-      const failure = toAppError(error)
-      if (attempt === MAX_ATTEMPTS) {
-        return {
-          kind: 'failed',
-          plan: current,
-          sql: lastSql,
-          error: failure.toJSON(),
-          trace: trace.steps,
+      lastSql = current.sql ?? ''
+      try {
+        if (python) {
+          // The input rows for df; the code itself runs only after the user approves it.
+          const opened = await openChecked(lastSql, { engine, tables, signal, trace, attempt })
+          return {
+            kind: 'python',
+            plan: current,
+            sql: opened.sql,
+            input: opened.result,
+            messages,
+            trace: trace.steps,
+          }
         }
+        const executed = await executeSql(lastSql, {
+          engine,
+          tables,
+          locale: input.locale,
+          signal,
+          trace,
+          attempt,
+          chartContext: {
+            question: input.question,
+            hint: current.chartHint,
+            title: current.title,
+            currency: input.currency,
+          },
+        })
+        if (held) {
+          const replaced = held.result
+          held = null
+          await closeResult(engine, replaced)
+          return answerOf(current, executed)
+        }
+        // Demo fixtures would only repeat themselves, so the check needs a real model.
+        const finding =
+          provider.remote && attempt < MAX_ATTEMPTS
+            ? checkResult({
+                question: input.question,
+                sql: executed.sql,
+                columns: executed.result.columns,
+                rows: executed.rows,
+                rowCount: executed.result.rowCount,
+              })
+            : null
+        if (!finding) return answerOf(current, executed)
+        held = { plan: current, ...executed }
+        await trace.step('check', attempt, async () => undefined, null, describeFinding(finding))
+        messages = buildResultCheckMessages(messages, current, finding)
+      } catch (error) {
+        if (isCancellation(error)) throw error
+        const failure = toAppError(error)
+        if (attempt === MAX_ATTEMPTS) {
+          if (held) return keepHeld(held)
+          return {
+            kind: 'failed',
+            plan: current,
+            sql: lastSql,
+            error: failure.toJSON(),
+            trace: trace.steps,
+          }
+        }
+        messages = buildRepairMessages(messages, current, describeFailure(failure))
       }
-      messages = buildRepairMessages(messages, current, describeFailure(failure))
     }
+  } finally {
+    // Cancelled while a checked result waited: drop its temp view.
+    if (held) await closeResult(engine, held.result)
   }
   // Unreachable: the loop returns on its last attempt.
   throw new AppError({
@@ -535,4 +595,10 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineOutcome
     message: 'The question could not be answered.',
     detail: null,
   })
+}
+
+/** The same query, ignoring whitespace, case and a trailing semicolon. */
+function sameSql(a: string | null, b: string): boolean {
+  const norm = (sql: string) => sql.replace(/;\s*$/, '').replace(/\s+/g, ' ').trim().toLowerCase()
+  return a !== null && norm(a) === norm(b)
 }

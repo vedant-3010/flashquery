@@ -31,6 +31,8 @@ export interface ReportMeta {
   model: string
   provider: string
   mode: string
+  /** The planner's effort: low, medium, high, or auto (per question, F-ASK-18). */
+  effort: string
   rows: number
   date: string
 }
@@ -55,7 +57,7 @@ export function renderReport(results: readonly EvalResult[], meta: ReportMeta): 
   const lines = [
     '# NL→SQL eval report',
     '',
-    `${meta.date} · ${meta.provider} \`${meta.model}\` · ${meta.mode} mode · Global Sales ${meta.rows.toLocaleString('en-US')} rows`,
+    `${meta.date} · ${meta.provider} \`${meta.model}\` · ${meta.mode} mode · ${meta.effort} effort · Global Sales ${meta.rows.toLocaleString('en-US')} rows`,
     '',
     `**Execution accuracy: ${passed}/${results.length} (${pct(passed, results.length)})**, ${repaired} after a self-correction. ` +
       `${tokens.toLocaleString('en-US')} tokens, ≈ $${cost.toFixed(2)}.`,

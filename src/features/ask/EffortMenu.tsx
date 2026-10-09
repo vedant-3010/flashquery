@@ -13,15 +13,16 @@ import {
 import { activeApiKey, useSettingsStore } from '@/stores/settings'
 
 /**
- * How hard the model thinks before writing SQL (F-ASK-16), for models that take an effort. Hidden in
- * demo mode and for models without one (Haiku 4.5, custom and local models).
+ * How hard the model thinks before writing SQL (F-ASK-16), for models that take an effort; Auto
+ * picks per question (F-ASK-18). Hidden in demo mode and for models without one (Haiku 4.5,
+ * custom and local models).
  */
 export function EffortMenu() {
   const settings = useSettingsStore()
   const { effort, setEffort } = settings
-  const sent = requestEffort(settings.models[settings.provider], effort)
-  if (activeApiKey(settings) === null || sent === null) return null
-  const label = EFFORT_OPTIONS.find((option) => option.id === sent)?.label ?? sent
+  if (activeApiKey(settings) === null) return null
+  if (requestEffort(settings.models[settings.provider], effort) === null) return null
+  const label = EFFORT_OPTIONS.find((option) => option.id === effort)?.label ?? effort
 
   return (
     <DropdownMenu>
@@ -40,7 +41,7 @@ export function EffortMenu() {
       <DropdownMenuContent align="end" className="w-72">
         <DropdownMenuLabel>Effort</DropdownMenuLabel>
         <DropdownMenuRadioGroup
-          value={sent}
+          value={effort}
           onValueChange={(value) => setEffort(EffortSchema.parse(value))}
         >
           {EFFORT_OPTIONS.map((option) => (

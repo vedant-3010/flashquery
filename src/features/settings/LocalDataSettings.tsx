@@ -18,12 +18,16 @@ import { toJsonl, useFeedbackStore } from '@/stores/feedback'
 import { useToastStore } from '@/stores/toast'
 import { clearLocalData, exportWorkspace, importWorkspace } from '@/stores/workspace'
 
-/** Kept files (F-DATA-12), workspace export/import (F-EXP-03) and "Clear all local data" (F-EXP-04). */
+/**
+ * Kept files (F-DATA-12), workspace export/import (F-EXP-03), saved answers (eval cases and learned
+ * examples, F-ASK-14/20) and "Clear all local data" (F-EXP-04).
+ */
 export function LocalDataSettings() {
   const input = useRef<HTMLInputElement>(null)
-  const [confirming, setConfirming] = useState(false)
+  const [confirming, setConfirming] = useState<'everything' | 'cases' | null>(null)
   const toast = useToastStore((state) => state.show)
   const cases = useFeedbackStore((state) => state.cases)
+  const clearCases = useFeedbackStore((state) => state.clearCases)
 
   const download = (snapshots: boolean) => {
     const file = exportWorkspace({ snapshots })
@@ -86,17 +90,56 @@ export function LocalDataSettings() {
           <Download aria-hidden />
           Export eval cases ({cases.length})
         </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={cases.length === 0}
+          onClick={() => setConfirming('cases')}
+        >
+          <Trash2 aria-hidden />
+          Delete saved answers…
+        </Button>
         <span className="text-xs text-muted-foreground">
-          Saved from 👍/👎 on answers, in the evals/ JSON Lines format.
+          Saved from 👍/👎 on answers, in the evals/ JSON Lines format. In Balanced mode, 👍 answers
+          and your corrected SQL also guide similar questions on the same data.
         </span>
       </div>
       <div>
-        <Button size="sm" variant="destructive" onClick={() => setConfirming(true)}>
+        <Button size="sm" variant="destructive" onClick={() => setConfirming('everything')}>
           <Trash2 aria-hidden />
           Clear all local data…
         </Button>
       </div>
-      <AlertDialog open={confirming} onOpenChange={setConfirming}>
+      <AlertDialog
+        open={confirming === 'cases'}
+        onOpenChange={(open) => setConfirming(open ? 'cases' : null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete saved answers?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This deletes the {cases.length} eval cases saved from 👍/👎, so they no longer guide
+              new questions. Export them first to keep a copy.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={() => {
+                clearCases()
+                toast('Deleted the saved answers.')
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <AlertDialog
+        open={confirming === 'everything'}
+        onOpenChange={(open) => setConfirming(open ? 'everything' : null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Clear all local data?</AlertDialogTitle>

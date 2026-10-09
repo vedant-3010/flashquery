@@ -1,4 +1,4 @@
-import { Ban, CircleCheck, CircleX, LoaderCircle } from 'lucide-react'
+import { Ban, CircleCheck, CircleX, LoaderCircle, TriangleAlert } from 'lucide-react'
 import type { TraceStep } from '@/ai/trace'
 import { STAGE_LABELS } from '@/ai/trace'
 import { useElapsed } from '@/hooks/useElapsed'
@@ -7,7 +7,8 @@ import { cn } from '@/lib/utils'
 import { useSettingsStore } from '@/stores/settings'
 
 // F-ASK-06: "Reading schema 12 ms · Writing SQL 1.8 s · Checking SQL 40 ms · Running 84 ms …".
-// Guard + EXPLAIN show as one "Checking SQL" item; later attempts read "Fixing SQL".
+// Guard + EXPLAIN show as one "Checking SQL" item; later attempts read "Fixing SQL". Notes follow
+// the label: the effort Auto chose (F-ASK-18), what a result check found (F-ASK-21).
 
 interface Item {
   /** Unique: explorations (F-ASK-15) mean a stage can repeat within one attempt. */
@@ -18,6 +19,9 @@ interface Item {
   status: TraceStep['status']
   startedAt: number
   ms: number | null
+  note: string | null
+  /** A result check that found something: shown as a warning, not a tick. */
+  warn: boolean
 }
 
 function items(trace: TraceStep[]): Item[] {
@@ -42,6 +46,8 @@ function items(trace: TraceStep[]): Item[] {
       status: step.status,
       startedAt: step.startedAt,
       ms: step.ms,
+      note: step.note ?? null,
+      warn: step.stage === 'check' && step.status === 'done',
     })
   })
   return out
@@ -68,7 +74,7 @@ export function PipelineTimeline({ trace }: { trace: TraceStep[] }) {
       className="relative flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground"
     >
       {items(trace).map((item) => {
-        const Icon = ICONS[item.status]
+        const Icon = item.warn ? TriangleAlert : ICONS[item.status]
         return (
           <li key={item.key} className="inline-flex items-center gap-1">
             <Icon
@@ -76,11 +82,17 @@ export function PipelineTimeline({ trace }: { trace: TraceStep[] }) {
               className={cn(
                 'size-3.5',
                 item.status === 'running' && 'animate-spin text-primary motion-reduce:animate-none',
-                item.status === 'done' && 'text-emerald-600 dark:text-emerald-400',
+                item.status === 'done' && !item.warn && 'text-emerald-600 dark:text-emerald-400',
+                item.warn && 'text-amber-600 dark:text-amber-400',
                 item.status === 'error' && 'text-destructive',
               )}
             />
             <span className={cn(item.status === 'running' && 'text-foreground')}>{item.label}</span>
+            {item.note && (
+              <span className="max-w-72 truncate" title={item.note}>
+                · {item.note}
+              </span>
+            )}
             <Duration item={item} locale={locale} />
             <span className="sr-only">{item.status}</span>
           </li>

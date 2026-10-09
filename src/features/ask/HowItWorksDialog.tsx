@@ -39,7 +39,7 @@ const MODES = [
   {
     mode: 'balanced',
     name: 'Balanced',
-    sent: 'Strict, plus per-column statistics, up to 5 common values, 3 sample rows (text cut to 40 characters), and the result (≤ 50 rows, or a digest) for the AI summary.',
+    sent: 'Strict, plus per-column statistics, up to 5 common values, 3 sample rows (text cut to 40 characters), up to 3 of your 👍 answers on the same data as examples, and the result (≤ 50 rows, or a digest) for the AI summary.',
   },
 ] as const
 

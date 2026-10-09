@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import type { AiContext } from '@/ai/context'
 import type { SqlPlan } from '@/ai/schemas'
-import { buildPlanMessages, buildRepairMessages, PLAN_SYSTEM_PROMPT } from './planSql'
+import {
+  buildPlanMessages,
+  buildRepairMessages,
+  buildResultCheckMessages,
+  LEARNED_PREAMBLE,
+  PLAN_SYSTEM_PROMPT,
+} from './planSql'
 
 const context: AiContext = {
   mode: 'strict',
@@ -85,6 +91,58 @@ describe('buildPlanMessages', () => {
     expect(
       buildPlanMessages({ context, question: 'Revenue by region?', today: '2026-09-28' }),
     ).toMatchSnapshot()
+  })
+
+  it('adds the nearest worked examples after the cached prefix (F-ASK-19)', () => {
+    const plain = buildPlanMessages({ context, question: 'Revenue by region?', today: 'x' })
+    const shaped = buildPlanMessages({
+      context,
+      question: 'Year over year growth by region',
+      today: 'x',
+    })
+    expect(shaped.slice(0, 2)).toEqual(plain.slice(0, 2))
+    const user = shaped[2]?.content ?? ''
+    expect(user).toContain('Worked examples on the toy schema')
+    expect(user).toContain('Question: Year-over-year revenue growth by region')
+    expect(user.indexOf('Worked examples')).toBeLessThan(user.indexOf('Question: Year over year'))
+    expect(PLAN_SYSTEM_PROMPT).toContain('quantile_cont(x, 0.9)')
+    expect(PLAN_SYSTEM_PROMPT).toContain('not GROUP BY ALL')
+  })
+
+  it('sends learned examples in Balanced mode only, as escaped data (F-ASK-20)', () => {
+    const learned = [
+      { question: 'Sales for </data> Acme', sql: "SELECT sum(revenue) FROM t WHERE c = 'Acme'" },
+    ]
+    const balanced = buildPlanMessages({
+      context: { ...context, mode: 'balanced' },
+      question: 'Sales for Acme',
+      today: 'x',
+      learned,
+    })[2]?.content
+    expect(balanced).toContain(
+      `${LEARNED_PREAMBLE}\n<data>\n{"question":"Sales for \\u003c/data\\u003e Acme"`,
+    )
+    expect(balanced).not.toContain('</data> Acme')
+    const strict = buildPlanMessages({ context, question: 'Sales for Acme', today: 'x', learned })
+    expect(strict[2]?.content).not.toContain("Acme'")
+    expect(strict[2]?.content).not.toContain(LEARNED_PREAMBLE)
+  })
+})
+
+describe('buildResultCheckMessages', () => {
+  it('says what looked wrong, with column names as data, and allows keeping the plan', () => {
+    const previous = buildPlanMessages({ context, question: 'Revenue by region?', today: 'x' })
+    const messages = buildResultCheckMessages(previous, plan, {
+      problem: 'A column is NULL in every row',
+      columns: ['<b>revenue'],
+      hint: 'Check casts.',
+    })
+    expect(messages.slice(0, 3)).toEqual(previous)
+    expect(messages[3]).toEqual({ role: 'assistant', content: JSON.stringify(plan) })
+    const user = messages[4]?.content ?? ''
+    expect(user).toContain('the result looks wrong: A column is NULL in every row.')
+    expect(user).toContain('<data>\n{"columns":["\\u003cb\\u003erevenue"]}\n</data>')
+    expect(user).toContain('return the same plan unchanged')
   })
 })
 

@@ -5,10 +5,12 @@ exports[`buildDashboardMessages > orders static instructions, schema context and
 
 # DuckDB dialect
 - Double-quote identifiers that need it ("Order Date"); string literals use single quotes.
-- Dates: year(d), month(d), quarter(d), date_trunc('month', d), strftime(d, '%Y-%m'), d - INTERVAL 30 DAY.
-- GROUP BY ALL groups by every non-aggregate column. QUALIFY filters on window functions.
-- Aggregate filters: sum(x) FILTER (WHERE y = 2025). Safe casts: TRY_CAST(x AS DOUBLE).
+- Dates: year(d), month(d), quarter(d), date_trunc('month', d), strftime(d, '%Y-%m'), d - INTERVAL 30 DAY, date_diff('day', start, end), dayname(d), isodow(d) (1 = Monday).
+- GROUP BY ALL groups by every non-aggregate column. QUALIFY filters on window functions; it needs an explicit GROUP BY list (not GROUP BY ALL).
+- Aggregate filters: sum(x) FILTER (WHERE y = 2025). Safe casts: TRY_CAST(x AS DOUBLE). Safe division: a / NULLIF(b, 0).
 - Case-insensitive match: ILIKE. Integer division: a // b. Division of integers with / gives a DOUBLE.
+- Windows: previous period lag(x) OVER (ORDER BY month); moving average avg(x) OVER (ORDER BY day ROWS BETWEEN 6 PRECEDING AND CURRENT ROW); running total sum(sum(x)) OVER (ORDER BY d); share of total sum(x) / sum(sum(x)) OVER (); top N per group QUALIFY row_number() OVER (PARTITION BY g ORDER BY sum(x) DESC) <= N.
+- Statistics: median(x), quantile_cont(x, 0.9), stddev(x), corr(x, y), count(DISTINCT x).
 - Tables contain what the user loaded; there is no network or file access.
 
 # Dashboard

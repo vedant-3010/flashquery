@@ -11,6 +11,7 @@ export type StageId =
   | 'guard'
   | 'explain'
   | 'execute'
+  | 'check'
   | 'chart'
   | 'summary'
   | 'narrate'
@@ -24,6 +25,8 @@ export const STAGE_LABELS: Record<StageId, string> = {
   guard: 'Checking SQL',
   explain: 'Checking SQL',
   execute: 'Running',
+  /** A result that looks wrong goes back to the model once (F-ASK-21). */
+  check: 'Checking result',
   chart: 'Choosing chart',
   summary: 'Summarizing',
   /** The AI summary (F-ASK-12), after the answer is shown. */
@@ -42,6 +45,8 @@ export interface TraceStep {
   sql: string | null
   error: string | null
   usage: Usage | null
+  /** A short finding shown with the step ("Effort: high, rolling window"; "No rows came back"). */
+  note?: string
 }
 
 /** Records steps and reports a fresh copy after every change. */
@@ -65,6 +70,7 @@ export class Trace {
     attempt: number,
     task: (step: TraceStep) => Promise<T>,
     sql: string | null = null,
+    note?: string,
   ): Promise<T> {
     const step: TraceStep = {
       stage,
@@ -75,6 +81,7 @@ export class Trace {
       sql,
       error: null,
       usage: null,
+      ...(note ? { note } : {}),
     }
     this.steps.push(step)
     this.emit()

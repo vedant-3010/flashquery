@@ -1,4 +1,6 @@
 import { create } from 'zustand'
+import { autoEffort, describeEffort } from '@/ai/effort'
+import { pickLearned } from '@/ai/learned'
 import {
   canNarrate,
   executeSql,
@@ -26,6 +28,7 @@ import {
 } from '@/stores/askPython'
 import { currentProvider, logRequest, release, today, turns } from '@/stores/askSupport'
 import { useDatasetsStore } from '@/stores/datasets'
+import { useFeedbackStore } from '@/stores/feedback'
 import { useHistoryStore } from '@/stores/history'
 import { activeRelationships } from '@/stores/relationships'
 import { activeApiKey, useSettingsStore } from '@/stores/settings'
@@ -194,7 +197,12 @@ export const useAskStore = create<AskState>()((set, get) => {
             detail: null,
           })
         }
-        const [provider, engine] = await Promise.all([currentProvider(), getDb()])
+        // Auto effort (F-ASK-18): this question's effort, shown on the planning step.
+        const auto =
+          settings.effort === 'auto'
+            ? autoEffort(text, { tables: datasets.length, hasHistory: history.length > 0 })
+            : null
+        const [provider, engine] = await Promise.all([currentProvider(auto?.effort), getDb()])
         const outcome = await runPipeline({
           answerId: id,
           question: text,
@@ -204,6 +212,11 @@ export const useAskStore = create<AskState>()((set, get) => {
           relationships: activeRelationships(datasets.map((d) => d.table)),
           mode: settings.privacyMode,
           history,
+          learned: pickLearned(useFeedbackStore.getState().cases, {
+            question: text,
+            tables: datasets.map(({ table, schemaHash }) => ({ table, schemaHash })),
+          }),
+          effortNote: auto && provider.effort ? describeEffort(auto) : undefined,
           locale: settings.locale,
           currency: settings.currency,
           today: today(),

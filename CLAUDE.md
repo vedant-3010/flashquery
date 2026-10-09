@@ -72,7 +72,9 @@ Optional (v2): src/platform/* → Supabase (Auth + Postgres with RLS): accounts,
 Ask pipeline (`src/ai/pipeline.ts`); each stage emits a status event for the UI timeline:
 `buildContext → plan (LLM → SqlPlan; Balanced: ≤ 3 'explore' queries first) → guard (Zod + AST allowlist + EXPLAIN) → execute (normalized,
 row-capped) → self-correct ≤ 2× on error → chooseChart (heuristic; LLM hint only if compatible) →
-local summary`, then, in Balanced mode with a key, the AI summary (`narrate`) once the answer is shown.
+local summary → result check (empty / all-NULL / one row for a breakdown: one guided retry within the
+same budget)`, then, in Balanced mode with a key, the AI summary (`narrate`) once the answer is shown.
+The planning request carries up to 3 curated examples and, in Balanced mode, up to 3 learned ones.
 
 ## Layout
 ```
@@ -190,6 +192,10 @@ e2e/ (Playwright)     scripts/ (sample + fixture generators, record-demo, record
   can't parse oklch colors: chart colors are hex in `src/charts/theme.ts`.
 - `sr-only` (and any absolutely positioned) elements inside a scrolling container need a positioned
   ancestor (`relative`), or they stretch the page and `scrollIntoView` scrolls the whole document.
+- Content sized in pixels (the ECharts canvas, the grid's rows) sets the minimum width of every grid
+  and flex item around it, so the page can't shrink when the window narrows. Its host gets
+  `contain-inline-size` (`EChart.tsx`, `DataGrid.tsx`) and takes its width from its container;
+  `e2e/ask.spec.ts` checks that the answer card follows the window.
 - Zustand 5: a selector must not build a new object or array on each call (e.g. `findTile(...)` inside
   `useStore(...)`): it re-renders forever. Select the stable state and derive with `useMemo`.
 - Pyodide runs in `src/workers/python.worker.ts` (logic in `python.ts`, testable with a fake runtime).

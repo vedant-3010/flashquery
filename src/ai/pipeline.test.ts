@@ -482,3 +482,113 @@ describe('multi-step exploration (F-ASK-15)', () => {
     expect(JSON.stringify(requests[1]?.messages)).not.toContain('APAC')
   })
 })
+
+describe('result checks (F-ASK-21)', () => {
+  const EMPTY = "SELECT region, revenue FROM sales WHERE region = 'apac'"
+  const FIXED = "SELECT region, revenue FROM sales WHERE region ILIKE 'apac'"
+  const views = async () =>
+    Number(
+      (await runQuery(engine, 'SELECT count(*) FROM duckdb_views() WHERE NOT internal'))
+        .rows[0]?.[0],
+    )
+
+  it('sends an empty result back once, and answers with the new SQL', async () => {
+    const before = await views()
+    const { provider, requests } = scripted([plan(EMPTY), plan(FIXED)])
+    const { outcome, logs } = await ask(provider, [sales], { question: 'Revenue in apac?' })
+    expect(outcome).toMatchObject({ kind: 'answer', sql: FIXED })
+    if (outcome.kind !== 'answer') return
+    expect(outcome.result.rowCount).toBe(2)
+    expect(outcome.trace.find((step) => step.stage === 'check')).toMatchObject({
+      attempt: 1,
+      status: 'done',
+      note: 'No rows came back',
+    })
+    expect(requests[1]?.messages.at(-1)?.content).toContain(
+      'the result looks wrong: No rows came back.',
+    )
+    expect(logs.map((log) => log.purpose)).toEqual(['plan', 'repair'])
+    // The first result's temp view is dropped; only the answer's remains.
+    expect(await views()).toBe(before + 1)
+  })
+
+  it('keeps the result when the model returns the same SQL, or no SQL', async () => {
+    for (const reply of [
+      plan(`${EMPTY.replace(' FROM', '\n  FROM')};`),
+      plan(null, { kind: 'unanswerable' }),
+    ]) {
+      const { provider, requests } = scripted([plan(EMPTY), reply])
+      const { outcome } = await ask(provider, [sales], { question: 'Revenue in apac?' })
+      expect(outcome).toMatchObject({ kind: 'answer', sql: EMPTY })
+      expect(requests).toHaveLength(2)
+      expect(outcome.trace.filter((step) => step.stage === 'execute')).toHaveLength(1)
+    }
+  })
+
+  it('keeps the checked result when the retry fails or the model errors', async () => {
+    const failing = scripted([
+      plan(EMPTY),
+      plan('SELECT nope FROM sales'),
+      plan('SELECT nah FROM sales'),
+    ])
+    expect((await ask(failing.provider, [sales])).outcome).toMatchObject({
+      kind: 'answer',
+      sql: EMPTY,
+    })
+    expect(failing.requests).toHaveLength(3)
+    const erroring = scripted([
+      plan(EMPTY),
+      new AppError({ code: 'ai_http', message: 'Overloaded', detail: null }),
+    ])
+    expect((await ask(erroring.provider, [sales])).outcome).toMatchObject({
+      kind: 'answer',
+      sql: EMPTY,
+    })
+  })
+
+  it('checks once, never on the last attempt, and never in demo mode', async () => {
+    const twice = scripted([plan(EMPTY), plan("SELECT region FROM sales WHERE region = 'x'")])
+    const { outcome } = await ask(twice.provider, [sales])
+    expect(outcome.trace.filter((step) => step.stage === 'check')).toHaveLength(1)
+    expect(twice.requests).toHaveLength(2)
+
+    const last = scripted([plan('SELECT a FROM sales'), plan('SELECT b FROM sales'), plan(EMPTY)])
+    const lastTry = await ask(last.provider, [sales])
+    expect(lastTry.outcome).toMatchObject({ kind: 'answer', sql: EMPTY })
+    expect(lastTry.outcome.trace.some((step) => step.stage === 'check')).toBe(false)
+
+    const demo = scripted([plan(EMPTY)])
+    const fixtures = await ask({ ...demo.provider, remote: false }, [sales])
+    expect(fixtures.outcome.trace.some((step) => step.stage === 'check')).toBe(false)
+  })
+})
+
+describe('learned examples and auto effort (F-ASK-18, F-ASK-20)', () => {
+  const learned = [
+    { question: 'Sales for APAC', sql: "SELECT sum(revenue) FROM sales WHERE region = 'APAC'" },
+  ]
+
+  it('sends learned examples in Balanced mode, counted as data values', async () => {
+    const plain = scripted([plan(GOOD)])
+    const withLearned = scripted([plan(GOOD)])
+    const a = await ask(plain.provider, [sales])
+    const b = await ask(withLearned.provider, [sales], { learned })
+    expect(withLearned.requests[0]?.messages.at(-1)?.content).toContain(
+      '"question":"Sales for APAC"',
+    )
+    expect(b.logs[0]?.dataValues).toBe((a.logs[0]?.dataValues ?? 0) + 1)
+  })
+
+  it('never sends them in Strict mode', async () => {
+    const { provider, requests } = scripted([plan(GOOD)])
+    await ask(provider, [sales], { learned, mode: 'strict' })
+    expect(JSON.stringify(requests[0]?.messages)).not.toContain('Sales for APAC')
+  })
+
+  it('shows the effort Auto chose on the first planning step', async () => {
+    const { provider } = scripted([plan('SELECT regon FROM sales'), plan(GOOD)])
+    const { outcome } = await ask(provider, [sales], { effortNote: 'High effort: growth' })
+    const plans = outcome.trace.filter((step) => step.stage === 'plan')
+    expect(plans.map((step) => step.note)).toEqual(['High effort: growth', undefined])
+  })
+})
