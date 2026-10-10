@@ -30,6 +30,8 @@ const TEXT_PAIRS: [string, string][] = [
   ['accent-foreground', 'accent'],
   ['destructive', 'background'],
   ['sidebar-foreground', 'sidebar'],
+  ['brand', 'background'],
+  ['brand', 'card'],
 ]
 
 describe.each([

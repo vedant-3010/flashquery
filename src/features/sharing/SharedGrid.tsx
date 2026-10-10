@@ -13,18 +13,19 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { COLS, GRID_CONFIG, moveTile, sizePreset, type SizePreset } from '@/dashboard/layout'
+import {
+  COLS,
+  GRID_CONFIG,
+  moveTile,
+  sizePreset,
+  STACK_BELOW_PX,
+  type SizePreset,
+} from '@/dashboard/layout'
 import type { Dashboard, DashboardTile, TileLayout } from '@/dashboard/schema'
+import { StackedTiles } from '@/features/dashboard/StackedTiles'
 import { TileBody } from '@/features/dashboard/TileBody'
 import { formatEventTime } from '@/lib/format'
 import { useSettingsStore } from '@/stores/settings'
-
-/** Narrower than this, a dashboard being read stacks its tiles in one column, in reading order. */
-const STACK_BELOW_PX = 640
-
-/** A tile's height in the grid, in pixels: rows plus the gaps between them. */
-const tileHeight = (tile: DashboardTile) =>
-  tile.layout.h * GRID_CONFIG.rowHeight + (tile.layout.h - 1) * GRID_CONFIG.margin[1]
 
 /**
  * A shared dashboard's tiles (F-SHARE-05/06), from their snapshots alone: no data, no engine, no
@@ -49,10 +50,6 @@ export function SharedGrid({
     [dashboard.tiles],
   )
   const stacked = mounted && !editing && width < STACK_BELOW_PX
-  const inReadingOrder = useMemo(
-    () => [...dashboard.tiles].sort((a, b) => a.layout.y - b.layout.y || a.layout.x - b.layout.x),
-    [dashboard.tiles],
-  )
 
   const layouts = () => new Map(dashboard.tiles.map((t) => [t.id, t.layout]))
   const resize = (tile: DashboardTile, preset: SizePreset) => {
@@ -137,15 +134,7 @@ export function SharedGrid({
 
   return (
     <div ref={containerRef}>
-      {stacked && (
-        <div className="grid gap-3">
-          {inReadingOrder.map((tile) => (
-            <div key={tile.id} style={{ height: tileHeight(tile) }}>
-              {card(tile)}
-            </div>
-          ))}
-        </div>
-      )}
+      {stacked && <StackedTiles tiles={dashboard.tiles}>{card}</StackedTiles>}
       {mounted && !stacked && (
         <ReactGridLayout
           width={width}

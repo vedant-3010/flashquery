@@ -372,6 +372,7 @@ exports[`toOption > draws a time-axis line in UTC with lttb sampling 1`] = `
     "axisLabel": {
       "color": "#737373",
       "formatter": [Function],
+      "hideOverlap": true,
     },
     "axisLine": {
       "show": false,
@@ -536,6 +537,7 @@ exports[`toOption > draws bars with formatted axes (snapshot) 1`] = `
     "axisLabel": {
       "color": "#737373",
       "formatter": [Function],
+      "hideOverlap": true,
     },
     "axisLine": {
       "show": false,
@@ -741,6 +743,7 @@ exports[`v2 chart types (F-VIZ-09, F-VIZ-10) > draws a 100% stacked bar as each 
     "axisLabel": {
       "color": "#737373",
       "formatter": [Function],
+      "hideOverlap": true,
     },
     "axisLine": {
       "show": false,
@@ -2584,6 +2587,7 @@ exports[`v2 chart types (F-VIZ-09, F-VIZ-10) > draws bars and a line on two axes
       "axisLabel": {
         "color": "#737373",
         "formatter": [Function],
+        "hideOverlap": true,
       },
       "axisLine": {
         "show": false,
@@ -2611,6 +2615,7 @@ exports[`v2 chart types (F-VIZ-09, F-VIZ-10) > draws bars and a line on two axes
       "axisLabel": {
         "color": "#737373",
         "formatter": [Function],
+        "hideOverlap": true,
       },
       "axisLine": {
         "show": false,
@@ -2761,6 +2766,7 @@ exports[`v2 chart types (F-VIZ-09, F-VIZ-10) > draws box plots from quartiles co
     "axisLabel": {
       "color": "#737373",
       "formatter": [Function],
+      "hideOverlap": true,
     },
     "axisLine": {
       "show": false,
@@ -2957,6 +2963,7 @@ exports[`v2 chart types (F-VIZ-09, F-VIZ-10) > floats waterfall steps from the r
     "axisLabel": {
       "color": "#737373",
       "formatter": [Function],
+      "hideOverlap": true,
     },
     "axisLine": {
       "show": false,

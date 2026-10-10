@@ -11,22 +11,28 @@ import {
 import { activeApiKey, useSettingsStore } from '@/stores/settings'
 import { useUiStore } from '@/stores/ui'
 
+// Plain words first (D117): what happens to your file, what the AI sees, how answers are checked,
+// and what sharing sends. The details follow in the table.
 const STEPS = [
   {
-    title: 'Your file loads into your browser',
-    text: 'DuckDB, a full SQL database, runs in this tab. Nothing is uploaded to a server; flashQuery has none.',
+    title: 'Your file stays on your device',
+    text: 'flashQuery reads it right here, in your browser, with a built-in database. Your files are never uploaded.',
   },
   {
-    title: 'The AI sees the shape of your data',
-    text: "Table and column names, and, in Balanced mode, a few statistics and sample values plus the answer's result (up to 50 rows) for its summary. Strict mode sends no values at all.",
+    title: 'The AI sees the outline, not your rows',
+    text: "Table and column names. In Balanced mode, also a few statistics and sample values, and the answer's result (up to 50 rows) to write its summary. Strict mode sends no values at all.",
   },
   {
-    title: 'The AI writes SQL; your browser runs it',
-    text: 'Every query is checked first: read-only, one statement, only your tables. If it fails, the AI gets the error and tries again (twice at most).',
+    title: 'The AI writes the query; your device runs it',
+    text: 'Every query is checked first: read-only, and only your tables. If one fails, the AI sees the error and tries again, twice at most.',
   },
   {
-    title: 'You can check everything',
-    text: 'Each answer shows its SQL (editable), assumptions and a step-by-step trace. The AI inspector shows every request exactly as it was sent.',
+    title: 'You can check every answer',
+    text: 'Each answer shows how it was worked out: the SQL (which you can edit), the assumptions made and each step. The AI inspector shows every request exactly as it was sent.',
+  },
+  {
+    title: 'Sharing is your choice',
+    text: "Signed in, you can share a dashboard's results with people or by link. A dialog lists exactly what will upload first; your files never do.",
   },
 ]
 
@@ -63,7 +69,8 @@ export function HowItWorksDialog({ inspector = true }: { inspector?: boolean }) 
         <DialogHeader>
           <DialogTitle>How flashQuery works</DialogTitle>
           <DialogDescription>
-            Bring your own AI key; without one, demo mode answers questions about the sample data.
+            Add your own AI key (Anthropic, OpenAI, or a model on your computer). Without one, demo
+            mode answers example questions about the samples.
           </DialogDescription>
         </DialogHeader>
         <ol className="grid gap-3 text-sm">
@@ -102,7 +109,7 @@ export function HowItWorksDialog({ inspector = true }: { inspector?: boolean }) 
         </table>
         <p className="text-xs text-muted-foreground">
           {demo
-            ? 'Demo mode sends nothing: its answers are pre-recorded and the SQL runs on your device.'
+            ? 'Demo mode sends nothing: its answers are prepared in advance, and the numbers are worked out on your device.'
             : 'Requests go straight from your browser to the AI provider with your key. Your rows and files stay here.'}{' '}
           Voice questions are recognized on this device; no audio leaves it.
         </p>

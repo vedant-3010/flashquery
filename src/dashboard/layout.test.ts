@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { moveTile, placeTile, planLayout, sizePreset } from './layout'
+import { moveTile, placeTile, planLayout, sizePreset, stackRows, tileHeightPx } from './layout'
 
 describe('placeTile (F-DASH-02 auto-place)', () => {
   it('fills the first free spot, left to right, then below', () => {
@@ -71,5 +71,33 @@ describe('sizes and moves (keyboard alternatives)', () => {
     expect(moved.get('c')).toMatchObject({ x: 6, y: 0 })
     expect(moved.get('b')).toMatchObject({ x: 0, y: 4 })
     expect(moveTile(layouts, 'a', 'earlier')).toEqual(layouts)
+  })
+})
+
+describe('stacked on a phone (D117)', () => {
+  const tile = (id: string, type: 'kpi' | 'chart' | 'text', x: number, y: number) => ({
+    id,
+    type,
+    layout: { x, y, w: type === 'kpi' ? 3 : 6, h: type === 'kpi' ? 2 : 4 },
+  })
+
+  it('reads top to bottom, left to right, pairing KPI tiles', () => {
+    const tiles = [
+      tile('chart', 'chart', 0, 2),
+      tile('k3', 'kpi', 6, 0),
+      tile('k1', 'kpi', 0, 0),
+      tile('k2', 'kpi', 3, 0),
+      tile('notes', 'text', 6, 2),
+    ]
+    expect(stackRows(tiles).map((row) => row.map((t) => t.id))).toEqual([
+      ['k1', 'k2'],
+      ['k3'],
+      ['chart'],
+      ['notes'],
+    ])
+  })
+
+  it('keeps each tile as tall as on the grid', () => {
+    expect(tileHeightPx({ x: 0, y: 0, w: 3, h: 2 })).toBe(2 * 72 + 12)
   })
 })

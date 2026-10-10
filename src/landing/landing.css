@@ -86,8 +86,9 @@
     text-wrap: pretty;
   }
   /* A hairline that draws in from the left when its parent is hovered or focused. */
+  /* Links underline in the accent as the pointer arrives. */
   .underline-draw {
-    background-image: linear-gradient(currentColor, currentColor);
+    background-image: linear-gradient(var(--color-accent), var(--color-accent));
     background-size: 0% 1px;
     background-position: 0 100%;
     background-repeat: no-repeat;

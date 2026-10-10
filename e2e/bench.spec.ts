@@ -34,6 +34,6 @@ test.describe('benchmark page', () => {
     expect(markdown).toContain('100,000 rows')
 
     await page.getByRole('link', { name: 'Back to flashQuery' }).click()
-    await expect(page.getByRole('heading', { name: 'Ask your data anything' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'What do you want to look at?' })).toBeVisible()
   })
 })

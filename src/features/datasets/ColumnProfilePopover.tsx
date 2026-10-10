@@ -22,10 +22,12 @@ export function ColumnProfilePopover({ dataset, column }: ColumnProfilePopoverPr
         <PopoverTrigger asChild>
           <button
             type="button"
-            className="flex w-full items-center gap-2 rounded px-2 py-0.5 text-left text-xs hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
+            className="flex w-full items-center gap-2 rounded-md px-2 py-1 text-left text-[13px] hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
           >
-            <ColumnTypeIcon duckType={column.type} />
-            <span className="truncate font-mono">{column.name}</span>
+            <span className="text-muted-foreground/80">
+              <ColumnTypeIcon duckType={column.type} />
+            </span>
+            <span className="truncate">{column.name}</span>
           </button>
         </PopoverTrigger>
         <PopoverContent side="right" align="start" className="w-72">

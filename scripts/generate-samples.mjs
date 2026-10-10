@@ -107,6 +107,192 @@ SELECT
 FROM metrics
 ORDER BY date, channel, device`
 
+// A small company's books, 2023–2025 (F-DATA-05, D117): invoices to customers (income) and bills
+// from vendors (expenses), each with its due and paid dates as of 2025-12-31, so receivables,
+// payables, margins and spend can all be asked about. Payroll and rent are monthly.
+const AS_OF = "DATE '2025-12-31'"
+const CUSTOMERS = [
+  'Bluebird Logistics',
+  'Harbor Health Clinics',
+  'Summit Outdoor Co.',
+  'Lumen Analytics',
+  'Orchard Foods',
+  'Granite Builders',
+  'Atlas Freight',
+  'Brightside Dental',
+  'Copperleaf Hotels',
+  'Driftwood Studios',
+  'Evergreen Schools',
+  'Foxglove Pharmacy',
+  'Ironclad Security',
+  'Juniper Retail',
+  'Keystone Legal',
+  'Larkspur Media',
+  'Meridian Travel',
+  'Nimbus Cloud Labs',
+  'Oakridge Farms',
+  'Pioneer Auto Parts',
+  'Quarry Lane Architects',
+  'Riverbend Clinics',
+  'Silverline Events',
+  'Tidewater Marine',
+  'Upland Coffee Roasters',
+  'Vantage Fitness',
+  'Willow Creek Vets',
+  'Cedar & Pine Interiors',
+  'Maple Street Bakery',
+  'Northfield Insurance',
+]
+// Slow payers: some of the larger customers, so "who owes us most" has an answer worth seeing.
+const SLOW = [1, 4, 9, 17]
+// category, P&L group, department, weight, typical amount, vendors
+const EXPENSES = [
+  [
+    'Hosting',
+    'Cost of sales',
+    'Engineering',
+    0.12,
+    2200,
+    ['Skyline Cloud Hosting', 'Stratus Data Centers'],
+  ],
+  [
+    'Contractors',
+    'Cost of sales',
+    'Operations',
+    0.12,
+    4800,
+    ['Brightwire Contractors', 'Keel & Co Consulting', 'Fieldwork Partners'],
+  ],
+  ['Payment fees', 'Cost of sales', 'Finance', 0.08, 600, ['Paylane Payments']],
+  [
+    'Software',
+    'Operating expenses',
+    null,
+    0.14,
+    900,
+    ['Codebase Software', 'Teamtools', 'Inkwell Docs'],
+  ],
+  [
+    'Marketing',
+    'Operating expenses',
+    'Marketing',
+    0.14,
+    3200,
+    ['Adwise Marketing', 'Pixelcraft Design', 'Signal Events'],
+  ],
+  ['Travel', 'Operating expenses', 'Sales', 0.12, 1100, ['Wayfarer Travel', 'Northline Air']],
+  ['Office supplies', 'Operating expenses', 'Operations', 0.08, 350, ['Paper & Pen Supplies']],
+  [
+    'Professional fees',
+    'Operating expenses',
+    'Finance',
+    0.06,
+    2600,
+    ['Ledgerline Accountants', 'Northgate Legal'],
+  ],
+  ['Utilities', 'Operating expenses', 'Operations', 0.05, 700, ['Metro Power & Water']],
+  ['Insurance', 'Operating expenses', 'Finance', 0.03, 1900, ['Clearview Insurance']],
+  ['Training', 'Operating expenses', 'HR', 0.06, 800, ['Pinnacle Training']],
+]
+const DEPARTMENTS = ['Engineering', 'Sales', 'Marketing', 'Operations', 'Finance', 'HR']
+const PAYROLL = {
+  Engineering: 96000,
+  Sales: 54000,
+  Marketing: 30000,
+  Operations: 38000,
+  Finance: 22000,
+  HR: 16000,
+}
+
+const quote = (text) => `'${text.replaceAll("'", "''")}'`
+const pick = (list, uniform) =>
+  list.length === 1
+    ? quote(list[0])
+    : `CASE ${list.map((item, i) => (i < list.length - 1 ? `WHEN ${uniform} < ${(i + 1) / list.length} THEN ${quote(item)}` : `ELSE ${quote(item)}`)).join(' ')} END`
+let cumulative = 0
+const expenseCase = (field) =>
+  `CASE ${EXPENSES.map((e, i) => {
+    cumulative = i === 0 ? e[3] : cumulative + e[3]
+    const value = typeof field === 'function' ? field(e) : quote(e[field])
+    return i < EXPENSES.length - 1
+      ? `WHEN u_cat < ${cumulative.toFixed(4)} THEN ${value}`
+      : `ELSE ${value}`
+  }).join(' ')} END`
+
+const COMPANY_FINANCES = `
+WITH base AS (
+  SELECT i,
+    ${u('i', 'type')} AS u_type, ${u('i', 'day')} AS u_day, ${u('i', 'cat')} AS u_cat,
+    ${u('i', 'who')} AS u_who, ${u('i', 'amt')} AS u_amt, ${u('i', 'pay')} AS u_pay,
+    ${u('i', 'dept')} AS u_dept, ${u('i', 'bad')} AS u_bad
+  FROM range(16000) r(i)
+), dated AS (
+  SELECT *, DATE '2023-01-01' + CAST(floor(pow(u_day, 0.85) * 1096) AS INTEGER) AS date
+  FROM base
+), income AS (
+  SELECT i, date, u_amt, u_pay, u_bad,
+    CAST(floor(pow(u_who, 1.7) * ${CUSTOMERS.length}) AS INTEGER) AS k,
+    CASE WHEN u_cat < 0.5 THEN 'Subscriptions' WHEN u_cat < 0.8 THEN 'Services'
+         WHEN u_cat < 0.92 THEN 'Licenses' ELSE 'Training' END AS category
+  FROM dated WHERE u_type < 0.46
+), income_rows AS (
+  SELECT date, 'Income' AS type, 'Revenue' AS pl_group, category,
+    list_extract([${CUSTOMERS.map(quote).join(', ')}], k + 1) AS counterparty,
+    'Sales' AS department,
+    round(CASE category WHEN 'Subscriptions' THEN 1800 WHEN 'Services' THEN 5200
+                        WHEN 'Licenses' THEN 9000 ELSE 1500 END
+      * (0.5 + u_amt * 1.2) * (1 + datediff('month', DATE '2023-01-01', date) * 0.015)
+      * (1 + (${CUSTOMERS.length - 1} - k) / 60.0), 2) AS amount,
+    'INV-' || lpad(CAST(row_number() OVER (ORDER BY date, i) AS VARCHAR), 5, '0') AS document_no,
+    CASE k % 3 WHEN 0 THEN 30 WHEN 1 THEN 45 ELSE 14 END AS terms,
+    CASE WHEN k IN (${SLOW.join(', ')}) THEN 25 + CAST(floor(u_pay * 70) AS INTEGER)
+         ELSE -8 + CAST(floor(u_pay * 20) AS INTEGER) END AS late,
+    u_bad < 0.008 AS bad_debt
+  FROM income
+), expense AS (
+  SELECT i, date, u_amt, u_pay, u_who, u_dept,
+    ${expenseCase(0)} AS category,
+    ${expenseCase(1)} AS pl_group,
+    ${expenseCase((e) => (e[2] ? quote(e[2]) : pick(DEPARTMENTS, 'u_dept')))} AS department,
+    ${expenseCase((e) => String(e[4]))} AS typical,
+    ${expenseCase((e) => pick(e[5], 'u_who'))} AS counterparty
+  FROM dated WHERE u_type >= 0.46
+), expense_rows AS (
+  SELECT date, 'Expense' AS type, pl_group, category, counterparty, department,
+    round(typical * (0.4 + u_amt * 1.3) * (1 + datediff('month', DATE '2023-01-01', date) * 0.01), 2) AS amount,
+    'BILL-' || lpad(CAST(row_number() OVER (ORDER BY date, i) AS VARCHAR), 5, '0') AS document_no,
+    30 AS terms, -12 + CAST(floor(u_pay * 22) AS INTEGER) AS late, false AS bad_debt
+  FROM expense
+), months AS (
+  SELECT CAST(m AS DATE) AS month FROM range(DATE '2023-01-01', DATE '2026-01-01', INTERVAL 1 MONTH) t(m)
+), fixed_rows AS (
+  SELECT last_day(month) AS date, 'Expense' AS type, 'Operating expenses' AS pl_group, 'Payroll' AS category,
+    'Staff payroll' AS counterparty, d.department,
+    round(d.monthly * (1 + datediff('month', DATE '2023-01-01', month) * 0.008), 2) AS amount,
+    'PAY-' || strftime(month, '%Y%m') || '-' || upper(left(d.department, 3)) AS document_no,
+    0 AS terms, 0 AS late, false AS bad_debt
+  FROM months, (VALUES ${Object.entries(PAYROLL)
+    .map(([dept, monthly]) => `(${quote(dept)}, ${monthly})`)
+    .join(', ')}) d(department, monthly)
+  UNION ALL
+  SELECT month, 'Expense', 'Operating expenses', 'Rent', 'DeskSpace Properties', 'Operations',
+    CASE WHEN month < DATE '2024-07-01' THEN 14500 ELSE 18900 END,
+    'RENT-' || strftime(month, '%Y%m'), 5, 0, false
+  FROM months
+), all_rows AS (
+  SELECT * FROM income_rows UNION ALL SELECT * FROM expense_rows UNION ALL SELECT * FROM fixed_rows
+), paid AS (
+  SELECT *, date + terms AS due_date,
+    CASE WHEN bad_debt OR date + terms + late > ${AS_OF} THEN NULL ELSE date + terms + late END AS paid_date
+  FROM all_rows
+)
+SELECT date, type, pl_group, category, counterparty, department, amount,
+  CASE WHEN category IN ('Payroll', 'Insurance') THEN 0 ELSE round(amount * 0.10, 2) END AS tax,
+  document_no, due_date, paid_date,
+  CASE WHEN paid_date IS NOT NULL THEN 'Paid' WHEN due_date < ${AS_OF} THEN 'Overdue' ELSE 'Open' END AS status
+FROM paid
+ORDER BY date, document_no`
+
 const db = await duckdb.createDuckDB(
   {
     mvp: { mainModule: dist('duckdb-mvp.wasm'), mainWorker: dist('duckdb-node-mvp.worker.cjs') },
@@ -124,6 +310,7 @@ const scratch = mkdtempSync(join(tmpdir(), 'flashQuery-samples-'))
 for (const [file, sql] of [
   ['hr_attrition.csv', HR_ATTRITION],
   ['web_traffic.csv', WEB_TRAFFIC],
+  ['company_finances.csv', COMPANY_FINANCES],
 ]) {
   const path = join(scratch, file)
   conn.query(`COPY (${sql}) TO '${path}' (FORMAT csv, HEADER)`)

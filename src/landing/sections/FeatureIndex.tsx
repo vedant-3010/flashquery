@@ -2,54 +2,50 @@ import { AnimatePresence, m, useMotionValue, useSpring } from 'motion/react'
 import { useLayoutEffect, useRef, useState, type ComponentType } from 'react'
 import { cx } from '@/landing/cx'
 import {
+  AnswerVignette,
+  AskVignette,
   DashboardVignette,
-  ExploreVignette,
-  JoinsVignette,
-  LocalModelVignette,
-  NotebookVignette,
-  PaletteVignette,
+  FilesVignette,
+  ShareVignette,
 } from '@/landing/features/Vignettes'
+import { Eyebrow } from '@/landing/Eyebrow'
 import { Reveal } from '@/landing/Reveal'
 import { HeadlineLines } from '@/landing/HeadlineLines'
 
 const PREVIEW_HEIGHT = 160
 
+// From a spreadsheet to a shared dashboard, in plain words (D117). The technical features are in
+// ForDataPeople.
 const FEATURES: { title: string; body: string; tags: string; Preview: ComponentType }[] = [
   {
-    title: 'Dashboards that stay live',
-    body: 'Pin answers or let the AI draft one. Drag, resize, filter every tile at once or click a bar to cross-filter, present full screen, export to HTML or PDF.',
-    tags: 'Cross-filter · Present · Export',
+    title: 'Bring any spreadsheet',
+    body: 'Excel, CSV and more, or paste cells straight from a sheet. Two related files? It works out how they connect. A million rows open in seconds.',
+    tags: 'Excel · CSV · Paste · Several files',
+    Preview: FilesVignette,
+  },
+  {
+    title: 'Ask in plain English',
+    body: 'Type your question, or say it. Unsure how something is spelled in your data? It checks before it answers.',
+    tags: 'Typed or spoken · Checks first',
+    Preview: AskVignette,
+  },
+  {
+    title: 'Answers you can check',
+    body: 'A chart picked for the question, a one-line summary, the assumptions it made and how it worked the answer out. Fix anything, and it reruns.',
+    tags: 'Chart · Summary · Assumptions · Working',
+    Preview: AnswerVignette,
+  },
+  {
+    title: 'Dashboards in a click',
+    body: 'Pin answers, or let the AI draft a whole dashboard. Filter every tile at once, present it full screen, or save it as a PDF.',
+    tags: 'Pin · Filter · Present · PDF',
     Preview: DashboardVignette,
   },
   {
-    title: 'Python when SQL isn’t enough',
-    body: 'Forecasts and regressions run as pandas in Pyodide, only after you approve the code. A notebook in the scratchpad runs your own cells, with matplotlib.',
-    tags: 'pandas · matplotlib · approval',
-    Preview: NotebookVignette,
-  },
-  {
-    title: 'Your model, on your machine',
-    body: 'Bring an Anthropic or OpenAI key, or point flashQuery at Ollama or LM Studio and keep everything on this computer.',
-    tags: 'BYOK · Ollama · LM Studio',
-    Preview: LocalModelVignette,
-  },
-  {
-    title: 'It looks before it answers',
-    body: 'Unsure how a value is spelled? The AI can run up to three small, checked queries first. Each one is in the trace.',
-    tags: 'Exploration · Trace',
-    Preview: ExploreVignette,
-  },
-  {
-    title: 'Joins it finds for you',
-    body: 'Load two related files and flashQuery spots the keys between them by name and by matching values, then uses them when a question spans both.',
-    tags: 'Relationships · Multi-table',
-    Preview: JoinsVignette,
-  },
-  {
-    title: 'Made for the keyboard',
-    body: 'Press ⌘K to jump anywhere, / to ask, ? for every shortcut. Grids copy as TSV straight into a spreadsheet.',
-    tags: '⌘K · Shortcuts · TSV',
-    Preview: PaletteVignette,
+    title: 'Share results, not files',
+    body: 'Invite your team or your accountant, or send a view-only link you can revoke. A dialog lists exactly what goes first; your files never do.',
+    tags: 'Invite · View-only links · Revoke',
+    Preview: ShareVignette,
   },
 ]
 
@@ -86,18 +82,13 @@ export function FeatureIndex() {
     <section
       id="features"
       aria-labelledby="features-title"
-      className="mx-auto max-w-[1200px] px-5 pt-32 md:px-8"
+      className="mx-auto max-w-[1200px] px-5 pt-24 md:px-8 md:pt-32"
     >
       <Reveal group className="max-w-[52rem]">
-        <Reveal
-          as="p"
-          className="font-mono text-[11.5px] tracking-[0.08em] text-ink-muted uppercase"
-        >
-          Also in the box
-        </Reveal>
+        <Eyebrow>All in one place</Eyebrow>
         <Reveal as="div">
           <h2 id="features-title" className="mt-4 text-[clamp(36px,4.6vw,60px)] text-balance">
-            <HeadlineLines lead="Everything else" line="an analyst reaches for." />
+            <HeadlineLines lead="From spreadsheet" line="to shared dashboard." />
           </h2>
         </Reveal>
       </Reveal>
@@ -119,7 +110,7 @@ export function FeatureIndex() {
                 hovered !== null && hovered !== i ? 'text-ink-faint' : 'text-ink',
               )}
             >
-              <span className="font-mono text-[12px] text-ink-faint">0{i + 1}</span>
+              <span className="font-mono text-[12px] text-accent-ink">0{i + 1}</span>
               <h3 className="font-serif text-[28px] leading-[1.05] transition-transform duration-300 ease-[var(--ease-out-quart)] group-hover:translate-x-1.5">
                 {feature.title}
               </h3>
@@ -128,7 +119,8 @@ export function FeatureIndex() {
                 <p className="mt-2 font-mono text-[10.5px] tracking-[0.04em] text-ink-faint">
                   {feature.tags}
                 </p>
-                <div className="mt-4 h-[150px] max-w-[300px] lg:hidden">
+                {/* Tablets show it inline; phones read the text alone (a shorter page). */}
+                <div className="mt-4 h-[150px] max-w-[300px] max-md:hidden lg:hidden">
                   <feature.Preview />
                 </div>
               </div>

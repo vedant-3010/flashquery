@@ -1,7 +1,7 @@
-import { CircleCheck, CircleX, LoaderCircle, Sparkles } from 'lucide-react'
+import { CircleCheck, CircleX, LayoutTemplate, LoaderCircle } from 'lucide-react'
 import { useId, useRef, useState } from 'react'
 import type { GenerateProgress } from '@/ai/dashboard'
-import { DEMO_TABLE } from '@/ai/fixtures'
+import { demoSetsFor } from '@/ai/fixtures'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -44,7 +44,8 @@ export function GenerateDialog({
   const datasets = useDatasetsStore((state) => state.datasets)
   const demo = useSettingsStore((state) => activeApiKey(state) === null)
   const mode = useSettingsStore((state) => state.privacyMode)
-  const preferred = datasets.find((d) => d.table === DEMO_TABLE) ?? datasets[0]
+  // Demo mode builds dashboards for the samples: offer a loaded one first.
+  const preferred = datasets.find((d) => demoSetsFor([d.table]).length > 0) ?? datasets[0]
   const [datasetId, setDatasetId] = useState<string | null>(null)
   const [focus, setFocus] = useState('')
   const [progress, setProgress] = useState<GenerateProgress | null>(null)
@@ -176,7 +177,7 @@ export function GenerateDialog({
             Cancel
           </Button>
           <Button onClick={() => void start()} disabled={running || !chosen}>
-            <Sparkles aria-hidden />
+            <LayoutTemplate aria-hidden />
             {running ? 'Generating…' : 'Generate'}
           </Button>
         </DialogFooter>

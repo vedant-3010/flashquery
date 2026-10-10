@@ -6,7 +6,7 @@ import { PanelErrorBoundary } from '@/app/PanelErrorBoundary'
 import { APP_BASE, legacyHashPath } from '@/app/paths'
 import { ProjectRoute } from '@/app/ProjectRoute'
 import { RequireAccount } from '@/app/RequireAccount'
-import { TRY_PROJECT_ID } from '@/app/tryDemo'
+import { isTryProject } from '@/app/tryDemo'
 import { TryRoute } from '@/app/TryRoute'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { warmUpEngine } from '@/engine/duckdb'
@@ -114,10 +114,10 @@ export function App() {
                 </Suspense>
               </PanelErrorBoundary>
             </Route>
-            {/* The try project stays open to guests; every other project needs the account. */}
+            {/* The try projects stay open to guests; every other project needs the account. */}
             <Route path="/p/:id/:view?">
               {(params) =>
-                params.id === TRY_PROJECT_ID ? (
+                isTryProject(params.id) ? (
                   <ProjectRoute />
                 ) : (
                   <RequireAccount>

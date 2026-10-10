@@ -147,7 +147,7 @@ function runStart(action: StartAction) {
       })
       return
     case 'try':
-      startTryDemo()
+      startTryDemo(action.sampleId)
   }
 }
 

@@ -21,18 +21,12 @@ export function DatasetsPanel({ onClose }: { onClose?: () => void }) {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex h-10 shrink-0 items-center gap-1 pr-1.5 pl-3">
-        <h2 className="flex-1 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-          Datasets
-        </h2>
-        {!empty && (
-          <>
-            <SampleMenu compact />
-            <IconButton label="Paste data" onClick={() => setPasteText('')}>
-              <ClipboardPaste />
-            </IconButton>
-            <UploadButton compact />
-          </>
-        )}
+        <h2 className="flex-1 text-[13px] font-medium text-foreground">Datasets</h2>
+        <SampleMenu compact />
+        <IconButton label="Paste data" onClick={() => setPasteText('')}>
+          <ClipboardPaste />
+        </IconButton>
+        <UploadButton compact />
         {onClose && (
           // No tooltip: the overlay focuses this button on open, and an open tooltip would take
           // the first Escape instead of closing the overlay.
@@ -42,18 +36,12 @@ export function DatasetsPanel({ onClose }: { onClose?: () => void }) {
         )}
       </div>
       {empty ? (
+        // The buttons above, or the start panel: no second set of them here.
         <EmptyState
           icon={Database}
           title="No datasets yet"
-          description="Load a sample, drop CSV, Excel, Parquet or JSON files anywhere, or paste cells from a spreadsheet. Files never leave this device."
-        >
-          <SampleMenu />
-          <UploadButton />
-          <Button variant="ghost" size="sm" onClick={() => setPasteText('')}>
-            <ClipboardPaste aria-hidden />
-            Paste data
-          </Button>
-        </EmptyState>
+          description="Drop a spreadsheet anywhere, or use the buttons above. Files never leave this device."
+        />
       ) : (
         <div className="min-h-0 flex-1 overflow-y-auto pb-4">
           {jobs.map((job) => (

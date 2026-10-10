@@ -12,6 +12,13 @@ export const GRID_CONFIG = {
   containerPadding: [0, 0] as const,
 }
 
+/** Narrower than this (a phone), dashboards stack their tiles in one column (D117). */
+export const STACK_BELOW_PX = 640
+
+/** A tile's height in pixels on the grid: its rows plus the gaps between them. */
+export const tileHeightPx = (layout: TileLayout) =>
+  layout.h * GRID_CONFIG.rowHeight + (layout.h - 1) * GRID_CONFIG.margin[1]
+
 /** Default tile sizes: KPI 3×2, chart 6×4, table 6×5, text 4×2. */
 export const DEFAULT_SIZES: Record<TileType, { w: number; h: number }> = {
   kpi: { w: 3, h: 2 },
@@ -106,4 +113,18 @@ export function moveTile(
   next.set(self[0], { ...self[1], x: other[1].x, y: other[1].y })
   next.set(other[0], { ...other[1], x: self[1].x, y: self[1].y })
   return next
+}
+
+/**
+ * The rows of a dashboard stacked on a phone (D117): reading order, one tile per row, except that
+ * KPI tiles pair up side by side (a number needs half the width).
+ */
+export function stackRows<T extends { type: TileType; layout: TileLayout }>(tiles: T[]): T[][] {
+  const rows: T[][] = []
+  for (const tile of [...tiles].sort((a, b) => byReadingOrder(a.layout, b.layout))) {
+    const last = rows.at(-1)
+    if (tile.type === 'kpi' && last?.length === 1 && last[0]?.type === 'kpi') last.push(tile)
+    else rows.push([tile])
+  }
+  return rows
 }

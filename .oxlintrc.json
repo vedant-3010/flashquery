@@ -21,6 +21,11 @@
             "message": "Import { z } from '@/lib/zod': it runs Zod jitless, which the production CSP needs (PRD D66)."
           },
           {
+            "name": "lucide-react",
+            "importNames": ["Sparkles", "Sparkle", "WandSparkles"],
+            "message": "No sparkle icons (D118): they read as generic \"AI\". Use an icon for what the action does (LayoutTemplate, Lightbulb, AlignLeft, Wrench…)."
+          },
+          {
             "name": "@supabase/supabase-js",
             "message": "Only src/platform/ talks to Supabase, as a lazy chunk guests never load (D114): use useAuthStore, or a type-only import.",
             "allowTypeImports": true

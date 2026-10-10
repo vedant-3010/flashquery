@@ -19,19 +19,21 @@ export function AnswerCard({ answer }: { answer: Answer }) {
   const usage = useMemo(() => log.filter((entry) => entry.answerId === answer.id), [log, answer.id])
 
   return (
-    <article aria-label={answer.question} className="grid gap-2">
-      <p className="ml-auto max-w-[85%] rounded-2xl rounded-br-sm bg-primary px-3 py-1.5 text-sm text-primary-foreground">
+    <article aria-label={answer.question} className="group/answer grid gap-2">
+      {/* The question in a quiet bubble; the answer is what stands out (D118). */}
+      <p className="ml-auto max-w-[85%] rounded-2xl rounded-br-md bg-muted px-3.5 py-2 text-sm text-foreground">
         {answer.question}
       </p>
-      <div className="grid gap-3 rounded-xl border bg-card p-4">
+      <div className="grid gap-3 rounded-2xl border bg-card p-4 shadow-xs sm:p-5">
         <header className="flex items-start gap-2">
-          <h3 className="min-w-0 flex-1 text-sm font-semibold">
+          <h3 className="min-w-0 flex-1 text-sm font-medium text-muted-foreground">
             {answer.plan?.title ?? (running ? 'Working on it…' : answer.question)}
           </h3>
           {answer.demo && (
             <Badge
-              variant="secondary"
-              title="Demo answers are pre-recorded; SQL runs live on your device."
+              variant="outline"
+              className="text-muted-foreground"
+              title="An example answer about the sample data, worked out live on your device."
             >
               Demo
             </Badge>
@@ -43,7 +45,8 @@ export function AnswerCard({ answer }: { answer: Answer }) {
           )}
           {answer.python && <Badge variant="outline">Python</Badge>}
           {!running && (
-            <>
+            // Shown on hover or focus with a mouse, always on touch (as Linear does).
+            <div className="flex items-center transition-opacity pointer-fine:opacity-0 pointer-fine:group-focus-within/answer:opacity-100 pointer-fine:group-hover/answer:opacity-100">
               <IconButton
                 label="Ask again"
                 size="icon-xs"
@@ -54,7 +57,7 @@ export function AnswerCard({ answer }: { answer: Answer }) {
               <IconButton label="Remove answer" size="icon-xs" onClick={() => remove(answer.id)}>
                 <X />
               </IconButton>
-            </>
+            </div>
           )}
         </header>
         <PipelineTimeline trace={answer.trace} />

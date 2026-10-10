@@ -1,37 +1,43 @@
 import { AnimatePresence, m } from 'motion/react'
 import { useId, useState } from 'react'
+import { cx } from '@/landing/cx'
 import { Reveal } from '@/landing/Reveal'
 import { SNAPPY } from '@/landing/motion'
 import { HeadlineLines } from '@/landing/HeadlineLines'
 
+// Business readers' questions first (D117); the accuracy figure is the eval average (PRD D112).
 const QUESTIONS = [
   {
     q: 'Is my file uploaded anywhere?',
-    a: 'No. No server ever sees your files: DuckDB reads them inside your browser tab, and they stay there. Only what your privacy mode allows (names and types, plus a few statistics and sample rows in Balanced mode) goes to the AI provider you choose.',
+    a: 'No. No server ever sees your files: flashQuery reads them inside your browser, and they stay on your device. To answer, the AI gets an outline of your data (column names, and a few samples only if you allow it), and you can read every request.',
   },
   {
-    q: 'What happens when I share a dashboard?',
-    a: 'Sharing uploads only the dashboard results you choose to share: each tile’s title, SQL, chart and last result (at most 5,000 rows), after a dialog lists exactly what will go. Your files never upload. The people you invite, or anyone with a view-only link you can revoke, see those results without your data or a key.',
+    q: 'Do I need to know SQL or formulas?',
+    a: 'No. Ask the way you would ask a colleague: “which customers owe us the most?” flashQuery works out the query, the chart and a short summary. The query is there to read or change if you want it.',
   },
   {
-    q: 'Do I need an API key?',
-    a: 'Not to try it. Without a key, demo mode answers a set of questions about a generated 1,000,000-row sales dataset, and the SQL still runs live. With an Anthropic or OpenAI key, you can ask anything about your own files.',
+    q: 'What files can I use?',
+    a: 'Excel, CSV and more (TSV, Parquet, JSON), or cells pasted straight from a spreadsheet. Exports from your accounting, sales or banking tools work well. A million rows is comfortable; the limit is your computer’s memory.',
   },
   {
-    q: 'Where does my API key go?',
-    a: 'Straight from your browser to the provider. It stays in memory unless you tick “Remember on this device”, and it never appears in exports, logs or the inspector.',
+    q: 'Is it free? Do I need an AI key?',
+    a: 'Trying it is free, with no sign-up: demo mode answers example questions about sample sales and finance data. To ask about your own files, add a key from Anthropic or OpenAI (you pay them for what you use), or use an AI model on your own computer.',
   },
   {
-    q: 'Can I keep everything on my computer?',
-    a: 'Yes. Point flashQuery at a local OpenAI-compatible server such as Ollama or LM Studio. The page’s security policy only allows the two AI providers, two CDNs and servers on localhost.',
+    q: 'Can I share with my team or my accountant?',
+    a: 'Yes. Invite people by email, as viewers or editors, or send a view-only link that you can revoke at any time. They see the dashboard’s results without your files or a key.',
+  },
+  {
+    q: 'What exactly happens when I share?',
+    a: 'Sharing uploads only the dashboard results you choose to share: each tile’s title, chart and last result (at most 5,000 rows), after a dialog lists exactly what will go. Your files never upload.',
   },
   {
     q: 'How accurate is it?',
-    a: 'Every answer shows its SQL, assumptions and trace, so you can check it. Accuracy is measured with 53 questions over two datasets, comparing results rather than SQL text; the published number is coming soon.',
+    a: 'On our test set of 53 questions over two datasets, even a small, low-cost AI model answers about 94% correctly. Every answer shows its working (the assumptions made and the query), so you can check it, and correct it if needed.',
   },
   {
-    q: 'What files can it read, and how big?',
-    a: 'CSV, TSV, Excel, Parquet and JSON, or cells pasted from a spreadsheet. A million rows is comfortable; the limit is your browser’s memory.',
+    q: 'Can I keep everything on my computer?',
+    a: 'Yes. Point flashQuery at an AI model running on your own computer (through Ollama or LM Studio), and not even the outline of your data leaves it.',
   },
 ]
 
@@ -52,7 +58,12 @@ function Item({ q, a }: { q: string; a: string }) {
           aria-hidden
           animate={{ rotate: open ? 45 : 0 }}
           transition={SNAPPY}
-          className="grid size-8 shrink-0 place-items-center rounded-full border border-hairline-strong text-ink transition-colors group-hover:border-ink"
+          className={cx(
+            'grid size-8 shrink-0 place-items-center rounded-full border transition-colors group-hover:border-accent group-hover:text-accent-ink',
+            open
+              ? 'border-accent bg-accent text-paper group-hover:text-paper'
+              : 'border-hairline-strong text-ink',
+          )}
         >
           <svg viewBox="0 0 12 12" className="size-3">
             <path
@@ -87,7 +98,7 @@ export function Faq() {
     <section
       id="faq"
       aria-labelledby="faq-title"
-      className="mx-auto max-w-[1200px] px-5 pt-32 md:px-8"
+      className="mx-auto max-w-[1200px] px-5 pt-24 md:px-8 md:pt-32"
     >
       <div className="grid gap-10 lg:grid-cols-12">
         <Reveal className="lg:col-span-4">

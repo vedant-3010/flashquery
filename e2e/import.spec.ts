@@ -16,7 +16,8 @@ test('pasted cells become a table; a column changes type with a preview', async 
   await expect(dialog.getByRole('status')).toContainText('2 rows × 3 columns')
   await dialog.getByRole('button', { name: 'Create table' }).click()
   const pasted = dataset(page, 'Pasted data')
-  await expect(pasted).toContainText('pasted_data · 2 rows · 3 columns')
+  await expect(pasted).toContainText('2 rows · 3 columns')
+  await expect(pasted).toContainText('Table pasted_data')
   await expect(pasted).toContainText('Pasted')
 
   // "sales" has a value that isn't a number: the preview says so before converting.
@@ -68,7 +69,8 @@ test('re-imports a CSV with a delimiter, header and skipped rows', async ({ page
   await dialog.getByRole('spinbutton', { name: 'Skip rows at the top' }).fill('2')
   await dialog.getByRole('button', { name: 'Re-import' }).click()
 
-  await expect(report).toContainText('report · 3 rows · 2 columns')
+  await expect(report).toContainText('3 rows · 2 columns')
+  await expect(report).toContainText('Table report')
   await expect(report).toContainText('semicolon-separated · header row')
   await expect(report.getByRole('button', { name: 'amount' })).toBeVisible()
 })

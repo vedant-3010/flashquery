@@ -1,4 +1,4 @@
-import { expect, type Page } from '@playwright/test'
+import { expect, type Locator, type Page } from '@playwright/test'
 import {
   mockSupabase,
   SESSION_KEY,
@@ -47,4 +47,20 @@ export async function openProject(page: Page): Promise<void> {
   await page.goto('/app/new')
   await expect(page).toHaveURL(/\/app\/p\/[\w-]+$/, { timeout: 15_000 })
   await expect(page.getByRole('tablist', { name: 'Views' })).toBeVisible()
+}
+
+/**
+ * An answer's steps (F-ASK-06): once it settles cleanly they fold into "Answered in …" (D118), so
+ * wait for the answer to finish, open them, and return the list.
+ */
+export async function answerSteps(answer: Locator): Promise<Locator> {
+  await expect(answer.getByRole('button', { name: 'Ask again' })).toBeVisible({ timeout: 30_000 })
+  // The AI summary can still be writing; the steps fold when it's done. An answer with a warning
+  // never folds, so give it a few seconds, then read whichever is there.
+  const toggle = answer.getByRole('button', { name: /^Answered in/ })
+  await toggle.waitFor({ timeout: 5_000 }).catch(() => undefined)
+  if ((await toggle.count()) > 0 && (await toggle.getAttribute('aria-expanded')) !== 'true') {
+    await toggle.click()
+  }
+  return answer.getByRole('list', { name: 'Progress' })
 }

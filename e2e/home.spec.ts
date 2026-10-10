@@ -99,7 +99,7 @@ test('each project keeps its own data; switching opens a fresh page', async ({ p
   await expect(page).toHaveURL(/\/app\/p\/[\w-]+$/)
   expect(page.url()).not.toBe(firstUrl)
   await expect(page.getByRole('button', { name: 'Project: Untitled project 2' })).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'Ask your data anything' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'What do you want to look at?' })).toBeVisible()
   await expect(await historyOf(page)).not.toContainText('Which region grew fastest?')
 
   // Rename it from the top bar, then switch back to the first one.

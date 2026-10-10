@@ -124,6 +124,10 @@ the owner's name and "updated 2 h ago" → no file, no key, no sign-in needed fo
 also appears under "Shared with me" on Home.
 - **J9 Ask by voice (v2)**: click the mic (or ⌘/Ctrl+Shift+Space) → "which region grew fastest" → the
 words appear in the box as they're spoken → Enter → answer. The audio is recognized on the device.
+- **J10 An accountant tries it (v2, D117)**: landing → "Who it's for" → "Try it on sample finances"
+(no sign-up) → the finance sample loads and answers "How do monthly income and expenses compare?" →
+asks "Which customers owe us the most?" → generates the finance dashboard → signs up to share it with
+their team.
 
 ---
 
@@ -439,7 +443,7 @@ Format: `ID (priority) Title: description. AC: acceptance criteria.`
   account: `docs/DEPLOY.md`.)*
 - [x] **F-SHIP-02 (P0) README**: demo GIF, 3-sentence pitch, architecture diagram (Mermaid), privacy-mode
   table, benchmark numbers, eval accuracy, key decisions and trade-offs, how to run. *(Demo as an animated PNG, D82;
-  eval accuracy not measured yet, D83.)*
+  eval accuracy 93.7%, measured in D112.)*
 - [x] **F-SHIP-03 (P1)** `docs/ARCHITECTURE.md`: threading model + sequence diagram of the ask pipeline.
 - [x] **F-SHIP-04 (P1) In-app "How it works"** modal explaining the privacy model, linking to the inspector.
 
@@ -499,6 +503,24 @@ Format: `ID (priority) Title: description. AC: acceptance criteria.`
 
 *(M14 as built: D116. Also "Shared by you" on Home, so an owner can manage a shared copy from any
 device.)*
+
+### 4.20 UX refresh (F-UX, v2)
+
+- [x] **F-UX-01 (P1) Landing message**: privacy first, then business and finance people, then one
+  compact section for data people; plain words above it (no DuckDB, WebAssembly, p95, GROUP BY,
+  BYOK, Pyodide). AC: an e2e check finds no such word in the business sections; a phone page under
+  9,500 px; "Try it free" and the finance card open a real answer.
+- [x] **F-UX-02 (P1) Sign-in copy**: current promises (sharing exists, projects stay in the browser),
+  a finance example in the panel, the promise under the form where the panel hides.
+- [x] **F-UX-03 (P1) Mobile-first shell**: no sideways scroll on phones and tablets; the top bars keep
+  the project, the views and the account (the rest under More); dashboards stack on phones with KPI
+  tiles in pairs; touch targets ≥ 40 px in the bars; fields ≥ 16 px. AC: `e2e/responsive.spec.ts` at
+  390 and 820 px.
+- [x] **F-UX-04 (P1) Finance sample**: a generated company's invoices and bills, 2023–2025, with 12
+  demo questions and a demo dashboard that work without a key, and a try link. AC: J10 in
+  `e2e/finance.spec.ts`; every answer passes the guard and runs (`src/ai/fixtures.test.ts`).
+- [x] **F-UX-05 (P2) Plain-language pass**: start panels, badges, demo notes, How it works and the
+  quick tour speak to the user's goal; the technical detail stays one click away.
 
 **Later (not planned):** comments on tiles, team workspaces, embedding a dashboard, a public gallery,
 refresh from a connected device.
@@ -732,6 +754,8 @@ and guests are unaffected.
 Supabase; the guest privacy e2e passes.
 - **M14 Sharing**: F-SHARE-01…07, F-SEC-07. DoD: J7 and J8 work end to end; revoke works; nothing
 uploads before consent.
+- **M15 UX refresh**: F-UX-01…05. DoD: J10 works; no sideways scroll at 390 and 820 px; both bundle
+budgets hold; no sparkle icons (D118).
 
 ---
 
@@ -1435,6 +1459,110 @@ named "Voice input (unavailable)" where on-device recognition is missing, and pr
   - **Bundle:** the app's initial JS is 310.4 KB gzip, up 1.9 KB for the Share button, its dialogs
     and Home's shared lists. The sharing calls (1.6 KB) join the lazy account chunks, and the shared
     view is its own chunk (4.1 KB). The landing is 135.4 KB, up 0.2 KB for the FAQ answer.
+- **D117** UX refresh: who it speaks to, and mobile first (M15, F-UX-01…05; user request,
+  2026-10-10).
+  - **Positioning:** privacy first, then the people who run the business (founders, finance and
+    accounting, sales and operations), then one compact section for data people. Global English:
+    "accountants", no regional examples.
+  - **Jargon rule:** the business-facing surfaces say what happens, not how. Those surfaces are the
+    landing page above "For data people", the sign-in pages, Home, the start panels, empty states,
+    badges and the quick tour. They avoid DuckDB, WebAssembly, p95, GROUP BY, BYOK, Pyodide and
+    schema. The technical words stay where data people look: the SQL view, the inspector, the
+    answer's tabs and the "For data people" section. "API key" stays in Settings (it's what
+    Anthropic and OpenAI call it); elsewhere it is "AI key". `e2e/landing.spec.ts` checks the
+    landing (the hero film shows real SQL on purpose and is left out).
+  - **Landing order:** hero, privacy (the request folds away on phones), who it's for (four roles,
+    each with its questions and a try link; swipeable on phones), all in one place, how it works
+    (pictures from 640 px up), for data people (the benchmark, the stack and the technical
+    features, replacing Performance and Built on), FAQ, the final call to action.
+    - The nav reads "Sign in" and "Try it free", in place of "Open the app", which led to sign-in.
+    - The bundle figure (278 KB) is dropped: out of date, and not a selling point.
+    - The phone page goes from 11,360 px to about 8,750 px.
+  - **Finance sample:** `company_finances.csv`, generated by `scripts/generate-samples.mjs`
+    (deterministic, 16,252 rows, 1.9 MB).
+    - It holds a small company's invoices (income) and bills (expenses), 2023–2025, with due and
+      paid dates as of 31 December 2025, plus monthly payroll and rent.
+    - A few slow payers make "who owes us most" worth asking.
+    - 12 demo questions (receivables, ageing, margins, profit, cash flow, spend) and a demo
+      dashboard, checked against the CSV as the app loads it.
+    - Ageing buckets start with a number ("0 days (not yet due)", "1-30 days late"), so the bars
+      keep their order. Net cash flow is a line: 36 months is more than bars hold.
+  - **Demo answers per sample:** `DEMO_SETS` in `src/ai/fixtures.ts` (sales, finance). The demo
+    provider matches only the sets whose sample is loaded. The ask box shares its six suggestions
+    between them, and "needs a sample" offers both.
+    - `/app/try?sample=company-finances` opens "Sample: Company finances". Its id is fixed
+      (`try-company-finances`), and like the sales one it is open to guests (`isTryProject`).
+    - The sales sample keeps its name, Global Sales: renaming it would only churn the tests.
+  - **Start panels:** one set of start cards (your file, Company finances, Global Sales) on Home's
+    first visit, Home's "Start something new" and an empty project. The sidebar's empty state is
+    text only (its header keeps the buttons), so the buttons no longer appear twice.
+  - **Phones:**
+    - Below 768 px the top bars keep the datasets toggle, Home, the project name, the views and the
+      account. The badges, theme, help, side panel and settings go into More (`AppMenu`), which
+      shows a dot while the engine starts.
+    - Dashboards stack below 640 px (`StackedTiles`, also in presentation and shared views), with
+      KPI tiles in pairs (`stackRows`). The toolbar keeps Share and puts the rest in its menu.
+    - A finished answer folds its steps into "Answered in 0.5 s · 6 steps"; tests read the list at
+      desktop width.
+    - The ask box drops "(press / to focus)" on touch.
+    - Touch targets in the bars are 40 px (`pointer: coarse`). Sign-in fields are 16 px, so iOS
+      doesn't zoom.
+  - **Badges:** "Demo mode", "Privacy: Balanced" (with a tooltip on what is sent) and "Ready". Their
+    accessible names are kept close to before ("Engine ready" stays the engine button's name).
+  - **Bundle:** the app's initial JS is 315.3 KB gzip, up 4.9 KB for the finance demo answers, the
+    start cards and the More menu. The landing is 136.5 KB, up 1.1 KB.
+  - **Not done:** `viewport-fit=cover` (content would slide under the notch in landscape).
+- **D118** A refinement pass, after the best products in the category (M15; user review,
+  2026-10-11).
+  - **What we took, and from whom:**
+    - ChatGPT, Claude and Perplexity fold their working into one line: so does each answer here.
+    - Hex Threads and Julius lead with the result and keep the code one click away.
+    - Mercury, Ramp and Digits show calm finance: one clear number, quiet chrome.
+    - Linear keeps its bars quiet and shows actions on hover.
+  - **Landing:**
+    - The hero is "Ask your data anything." again, with its pixel burst on "data". The eyebrow
+      reads "Your private AI data analyst" ("business" is gone from the hero).
+    - Small, repeated accent touches:
+      - accent eyebrows (`Eyebrow.tsx`);
+      - the How it works progress line;
+      - step and feature numbers, and the privacy ticks;
+      - a wash on "never the file";
+      - role-card hovers and links;
+      - stat units;
+      - the open FAQ button;
+      - link underlines.
+  - **No sparkle icons:** they read as generic "AI". Each became an icon for what it does:
+    - Generate dashboard: `LayoutTemplate`.
+    - Suggestions: `Lightbulb`.
+    - Format SQL: `AlignLeft`.
+    - Fix Python: `Wrench`.
+    - The model chip: `Cpu` (`FlaskConical` in demo mode).
+    - The sign-in ask bar: `Search`.
+    - Lint bans `Sparkles`, `Sparkle` and `WandSparkles` (`.oxlintrc.json`).
+  - **The app's colours stay.** One token, `--brand` (the landing's violet, lighter in dark mode),
+    marks only the key figures in an answer's headline (`splitNumbers`, `src/lib/emphasis.ts`).
+  - **Top bar:**
+    - One status pill: the privacy mode and the engine's dot. Its popover switches the mode, shows
+      the engine and its memory, and restarts it. It's named "Status: Balanced, engine ready".
+    - "Demo mode" stays its own chip, as it leads to adding a key.
+    - How it works, the shortcuts and the theme moved under Help ("Help and appearance").
+  - **Answers:**
+    - A finished answer folds its steps into "Answered in … · N steps" at every width (e2e reads
+      them through `answerSteps()`).
+    - The question bubble is muted; the headline is larger.
+    - "Ask again" and "Remove" show on hover with a mouse.
+    - The chart toolbar keeps icons only on phones.
+    - The ask box is a floating card that the answers fade under.
+    - Value axes hide labels that would collide.
+  - **Sidebar:** dataset rows read "16.3K rows · 12 columns"; the table name moved to the details
+    ("Table …") and the menu ("Copy table name"). Column names are in the regular font.
+  - **Home:** the greeting uses the first name in the landing's serif ("Good evening, Vera"), the
+    only touch of it in the app. Projects show their count and their data as chips.
+  - **Dashboards:**
+    - The footer reads "Updated just now", re-read every minute.
+    - Tried and reverted at review: the handle and menu on hover only, and KPI tiles without the
+      full figure. Both are as before.
+    - Add text, Refresh all and Present are quiet buttons, icons only below `lg`.
 - **D12** Shared hooks live in `src/hooks/` and shared app components in `src/components/` (outside the
 generated `ui/`), matching the shadcn aliases in `components.json`.
 

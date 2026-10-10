@@ -1,6 +1,4 @@
 import {
-  CircleHelp,
-  Keyboard,
   LayoutDashboard,
   MessageSquareText,
   PanelLeft,
@@ -9,11 +7,12 @@ import {
   SquareTerminal,
 } from 'lucide-react'
 import { Link } from 'wouter'
-import { EngineStatusBadge } from '@/app/EngineStatusBadge'
+import { AppMenu } from '@/app/AppMenu'
+import { DemoChip } from '@/app/DemoChip'
+import { HelpMenu } from '@/app/HelpMenu'
 import { paths } from '@/app/paths'
-import { PrivacyBadge } from '@/app/PrivacyBadge'
 import { ProjectMenu } from '@/app/ProjectMenu'
-import { ThemeMenu } from '@/app/ThemeMenu'
+import { StatusPill } from '@/app/StatusPill'
 import { BrandMark } from '@/components/BrandMark'
 import { IconButton } from '@/components/IconButton'
 import { AccountMenu } from '@/features/account/AccountMenu'
@@ -30,12 +29,12 @@ export function TopBar({ showSidebarToggle }: TopBarProps) {
   const sidePanelOpen = useUiStore((state) => state.sidePanelOpen)
   const setSidePanelOpen = useUiStore((state) => state.setSidePanelOpen)
   const setSettingsOpen = useUiStore((state) => state.setSettingsOpen)
-  const setShortcutsOpen = useUiStore((state) => state.setShortcutsOpen)
-  const setHowItWorksOpen = useUiStore((state) => state.setHowItWorksOpen)
   const theme = useResolvedTheme()
 
   return (
-    <header className="flex h-12 shrink-0 items-center gap-3 border-b px-3">
+    // Phones keep the essentials (datasets, Home, the project, the views, the account) and put
+    // the rest in More (AppMenu), so nothing is pushed off-screen (D117).
+    <header className="flex h-12 shrink-0 items-center gap-2 border-b px-2 sm:gap-3 sm:px-3">
       {showSidebarToggle && (
         <IconButton label="Show datasets" onClick={() => setSidebarOpen(true)}>
           <PanelLeft />
@@ -50,49 +49,51 @@ export function TopBar({ showSidebarToggle }: TopBarProps) {
         <BrandMark className="size-[18px] text-primary" onDark={theme === 'dark'} />
         <span className="max-xl:sr-only">flashQuery</span>
       </Link>
-      <span aria-hidden className="-mx-1.5 text-muted-foreground/60">
+      <span aria-hidden className="-mx-1.5 text-muted-foreground/60 max-sm:hidden">
         /
       </span>
       <ProjectMenu />
       <TabsList aria-label="Views" className="shrink-0">
-        <TabsTrigger value="workspace" className="px-2.5">
+        <TabsTrigger value="workspace" className="px-2 sm:px-2.5">
           <MessageSquareText aria-hidden />
           <span className="max-lg:sr-only">Workspace</span>
         </TabsTrigger>
-        <TabsTrigger value="sql" className="px-2.5">
+        <TabsTrigger value="sql" className="px-2 sm:px-2.5">
           <SquareTerminal aria-hidden />
           <span className="max-lg:sr-only">SQL</span>
         </TabsTrigger>
-        <TabsTrigger value="dashboard" className="px-2.5">
+        <TabsTrigger value="dashboard" className="px-2 sm:px-2.5">
           <LayoutDashboard aria-hidden />
           <span className="max-lg:sr-only">Dashboard</span>
         </TabsTrigger>
       </TabsList>
       <div className="ml-auto flex shrink-0 items-center gap-2">
-        <PrivacyBadge />
-        <EngineStatusBadge />
-        <ThemeMenu />
-        <IconButton label="How flashQuery works" onClick={() => setHowItWorksOpen(true)}>
-          <CircleHelp />
-        </IconButton>
-        {/* Narrow (touch) layouts drop it: ? and the command palette still open the list. */}
-        <IconButton
-          label="Keyboard shortcuts (?)"
-          className="max-lg:hidden"
-          onClick={() => setShortcutsOpen(true)}
-        >
-          <Keyboard />
-        </IconButton>
+        {/* Quiet, as in Linear (D118): one status pill; the theme and shortcuts are under Help. */}
+        <div className="flex items-center gap-2 max-md:hidden">
+          <DemoChip />
+          <StatusPill />
+        </div>
         <IconButton
           label="Side panel"
           aria-pressed={sidePanelOpen}
+          className="max-md:hidden"
           onClick={() => setSidePanelOpen(!sidePanelOpen)}
         >
           <PanelRight />
         </IconButton>
-        <IconButton label="Settings" onClick={() => setSettingsOpen(true)}>
+        <div className="max-md:hidden">
+          <HelpMenu />
+        </div>
+        <IconButton
+          label="Settings"
+          className="max-md:hidden"
+          onClick={() => setSettingsOpen(true)}
+        >
           <Settings />
         </IconButton>
+        <div className="md:hidden">
+          <AppMenu inProject />
+        </div>
         <AccountMenu />
       </div>
     </header>

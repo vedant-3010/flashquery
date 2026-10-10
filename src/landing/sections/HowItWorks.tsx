@@ -5,28 +5,29 @@ import { AnswerVisual } from '@/landing/how/AnswerVisual'
 import { AskVisual } from '@/landing/how/AskVisual'
 import { CheckVisual } from '@/landing/how/CheckVisual'
 import { LoadVisual } from '@/landing/how/LoadVisual'
+import { Eyebrow } from '@/landing/Eyebrow'
 import { Reveal } from '@/landing/Reveal'
 import { HeadlineLines } from '@/landing/HeadlineLines'
 
 const STEPS: { title: string; body: string; Visual: ComponentType }[] = [
   {
-    title: 'Your file loads into this tab',
-    body: 'DuckDB, a full analytical database compiled to WebAssembly, reads the file where it is. Nothing is uploaded: no server ever sees your files.',
+    title: 'Your file opens on your device',
+    body: 'A full database built into your browser reads it where it is. Nothing is uploaded: no server ever sees your files.',
     Visual: LoadVisual,
   },
   {
-    title: 'The AI sees the shape, not the rows',
-    body: 'Table and column names, types and your notes. In Balanced mode, also a few statistics and three sample rows. Every request is in the inspector, exactly as it was sent.',
+    title: 'The AI gets an outline, not your rows',
+    body: 'Column names and your notes; a few statistics and sample rows only if you allow them. You can read every request, exactly as it was sent.',
     Visual: AskVisual,
   },
   {
-    title: 'Every query is checked before it runs',
-    body: 'One read-only SELECT, only your tables, no file or network functions. If the AI gets it wrong, it sees the error and tries again, twice at most.',
+    title: 'Every query is checked first',
+    body: 'It can only read, and only your data. If the AI gets something wrong, it sees the error and corrects itself, twice at most.',
     Visual: CheckVisual,
   },
   {
-    title: 'You get the answer and its working',
-    body: 'A chart chosen by clear rules, a short summary, SQL you can edit and re-run, the assumptions made, and a step-by-step trace.',
+    title: 'You get the answer, and the working',
+    body: 'A chart picked for the question, a short summary, the assumptions made and every step, so you can trust it, or check it.',
     Visual: AnswerVisual,
   },
 ]
@@ -36,7 +37,7 @@ function StepText({ index, active }: { index: number; active: boolean }) {
   if (!step) return null
   return (
     <div className={cx('transition-opacity duration-500', active ? 'opacity-100' : 'opacity-35')}>
-      <p className="font-mono text-[11.5px] text-ink-muted">0{index + 1}</p>
+      <p className="font-mono text-[11.5px] text-accent-ink">0{index + 1}</p>
       <h3 className="mt-2 font-serif text-[30px] leading-[1.05] text-ink">{step.title}</h3>
       <p className="mt-3 max-w-[28rem] text-[15.5px] leading-[1.6] text-ink-muted">{step.body}</p>
     </div>
@@ -82,18 +83,13 @@ export function HowItWorks() {
     <section
       id="how"
       aria-labelledby="how-title"
-      className="mx-auto max-w-[1200px] px-5 pt-28 md:px-8"
+      className="mx-auto max-w-[1200px] px-5 pt-24 md:px-8 md:pt-28"
     >
       <Reveal group className="max-w-[52rem]">
-        <Reveal
-          as="p"
-          className="font-mono text-[11.5px] tracking-[0.08em] text-ink-muted uppercase"
-        >
-          How it works
-        </Reveal>
+        <Eyebrow>How it works</Eyebrow>
         <Reveal as="div">
           <h2 id="how-title" className="mt-4 text-[clamp(36px,4.6vw,60px)] text-balance">
-            <HeadlineLines lead="Four steps," line="and you can watch every one." />
+            <HeadlineLines lead="Four steps," line="and you can see every one." />
           </h2>
         </Reveal>
       </Reveal>
@@ -103,13 +99,13 @@ export function HowItWorks() {
         <div className="relative col-span-5 pl-6">
           <span aria-hidden className="absolute top-0 bottom-0 left-0 w-px bg-hairline">
             <m.span
-              className="absolute inset-x-0 top-0 h-full origin-top bg-ink"
+              className="absolute inset-x-0 top-0 h-full origin-top bg-accent"
               style={{ scaleY: scrollYProgress }}
             />
           </span>
           <ol ref={steps}>
             {STEPS.map((step, i) => (
-              <li key={step.title} className="flex min-h-[60vh] items-center">
+              <li key={step.title} className="flex min-h-[46vh] items-center">
                 <StepText index={i} active={i === active} />
               </li>
             ))}
@@ -123,11 +119,11 @@ export function HowItWorks() {
       </div>
 
       {/* Narrow screens: one after another. */}
-      <ol className="mt-10 grid gap-14 lg:hidden">
+      <ol className="mt-10 grid gap-10 sm:gap-12 lg:hidden">
         {STEPS.map((step, i) => (
           <Reveal as="li" key={step.title} className="grid gap-5">
             <StepText index={i} active />
-            <div className="relative h-[380px] overflow-hidden rounded-2xl border border-hairline bg-paper-deep/60">
+            <div className="relative h-[340px] overflow-hidden rounded-2xl border border-hairline bg-paper-deep/60 max-sm:hidden">
               <step.Visual />
             </div>
           </Reveal>

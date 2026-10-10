@@ -1,5 +1,6 @@
 import {
   ChevronRight,
+  Copy,
   Eye,
   FileCog,
   MoreHorizontal,
@@ -28,10 +29,12 @@ import { cn } from '@/lib/utils'
 import { importOptionsOf } from '@/stores/datasetEdits'
 import { useSettingsStore } from '@/stores/settings'
 import { useSqlStore } from '@/stores/sql'
+import { useToastStore } from '@/stores/toast'
 import { useUiStore } from '@/stores/ui'
 
 export function DatasetItem({ dataset }: { dataset: DatasetProfile }) {
   const locale = useSettingsStore((state) => state.locale)
+  const toast = useToastStore((state) => state.show)
   const previewTable = useUiStore((state) => state.previewTable)
   const showPreview = useUiStore((state) => state.showPreview)
   const openInSql = useSqlStore((state) => state.openTable)
@@ -90,8 +93,8 @@ export function DatasetItem({ dataset }: { dataset: DatasetProfile }) {
           onClick={() => showPreview(dataset.table)}
         >
           <span className="block truncate text-sm font-medium">{dataset.label}</span>
+          {/* What a person needs at a glance; the table name is in the details and the menu (D118). */}
           <span className="block truncate text-xs text-muted-foreground">
-            <span className="font-mono">{dataset.table}</span> ·{' '}
             {formatCompact(dataset.rowCount, locale)} rows · {dataset.columns.length} columns
           </span>
         </button>
@@ -109,6 +112,17 @@ export function DatasetItem({ dataset }: { dataset: DatasetProfile }) {
             <DropdownMenuItem onSelect={() => openInSql(dataset.table)}>
               <SquareTerminal aria-hidden />
               Open in SQL
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onSelect={() =>
+                void navigator.clipboard.writeText(dataset.table).then(
+                  () => toast(`Copied “${dataset.table}”.`),
+                  () => toast('Couldn’t copy the table name.'),
+                )
+              }
+            >
+              <Copy aria-hidden />
+              Copy table name
             </DropdownMenuItem>
             <DropdownMenuItem onSelect={() => setDialog('rename')}>
               <Pencil aria-hidden />
@@ -135,7 +149,20 @@ export function DatasetItem({ dataset }: { dataset: DatasetProfile }) {
       {expanded && (
         <div className="pl-6">
           <p className="px-2 pb-1 text-[11px] leading-snug text-muted-foreground">
-            {sourceSummary(dataset, locale)}
+            <span className="whitespace-nowrap">
+              Table <span className="font-mono text-foreground/80">{dataset.table}</span> ·
+            </span>{' '}
+            {/* Each part stays whole ("1.9 s"); lines break after a "·". */}
+            {sourceSummary(dataset, locale)
+              .split(' · ')
+              .map((part, i, parts) => (
+                <span key={part}>
+                  <span className="whitespace-nowrap">
+                    {part}
+                    {i < parts.length - 1 && ' ·'}
+                  </span>{' '}
+                </span>
+              ))}
           </p>
           {dataset.notes && (
             <p className="line-clamp-2 px-2 pb-1 text-[11px] leading-snug" title={dataset.notes}>

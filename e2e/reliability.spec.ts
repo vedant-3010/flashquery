@@ -12,7 +12,7 @@ test('restarting the engine reloads data and restores answers', async ({ page })
   const answer = page.getByRole('article', { name: 'Which region grew fastest?' })
   await expect(answer.getByRole('img', { name: /^Bar chart/ })).toBeVisible({ timeout: 60_000 })
 
-  await page.getByRole('button', { name: /^Engine ready/ }).click()
+  await page.getByRole('button', { name: /engine ready$/ }).click()
   await page.getByRole('button', { name: 'Restart engine' }).click()
   await expect(
     page
@@ -37,7 +37,7 @@ test('the engine popover shows memory use', async ({ page }) => {
   await expect(page.getByRole('region', { name: 'Global Sales · 100k rows' })).toBeVisible({
     timeout: 60_000,
   })
-  await page.getByRole('button', { name: /^Engine ready/ }).click()
+  await page.getByRole('button', { name: /engine ready$/ }).click()
   const users = page.getByRole('list', { name: 'Largest memory users' })
   await expect(users).toContainText('Tables')
   await expect(page.getByRole('dialog')).toContainText(/Memory\s*[\d.]+\s*(MB|GB)/)

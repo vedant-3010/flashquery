@@ -9,7 +9,10 @@ allows (schema, a few sample values) is sent to the LLM provider the user picks 
 v2 (PRD D100) adds accounts (Supabase): a Home page with projects, and dashboards saved to the cloud
 and shared by invite or link. Where an account service is configured, the app asks for an account;
 the try demo (`/app/try`) stays open (D115). The account service stores only what a signed-in user
-explicitly saves or shares; guests and the demo never talk to it.
+explicitly saves or shares; guests and the demo never talk to it. It speaks to founders, finance and
+accounting people and anyone in business first, privacy before everything, with one section for data
+people (D117): business-facing copy avoids DuckDB, WebAssembly, p95, GROUP BY, BYOK, Pyodide and
+"schema"; the SQL view, inspector and "For data people" keep the technical words.
 
 - Requirements, feature IDs (e.g. `F-ASK-05`), acceptance criteria (AC) and milestones: `docs/PRD.md`.
   Read the relevant section before starting any feature.
@@ -255,7 +258,21 @@ e2e/ (Playwright)     scripts/ (sample + fixture generators, record-demo, record
   is pressed. Playwright's Chromium has the API but crashes the tab on that call (real Chrome answers).
   e2e uses a fake on-device recognizer (`e2e/voice.spec.ts`); don't click the mic without one.
 - The ask bar's model chip is named "Model: …", so match the top bar's badge with
-  `{ name: 'Demo', exact: true }`.
+  `{ name: 'Demo mode', exact: true }` (it shows "Demo" on medium screens; the name keeps "mode").
+  Privacy and the engine share one pill (`StatusPill`, D118), named "Status: Balanced, engine
+  ready" (match `/^Status: Balanced/` or `/engine ready$/`); its popover switches the mode and
+  restarts the engine. How it works, shortcuts and theme are under "Help and appearance".
+- A finished answer folds its steps (D118): read them with `answerSteps(answer)` from `e2e/app.ts`.
+- No sparkle icons (D118): lint rejects `Sparkles`/`Sparkle`/`WandSparkles`; pick an icon for what
+  the action does. The app's one brand colour is `--brand` (`text-brand`), for an answer's key
+  figures only (`splitNumbers`); everything else keeps the neutral theme.
+- Demo answers come in sets, one per sample (`DEMO_SETS` in `src/ai/fixtures.ts`: Global Sales and
+  Company finances, D117); the demo provider answers only from loaded samples. A new demo question
+  goes in its set's JSON and in `EXPECTED_CHARTS` (`fixtures.test.ts` runs it on the sample). The try
+  projects (`TRY_DEMOS`, `isTryProject` in `app/tryDemo.ts`) are the ones guests may open.
+- Phones (D117): below `md` the top bars put their extras in `AppMenu` ("More"); below 640 px
+  dashboards stack (`StackedTiles`, `stackRows` in `dashboard/layout.ts`). `e2e/responsive.spec.ts`
+  checks 390 and 820 px; match "More" with `exact: true` (a start card says "and more").
 - The Python worker also runs the scratchpad notebook (`src/workers/notebook.ts`, own namespace);
   Stop/timeout reset both. Kept files (`src/stores/persistFiles.ts`) live in OPFS, opt-in only.
 - Two pages (PRD D99): `index.html` is the landing page, `app/index.html` the app (served at

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { openProject, signIn } from './app.ts'
+import { answerSteps, openProject, signIn } from './app.ts'
 
 // M3 in demo mode (no API key): J1, answer cards, the SQL/Explanation/Trace tabs, edited SQL
 // through the guard, and history. The fixture answers run live SQL on the generated sample.
@@ -25,11 +25,14 @@ test.describe('J1: first run without a key (F-SHELL-02, F-AI-03)', () => {
     // Home needs an account (D115); a first visit then welcomes with the sample.
     await signIn(page)
     await page.goto('/app/')
-    await expect(page.getByRole('heading', { name: 'Ask your data anything' })).toBeVisible()
-    await expect(page.getByText('Your files never leave this browser.')).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Demo', exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'What do you want to look at?' })).toBeVisible()
+    await expect(page.getByText('Your files stay on this device.')).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Demo mode', exact: true })).toBeVisible()
 
-    await page.getByRole('button', { name: 'Try sample data (1M rows)' }).click()
+    await page
+      .getByRole('list', { name: 'Ways to start' })
+      .getByRole('button', { name: /Global Sales/ })
+      .click()
     const suggestions = page.getByRole('list', { name: 'Suggested questions' })
     await expect(suggestions).toBeVisible({ timeout: 60_000 })
     await suggestions.getByRole('button', { name: 'Which region grew fastest?' }).click()
@@ -41,7 +44,7 @@ test.describe('J1: first run without a key (F-SHELL-02, F-AI-03)', () => {
     await expect(answer.getByText(/^APAC leads with \+\d+%, followed by LATAM/)).toBeVisible()
     await expect(answer.getByText('Demo', { exact: true })).toBeVisible()
 
-    const timeline = answer.getByRole('list', { name: 'Progress' })
+    const timeline = await answerSteps(answer)
     for (const stage of [
       'Reading schema',
       'Writing SQL',
@@ -85,9 +88,11 @@ test.describe('J1: first run without a key (F-SHELL-02, F-AI-03)', () => {
     await loadSales(page)
     const answer = await ask(page, 'What is the meaning of life?')
 
-    await expect(answer.getByRole('alert')).toContainText('Demo mode only knows a few questions')
+    await expect(answer.getByRole('alert')).toContainText(
+      'Demo mode answers a set of example questions',
+    )
     await expect(
-      answer.getByRole('button', { name: 'Add an API key to ask anything' }),
+      answer.getByRole('button', { name: 'Add an AI key to ask anything' }),
     ).toBeVisible()
     await answer.getByRole('button', { name: 'What is total revenue by year?' }).click()
 
@@ -100,14 +105,15 @@ test.describe('J1: first run without a key (F-SHELL-02, F-AI-03)', () => {
     await openProject(page)
     await page.getByRole('button', { name: 'Try sample data', exact: true }).click()
     await page.getByRole('menuitem', { name: /HR attrition/ }).click()
-    await expect(page.getByRole('region', { name: 'HR attrition (CSV)' })).toBeVisible()
+    await expect(page.getByRole('region', { name: 'HR attrition' })).toBeVisible()
 
     const answer = await ask(page, 'Which region grew fastest?')
-    await expect(answer.getByRole('alert')).toContainText('Demo answers work on the Global Sales')
+    await expect(answer.getByRole('alert')).toContainText('Demo answers work on the sample data')
     await expect(
-      answer.getByRole('button', { name: 'Add an API key to ask anything' }),
+      answer.getByRole('button', { name: 'Add an AI key to ask anything' }),
     ).toBeVisible()
-    await answer.getByRole('button', { name: 'Load Global Sales (1M rows)' }).click()
+    await expect(answer.getByRole('button', { name: 'Load Company finances' })).toBeVisible()
+    await answer.getByRole('button', { name: 'Load Global Sales' }).click()
     await expect(page.getByRole('region', { name: 'Global Sales · 1M rows' })).toBeVisible({
       timeout: 60_000,
     })

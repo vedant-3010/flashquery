@@ -1,4 +1,4 @@
-import { ChevronDown, KeyRound, Settings2, Sparkles } from 'lucide-react'
+import { ChevronDown, Cpu, FlaskConical, KeyRound, Settings2 } from 'lucide-react'
 import { localBaseUrl } from '@/ai/localServer'
 import { findModel, modelsFor, PROVIDER_LABELS, shortModelLabel } from '@/ai/models'
 import { ProviderIdSchema, type ProviderId } from '@/ai/schemas'
@@ -48,7 +48,7 @@ export function ModelMenu() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="xs" aria-label={`Model: ${name}`} title="Choose the model">
-          <Sparkles aria-hidden />
+          {demo ? <FlaskConical aria-hidden /> : <Cpu aria-hidden />}
           <span className="max-w-32 truncate">
             {demo ? 'Demo' : provider === 'local' ? current : shortModelLabel(current)}
           </span>

@@ -1,4 +1,4 @@
-import { Play, Square, SquareTerminal, TriangleAlert, WandSparkles } from 'lucide-react'
+import { AlignLeft, Play, Square, SquareTerminal, TriangleAlert } from 'lucide-react'
 import { lazy, Suspense, useMemo, useState } from 'react'
 import { EmptyState } from '@/components/EmptyState'
 import { Button } from '@/components/ui/button'
@@ -86,7 +86,7 @@ export function SqlView() {
           </Button>
         )}
         <Button size="sm" variant="ghost" onClick={() => void format()} disabled={!text.trim()}>
-          <WandSparkles aria-hidden />
+          <AlignLeft aria-hidden />
           Format
         </Button>
         <span aria-live="polite" className="ml-auto truncate text-xs text-muted-foreground">

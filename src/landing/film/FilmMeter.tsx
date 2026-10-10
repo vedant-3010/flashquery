@@ -24,7 +24,7 @@ export function FilmMeter({ asked }: { asked: boolean }) {
       <div className="flex items-center gap-2 px-3 py-2">
         <span className="text-ink-muted">Sent to the AI</span>
         <span className="ml-auto truncate font-mono text-ink">
-          {asked ? 'schema + 3 sample rows' : 'nothing yet'}
+          {asked ? 'column names + 3 sample rows' : 'nothing yet'}
         </span>
       </div>
     </div>

@@ -7,15 +7,15 @@ import { useSettingsStore } from '@/stores/settings'
 const STEPS = [
   {
     title: 'Ask in plain English',
-    text: 'Type a question below or pick a suggestion. The AI writes SQL, and DuckDB runs it here in your browser.',
+    text: 'Type a question below, say it, or pick a suggestion. The AI works out the query, and your device runs it: your files stay here.',
   },
   {
     title: 'Check every answer',
-    text: "Each answer shows its SQL (you can edit and re-run it), its assumptions and a trace. The side panel's AI inspector shows exactly what was sent to the AI.",
+    text: "Each answer shows how it was worked out: its assumptions, every step, and the query (edit it and it reruns). The side panel's AI inspector shows exactly what was sent to the AI.",
   },
   {
     title: 'Build a dashboard',
-    text: 'Pin answers, or let the AI generate a dashboard in the Dashboard tab. Everything is saved on this device only.',
+    text: 'Pin answers, or let the AI generate a dashboard in the Dashboard tab. It stays on this device until you choose to share it.',
   },
 ]
 

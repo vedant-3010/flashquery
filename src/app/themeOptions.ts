@@ -1,0 +1,9 @@
+import { Monitor, Moon, Sun, type LucideIcon } from 'lucide-react'
+import type { ThemePreference } from '@/lib/theme'
+
+/** The theme choices, for the theme menu and the phone's More menu. */
+export const THEME_OPTIONS: { value: ThemePreference; label: string; icon: LucideIcon }[] = [
+  { value: 'light', label: 'Light', icon: Sun },
+  { value: 'dark', label: 'Dark', icon: Moon },
+  { value: 'system', label: 'System', icon: Monitor },
+]

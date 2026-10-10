@@ -83,7 +83,7 @@ test('notes come back with the data; the workspace exports, clears and imports',
   await page.getByRole('alertdialog').getByRole('button', { name: 'Clear everything' }).click()
   // Everything went, projects too: Home welcomes a first visit.
   await expect(page).toHaveURL(/\/app\/$/)
-  await expect(page.getByRole('heading', { name: 'Ask your data anything' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'What do you want to look at?' })).toBeVisible()
   await openProject(page)
   await loadSales(page)
   await expect(sales).not.toContainText('Notes:')
@@ -149,13 +149,14 @@ test('kept files load again after a reload, until the setting is turned off', as
   for (const name of ['Global Sales · 10k rows', 'regions.csv', 'Pasted data']) {
     await expect(page.getByRole('region', { name })).toBeVisible({ timeout: 60_000 })
   }
-  await expect(page.getByRole('region', { name: 'regions.csv' })).toContainText('regions · 2 rows')
+  await expect(page.getByRole('region', { name: 'regions.csv' })).toContainText('2 rows')
+  await expect(page.getByRole('region', { name: 'regions.csv' })).toContainText('Table regions')
 
   await page.getByRole('button', { name: 'Settings', exact: true }).click()
   await page.getByRole('checkbox', { name: 'Keep loaded files on this device' }).uncheck()
   await page.keyboard.press('Escape')
   await expect.poll(() => keptCount(page)).toBe(0)
   await page.reload()
-  await expect(page.getByRole('heading', { name: 'Ask your data anything' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'What do you want to look at?' })).toBeVisible()
   await expect(page.getByRole('region', { name: 'regions.csv' })).toHaveCount(0)
 })

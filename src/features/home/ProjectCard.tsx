@@ -47,13 +47,13 @@ export function ProjectCard({ project }: { project: Project }) {
   return (
     <article
       aria-label={project.name}
-      className="relative grid gap-2 rounded-xl border bg-card p-4 transition-colors focus-within:ring-2 focus-within:ring-ring/50 hover:border-primary/40"
+      className="relative grid gap-2 rounded-2xl border bg-card p-4 transition-[border-color,box-shadow,translate] duration-200 focus-within:ring-2 focus-within:ring-ring/50 hover:-translate-y-px hover:border-foreground/20 hover:shadow-sm"
     >
       <div className="flex items-start gap-2">
         {/* The link covers the card; the menu sits above it. */}
         <Link
           href={paths.project(project.id)}
-          className="min-w-0 flex-1 truncate font-medium outline-none after:absolute after:inset-0 after:rounded-xl"
+          className="min-w-0 flex-1 truncate font-medium outline-none after:absolute after:inset-0 after:rounded-2xl"
         >
           {project.name}
         </Link>
@@ -79,9 +79,23 @@ export function ProjectCard({ project }: { project: Project }) {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-      <p className="truncate text-sm text-muted-foreground">
-        {shown.length > 0 ? `${shown.join(', ')}${more > 0 ? ` +${more}` : ''}` : 'No data yet'}
-      </p>
+      {/* Its data, as chips: what's in it at a glance. */}
+      {shown.length > 0 ? (
+        <ul className="flex min-w-0 flex-wrap gap-1" aria-label="Data">
+          {shown.map((name) => (
+            <li
+              key={name}
+              className="max-w-full truncate rounded-md bg-muted px-1.5 py-0.5 text-xs text-muted-foreground"
+              title={name}
+            >
+              {name}
+            </li>
+          ))}
+          {more > 0 && <li className="px-1 py-0.5 text-xs text-muted-foreground">+{more}</li>}
+        </ul>
+      ) : (
+        <p className="text-sm text-muted-foreground">No data yet</p>
+      )}
       <p className="text-xs text-muted-foreground">
         {count(project.dashboards, 'dashboard')} · {count(project.questions, 'question')} · opened{' '}
         {formatAgo(project.lastOpenedAt, locale)}

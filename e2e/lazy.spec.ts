@@ -25,7 +25,7 @@ test('the app loads none of the heavy libraries at first; each loads on first us
   const urls = recordRequests(page)
   await openProject(page)
   // DuckDB starts after the first paint, in an idle callback.
-  await expect(page.getByRole('button', { name: /^Engine ready/ })).toBeVisible({ timeout: 30_000 })
+  await expect(page.getByRole('button', { name: /engine ready$/ })).toBeVisible({ timeout: 30_000 })
   for (const [name, pattern] of Object.entries(HEAVY)) {
     expect(loaded(urls, pattern), `${name} loaded with the landing page`).toBe(false)
   }

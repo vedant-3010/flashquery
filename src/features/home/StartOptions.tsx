@@ -1,6 +1,7 @@
-import { FileJson, FlaskConical, KeyRound, Upload, type LucideIcon } from 'lucide-react'
+import { FileJson, KeyRound } from 'lucide-react'
 import { useRef } from 'react'
-import { TRY_PROJECT_ID, TRY_PROJECT_NAME } from '@/app/tryDemo'
+import { tryDemoFor } from '@/app/tryDemo'
+import { StartCards, type StartChoice } from '@/components/StartCards'
 import { Button } from '@/components/ui/button'
 import { ACCEPTED_EXTENSIONS } from '@/engine/ingest'
 import { useStartProject } from '@/features/home/useStartProject'
@@ -14,8 +15,8 @@ import { useUiStore } from '@/stores/ui'
 const baseName = (fileName: string) => fileName.replace(/\.[^.]+$/, '') || fileName
 
 /**
- * Ways to start (F-HOME-03): upload files into a new project, the 1M-row sample (in the "Sample:
- * Global Sales" project, as the try link), or a workspace file imported into a new project.
+ * Ways to start (F-HOME-03, D117): your file into a new project, or a sample in its own sample
+ * project (the one its try link opens); a saved workspace file below.
  */
 export function StartOptions({ variant }: { variant: 'hero' | 'tiles' }) {
   const start = useStartProject()
@@ -25,11 +26,16 @@ export function StartOptions({ variant }: { variant: 'hero' | 'tiles' }) {
   const openSettings = useUiStore((state) => state.setSettingsOpen)
   const toast = useToastStore((state) => state.show)
 
-  const sample = () => {
-    const existing = useProjectsStore.getState().projects.find((p) => p.id === TRY_PROJECT_ID)
+  const choose = (choice: StartChoice) => {
+    if (choice === 'upload') {
+      files.current?.click()
+      return
+    }
+    const demo = tryDemoFor(choice)
+    const existing = useProjectsStore.getState().projects.find((p) => p.id === demo.projectId)
     void start(
-      { kind: 'sample', sampleId: 'global-sales-1m' },
-      existing ? { projectId: existing.id } : { name: TRY_PROJECT_NAME, newId: TRY_PROJECT_ID },
+      { kind: 'sample', sampleId: choice },
+      existing ? { projectId: existing.id } : { name: demo.projectName, newId: demo.projectId },
     )
   }
   const upload = (picked: File[]) => {
@@ -71,28 +77,37 @@ export function StartOptions({ variant }: { variant: 'hero' | 'tiles' }) {
     </>
   )
 
+  const more = (
+    <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+      <Button
+        variant="link"
+        size="sm"
+        className="h-auto p-0 text-muted-foreground"
+        onClick={() => workspace.current?.click()}
+      >
+        <FileJson aria-hidden />
+        Open a saved workspace file
+      </Button>
+      {!hasKey && (
+        <Button
+          variant="link"
+          size="sm"
+          className="h-auto p-0 text-muted-foreground"
+          onClick={() => openSettings(true)}
+        >
+          <KeyRound aria-hidden />
+          Add an AI key
+        </Button>
+      )}
+    </div>
+  )
+
   if (variant === 'hero') {
     return (
-      <div className="flex flex-wrap justify-center gap-2">
+      <div className="grid w-full max-w-3xl justify-items-center gap-4">
         {inputs}
-        <Button onClick={sample}>
-          <FlaskConical aria-hidden />
-          Try sample data (1M rows)
-        </Button>
-        <Button variant="outline" size="sm" onClick={() => files.current?.click()}>
-          <Upload aria-hidden />
-          Upload files
-        </Button>
-        <Button variant="outline" size="sm" onClick={() => workspace.current?.click()}>
-          <FileJson aria-hidden />
-          Import a workspace
-        </Button>
-        {!hasKey && (
-          <Button variant="outline" size="sm" onClick={() => openSettings(true)}>
-            <KeyRound aria-hidden />
-            Add API key
-          </Button>
-        )}
+        <StartCards onChoose={choose} />
+        {more}
       </div>
     )
   }
@@ -103,50 +118,8 @@ export function StartOptions({ variant }: { variant: 'hero' | 'tiles' }) {
       <h2 id="home-start" className="text-sm font-medium">
         Start something new
       </h2>
-      <div className="grid gap-3 sm:grid-cols-3">
-        <StartTile
-          icon={Upload}
-          title="Upload files"
-          description="CSV, Excel, Parquet or JSON, read in this browser."
-          onClick={() => files.current?.click()}
-        />
-        <StartTile
-          icon={FlaskConical}
-          title="Try the 1M-row sample"
-          description="Global Sales orders, generated on your device."
-          onClick={sample}
-        />
-        <StartTile
-          icon={FileJson}
-          title="Import a workspace"
-          description="History, dashboards and notes from an exported file."
-          onClick={() => workspace.current?.click()}
-        />
-      </div>
+      <StartCards onChoose={choose} />
+      <div className="flex justify-start">{more}</div>
     </section>
-  )
-}
-
-function StartTile({
-  icon: Icon,
-  title,
-  description,
-  onClick,
-}: {
-  icon: LucideIcon
-  title: string
-  description: string
-  onClick: () => void
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="grid gap-1 rounded-xl border bg-card p-4 text-left transition-colors outline-none hover:border-primary/40 hover:bg-accent/40 focus-visible:ring-2 focus-visible:ring-ring/50"
-    >
-      <Icon className="size-5 text-primary" aria-hidden />
-      <span className="mt-1 text-sm font-medium">{title}</span>
-      <span className="text-xs text-muted-foreground">{description}</span>
-    </button>
   )
 }

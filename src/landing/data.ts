@@ -184,4 +184,8 @@ export function columnFields(): PayloadField[][] {
 
 export const APP_URL = '/app/'
 export const TRY_URL = '/app/try'
+/** The finance sample's try link (D117): its project, and the first finance question. */
+export const FINANCE_TRY_URL = '/app/try?sample=company-finances'
+export const LOGIN_URL = '/app/login'
+export const REGISTER_URL = '/app/register'
 export const BENCH_URL = '/app/bench'

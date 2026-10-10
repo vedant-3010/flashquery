@@ -1,6 +1,13 @@
 import { BrandMark } from '@/components/BrandMark'
 import { TextLink } from '@/landing/CtaLink'
-import { APP_URL, BENCH_URL } from '@/landing/data'
+import { BENCH_URL, LOGIN_URL, REGISTER_URL, TRY_URL } from '@/landing/data'
+
+const LINKS = [
+  { href: TRY_URL, label: 'Try it free' },
+  { href: LOGIN_URL, label: 'Sign in' },
+  { href: REGISTER_URL, label: 'Create an account' },
+  { href: BENCH_URL, label: 'Benchmark' },
+]
 
 export function Footer() {
   return (
@@ -11,20 +18,18 @@ export function Footer() {
             <BrandMark className="size-5 text-ink" /> flashQuery
           </p>
           <p className="mt-3 max-w-[26rem] text-[14px] text-ink-muted">
-            A private AI data analyst that runs in your browser tab. Made by Vedant Dandge.
+            A private AI analyst for your business data: answers, charts and dashboards, with your
+            files kept on your device. Made by Vedant Dandge.
           </p>
         </div>
-        <ul className="grid gap-2 text-[14px] text-ink-muted md:col-span-3">
-          <li>
-            <TextLink href={APP_URL} className="hover:text-ink">
-              Open the app
-            </TextLink>
-          </li>
-          <li>
-            <TextLink href={BENCH_URL} className="hover:text-ink">
-              Benchmark
-            </TextLink>
-          </li>
+        <ul className="grid content-start gap-2 text-[14px] text-ink-muted md:col-span-3">
+          {LINKS.map((link) => (
+            <li key={link.href}>
+              <TextLink href={link.href} className="hover:text-ink">
+                {link.label}
+              </TextLink>
+            </li>
+          ))}
         </ul>
         <p className="font-mono text-[11px] leading-[1.7] text-ink-faint md:col-span-3">
           No cookies. No analytics. This page makes no requests to anyone else.

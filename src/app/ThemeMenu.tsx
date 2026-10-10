@@ -1,4 +1,5 @@
-import { Monitor, Moon, Sun, type LucideIcon } from 'lucide-react'
+import { Moon, Sun } from 'lucide-react'
+import { THEME_OPTIONS } from '@/app/themeOptions'
 import { IconButton } from '@/components/IconButton'
 import {
   DropdownMenu,
@@ -8,14 +9,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useResolvedTheme } from '@/hooks/useResolvedTheme'
-import { ThemePreferenceSchema, type ThemePreference } from '@/lib/theme'
+import { ThemePreferenceSchema } from '@/lib/theme'
 import { useSettingsStore } from '@/stores/settings'
-
-const OPTIONS: { value: ThemePreference; label: string; icon: LucideIcon }[] = [
-  { value: 'light', label: 'Light', icon: Sun },
-  { value: 'dark', label: 'Dark', icon: Moon },
-  { value: 'system', label: 'System', icon: Monitor },
-]
 
 export function ThemeMenu() {
   const preference = useSettingsStore((state) => state.theme)
@@ -32,7 +27,7 @@ export function ThemeMenu() {
           value={preference}
           onValueChange={(value) => setTheme(ThemePreferenceSchema.parse(value))}
         >
-          {OPTIONS.map(({ value, label, icon: Icon }) => (
+          {THEME_OPTIONS.map(({ value, label, icon: Icon }) => (
             <DropdownMenuRadioItem key={value} value={value}>
               <Icon aria-hidden />
               {label}

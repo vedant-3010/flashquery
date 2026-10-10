@@ -66,7 +66,7 @@ export function ChartExportMenu({ chartRef, option, theme, title }: ChartExportM
         <DropdownMenuTrigger asChild>
           <Button size="xs" variant="ghost">
             <Download aria-hidden />
-            Export chart
+            <span className="max-md:sr-only">Export chart</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-auto">

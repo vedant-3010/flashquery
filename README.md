@@ -1,18 +1,22 @@
 # flashQuery
 
-**Ask your data questions in plain English. Your file never leaves your browser.**
+**A private AI analyst for your business data. Ask in plain English; your files never leave your
+device.**
 
 <!-- Live demo: add the Vercel URL here after the first deploy (see docs/DEPLOY.md). -->
 
 ![flashQuery demo: loading a 1M-row sample, asking "Which region grew fastest?", checking the SQL, a trend chart, a generated dashboard, the privacy model, dark mode](docs/demo.png)
 
-flashQuery is an AI data analyst that runs entirely in the browser: load a CSV, Excel, Parquet or JSON
-file, ask a question, and get a chart, a table and a short explanation. An LLM writes DuckDB SQL from
+flashQuery is for founders, finance and accounting people, and anyone in business who wants answers
+from their spreadsheets without waiting on a report: open an Excel or CSV export (or Parquet, JSON,
+pasted cells), ask a question, and get a chart, a table and a short explanation, then pin it to a
+dashboard and share the results. It runs entirely in the browser. An LLM writes DuckDB SQL from
 your question, and DuckDB-WASM runs it on your device, so the rows stay with you. Only what the
 privacy mode allows (column names, and optionally a few statistics and sample values) goes to the AI
 provider you choose, with your own key, and every request is shown in an inspector exactly as sent.
 
-No key? Demo mode answers a set of questions about a generated 1M-row sales dataset, with live SQL.
+No key? Demo mode answers a set of questions about two samples, with live SQL: a generated 1M-row
+sales dataset, and a small company's finances (invoices and bills: receivables, margins, cash flow).
 
 ## What it does
 

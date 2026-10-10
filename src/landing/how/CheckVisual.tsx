@@ -31,7 +31,7 @@ export function CheckVisual() {
         </p>
       </div>
       <p className="font-sans text-[12px] text-ink-muted">
-        The check walks DuckDB's own parse tree, so text tricks and comments don't get past it.
+        The check reads each query the way the database does, so tricks don't get past it.
       </p>
     </div>
   )

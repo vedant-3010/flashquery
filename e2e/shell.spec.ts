@@ -44,10 +44,10 @@ test.describe('app shell (F-SHELL-01)', () => {
   test('switches between workspace and dashboard', async ({ page }) => {
     await openProject(page)
 
-    await expect(page.getByRole('heading', { name: 'Ask your data anything' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'What do you want to look at?' })).toBeVisible()
     await page.getByRole('tab', { name: 'Dashboard' }).click()
     await expect(page.getByText('No tiles yet')).toBeVisible()
-    await expect(page.getByRole('heading', { name: 'Ask your data anything' })).toBeHidden()
+    await expect(page.getByRole('heading', { name: 'What do you want to look at?' })).toBeHidden()
   })
 
   test('toggles the side panel and its tabs', async ({ page }) => {
@@ -77,7 +77,9 @@ test.describe('theme (F-SHELL-04)', () => {
     await openProject(page)
     await expect(page.locator('html')).not.toHaveClass(/dark/)
 
-    await page.getByRole('button', { name: 'Theme' }).click()
+    // The theme is under Help (D118).
+    await page.getByRole('button', { name: 'Help and appearance' }).click()
+    await page.getByRole('menuitem', { name: 'Theme' }).click()
     await page.getByRole('menuitemradio', { name: 'Dark' }).click()
     await expect(page.locator('html')).toHaveClass(/dark/)
 
@@ -99,7 +101,8 @@ test.describe('theme (F-SHELL-04)', () => {
 test.describe('how it works (F-SHIP-04)', () => {
   test('explains the privacy modes and opens the AI inspector', async ({ page }) => {
     await openProject(page)
-    await page.getByRole('button', { name: 'How flashQuery works' }).click()
+    await page.getByRole('button', { name: 'Help and appearance' }).click()
+    await page.getByRole('menuitem', { name: 'How flashQuery works' }).click()
     const dialog = page.getByRole('dialog', { name: 'How flashQuery works' })
     const modes = dialog.getByRole('table', { name: 'What the AI receives in each privacy mode' })
     await expect(modes.getByRole('rowheader', { name: /Balanced/ })).toContainText('(yours)')

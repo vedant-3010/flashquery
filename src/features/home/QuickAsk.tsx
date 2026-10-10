@@ -18,7 +18,7 @@ export function QuickAsk({ project }: { project: Project }) {
   }
   return (
     <form
-      className="flex items-center gap-2 rounded-xl border bg-card p-2 shadow-xs focus-within:ring-2 focus-within:ring-ring/50"
+      className="flex items-center gap-2 rounded-2xl border bg-card p-2 pl-3 shadow-[0_6px_24px_-12px_rgb(0_0_0/0.18)] focus-within:ring-2 focus-within:ring-ring/30 dark:shadow-none"
       onSubmit={(event) => {
         event.preventDefault()
         submit()
@@ -29,7 +29,7 @@ export function QuickAsk({ project }: { project: Project }) {
         placeholder={`Ask about ${project.name}…`}
         value={question}
         onChange={(event) => setQuestion(event.target.value)}
-        className="border-0 bg-transparent shadow-none focus-visible:ring-0 dark:bg-transparent"
+        className="h-10 border-0 bg-transparent px-1 text-base shadow-none focus-visible:ring-0 dark:bg-transparent"
       />
       <Button type="submit" size="icon-sm" aria-label="Ask" disabled={!question.trim()}>
         <SendHorizontal />

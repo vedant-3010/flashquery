@@ -1,4 +1,4 @@
-import { LoaderCircle, Play, ShieldCheck, Sparkles, Square, TriangleAlert } from 'lucide-react'
+import { LoaderCircle, Play, ShieldCheck, Square, TriangleAlert, Wrench } from 'lucide-react'
 import { lazy, Suspense, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -91,7 +91,7 @@ export function PythonPanel({ answer }: { answer: Answer }) {
         )}
         {canFixPython(answer) && (
           <Button size="sm" variant="outline" onClick={() => void fixPython(id)}>
-            <Sparkles aria-hidden />
+            <Wrench aria-hidden />
             Ask the AI to fix it
           </Button>
         )}
