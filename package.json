@@ -30,6 +30,7 @@
     "@langchain/anthropic": "^1.5.11",
     "@langchain/core": "^1.2.13",
     "@langchain/openai": "^1.6.0",
+    "@supabase/supabase-js": "^2.117.3",
     "@tailwindcss/vite": "^4.3.3",
     "@tanstack/react-table": "^9.2.4",
     "@tanstack/react-virtual": "^3.14.13",

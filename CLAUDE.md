@@ -6,8 +6,9 @@ LLM, runs it client-side in DuckDB-WASM, picks a chart, explains its reasoning, 
 to a drag-and-drop dashboard. Stats/forecast questions can run as Python (pandas) via Pyodide.
 No server ever sees the user's files: analysis runs in the browser. Only what the active privacy mode
 allows (schema, a few sample values) is sent to the LLM provider the user picks with their own API key.
-v2 (PRD D100) adds an optional account (Supabase): a Home page with projects, and dashboards saved to
-the cloud and shared by invite or link. The account service stores only what a signed-in user
+v2 (PRD D100) adds accounts (Supabase): a Home page with projects, and dashboards saved to the cloud
+and shared by invite or link. Where an account service is configured, the app asks for an account;
+the try demo (`/app/try`) stays open (D115). The account service stores only what a signed-in user
 explicitly saves or shares; guests and the demo never talk to it.
 
 - Requirements, feature IDs (e.g. `F-ASK-05`), acceptance criteria (AC) and milestones: `docs/PRD.md`.
@@ -38,6 +39,11 @@ explicitly saves or shares; guests and the demo never talk to it.
 - `node scripts/record-demo.mjs` (after `npm run build`): re-records the README demo, `docs/demo.png`
 - `node scripts/record-og.mjs` (after `npm run build`): re-records the landing page's `public/og.png`
 - Deploy: Vercel, configured by `vercel.json`; steps and checks in `docs/DEPLOY.md`
+- Accounts locally (optional, needs Docker): `npx supabase start` runs Supabase on this computer
+  (`supabase/config.toml`; migrations from `supabase/migrations/` apply on start), then put its API URL
+  and publishable key in `.env.local` (see `.env.example`). Emails land in Mailpit
+  (http://127.0.0.1:54324), the database in Studio (http://127.0.0.1:54323). `npx supabase stop`
+  when done. Without `.env.local`, accounts are off.
 - `npx shadcn@latest add <component>`: add a shadcn/ui primitive (files in `src/components/ui/` stay
   as generated; they're in `.prettierignore`)
 - `node scripts/generate-samples.mjs` / `node scripts/generate-e2e-fixtures.mjs`: regenerate
@@ -202,6 +208,18 @@ e2e/ (Playwright)     scripts/ (sample + fixture generators, record-demo, record
   `/app`. The dev and preview servers serve the app for any path under `/app/` (`appRoutes` in
   vite.config.ts), as Vercel does (`vercel.json` rewrites). e2e: `/app/` is Home; specs open the
   workspace with `openProject(page)` from `e2e/app.ts` (it visits `/app/new`).
+- Accounts (D114): supabase-js is reached only through `src/platform/`, a lazy chunk; lint rejects
+  importing it, `@/platform/auth` or `@/platform/supabase` anywhere else (type imports are fine), and
+  only `useAuthStore` (`src/stores/auth.ts`) loads it. `accountsConfig()` (`platform/config.ts`) says whether accounts are
+  on without loading it. e2e: `mockSupabase(page)` from `e2e/supabase.ts` mocks the service for the
+  real supabase-js (the dev server reads its URL from `window.__flashQueryAccounts`; CI builds with
+  the same URL). A new table needs row-level security and policies (`src/test/migrations.test.ts`).
+- Sign-in gate (D115): `RequireAccount` wraps Home, `/new` and projects (not the try project,
+  `TRY_PROJECT_ID`). e2e: `openProject`/`signIn` (`e2e/app.ts`) sign in to the mock first; guest
+  checks use `/app/try`. The sign-in pages share the landing's palette (in the app theme under the
+  landing's names: keep it in step with `landing.css`; `.paper-scope`, `.ink-accent`) but no code:
+  importing a landing module into the app splits a chunk off the landing page. Their animations are
+  CSS (`.auth-*`). The app's Tailwind skips `src/landing/` (`@source not` in `index.css`).
 - Content sized in pixels (the ECharts canvas, the grid's rows) sets the minimum width of every grid
   and flex item around it, so the page can't shrink when the window narrows. Its host gets
   `contain-inline-size` (`EChart.tsx`, `DataGrid.tsx`) and takes its width from its container;

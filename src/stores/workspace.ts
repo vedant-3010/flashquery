@@ -100,10 +100,14 @@ export function importWorkspace(text: string): {
   }
 }
 
-/** Removes everything flashQuery saved in this browser, then starts again on Home (F-EXP-04). */
+/** Removes everything flashQuery saved in this browser (a sign-in too), then starts again on Home (F-EXP-04). */
 export async function clearLocalData(): Promise<void> {
   await idbStore.clear()
   await clearOpfs()
   localStorage.removeItem(THEME_STORAGE_KEY)
+  // A saved sign-in (supabase-js keeps it as sb-…): this browser forgets it too (F-ACCT-04).
+  for (const key of Object.keys(localStorage)) {
+    if (key.startsWith('sb-')) localStorage.removeItem(key)
+  }
   window.location.assign(appUrl(paths.home))
 }

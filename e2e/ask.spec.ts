@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { openProject } from './app.ts'
+import { openProject, signIn } from './app.ts'
 
 // M3 in demo mode (no API key): J1, answer cards, the SQL/Explanation/Trace tabs, edited SQL
 // through the guard, and history. The fixture answers run live SQL on the generated sample.
@@ -22,6 +22,8 @@ async function ask(page: Page, question: string) {
 
 test.describe('J1: first run without a key (F-SHELL-02, F-AI-03)', () => {
   test('sample data → suggested question → answer with SQL and explanation', async ({ page }) => {
+    // Home needs an account (D115); a first visit then welcomes with the sample.
+    await signIn(page)
     await page.goto('/app/')
     await expect(page.getByRole('heading', { name: 'Ask your data anything' })).toBeVisible()
     await expect(page.getByText('Your files never leave this browser.')).toBeVisible()

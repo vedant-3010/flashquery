@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { DEMO_QUESTIONS } from '@/ai/providers/fixture'
-import { appUrl, legacyHashPath, paths, viewFromSegment } from './paths'
+import { appUrl, legacyHashPath, loginPath, nextPath, paths, viewFromSegment } from './paths'
 
 describe('routes (F-HOME-01)', () => {
   it('builds project paths per view', () => {
@@ -26,5 +26,21 @@ describe('routes (F-HOME-01)', () => {
 
   it('the try link asks the landing page headline question', () => {
     expect(DEMO_QUESTIONS[0]).toBe('Which region grew fastest?')
+  })
+
+  it('returns to the page that asked for sign-in, never to another site (D115)', () => {
+    expect(loginPath('/p/x/dashboard')).toBe('/login?next=%2Fp%2Fx%2Fdashboard')
+    expect(loginPath('/')).toBe('/login')
+    expect(nextPath('?next=%2Fp%2Fx%2Fdashboard')).toBe('/p/x/dashboard')
+    expect(nextPath('')).toBe('/')
+    for (const bad of [
+      '//evil.example',
+      '/\\evil.example',
+      'https://evil.example',
+      '/login',
+      '/auth/callback',
+    ]) {
+      expect(nextPath(`?next=${encodeURIComponent(bad)}`)).toBe('/')
+    }
   })
 })

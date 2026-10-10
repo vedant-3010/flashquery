@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { openProject } from './app.ts'
+import { openProject, signIn } from './app.ts'
 
 // M12 (F-HOME-01…04): Home, projects with their own data, routes that deep-link, and data saved
 // before projects moving into "My first project". Demo mode, no key.
@@ -37,6 +37,7 @@ async function historyOf(page: Page) {
 }
 
 test('data saved before projects moves into "My first project"', async ({ page }) => {
+  await signIn(page)
   // The landing page shares the origin and never opens IndexedDB: seed v1 records from it.
   await page.goto('/')
   await page.evaluate(async () => {
@@ -149,8 +150,8 @@ test('routes deep-link and survive a reload; v1 links redirect', async ({ page }
   await page.goto('/app/#/bench')
   await expect(page).toHaveURL(/\/app\/bench$/)
   await expect(page.getByRole('heading', { name: 'Benchmark' })).toBeVisible()
-  await page.goto('/app/login')
-  await expect(page.getByRole('heading', { name: 'Sign-in is coming' })).toBeVisible()
+  await page.goto('/app/s/some-link')
+  await expect(page.getByRole('heading', { name: 'Shared dashboards are coming' })).toBeVisible()
   await page.goto('/app/nowhere')
   await expect(page.getByRole('heading', { name: 'Page not found' })).toBeVisible()
   await page.getByRole('link', { name: 'Go to Home' }).click()

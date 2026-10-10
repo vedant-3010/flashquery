@@ -120,7 +120,8 @@ interface ProjectsState {
   /** The project this page has open (null until one is): opening another one reloads the page. */
   openId: string | null
   hydrate: () => Promise<void>
-  create: (name?: string) => Project
+  /** `id`: a fixed id (the try project); otherwise a new random one. */
+  create: (name?: string, id?: string) => Project
   rename: (id: string, name: string) => void
   /** Deletes the project, its records and its kept files; resolves once that is saved. */
   remove: (id: string) => Promise<void>
@@ -135,8 +136,9 @@ export const useProjectsStore = create<ProjectsState>()((set, get) => ({
   hydrated: false,
   openId: null,
   hydrate: () => (hydrating ??= load()),
-  create: (name) => {
-    const project = newProject(name ?? nextName(get().projects))
+  create: (name, id) => {
+    const made = newProject(name ?? nextName(get().projects))
+    const project = id ? { ...made, id } : made
     set((state) => ({ projects: [project, ...state.projects] }))
     return project
   },

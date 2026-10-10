@@ -13,6 +13,13 @@ export const paths = {
   bench: '/bench',
   login: '/login',
   register: '/register',
+  /** Asks for a password reset link. */
+  forgot: '/forgot',
+  /** Where a reset link lands: choose a new password. */
+  reset: '/reset',
+  /** Where email links and Google/GitHub sign-in come back to (PKCE ?code=). */
+  authCallback: '/auth/callback',
+  account: '/account',
   project: (id: string, view: View = 'workspace') =>
     view === 'workspace' ? `/p/${id}` : `/p/${id}/${view}`,
 }
@@ -31,4 +38,20 @@ export function legacyHashPath(hash: string): string | null {
   if (hash === '#/bench') return paths.bench
   if (hash === '#/try' || hash.startsWith('#/try?')) return paths.try
   return null
+}
+
+/**
+ * Where to go after signing in: `?next=` when it's a path in this app, else Home. Never another
+ * site: "//host" and "/\\host" are rejected, and wouter keeps every path under /app/ anyway.
+ */
+export function nextPath(search: string): string {
+  const next = new URLSearchParams(search).get('next')
+  const inApp = next !== null && /^\/(?![/\\])/.test(next)
+  const isAuthPage = next !== null && /^\/(login|register|forgot|reset|auth\/)/.test(next)
+  return inApp && !isAuthPage ? next : paths.home
+}
+
+/** The sign-in page, returning to `next` (an app path) afterwards. */
+export function loginPath(next: string): string {
+  return next === paths.home ? paths.login : `${paths.login}?next=${encodeURIComponent(next)}`
 }

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { useLocation } from 'wouter'
 import { paths } from '@/app/paths'
-import { TRY_PROJECT_NAME } from '@/app/tryDemo'
+import { TRY_PROJECT_ID, TRY_PROJECT_NAME } from '@/app/tryDemo'
 import { needsReload } from '@/stores/projectSession'
 import { useProjectsStore } from '@/stores/projects'
 import { queueStart } from '@/stores/projectStart'
@@ -20,8 +20,8 @@ export function TryRoute() {
       const store = useProjectsStore.getState()
       await store.hydrate()
       const project =
-        useProjectsStore.getState().projects.find((p) => p.name === TRY_PROJECT_NAME) ??
-        store.create(TRY_PROJECT_NAME)
+        useProjectsStore.getState().projects.find((p) => p.id === TRY_PROJECT_ID) ??
+        store.create(TRY_PROJECT_NAME, TRY_PROJECT_ID)
       await queueStart(project.id, { kind: 'try' }, { persist: needsReload(project.id) })
       navigate(paths.project(project.id), { replace: true })
     })()

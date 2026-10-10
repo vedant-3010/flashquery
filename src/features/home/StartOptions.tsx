@@ -1,6 +1,6 @@
 import { FileJson, FlaskConical, KeyRound, Upload, type LucideIcon } from 'lucide-react'
 import { useRef } from 'react'
-import { TRY_PROJECT_NAME } from '@/app/tryDemo'
+import { TRY_PROJECT_ID, TRY_PROJECT_NAME } from '@/app/tryDemo'
 import { Button } from '@/components/ui/button'
 import { ACCEPTED_EXTENSIONS } from '@/engine/ingest'
 import { useStartProject } from '@/features/home/useStartProject'
@@ -26,10 +26,10 @@ export function StartOptions({ variant }: { variant: 'hero' | 'tiles' }) {
   const toast = useToastStore((state) => state.show)
 
   const sample = () => {
-    const existing = useProjectsStore.getState().projects.find((p) => p.name === TRY_PROJECT_NAME)
+    const existing = useProjectsStore.getState().projects.find((p) => p.id === TRY_PROJECT_ID)
     void start(
       { kind: 'sample', sampleId: 'global-sales-1m' },
-      existing ? { projectId: existing.id } : { name: TRY_PROJECT_NAME },
+      existing ? { projectId: existing.id } : { name: TRY_PROJECT_NAME, newId: TRY_PROJECT_ID },
     )
   }
   const upload = (picked: File[]) => {
