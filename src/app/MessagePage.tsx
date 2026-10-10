@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { useResolvedTheme } from '@/hooks/useResolvedTheme'
 import { paths } from '@/app/paths'
 
-/** A page with one message and a way Home: not found, and routes that arrive later (M13, M14). */
+/** A page with one message and a way Home: not found. */
 export function MessagePage({ title, description }: { title: string; description: string }) {
   const theme = useResolvedTheme()
   return (

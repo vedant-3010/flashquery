@@ -7,7 +7,11 @@ import { HeadlineLines } from '@/landing/HeadlineLines'
 const QUESTIONS = [
   {
     q: 'Is my file uploaded anywhere?',
-    a: 'No. flashQuery has no server. The file is read by DuckDB inside your browser tab and stays there. Only what your privacy mode allows (names and types, plus a few statistics and sample rows in Balanced mode) goes to the AI provider you choose.',
+    a: 'No. No server ever sees your files: DuckDB reads them inside your browser tab, and they stay there. Only what your privacy mode allows (names and types, plus a few statistics and sample rows in Balanced mode) goes to the AI provider you choose.',
+  },
+  {
+    q: 'What happens when I share a dashboard?',
+    a: 'Sharing uploads only the dashboard results you choose to share: each tile’s title, SQL, chart and last result (at most 5,000 rows), after a dialog lists exactly what will go. Your files never upload. The people you invite, or anyone with a view-only link you can revoke, see those results without your data or a key.',
   },
   {
     q: 'Do I need an API key?',

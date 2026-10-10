@@ -4,6 +4,14 @@ import type { TileLayout, TileType } from '@/dashboard/schema'
 
 export const COLS = 12
 
+/** The grid's geometry (react-grid-layout's gridConfig): here, in presentation and shared. */
+export const GRID_CONFIG = {
+  cols: COLS,
+  rowHeight: 72,
+  margin: [12, 12] as const,
+  containerPadding: [0, 0] as const,
+}
+
 /** Default tile sizes: KPI 3×2, chart 6×4, table 6×5, text 4×2. */
 export const DEFAULT_SIZES: Record<TileType, { w: number; h: number }> = {
   kpi: { w: 3, h: 2 },

@@ -20,6 +20,10 @@ export const paths = {
   /** Where email links and Google/GitHub sign-in come back to (PKCE ?code=). */
   authCallback: '/auth/callback',
   account: '/account',
+  /** A view-only link (F-SHARE-04): open to anyone holding it. */
+  sharedLink: (slug: string) => `/s/${slug}`,
+  /** A dashboard shared with you, or your own shared copy (F-SHARE-05). */
+  shared: (id: string) => `/shared/${id}`,
   project: (id: string, view: View = 'workspace') =>
     view === 'workspace' ? `/p/${id}` : `/p/${id}/${view}`,
 }

@@ -11,7 +11,7 @@ import { HeadlineLines } from '@/landing/HeadlineLines'
 const STEPS: { title: string; body: string; Visual: ComponentType }[] = [
   {
     title: 'Your file loads into this tab',
-    body: 'DuckDB, a full analytical database compiled to WebAssembly, reads the file where it is. There is no upload, because there is no server to upload to.',
+    body: 'DuckDB, a full analytical database compiled to WebAssembly, reads the file where it is. Nothing is uploaded: no server ever sees your files.',
     Visual: LoadVisual,
   },
   {

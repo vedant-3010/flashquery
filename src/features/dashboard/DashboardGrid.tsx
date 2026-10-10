@@ -3,17 +3,10 @@ import '@/features/dashboard/grid.css'
 import { useEffect, useMemo } from 'react'
 import ReactGridLayout, { useContainerWidth, type Layout } from 'react-grid-layout'
 import type { Dashboard } from '@/dashboard/schema'
-import { COLS } from '@/dashboard/layout'
+import { GRID_CONFIG } from '@/dashboard/layout'
 import { TileCard } from '@/features/dashboard/TileCard'
 import { useDashboardStore } from '@/stores/dashboard'
 import { useUiStore } from '@/stores/ui'
-
-const GRID = {
-  cols: COLS,
-  rowHeight: 72,
-  margin: [12, 12] as const,
-  containerPadding: [0, 0] as const,
-}
 
 /** The 12-column tile grid (F-DASH-02): drag by the handle, resize from the corner. */
 export function DashboardGrid({
@@ -58,7 +51,7 @@ export function DashboardGrid({
         <ReactGridLayout
           width={width}
           layout={layout}
-          gridConfig={GRID}
+          gridConfig={GRID_CONFIG}
           dragConfig={{ enabled: !readOnly, handle: '.tile-handle' }}
           resizeConfig={{ enabled: !readOnly, handles: ['se'] }}
           onLayoutChange={(next) => {

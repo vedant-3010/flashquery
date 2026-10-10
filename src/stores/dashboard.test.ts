@@ -125,3 +125,13 @@ describe('dashboard files (F-DASH-08)', () => {
     expect(() => importDashboard(JSON.stringify(file))).toThrow(/isn't an flashQuery dashboard/)
   })
 })
+
+describe('dashboard file (F-DASH-08) and sharing', () => {
+  it('leaves out where its shared copy lives', () => {
+    const id = state().createDashboard('Shared one')
+    state().setCloud(id, { id: 'cloud-1', version: 2, savedAt: 1 })
+    const file = exportDashboard(id, { snapshots: true })
+    expect(file?.json).not.toContain('cloud-1')
+    expect(JSON.parse(file?.json ?? '{}').dashboard).not.toHaveProperty('cloud')
+  })
+})

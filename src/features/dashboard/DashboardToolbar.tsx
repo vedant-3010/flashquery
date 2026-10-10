@@ -30,6 +30,7 @@ import { PALETTES } from '@/charts/theme'
 import type { Dashboard } from '@/dashboard/schema'
 import { DashboardSwitcher } from '@/features/dashboard/DashboardSwitcher'
 import { printDashboardHtml, renderDashboardHtml } from '@/features/dashboard/exportDashboard'
+import { ShareButton } from '@/features/sharing/ShareButton'
 import { downloadBytes } from '@/lib/download'
 import { toAppError } from '@/lib/errors'
 import { useDashboardStore } from '@/stores/dashboard'
@@ -37,7 +38,10 @@ import { addTextTile, exportDashboard, importDashboard, refreshAll } from '@/sto
 import { useSettingsStore } from '@/stores/settings'
 import { useToastStore } from '@/stores/toast'
 
-/** Switcher and dashboard actions: generate, add text, refresh all, present, export and import. */
+/**
+ * Switcher and dashboard actions: generate, add text, refresh all, present, share, export and
+ * import.
+ */
 export function DashboardToolbar({
   dashboard,
   onGenerate,
@@ -112,6 +116,9 @@ export function DashboardToolbar({
             <Presentation aria-hidden />
             Present
           </Button>
+        )}
+        {dashboard && (dashboard.tiles.length > 0 || dashboard.cloud) && (
+          <ShareButton dashboard={dashboard} />
         )}
         <input
           ref={input}

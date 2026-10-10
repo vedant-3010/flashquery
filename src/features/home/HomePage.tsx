@@ -11,15 +11,16 @@ import { HomeHeader } from '@/features/home/HomeHeader'
 import { ProjectCard } from '@/features/home/ProjectCard'
 import { QuickAsk } from '@/features/home/QuickAsk'
 import { RecentQuestions } from '@/features/home/RecentQuestions'
+import { SharedSection } from '@/features/home/SharedSection'
 import { StartOptions } from '@/features/home/StartOptions'
 import { SettingsDialog } from '@/features/settings/SettingsDialog'
 import { greeting } from '@/lib/greeting'
 import { useProjectsStore } from '@/stores/projects'
 
 /**
- * Home at /app/ (F-HOME-03): a greeting, a quick ask, ways to start, the projects and recent
- * questions; a first-visit welcome before any project exists. "Shared with me" arrives with
- * accounts (M13).
+ * Home at /app/ (F-HOME-03): a greeting, a quick ask, ways to start, the projects, dashboards
+ * shared with you (F-SHARE-05) and recent questions; a first-visit welcome before any project
+ * exists.
  */
 export function HomePage() {
   const hydrated = useProjectsStore((state) => state.hydrated)
@@ -41,7 +42,10 @@ export function HomePage() {
         {!hydrated ? (
           <Skeleton className="h-40" />
         ) : !latest ? (
-          <FirstVisit />
+          <>
+            <FirstVisit />
+            <SharedSection />
+          </>
         ) : (
           <>
             <section aria-labelledby="home-greeting" className="grid gap-4">
@@ -74,6 +78,7 @@ export function HomePage() {
                 ))}
               </div>
             </section>
+            <SharedSection />
             <StartOptions variant="tiles" />
             <RecentQuestions projects={sorted} />
           </>

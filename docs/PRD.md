@@ -399,7 +399,7 @@ Format: `ID (priority) Title: description. AC: acceptance criteria.`
   the LLM APIs, cdn.jsdelivr.net and extensions.duckdb.org; `script-src 'self' 'wasm-unsafe-eval'` plus
   what Pyodide needs; `worker-src 'self' blob:`. AC: DuckDB and Pyodide still work; every extra directive
   is documented in §12.
-- [ ] **F-SEC-07 (P1) Row-level security** (v2) on every Supabase table, with policy tests for the
+- [x] **F-SEC-07 (P1) Row-level security** (v2) on every Supabase table, with policy tests for the
   owner, a member, a link viewer and a stranger.
 - [x] **F-SEC-08 (P1) Account service in the CSP** (v2): `connect-src` adds exactly the project's
   `https://` and `wss://` Supabase host (from `VITE_SUPABASE_URL` at build), never a wildcard (D104).
@@ -480,22 +480,25 @@ Format: `ID (priority) Title: description. AC: acceptance criteria.`
 
 ### 4.19 Sharing (F-SHARE, v2)
 
-- [ ] **F-SHARE-01 (P1) Cloud dashboards**: save a dashboard to the account: layout, titles, SQL, chart
+- [x] **F-SHARE-01 (P1) Cloud dashboards**: save a dashboard to the account: layout, titles, SQL, chart
   specs, text tiles and tile snapshots (≤ 5,000 rows each, as stored locally), never source files; a
   size cap with a clear error.
-- [ ] **F-SHARE-02 (P1) Consent**: before anything uploads, a dialog lists exactly what will (tiles,
+- [x] **F-SHARE-02 (P1) Consent**: before anything uploads, a dialog lists exactly what will (tiles,
   rows of results, columns). AC: e2e asserts no request before "Confirm" (D103).
-- [ ] **F-SHARE-03 (P1) Invites**: by email, as viewer or editor; an invite resolves when that email
+- [x] **F-SHARE-03 (P1) Invites**: by email, as viewer or editor; an invite resolves when that email
   signs in; members list; remove a member.
-- [ ] **F-SHARE-04 (P1) Links**: a view-only link (`/app/s/:slug`) with optional expiry; revoke. AC: a
+- [x] **F-SHARE-04 (P1) Links**: a view-only link (`/app/s/:slug`) with optional expiry; revoke. AC: a
   revoked or expired link says it's no longer shared.
-- [ ] **F-SHARE-05 (P1) Viewer**: a read-only dashboard from snapshots (the presentation-mode
+- [x] **F-SHARE-05 (P1) Viewer**: a read-only dashboard from snapshots (the presentation-mode
   renderer), with the owner and an "updated" time; works with no file and no key; "Shared with me" on
   Home.
-- [ ] **F-SHARE-06 (P1) Editors**: arrange tiles and edit titles and text tiles; saves with a version
+- [x] **F-SHARE-06 (P1) Editors**: arrange tiles and edit titles and text tiles; saves with a version
   check.
-- [ ] **F-SHARE-07 (P1) Update shared copy**: the owner re-runs the tiles locally and re-uploads their
+- [x] **F-SHARE-07 (P1) Update shared copy**: the owner re-runs the tiles locally and re-uploads their
   snapshots; a prompt on conflict.
+
+*(M14 as built: D116. Also "Shared by you" on Home, so an owner can manage a shared copy from any
+device.)*
 
 **Later (not planned):** comments on tiles, team workspaces, embedding a dashboard, a public gallery,
 refresh from a connected device.
@@ -606,6 +609,7 @@ CloudDashboard { id, ownerId, name, doc: Dashboard (with snapshots), version, up
 Membership     { dashboardId, userId, role: 'viewer'|'editor' }
 Invite         { dashboardId, email, role, createdAt }
 ShareLink      { slug, dashboardId, expiresAt, revokedAt, createdAt }
+Dashboard      + cloud? { id, version, savedAt }   // the local dashboard's shared copy (D116)
 ```
 
 ---
@@ -1355,6 +1359,82 @@ named "Voice input (unavailable)" where on-device recognition is missing, and pr
     landing's (135.2 KB) are unchanged.
   - **e2e:** `signIn(page)` (`e2e/app.ts`) mocks the service and restores a saved session before the
     page loads; `openProject` uses it. Guest checks go through `/app/try`.
+- **D116** Sharing (M14, F-SHARE-01…07, F-SEC-07).
+  - **What uploads** is decided in one place, `toSharedDoc` (`src/dashboard/cloud.ts`): the
+    dashboard's name and layout, and each tile's title, SQL, chart settings, question, text and last
+    result (≤ 5,000 rows). Left out: which files and tables the tiles read (`datasetRefs`, with file
+    names), the dashboard's filters (the results already reflect them) and the local link to the
+    shared copy. SQL names tables and columns, so the dialog says that SQL uploads.
+  - **Consent (D103):** the dialog lists every tile with its kind, rows and columns, then the totals
+    and size, what else uploads and what never does. Nothing is sent before "Upload and share" (e2e
+    checks the requests), and the same dialog comes before every update.
+  - **Size cap:** the database refuses a document over 5 MB of JSON (`dashboards_doc_size`). The app
+    stops at 4.5 MB of its own JSON, because Postgres prints jsonb a little larger (a space after each
+    separator), and names the largest tiles to remove.
+  - **Tables:** `dashboards` (a trigger bumps `version` and `updated_at` on every save; only `name`
+    and `doc` can be updated, so the owner can't be changed), `dashboard_members`,
+    `dashboard_invites` and `share_links` (24-character slugs from 18 random bytes; only expiry and
+    revoked can change).
+  - **Who may do what (row-level security):**
+    - The owner may do everything. An editor reads and saves the document. A viewer reads it.
+    - Anyone with a live link reads that one dashboard through `shared_dashboard(link)`, a security
+      definer function. Anonymous visitors read no table.
+    - Members see only their own membership; invites and links are the owner's alone.
+    - Policies ask `dashboard_role(id)` (security definer, so policies don't recurse through each
+      other). The exception: the owner is checked on the row itself. A row being inserted isn't
+      visible to that function yet, and the app's insert reads back its id. The first run against
+      the real stack found this, and a pgTAP check now covers it.
+  - **Functions:**
+    - `claim_invites()`: invites to your confirmed address become memberships. It runs when Home lists
+      shared dashboards and when you open one, and skips your own dashboards.
+    - `open_dashboard(id)`, `shared_with_me()`, `dashboard_people(id)` (owner only) and
+      `shared_dashboard(link)`.
+  - **Version check:** a save names the version it read (`update … where version = n`). If no row
+    changes, the version moved (a conflict) or the copy is gone (no longer visible); reading the
+    version tells which.
+    - Editors choose "Load their version" or "Save mine over it".
+    - The owner's "Update shared copy" re-runs the tiles here first. It asks before replacing
+      changes made in the shared copy.
+  - **The local link:** a shared dashboard keeps `cloud: { id, version, savedAt }`, saved at once
+    rather than debounced, so a reload can't share it twice. Exported files leave it out. If the copy
+    is gone (deleted elsewhere, or another account's), the dialog says so and offers to share afresh.
+  - **The viewer:**
+    - Two routes: `/app/s/:slug` with no account, and `/app/shared/:id` for the owner and members.
+    - A store-free grid (`SharedGrid`) draws the snapshots, with the owner's name and when it was
+      updated. No engine, no file and no key.
+    - Below 640 px it stacks the tiles in reading order.
+    - Owners also get "Manage sharing" there.
+    - Home lists "Shared with me" and "Shared by you", so a copy can be managed from any device, even
+      after its local dashboard is gone.
+  - **Editors** arrange tiles and edit titles and text in the shared view. The app offers nothing
+    more, but the policy lets an editor save any document: editors are trusted with the dashboard.
+  - **Privacy:**
+    - A link page is the one place a visitor without an account talks to the service, and it asks
+      only `shared_dashboard` for that link (e2e).
+    - Guests and the demo still load and request nothing (`privacy.spec.ts`).
+    - The calls live in the lazy platform chunk (`src/platform/sharing.ts`), reached only through
+      `src/stores/sharing.ts` (lint).
+  - **Deleting** a local dashboard leaves its shared copy shared, since people may rely on it; the
+    delete dialog says so. Stopping sharing deletes the copy with its members, invites and links.
+  - **Landing:** a FAQ answer on what sharing uploads. "No server" copy now reads "no server ever sees
+    your files".
+  - **Tests:**
+    - `supabase/tests/sharing.test.sql`: 43 pgTAP checks against the local stack
+      (`npx supabase test db`). They cover the owner, a stranger, a viewer, an editor (with a version
+      conflict), a link viewer (live, revoked, expired), leaving, the size cap and account deletion.
+    - Unit tests: the upload description, the store, and the platform calls with a fake client.
+    - `e2e/sharing.spec.ts` with the mocked service (`e2e/supabaseSharing.ts`): J7 and J8, invites,
+      editors, the update conflict, revoke and stop.
+  - **Checked by hand** against the local stack on 2026-10-10, with three accounts:
+    - share (no request before consent), invite a viewer and an editor, and a link;
+    - a guest opens the link;
+    - the viewer finds it under "Shared with me";
+    - the editor renames a tile and saves;
+    - the owner's update hits the conflict and replaces;
+    - revoking turns the guest's page into "no longer shared".
+  - **Bundle:** the app's initial JS is 310.4 KB gzip, up 1.9 KB for the Share button, its dialogs
+    and Home's shared lists. The sharing calls (1.6 KB) join the lazy account chunks, and the shared
+    view is its own chunk (4.1 KB). The landing is 135.4 KB, up 0.2 KB for the FAQ answer.
 - **D12** Shared hooks live in `src/hooks/` and shared app components in `src/components/` (outside the
 generated `ui/`), matching the shadcn aliases in `components.json`.
 

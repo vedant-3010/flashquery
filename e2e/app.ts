@@ -6,6 +6,7 @@ import {
   type MockSupabase,
   type MockUser,
 } from './supabase.ts'
+import type { MockCloud } from './supabaseSharing.ts'
 
 // Shared e2e steps. Since M12, /app/ is Home; since D115 Home and projects need an account where
 // accounts are on (the dev server with .env.local, CI's build): tests sign in to a mocked service.
@@ -22,13 +23,20 @@ export const E2E_USER: MockUser = {
  * Signed in, before the page loads: the mocked service, and a saved session supabase-js restores
  * (put back on every load, so it outlasts "Clear all local data").
  */
-export async function signIn(page: Page): Promise<MockSupabase> {
-  const service = await mockSupabase(page, { users: [E2E_USER] })
+export async function signIn(
+  page: Page,
+  {
+    user = E2E_USER,
+    others = [],
+    cloud,
+  }: { user?: MockUser; others?: MockUser[]; cloud?: MockCloud } = {},
+): Promise<MockSupabase> {
+  const service = await mockSupabase(page, { users: [user, ...others], cloud })
   await page.addInitScript(
     ({ key, session }) => {
       if (localStorage.getItem(key) === null) localStorage.setItem(key, JSON.stringify(session))
     },
-    { key: SESSION_KEY, session: sessionFor(E2E_USER) },
+    { key: SESSION_KEY, session: sessionFor(user) },
   )
   return service
 }

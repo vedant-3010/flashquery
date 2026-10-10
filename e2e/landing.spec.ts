@@ -86,7 +86,7 @@ test('works by keyboard: skip link, FAQ, focus visible', async ({ page }) => {
   await question.focus()
   await page.keyboard.press('Enter')
   await expect(question).toHaveAttribute('aria-expanded', 'true')
-  await expect(page.getByText('flashQuery has no server.')).toBeVisible()
+  await expect(page.getByText('No server ever sees your files: DuckDB reads them')).toBeVisible()
 })
 
 test('fits a phone without sideways scrolling', async ({ page }) => {

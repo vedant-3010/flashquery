@@ -89,7 +89,8 @@ src/
   app/          routes (wouter, base /app: Home, /p/:id[/view], /try, /new, /bench), shell, top bar
   components/   shared app components (EmptyState, IconButton); ui/ = shadcn/ui primitives (generated)
   hooks/        shared React hooks (useMediaQuery, useResolvedTheme)
-  features/     home/ datasets/ grid/ sql/ ask/ explain/ charts/ dashboard/ python/ settings/ bench/  (React only)
+  features/     home/ datasets/ grid/ sql/ ask/ explain/ charts/ dashboard/ python/ settings/ bench/
+                account/ sharing/  (React only)
   engine/       duckdb init, ingest, catalog, profile, query, normalize, sqlGuard, samples, export,
                 chartData, filters (dashboard filter views + AST table rewrite)
   ai/           models, providers, prompts/, schemas, context, pipeline, dashboard, fixtures/  (no React/DOM)
@@ -213,7 +214,13 @@ e2e/ (Playwright)     scripts/ (sample + fixture generators, record-demo, record
   only `useAuthStore` (`src/stores/auth.ts`) loads it. `accountsConfig()` (`platform/config.ts`) says whether accounts are
   on without loading it. e2e: `mockSupabase(page)` from `e2e/supabase.ts` mocks the service for the
   real supabase-js (the dev server reads its URL from `window.__flashQueryAccounts`; CI builds with
-  the same URL). A new table needs row-level security and policies (`src/test/migrations.test.ts`).
+  the same URL). A new table needs row-level security and policies (`src/test/migrations.test.ts`)
+  and pgTAP policy tests (`supabase/tests/`, run with `npx supabase test db` against the local stack).
+- Sharing (D116): the app reaches `src/platform/sharing.ts` only through `sharing()` in
+  `src/stores/sharing.ts` (lint). What uploads is `toSharedDoc` (`src/dashboard/cloud.ts`), always
+  after `ConsentDialog`. A policy must not rely on `dashboard_role()` to see a row being inserted
+  (the insert reads it back): check `owner_id` on the row. e2e: `mockCloud()` (`e2e/supabaseSharing.ts`)
+  passed to `signIn`/`mockSupabase` lets several pages (owner, member, guest) share one service.
 - Sign-in gate (D115): `RequireAccount` wraps Home, `/new` and projects (not the try project,
   `TRY_PROJECT_ID`). e2e: `openProject`/`signIn` (`e2e/app.ts`) sign in to the mock first; guest
   checks use `/app/try`. The sign-in pages share the landing's palette (in the app theme under the

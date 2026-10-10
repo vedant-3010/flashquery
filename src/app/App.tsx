@@ -46,13 +46,21 @@ const AccountPage = lazy(() =>
   import('@/features/account/AccountPage').then((module) => ({ default: module.AccountPage })),
 )
 
+// Shared dashboards (F-SHARE-04/05): their own chunk; the account service loads when one opens.
+const SharedDashboardPage = lazy(() =>
+  import('@/features/sharing/SharedDashboardPage').then((module) => ({
+    default: module.SharedDashboardPage,
+  })),
+)
+
 /** While an account page's chunk loads: the paper, so it doesn't flash white. */
 const paper = <div className="paper-scope min-h-dvh" />
 
 // Routes under /app/ (F-HOME-01, D105): Home, a project's workspace, SQL and dashboard, the try
-// link, the benchmark, the account pages (F-ACCT, M13) and a placeholder for shared links (M14). A
+// link, the benchmark, the account pages (F-ACCT, M13) and shared dashboards (F-SHARE, M14). A
 // project's own data loads when it opens (stores/projectSession.ts); settings and eval cases are
-// global. Accounts are optional: guests never load the account service (F-SEC-09).
+// global. Accounts are optional: guests never load the account service (F-SEC-09), except to open
+// a view-only link someone gave them.
 
 /** v1 links (`/app/#/bench`, `/app/#/try`) go to their routes. */
 function LegacyHashRedirect() {
@@ -148,11 +156,32 @@ export function App() {
                 <AccountPage />
               </Suspense>
             </Route>
+            {/* A view-only link needs no account (F-SHARE-04). */}
             <Route path="/s/:slug">
-              <MessagePage
-                title="Shared dashboards are coming"
-                description="This link will open a dashboard someone shared with you. Sharing isn't available yet."
-              />
+              {(params) => (
+                <PanelErrorBoundary name="the shared dashboard">
+                  <Suspense fallback={null}>
+                    <SharedDashboardPage
+                      key={params.slug}
+                      source={{ kind: 'link', slug: params.slug }}
+                    />
+                  </Suspense>
+                </PanelErrorBoundary>
+              )}
+            </Route>
+            <Route path="/shared/:id">
+              {(params) => (
+                <RequireAccount>
+                  <PanelErrorBoundary name="the shared dashboard">
+                    <Suspense fallback={null}>
+                      <SharedDashboardPage
+                        key={params.id}
+                        source={{ kind: 'member', id: params.id }}
+                      />
+                    </Suspense>
+                  </PanelErrorBoundary>
+                </RequireAccount>
+              )}
             </Route>
             <Route>
               <MessagePage title="Page not found" description="There's nothing at this address." />
