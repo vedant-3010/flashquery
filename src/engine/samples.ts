@@ -257,7 +257,15 @@ export function createGlobalSalesSql(rows: number, table = GLOBAL_SALES_TABLE): 
 }
 
 export type SampleId =
-  'global-sales-10k' | 'global-sales-100k' | 'global-sales-1m' | 'hr-attrition' | 'web-traffic'
+  | 'global-sales-10k'
+  | 'global-sales-100k'
+  | 'global-sales-1m'
+  | 'company-finances'
+  | 'hr-attrition'
+  | 'web-traffic'
+
+/** The finance sample's table (D117): a small company's invoices and bills, 2023–2025. */
+export const COMPANY_FINANCES_TABLE = 'company_finances'
 
 export type SampleDefinition = {
   id: SampleId
@@ -292,12 +300,22 @@ export const SAMPLES: SampleDefinition[] = [
     description: 'Same data, smallest.',
   },
   {
+    id: 'company-finances',
+    kind: 'csv',
+    path: '/samples/company_finances.csv',
+    fileName: 'company_finances.csv',
+    table: COMPANY_FINANCES_TABLE,
+    label: 'Company finances',
+    description:
+      'A small company’s invoices and bills, 2023–2025: income, expenses, who owes what and when it was paid.',
+  },
+  {
     id: 'hr-attrition',
     kind: 'csv',
     path: '/samples/hr_attrition.csv',
     fileName: 'hr_attrition.csv',
     table: 'hr_attrition',
-    label: 'HR attrition (CSV)',
+    label: 'HR attrition',
     description: '1,470 synthetic employees with department, pay, overtime and attrition.',
   },
   {
@@ -306,7 +324,7 @@ export const SAMPLES: SampleDefinition[] = [
     path: '/samples/web_traffic.csv',
     fileName: 'web_traffic.csv',
     table: 'web_traffic',
-    label: 'Web traffic (CSV)',
+    label: 'Website traffic',
     description: 'Daily sessions, conversions and revenue by channel and device, 2024–mid 2025.',
   },
 ]

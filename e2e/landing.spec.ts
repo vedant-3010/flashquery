@@ -1,9 +1,9 @@
 import { expect, test, type Page } from '@playwright/test'
 import { mockSupabase } from './supabase.ts'
 
-// The landing page at / (PRD D99): renders cleanly, the hero film behaves (pause, reduced motion),
-// the privacy toggle shows what each mode sends, it works by keyboard and on a phone, it doesn't
-// shift or block, and "Try it on 1M rows" lands on a real answer in the app.
+// The landing page at / (PRD D99, D117): renders cleanly, the hero film behaves (pause, reduced
+// motion), the privacy toggle shows what each mode sends, it works by keyboard and on a phone, it
+// doesn't shift or block, and "Try it free" lands on a real answer in the app (sales, or finance).
 
 declare global {
   interface Window {
@@ -23,16 +23,39 @@ test('renders the page without errors and links to the app', async ({ page }) =>
   await expect(
     page.getByRole('heading', {
       level: 1,
-      name: /Ask your data anything\. It never leaves your browser\./,
+      name: /Ask your data anything\. It never leaves your computer\./,
     }),
   ).toBeVisible()
   await expect(film(page)).toBeVisible()
-  for (const id of ['how', 'privacy', 'performance', 'features', 'faq']) {
+  for (const id of ['privacy', 'who', 'features', 'how', 'data-people', 'faq']) {
     await expect(page.locator(`#${id}`)).toHaveCount(1)
+  }
+  // Privacy comes first, then who it's for (D117).
+  const order = await page.evaluate(() =>
+    ['privacy', 'who', 'features', 'how', 'data-people'].map(
+      (id) => document.getElementById(id)?.getBoundingClientRect().top ?? 0,
+    ),
+  )
+  expect([...order].sort((a, b) => a - b)).toEqual(order)
+  // The jargon stays in the section for data people (the hero film shows real SQL on purpose).
+  const business = await page.evaluate(() =>
+    ['top', 'privacy', 'who', 'features', 'how']
+      .map((id) => {
+        const copy = document.getElementById(id)?.cloneNode(true) as HTMLElement | undefined
+        copy?.querySelectorAll('figure').forEach((film) => film.remove())
+        return copy?.textContent ?? ''
+      })
+      .join(' '),
+  )
+  for (const word of ['DuckDB', 'WebAssembly', 'p95', 'GROUP BY', 'BYOK', 'Pyodide']) {
+    expect(business).not.toContain(word)
   }
   // The app asks for an account where accounts are on (D115); the mocked service turns them on.
   await mockSupabase(page)
-  await page.getByRole('link', { name: 'Open the app' }).first().click()
+  await page
+    .getByRole('navigation', { name: 'Main' })
+    .getByRole('link', { name: 'Sign in' })
+    .click()
   await expect(page).toHaveURL(/\/app\/login$/)
   await expect(page.getByRole('heading', { level: 1, name: 'Sign in' })).toBeVisible()
   expect(errors).toEqual([])
@@ -86,14 +109,16 @@ test('works by keyboard: skip link, FAQ, focus visible', async ({ page }) => {
   await question.focus()
   await page.keyboard.press('Enter')
   await expect(question).toHaveAttribute('aria-expanded', 'true')
-  await expect(page.getByText('flashQuery has no server.')).toBeVisible()
+  await expect(
+    page.getByText('No server ever sees your files: flashQuery reads them'),
+  ).toBeVisible()
 })
 
 test('fits a phone without sideways scrolling', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
   await expect(film(page)).toBeVisible()
-  for (const y of [0, 2000, 4000, 6000, 9000]) {
+  for (const y of [0, 2000, 4000, 6000, 8000]) {
     await page.evaluate((top) => window.scrollTo(0, top), y)
     await page.waitForTimeout(150)
     const overflow = await page.evaluate(
@@ -102,8 +127,15 @@ test('fits a phone without sideways scrolling', async ({ page }) => {
     expect(overflow).toBeLessThanOrEqual(0)
   }
   await page.evaluate(() => window.scrollTo(0, 0))
+  // Shorter than it was (11,360 px): the request is folded away until asked for.
+  expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBeLessThan(9_500)
+  await page.getByRole('button', { name: 'See exactly what’s sent' }).click()
+  await expect(page.locator('#privacy').getByText('<data>')).toBeVisible()
+  await page.evaluate(() => window.scrollTo(0, 0))
   await page.getByRole('button', { name: 'Open the menu' }).click()
-  await expect(page.locator('#mobile-menu').getByRole('link', { name: 'Privacy' })).toBeVisible()
+  const menu = page.locator('#mobile-menu')
+  await expect(menu.getByRole('link', { name: 'Privacy' })).toBeVisible()
+  await expect(menu.getByRole('link', { name: 'Sign in' })).toBeVisible()
 })
 
 test('the hero loop neither shifts the layout nor blocks the main thread', async ({ page }) => {
@@ -137,10 +169,10 @@ test('the hero loop neither shifts the layout nor blocks the main thread', async
   expect(tasks.filter((ms) => ms > 50)).toEqual([])
 })
 
-test('“Try it on 1M rows” opens the app on a real answer', async ({ page }) => {
+test('“Try it free” opens the app on a real answer', async ({ page }) => {
   test.setTimeout(120_000)
   await page.goto('/')
-  await page.getByRole('link', { name: 'Try it on 1M rows' }).click()
+  await page.getByRole('main').getByRole('link', { name: 'Try it free' }).first().click()
   // /app/try opens the "Sample: Global Sales" project (F-HOME-04).
   await expect(page).toHaveURL(/\/app\/p\/[\w-]+$/)
   await expect(page.getByRole('region', { name: 'Global Sales · 1M rows' })).toBeVisible({
@@ -169,4 +201,16 @@ test('the built landing page keeps its Content-Security-Policy', async ({ page }
   }
   expect(await page.evaluate(() => (window as unknown as { __csp: string[] }).__csp)).toEqual([])
   expect([...hosts]).toEqual(['localhost'])
+})
+
+test('the finance card opens the finance sample on its first question (D117)', async ({ page }) => {
+  test.setTimeout(120_000)
+  await page.goto('/#who')
+  await page.getByRole('link', { name: 'Try it on sample finances →' }).click()
+  await expect(page).toHaveURL(/\/app\/p\/try-company-finances$/)
+  await expect(page.getByRole('region', { name: 'Company finances' })).toBeVisible({
+    timeout: 60_000,
+  })
+  const answer = page.getByRole('article', { name: 'How do monthly income and expenses compare?' })
+  await expect(answer.getByRole('img', { name: /^Line chart/ })).toBeVisible({ timeout: 60_000 })
 })

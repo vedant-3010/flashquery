@@ -3,14 +3,20 @@ import { useState } from 'react'
 import { BrandMark } from '@/components/BrandMark'
 import { CtaLink, TextLink } from '@/landing/CtaLink'
 import { cx } from '@/landing/cx'
-import { APP_URL } from '@/landing/data'
+import { LOGIN_URL, REGISTER_URL, TRY_URL } from '@/landing/data'
 import { SNAPPY } from '@/landing/motion'
 
 const LINKS = [
-  { href: '#how', label: 'How it works' },
   { href: '#privacy', label: 'Privacy' },
-  { href: '#performance', label: 'Performance' },
+  { href: '#who', label: 'Who it’s for' },
   { href: '#features', label: 'Features' },
+  { href: '#faq', label: 'FAQ' },
+]
+
+/** In the phone menu, after the sections. */
+const ACCOUNT_LINKS = [
+  { href: LOGIN_URL, label: 'Sign in' },
+  { href: REGISTER_URL, label: 'Create an account' },
 ]
 
 /** Sticky top bar: a hairline and a paper backdrop appear once the page scrolls. */
@@ -51,8 +57,14 @@ export function Nav() {
             ))}
           </ul>
           <div className="ml-auto flex items-center gap-4">
-            <CtaLink href={APP_URL} size="sm">
-              Open the app
+            <TextLink
+              href={LOGIN_URL}
+              className="text-[13.5px] text-ink-muted transition-colors hover:text-ink max-sm:hidden"
+            >
+              Sign in
+            </TextLink>
+            <CtaLink href={TRY_URL} size="sm">
+              Try it free
             </CtaLink>
             <button
               type="button"
@@ -85,7 +97,7 @@ export function Nav() {
               transition={{ duration: 0.3, ease: [0.25, 1, 0.5, 1] }}
               className="overflow-hidden px-5 md:hidden"
             >
-              {LINKS.map((link) => (
+              {[...LINKS, ...ACCOUNT_LINKS].map((link) => (
                 <li key={link.href} className="border-t border-hairline first:border-t-0">
                   <a
                     href={link.href}

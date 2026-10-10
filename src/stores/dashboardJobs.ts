@@ -234,8 +234,10 @@ export function exportDashboard(
   dashboardId: string,
   { snapshots }: { snapshots: boolean },
 ): { fileName: string; json: string } | null {
-  const dashboard = store().dashboards.find((d) => d.id === dashboardId)
-  if (!dashboard) return null
+  const found = store().dashboards.find((d) => d.id === dashboardId)
+  if (!found) return null
+  // Where its shared copy lives is this account's business, not the file's.
+  const { cloud: _account, ...dashboard } = found
   const file: DashboardFile = {
     format: 'flashQuery-dashboard',
     version: 1,

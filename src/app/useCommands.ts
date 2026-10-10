@@ -1,8 +1,7 @@
 import { useMemo } from 'react'
 import { useLocation } from 'wouter'
 import { paths } from '@/app/paths'
-import { DEMO_TABLE } from '@/ai/fixtures'
-import { DEMO_QUESTIONS } from '@/ai/providers/fixture'
+import { demoQuestions } from '@/ai/fixtures'
 import { SAMPLES } from '@/engine/samples'
 import { useAskStore } from '@/stores/ask'
 import { useDashboardStore } from '@/stores/dashboard'
@@ -81,10 +80,9 @@ export function useCommands(): Command[] {
         .map((entry) => entry.text)
         .filter((text, index, all) => all.indexOf(text) === index)
         .slice(0, MAX_QUESTIONS)
-      const suggested =
-        demo && datasets.some((d) => d.table === DEMO_TABLE)
-          ? DEMO_QUESTIONS.filter((q) => !asked.includes(q))
-          : []
+      const suggested = demo
+        ? demoQuestions(datasets.map((d) => d.table)).filter((q) => !asked.includes(q))
+        : []
       for (const question of [...asked, ...suggested]) {
         commands.push({
           id: `ask-${question}`,

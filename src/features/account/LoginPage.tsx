@@ -62,7 +62,7 @@ export function LoginPage() {
   return (
     <AuthLayout
       title="Sign in"
-      description="Your projects are waiting. Files and queries stay in this browser either way."
+      description="Your files stay on this device. Dashboards shared with you are waiting in your account."
       footer={
         <>
           <p>
@@ -73,7 +73,7 @@ export function LoginPage() {
           </p>
           <p>
             <Link href={paths.try} className="group inline-flex items-center gap-1 hover:text-ink">
-              Or try it on 1M rows, no account needed
+              Or try it free with sample data, no account needed
               <ArrowRight
                 className="size-3.5 transition-transform group-hover:translate-x-0.5"
                 aria-hidden

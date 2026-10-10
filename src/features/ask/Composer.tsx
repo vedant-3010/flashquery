@@ -1,7 +1,6 @@
-import { KeyRound, LoaderCircle, Mic, SendHorizontal, Sparkles, Square } from 'lucide-react'
+import { KeyRound, Lightbulb, LoaderCircle, Mic, SendHorizontal, Square } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type Ref } from 'react'
-import { DEMO_TABLE } from '@/ai/fixtures'
-import { DEMO_QUESTIONS } from '@/ai/providers/fixture'
+import { demoSetsFor } from '@/ai/fixtures'
 import { suggestionKey } from '@/ai/suggest'
 import { suggestQuestions } from '@/ai/suggestions'
 import { Button } from '@/components/ui/button'
@@ -14,6 +13,7 @@ import { ScopeMenu } from '@/features/ask/ScopeMenu'
 import { joinSpoken, unavailableReason } from '@/features/ask/speech'
 import { useSpeechInput } from '@/features/ask/useSpeechInput'
 import { useAskStore } from '@/stores/ask'
+import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { useDatasetsStore } from '@/stores/datasets'
 import { activeApiKey, useSettingsStore } from '@/stores/settings'
 import { useSuggestionsStore } from '@/stores/suggestions'
@@ -47,6 +47,8 @@ export function Composer({ inputRef }: { inputRef?: Ref<HTMLTextAreaElement> }) 
   // Bumped when a question is sent, so a late result can't refill the emptied box.
   const micRun = useRef(0)
   const hasData = datasets.length > 0
+  // Touch screens have no "/" shortcut to mention.
+  const touch = useMediaQuery('(pointer: coarse)')
   const listening = speech.state === 'listening'
 
   // A question from Home that couldn't be asked yet (no data in the project): it waits here.
@@ -69,9 +71,14 @@ export function Composer({ inputRef }: { inputRef?: Ref<HTMLTextAreaElement> }) 
   const canAskAi = !demo && balanced && scoped.length > 0 && !aiQuestions
 
   const suggestions = useMemo(() => {
-    if (demo) return datasets.some((d) => d.table === DEMO_TABLE) ? DEMO_QUESTIONS.slice(0, 6) : []
+    if (demo) {
+      // Six questions, shared between the samples that are loaded.
+      const sets = demoSetsFor(scoped.map((d) => d.table))
+      const each = Math.ceil(6 / Math.max(1, sets.length))
+      return sets.flatMap((set) => set.fixtures.slice(0, each).map((fixture) => fixture.question))
+    }
     return aiQuestions ?? suggestQuestions(scoped)
-  }, [datasets, scoped, demo, aiQuestions])
+  }, [scoped, demo, aiQuestions])
 
   const submit = () => {
     if (!text.trim() || !hasData) return
@@ -118,13 +125,19 @@ export function Composer({ inputRef }: { inputRef?: Ref<HTMLTextAreaElement> }) 
   }, [active])
 
   return (
-    <div className="shrink-0 border-t bg-background p-3">
+    // A floating card (D118); the answers fade out above it instead of meeting a hard line. The
+    // bottom padding clears a phone's home indicator.
+    <div className="relative shrink-0 bg-background p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] sm:p-3 sm:pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 -top-6 h-6 bg-gradient-to-t from-background to-transparent"
+      />
       <div className="mx-auto grid max-w-3xl gap-2">
         {(suggestions.length > 0 || canAskAi) && (
           <ul className="flex gap-1.5 overflow-x-auto pb-0.5" aria-label="Suggested questions">
             {aiQuestions && (
               <li className="flex shrink-0 items-center" title="Suggested by the AI">
-                <Sparkles className="size-3.5 text-muted-foreground" aria-label="AI suggestions" />
+                <Lightbulb className="size-3.5 text-muted-foreground" aria-label="AI suggestions" />
               </li>
             )}
             {suggestions.map((question) => (
@@ -132,6 +145,7 @@ export function Composer({ inputRef }: { inputRef?: Ref<HTMLTextAreaElement> }) 
                 <Button
                   size="xs"
                   variant="outline"
+                  className="rounded-full font-normal text-muted-foreground hover:text-foreground"
                   disabled={running}
                   onClick={() => void ask(question)}
                 >
@@ -154,7 +168,7 @@ export function Composer({ inputRef }: { inputRef?: Ref<HTMLTextAreaElement> }) 
                   {aiPending === key ? (
                     <LoaderCircle className="animate-spin" aria-hidden />
                   ) : (
-                    <Sparkles aria-hidden />
+                    <Lightbulb aria-hidden />
                   )}
                   {aiPending === key
                     ? 'Suggesting…'
@@ -167,7 +181,7 @@ export function Composer({ inputRef }: { inputRef?: Ref<HTMLTextAreaElement> }) 
           </ul>
         )}
         <form
-          className="rounded-xl border bg-card focus-within:ring-2 focus-within:ring-ring/40"
+          className="rounded-2xl border bg-card shadow-[0_6px_24px_-12px_rgb(0_0_0/0.18)] transition-shadow focus-within:shadow-[0_8px_28px_-12px_rgb(0_0_0/0.25)] focus-within:ring-2 focus-within:ring-ring/30 dark:shadow-none"
           onSubmit={(event) => {
             event.preventDefault()
             submit()
@@ -178,8 +192,10 @@ export function Composer({ inputRef }: { inputRef?: Ref<HTMLTextAreaElement> }) 
             aria-label="Ask a question"
             placeholder={
               hasData
-                ? 'Ask a question about your data…  (press / to focus)'
-                : 'Load a dataset to start asking questions'
+                ? touch
+                  ? 'Ask a question about your data…'
+                  : 'Ask a question about your data…  (press / to focus)'
+                : 'Load a file or a sample to start asking'
             }
             disabled={!hasData}
             rows={1}
@@ -237,8 +253,8 @@ export function Composer({ inputRef }: { inputRef?: Ref<HTMLTextAreaElement> }) 
           ) : (speech.error ?? micNote) ? (
             <span className="text-destructive">{speech.error ?? micNote}</span>
           ) : demo ? (
-            <span className="flex flex-wrap items-center gap-1">
-              Demo mode: answers are pre-recorded; SQL runs live on your device.
+            <span className="flex flex-wrap items-center gap-x-1">
+              Demo mode: example answers about the samples.
               <Button
                 size="xs"
                 variant="link"
@@ -246,7 +262,7 @@ export function Composer({ inputRef }: { inputRef?: Ref<HTMLTextAreaElement> }) 
                 onClick={() => openSettings(true)}
               >
                 <KeyRound aria-hidden />
-                Add an API key to ask anything
+                Add an AI key to ask anything
               </Button>
             </span>
           ) : (

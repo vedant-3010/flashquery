@@ -21,6 +21,11 @@
             "message": "Import { z } from '@/lib/zod': it runs Zod jitless, which the production CSP needs (PRD D66)."
           },
           {
+            "name": "lucide-react",
+            "importNames": ["Sparkles", "Sparkle", "WandSparkles"],
+            "message": "No sparkle icons (D118): they read as generic \"AI\". Use an icon for what the action does (LayoutTemplate, Lightbulb, AlignLeft, Wrench…)."
+          },
+          {
             "name": "@supabase/supabase-js",
             "message": "Only src/platform/ talks to Supabase, as a lazy chunk guests never load (D114): use useAuthStore, or a type-only import.",
             "allowTypeImports": true
@@ -33,6 +38,11 @@
           {
             "name": "@/platform/supabase",
             "message": "Only src/platform/ talks to Supabase, as a lazy chunk guests never load (D114): use useAuthStore, or a type-only import.",
+            "allowTypeImports": true
+          },
+          {
+            "name": "@/platform/sharing",
+            "message": "Only src/platform/ talks to Supabase, as a lazy chunk guests never load (D114): use sharing() from @/stores/sharing, or a type-only import.",
             "allowTypeImports": true
           }
         ]
@@ -59,7 +69,12 @@
       }
     },
     {
-      "files": ["src/platform/**", "src/stores/auth.ts", "src/stores/auth.test.ts"],
+      "files": [
+        "src/platform/**",
+        "src/stores/auth.ts",
+        "src/stores/auth.test.ts",
+        "src/stores/sharing.ts"
+      ],
       "rules": {
         "no-restricted-imports": [
           "error",

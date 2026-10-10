@@ -1,7 +1,9 @@
 import type { Page, Route } from '@playwright/test'
+import { handleSharing, mockCloud, type MockCloud } from './supabaseSharing.ts'
 
-// A mocked account service (F-ACCT, M13) for e2e: just enough of Supabase Auth (GoTrue) and the
-// profiles table for the real supabase-js in the browser. The dev server learns the URL from
+// A mocked account service (F-ACCT, M13) for e2e: just enough of Supabase Auth (GoTrue), the
+// profiles table and the sharing tables (supabaseSharing.ts, M14) for the real supabase-js in the
+// browser. The dev server learns the URL from
 // window.__flashQueryAccounts; CI's production build is built with the same URL (ci.yml).
 
 declare global {
@@ -33,6 +35,8 @@ export interface MockSupabase {
   calls: string[]
   /** Request bodies by path (the last one). */
   bodies: Map<string, unknown>
+  /** Shared dashboards, members, invites and links (pass one to several pages to share it). */
+  cloud: MockCloud
 }
 
 const userJson = (user: MockUser) => ({
@@ -62,20 +66,22 @@ export const sessionFor = (user: MockUser) => ({
   user: userJson(user),
 })
 
-/**
- * Points the app at the mocked service and answers it. `confirmEmail`: new accounts must confirm
- * their address first (no session from sign-up). `oauthUser`: who Google or GitHub signs in.
- */
 /** Where supabase-js keeps the mocked project's session (sb-<project>-auth-token). */
 export const SESSION_KEY = 'sb-e2e-project-auth-token'
 
+/**
+ * Points the app at the mocked service and answers it. `confirmEmail`: new accounts must confirm
+ * their address first (no session from sign-up). `oauthUser`: who Google or GitHub signs in.
+ * `cloud`: the sharing data, shared with other pages.
+ */
 export async function mockSupabase(
   page: Page,
   {
     users = [],
     confirmEmail = false,
     oauthUser,
-  }: { users?: MockUser[]; confirmEmail?: boolean; oauthUser?: MockUser } = {},
+    cloud = mockCloud(),
+  }: { users?: MockUser[]; confirmEmail?: boolean; oauthUser?: MockUser; cloud?: MockCloud } = {},
 ): Promise<MockSupabase> {
   await page.addInitScript(
     ({ url, key }) => {
@@ -83,7 +89,8 @@ export async function mockSupabase(
     },
     { url: SUPABASE_URL, key: SUPABASE_KEY },
   )
-  const state: MockSupabase = { users: [...users], calls: [], bodies: new Map() }
+  const state: MockSupabase = { users: [...users], calls: [], bodies: new Map(), cloud }
+  for (const user of users) cloud.names.set(user.id, user.name)
   // The account a code (email link, OAuth, reset) signs in: the last one asked for.
   let pending: MockUser | undefined = oauthUser
 
@@ -165,6 +172,17 @@ export async function mockSupabase(
       }
       return json(route, 200, [{ id: user.id, display_name: user.name }])
     }
+    const sharing = await handleSharing(cloud, {
+      route,
+      method: request.method(),
+      path,
+      url,
+      body,
+      user: fromToken(),
+      single: (request.headers().accept ?? '').includes('vnd.pgrst.object'),
+      json: (status, value) => json(route, status, value),
+    })
+    if (sharing) return
     if (path === '/rest/v1/rpc/delete_my_account') {
       const user = fromToken()
       state.users = state.users.filter((u) => u !== user)

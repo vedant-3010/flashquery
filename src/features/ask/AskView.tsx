@@ -1,4 +1,4 @@
-import { Sparkles } from 'lucide-react'
+import { MessageSquareText } from 'lucide-react'
 import { useEffect, useRef } from 'react'
 import { EmptyState } from '@/components/EmptyState'
 import { AnswerCard } from '@/features/ask/AnswerCard'
@@ -76,7 +76,7 @@ export function AskView() {
         </div>
         {answers.length === 0 ? (
           <EmptyState
-            icon={Sparkles}
+            icon={MessageSquareText}
             title="Ask a question about your data"
             description="Answers appear here with the SQL behind them and a plain-English explanation. Queries run on this device."
           />

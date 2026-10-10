@@ -39,95 +39,80 @@ export function DashboardVignette() {
   )
 }
 
-export function NotebookVignette() {
+export function FilesVignette() {
   return (
-    <div className={`${card} grid gap-2`}>
-      <p className="font-mono text-[10px]">
-        <span className="text-ink-faint">[2]</span> df.plot(kind=
-        <span className="text-ok">"scatter"</span>)
-      </p>
-      <svg
-        viewBox="0 0 100 50"
-        className="h-full w-full rounded border border-hairline bg-white"
-        aria-hidden
-      >
-        {Array.from({ length: 26 }, (_, i) => (
-          <circle
-            key={i}
-            cx={6 + i * 3.5}
-            cy={44 - i * 1.4 - ((i * 7) % 5)}
-            r="1.4"
-            fill="#1f77b4"
-          />
-        ))}
-      </svg>
-    </div>
-  )
-}
-
-export function LocalModelVignette() {
-  return (
-    <div className={`${card} grid content-center gap-2`}>
-      <p className={mono}>Server URL</p>
-      <p className="rounded-md border border-hairline bg-paper px-2 py-1 font-mono text-[10px]">
-        http://localhost:11434/v1
-      </p>
-      <p className="flex items-center gap-1.5 text-[10.5px] text-ok">
-        <span className="size-1.5 rounded-full bg-ok" /> Connected · qwen2.5-coder:7b
-      </p>
-      <p className={mono}>Nothing leaves this computer.</p>
-    </div>
-  )
-}
-
-export function ExploreVignette() {
-  return (
-    <ol className={`${card} grid content-center gap-1.5 font-mono`}>
+    <div className={`${card} grid content-center gap-1.5`}>
       {[
-        ['Writing SQL', '1.2 s'],
-        ['Exploring data', 'SELECT DISTINCT channel'],
-        ['Writing SQL', '0.9 s'],
-        ['Running', '21 ms'],
-      ].map(([stage, detail], i) => (
-        <li key={i} className="flex items-center gap-1.5 text-[10px]">
-          <span className={`size-2 rounded-full ${i === 1 ? 'bg-accent' : 'bg-ok'}`} />
-          <span className="text-ink">{stage}</span>
-          <span className="ml-auto truncate text-ink-faint">{detail}</span>
-        </li>
-      ))}
-    </ol>
-  )
-}
-
-export function JoinsVignette() {
-  return (
-    <div className={`${card} grid content-center gap-2`}>
-      <p className={mono}>Suggested joins</p>
-      <p className="font-mono text-[10.5px]">
-        orders.customer_id <span className="text-accent-ink">→</span> customers.id
-      </p>
-      <p className={mono}>many to one · 100% of values match</p>
-      <div className="h-[3px] rounded-full bg-hairline">
-        <div className="h-full w-full rounded-full bg-ok" />
-      </div>
-    </div>
-  )
-}
-
-export function PaletteVignette() {
-  return (
-    <div className={`${card} grid content-start gap-1`}>
-      <p className="flex items-center justify-between rounded-md border border-hairline bg-paper px-2 py-1 text-[10.5px]">
-        orders <span className="font-mono text-ink-faint">⌘K</span>
-      </p>
-      {['Preview orders.csv', 'Query orders in SQL', 'Open dashboard: Sales'].map((item, i) => (
+        ['Q3 invoices.xlsx', '2,418 rows'],
+        ['bank-export.csv', '9,904 rows'],
+        ['Pasted from a sheet', '36 rows'],
+      ].map(([name, rows], i) => (
         <p
-          key={item}
-          className={`rounded-md px-2 py-1 text-[10.5px] ${i === 0 ? 'bg-paper-deep' : ''}`}
+          key={name}
+          className="flex items-center gap-2 rounded-md border border-hairline bg-paper px-2 py-1.5"
         >
-          {item}
+          <span className={`size-2 rounded-sm ${i === 0 ? 'bg-accent' : 'bg-ink-soft/50'}`} />
+          <span className="text-[10.5px] text-ink">{name}</span>
+          <span className="ml-auto font-mono text-[9.5px] text-ink-faint">{rows}</span>
         </p>
       ))}
+      <p className={mono}>Read on this device · 0 bytes uploaded</p>
+    </div>
+  )
+}
+
+export function AskVignette() {
+  return (
+    <div className={`${card} grid content-center gap-2`}>
+      <p className="ml-auto max-w-[85%] rounded-full bg-ink px-2.5 py-1 text-[10.5px] text-paper">
+        Which customers owe us the most?
+      </p>
+      <p className="flex items-center gap-1.5 text-[10px] text-ink-muted">
+        <span className="size-1.5 rounded-full bg-ok" /> Checked how “Overdue” is spelled
+      </p>
+      <p className="flex items-center gap-1.5 text-[10px] text-ink-muted">
+        <span className="size-1.5 rounded-full bg-ok" /> Joined invoices to customers
+      </p>
+    </div>
+  )
+}
+
+export function AnswerVignette() {
+  return (
+    <div className={`${card} grid content-start gap-1.5`}>
+      <p className="text-[11px] text-ink">
+        Harbor Health owes the most: <span className="text-accent-ink">$563K</span>
+      </p>
+      {[100, 77, 76, 42].map((width, i) => (
+        <span key={width} className="flex items-center gap-1.5">
+          <span
+            className={`h-2 rounded-sm ${i === 0 ? 'bg-accent' : 'bg-ink-soft/50'}`}
+            style={{ width: `${width * 0.7}%` }}
+          />
+        </span>
+      ))}
+      <p className={mono}>Why this chart · Assumptions · The query</p>
+    </div>
+  )
+}
+
+export function ShareVignette() {
+  return (
+    <div className={`${card} grid content-center gap-1.5`}>
+      <p className={mono}>Shared with</p>
+      {[
+        ['maya@yourco.com', 'Can edit'],
+        ['accountant@firm.com', 'Can view'],
+      ].map(([email, role]) => (
+        <p key={email} className="flex items-center gap-2 text-[10.5px]">
+          <span className="text-ink">{email}</span>
+          <span className="ml-auto text-ink-faint">{role}</span>
+        </p>
+      ))}
+      <p className="flex items-center gap-1.5 rounded-md border border-hairline bg-paper px-2 py-1 font-mono text-[9.5px] text-ink-muted">
+        /app/s/7Hk2qLw9…
+        <span className="ml-auto text-ink">Revoke</span>
+      </p>
     </div>
   )
 }

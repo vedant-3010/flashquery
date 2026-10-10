@@ -206,6 +206,8 @@ export function valueAxis(
     axisTick: { show: false },
     axisLabel: {
       color: ctx.theme.muted,
+      // Narrow charts (a phone, a small tile) drop labels that would collide (D118).
+      hideOverlap: true,
       formatter: (value: number) => formatValue(value, format, ctx.locale, { compact: true }),
     },
     splitLine: { lineStyle: { color: ctx.theme.grid, type: [4, 4] as number[] } },

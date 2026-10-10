@@ -1,5 +1,5 @@
 import { expect, test, type Page, type Route } from '@playwright/test'
-import { openProject } from './app.ts'
+import { answerSteps, openProject } from './app.ts'
 
 // J2 and J6 with a real provider code path (LangChain + the Anthropic SDK in the browser) against a
 // mocked https://api.anthropic.com. A live call with a real key stays a manual check.
@@ -267,7 +267,7 @@ test.describe('J2: own key (F-AI-01, F-ASK-03…09)', () => {
     await dialog.getByRole('button', { name: 'Test connection' }).click()
     await expect(dialog.getByRole('status')).toContainText('Connected')
     await page.keyboard.press('Escape')
-    await expect(page.getByRole('button', { name: 'Demo', exact: true })).toBeHidden()
+    await expect(page.getByRole('button', { name: 'Demo mode', exact: true })).toBeHidden()
 
     await loadSales(page)
     const first = await ask(page, 'Top 5 countries by revenue')
@@ -275,7 +275,7 @@ test.describe('J2: own key (F-AI-01, F-ASK-03…09)', () => {
     await expect(first.getByRole('img', { name: /^Bar chart/ })).toBeVisible()
     await first.getByRole('tab', { name: 'Table' }).click()
     await expect(first.getByText('5 rows · 2 columns')).toBeVisible()
-    await expect(first.getByRole('list', { name: 'Progress' })).toContainText('Fixing SQL (2)')
+    await expect(await answerSteps(first)).toContainText('Fixing SQL (2)')
     await expect(first.getByText('Demo', { exact: true })).toBeHidden()
 
     const plans = plansOf(calls)
@@ -304,6 +304,7 @@ test.describe('J2: own key (F-AI-01, F-ASK-03…09)', () => {
     await loadSales(page)
 
     const answer = await ask(page, 'Take your time')
+    // Still running, so the steps are open.
     await expect(answer.getByRole('list', { name: 'Progress' })).toContainText('Writing SQL')
     await page.keyboard.press('Escape')
     await expect(answer.getByText('Cancelled.')).toBeVisible()
@@ -316,16 +317,16 @@ test.describe('J2: own key (F-AI-01, F-ASK-03…09)', () => {
     await openProject(page)
     await addKey(page)
     await page.keyboard.press('Escape')
-    await expect(page.getByRole('button', { name: 'Demo', exact: true })).toBeHidden()
+    await expect(page.getByRole('button', { name: 'Demo mode', exact: true })).toBeHidden()
     await page.reload()
-    await expect(page.getByRole('button', { name: 'Demo', exact: true })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Demo mode', exact: true })).toBeVisible()
 
     const dialog = await addKey(page, { remember: true })
     await expect(dialog).toContainText('anyone using this browser profile could read it')
     await page.keyboard.press('Escape')
     await settingsSaved(page, true)
     await page.reload()
-    await expect(page.getByRole('button', { name: 'Demo', exact: true })).toBeHidden()
+    await expect(page.getByRole('button', { name: 'Demo mode', exact: true })).toBeHidden()
     await page.getByRole('button', { name: 'Settings' }).click()
     await expect(dialog.getByLabel('Anthropic API key')).toHaveValue(KEY)
 
@@ -333,7 +334,7 @@ test.describe('J2: own key (F-AI-01, F-ASK-03…09)', () => {
     await page.keyboard.press('Escape')
     await settingsSaved(page, false)
     await page.reload()
-    await expect(page.getByRole('button', { name: 'Demo', exact: true })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Demo mode', exact: true })).toBeVisible()
   })
 })
 
@@ -348,7 +349,7 @@ test.describe('AI summary (F-ASK-12)', () => {
     const answer = await ask(page, 'Revenue by country and channel')
     await expect(answer.getByText(AI_HEADLINE)).toBeVisible()
     await expect(answer.getByText('Summary by Claude Haiku 4.5, from the result')).toBeVisible()
-    await expect(answer.getByRole('list', { name: 'Progress' })).toContainText('Writing summary')
+    await expect(await answerSteps(answer)).toContainText('Writing summary')
 
     const [summary] = summariesOf(calls)
     expect(summary?.raw).toContain('"model":"claude-haiku-4-5-20251001"')
@@ -399,10 +400,11 @@ test.describe('J6: privacy check (F-AI-02, F-EXPL-04, F-SEC-03, F-SEC-04)', () =
     )
     await expect(panel).not.toContainText(KEY)
 
-    await page.getByRole('button', { name: 'Privacy mode: Balanced' }).click()
+    // The top bar's status pill switches the mode in place (D118).
+    await page.getByRole('button', { name: /^Status: Balanced/ }).click()
     await page.getByRole('radio', { name: /Strict/ }).click()
     await page.keyboard.press('Escape')
-    await expect(page.getByRole('button', { name: 'Privacy mode: Strict' })).toBeVisible()
+    await expect(page.getByRole('button', { name: /^Status: Strict/ })).toBeVisible()
 
     const summariesBefore = summariesOf(calls).length
     const again = await ask(page, 'Total revenue again')
@@ -497,7 +499,7 @@ test.describe('local OpenAI-compatible server (F-AI-06)', () => {
     await dialog.getByRole('button', { name: 'Test connection' }).click()
     await expect(dialog.getByRole('status')).toContainText('Connected')
     await page.keyboard.press('Escape')
-    await expect(page.getByRole('button', { name: 'Demo', exact: true })).toBeHidden()
+    await expect(page.getByRole('button', { name: 'Demo mode', exact: true })).toBeHidden()
 
     await loadSales(page)
     const answer = await ask(page, 'Total revenue')
@@ -584,7 +586,7 @@ test.describe('multi-step exploration (F-ASK-15)', () => {
 
     const answer = await ask(page, 'Revenue for each sales channel')
     await expect(answer.getByRole('heading', { name: 'Revenue by channel' })).toBeVisible()
-    await expect(answer.getByRole('list', { name: 'Progress' })).toContainText('Exploring data')
+    await expect(await answerSteps(answer)).toContainText('Exploring data')
     await answer.getByRole('tab', { name: 'Trace' }).click()
     await expect(answer).toContainText('SELECT DISTINCT channel FROM global_sales')
     const followUp = plansOf(calls).at(-1)?.user ?? ''
@@ -608,16 +610,12 @@ test.describe('better answers (F-ASK-18, F-ASK-20, F-ASK-21)', () => {
     // The note shows while the model plans; wait for the answer before reading the request.
     let answer = await ask(page, 'Total revenue')
     await expect(answer.getByRole('heading', { name: 'Revenue' })).toBeVisible()
-    await expect(answer.getByRole('list', { name: 'Progress' })).toContainText(
-      'Low effort: simple total',
-    )
+    await expect(await answerSteps(answer)).toContainText('Low effort: simple total')
     expect(plansOf(calls).at(-1)?.body).toMatchObject({ output_config: { effort: 'low' } })
 
     answer = await ask(page, 'Which region grew fastest?')
     await expect(answer.getByRole('heading', { name: 'Revenue' })).toBeVisible()
-    await expect(answer.getByRole('list', { name: 'Progress' })).toContainText(
-      'High effort: growth',
-    )
+    await expect(await answerSteps(answer)).toContainText('High effort: growth')
     expect(plansOf(calls).at(-1)?.body).toMatchObject({ output_config: { effort: 'high' } })
   })
 
@@ -639,7 +637,7 @@ test.describe('better answers (F-ASK-18, F-ASK-20, F-ASK-21)', () => {
 
     const answer = await ask(page, 'Revenue by country in apac')
     await expect(answer.getByRole('heading', { name: 'APAC revenue by country' })).toBeVisible()
-    const progress = answer.getByRole('list', { name: 'Progress' })
+    const progress = await answerSteps(answer)
     await expect(progress).toContainText('Checking result')
     await expect(progress).toContainText('No rows came back')
     await expect(progress).toContainText('Fixing SQL (2)')

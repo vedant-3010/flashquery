@@ -1,6 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { BrandMark } from '@/components/BrandMark'
 import { Toaster } from '@/components/Toaster'
+import { AUTH_POINTS } from '@/features/account/authPoints'
 import { AuthShowcase, type Showcase } from '@/features/account/AuthShowcase'
 
 const SIGN_IN: Showcase = { lead: 'Welcome back.', line: 'Your data never left.' }
@@ -59,6 +60,18 @@ export function AuthLayout({
                   {footer}
                 </div>
               )}
+              {/* Where the ink panel is hidden, its promise still shows. */}
+              <ul
+                className="auth-rise grid gap-1.5 border-t border-hairline pt-5 text-[13px] text-ink-muted lg:hidden"
+                style={rise(3)}
+              >
+                {AUTH_POINTS.map((point) => (
+                  <li key={point} className="flex items-center gap-2">
+                    <span className="size-1.5 rounded-full bg-ink-faint" aria-hidden />
+                    {point}
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
         </main>

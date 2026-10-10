@@ -99,7 +99,7 @@ test('each project keeps its own data; switching opens a fresh page', async ({ p
   await expect(page).toHaveURL(/\/app\/p\/[\w-]+$/)
   expect(page.url()).not.toBe(firstUrl)
   await expect(page.getByRole('button', { name: 'Project: Untitled project 2' })).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'Ask your data anything' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'What do you want to look at?' })).toBeVisible()
   await expect(await historyOf(page)).not.toContainText('Which region grew fastest?')
 
   // Rename it from the top bar, then switch back to the first one.
@@ -150,8 +150,10 @@ test('routes deep-link and survive a reload; v1 links redirect', async ({ page }
   await page.goto('/app/#/bench')
   await expect(page).toHaveURL(/\/app\/bench$/)
   await expect(page.getByRole('heading', { name: 'Benchmark' })).toBeVisible()
-  await page.goto('/app/s/some-link')
-  await expect(page.getByRole('heading', { name: 'Shared dashboards are coming' })).toBeVisible()
+  await page.goto('/app/s/some-link-0123456789abcdef')
+  await expect(
+    page.getByRole('heading', { name: 'This dashboard is no longer shared' }),
+  ).toBeVisible()
   await page.goto('/app/nowhere')
   await expect(page.getByRole('heading', { name: 'Page not found' })).toBeVisible()
   await page.getByRole('link', { name: 'Go to Home' }).click()

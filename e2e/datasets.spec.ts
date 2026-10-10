@@ -25,7 +25,8 @@ test.describe('sample data (F-DATA-05)', () => {
     await page.getByRole('menuitem', { name: 'Global Sales · 10k rows' }).click()
 
     const sales = dataset(page, 'Global Sales · 10k rows')
-    await expect(sales).toContainText('global_sales · 10K rows · 14 columns')
+    await expect(sales).toContainText('10K rows · 14 columns')
+    await expect(sales).toContainText('Table global_sales')
     await expect(sales).toContainText('Generated in your browser')
 
     // Column profile popover (F-PROF-01, F-PROF-02).
@@ -57,8 +58,9 @@ test.describe('sample data (F-DATA-05)', () => {
     await openProject(page)
     await page.getByRole('button', { name: 'Try sample data', exact: true }).click()
     await page.getByRole('menuitem', { name: /HR attrition/ }).click()
-    await expect(dataset(page, 'HR attrition (CSV)')).toContainText('hr_attrition · 1.5K rows')
-    await expect(dataset(page, 'HR attrition (CSV)')).toContainText('comma-separated')
+    await expect(dataset(page, 'HR attrition')).toContainText('1.5K rows')
+    await expect(dataset(page, 'HR attrition')).toContainText('Table hr_attrition')
+    await expect(dataset(page, 'HR attrition')).toContainText('comma-separated')
   })
 
   test('cancels a running load', async ({ page }) => {
@@ -95,9 +97,11 @@ test.describe('uploads (F-DATA-01..04)', () => {
     await expect(page.getByText('Drop files to load them')).toBeVisible()
     await page.dispatchEvent('body', 'drop', { dataTransfer: transfer })
 
-    await expect(dataset(page, 'sales.csv')).toContainText('sales · 2 rows')
+    await expect(dataset(page, 'sales.csv')).toContainText('2 rows')
+    await expect(dataset(page, 'sales.csv')).toContainText('Table sales')
     await expect(dataset(page, 'metrics.tsv')).toContainText('tab-separated')
-    await expect(dataset(page, 'events.jsonl')).toContainText('events · 2 rows')
+    await expect(dataset(page, 'events.jsonl')).toContainText('2 rows')
+    await expect(dataset(page, 'events.jsonl')).toContainText('Table events')
   })
 
   test('rejects unsupported files with a clear error', async ({ page }) => {
@@ -138,7 +142,8 @@ test.describe('uploads (F-DATA-01..04)', () => {
     await sheets.getByRole('button', { name: /Q1 Sales/ }).click()
 
     const q1 = dataset(page, 'workbook.xlsx · Q1 Sales')
-    await expect(q1).toContainText('workbook_q1_sales · 3 rows')
+    await expect(q1).toContainText('3 rows')
+    await expect(q1).toContainText('Table workbook_q1_sales')
     await expect(q1).toContainText('sheet “Q1 Sales”')
     await q1.getByRole('button', { name: 'month' }).click()
     await expect(page.getByRole('dialog')).toContainText('DATE')
@@ -159,9 +164,11 @@ test.describe('uploads (F-DATA-01..04)', () => {
       text('nested.json', json, 'application/json'),
     ])
 
-    await expect(dataset(page, 'orders.parquet')).toContainText('orders · 500 rows · 5 columns')
+    await expect(dataset(page, 'orders.parquet')).toContainText('500 rows · 5 columns')
+    await expect(dataset(page, 'orders.parquet')).toContainText('Table orders')
     const nested = dataset(page, 'nested.json')
-    await expect(nested).toContainText('nested · 2 rows')
+    await expect(nested).toContainText('2 rows')
+    await expect(nested).toContainText('Table nested')
     await nested.getByRole('button', { name: 'tags' }).click()
     await expect(page.getByRole('dialog')).toContainText('VARCHAR')
   })
@@ -172,7 +179,8 @@ test.describe('managing tables (F-DATA-06)', () => {
     await openProject(page)
     await upload(page, [text('Monthly Sales.csv', 'month,total\n1,10\n2,20\n', 'text/csv')])
     const item = dataset(page, 'Monthly Sales.csv')
-    await expect(item).toContainText('monthly_sales · 2 rows')
+    await expect(item).toContainText('2 rows')
+    await expect(item).toContainText('Table monthly_sales')
 
     await item.getByRole('button', { name: 'Actions for Monthly Sales.csv' }).click()
     await page.getByRole('menuitem', { name: 'Rename…' }).click()
@@ -184,7 +192,8 @@ test.describe('managing tables (F-DATA-06)', () => {
     await page.getByRole('button', { name: 'Save' }).click()
 
     const renamed = dataset(page, 'Sales by month')
-    await expect(renamed).toContainText('sales_by_month · 2 rows')
+    await expect(renamed).toContainText('2 rows')
+    await expect(renamed).toContainText('Table sales_by_month')
     await renamed.getByRole('button', { name: 'Preview Sales by month' }).click()
     const panel = page.getByRole('complementary', { name: 'Side panel' })
     await expect(panel.getByRole('grid', { name: 'Rows of sales_by_month' })).toBeVisible()
@@ -201,7 +210,7 @@ test.describe('managing tables (F-DATA-06)', () => {
 test.describe('engine status (F-SHELL-03)', () => {
   test('reports DuckDB ready with its version', async ({ page }) => {
     await openProject(page)
-    await page.getByRole('button', { name: 'Engine ready' }).click()
+    await page.getByRole('button', { name: /engine ready$/ }).click()
     await expect(page.getByRole('dialog')).toContainText(/DuckDB v\d+\.\d+\.\d+ · ready/)
     await expect(page.getByRole('dialog')).toContainText('Python')
   })

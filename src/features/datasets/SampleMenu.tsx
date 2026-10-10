@@ -21,7 +21,7 @@ export function SampleMenu({ compact = false }: { compact?: boolean }) {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         {compact ? (
-          <IconButton label="Load sample data">
+          <IconButton label="Try sample data">
             <FlaskConical />
           </IconButton>
         ) : (

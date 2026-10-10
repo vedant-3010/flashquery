@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { DEMO_FIXTURES } from '@/ai/fixtures'
+import { SALES_DEMO } from '@/ai/fixtures'
 import { createTestEngine } from '@/test/duckdb'
 import type { Engine } from './connection'
 import {
@@ -82,7 +82,7 @@ describe('filtered tiles', () => {
     expect(await rewriteTables(engine, 'SELECT 42 AS answer', views)).toBe('SELECT 42 AS answer')
   })
 
-  it.each(DEMO_FIXTURES.map((f) => [f.question, f.plan.sql ?? ''] as const))(
+  it.each(SALES_DEMO.fixtures.map((f) => [f.question, f.plan.sql ?? ''] as const))(
     'runs the demo query "%s" filtered',
     async (_, sql) => {
       const views = await createFilterViews(engine, [year2025])

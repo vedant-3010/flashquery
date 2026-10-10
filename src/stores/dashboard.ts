@@ -9,6 +9,7 @@ import {
 } from '@/dashboard/layout'
 import {
   DashboardsRecordSchema,
+  type CloudLink,
   type Dashboard,
   type DashboardFile,
   type DashboardsRecord,
@@ -53,6 +54,8 @@ interface DashboardState {
   /** Colors for the dashboard's charts (F-VIZ-12); null: the default in Settings. */
   setPalette: (id: string, palette: ChartPalette | null) => void
   deleteDashboard: (id: string) => void
+  /** Links the dashboard to its shared copy (F-SHARE-01), or unlinks it (null). */
+  setCloud: (id: string, cloud: CloudLink | null) => void
   setActive: (id: string) => void
   /** The active dashboard's id, creating "My dashboard" when there is none. */
   ensureActive: () => string
@@ -131,6 +134,9 @@ export const useDashboardStore = create<DashboardState>()((set, get) => {
 
     setPalette: (id, palette) =>
       patchDashboard(id, ({ palette: _drop, ...d }) => (palette ? { ...d, palette } : d)),
+
+    setCloud: (id, cloud) =>
+      patchDashboard(id, ({ cloud: _drop, ...d }) => (cloud ? { ...d, cloud } : d)),
 
     deleteDashboard: (id) =>
       set((state) => {

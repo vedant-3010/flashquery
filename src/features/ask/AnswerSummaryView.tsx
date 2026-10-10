@@ -1,5 +1,6 @@
 import { Info, LoaderCircle } from 'lucide-react'
 import { findModel } from '@/ai/models'
+import { splitNumbers } from '@/lib/emphasis'
 import type { Answer } from '@/stores/ask'
 
 /** Headline, bullets and caveats, and who wrote them (F-ASK-11 local, F-ASK-12 AI). */
@@ -12,7 +13,18 @@ export function AnswerSummaryView({ answer }: { answer: Answer }) {
     : null
   return (
     <div className="grid gap-1" aria-live="polite">
-      <p className="text-base font-medium">{summary.headline}</p>
+      <p className="text-lg leading-snug font-medium text-pretty">
+        {/* The figures to look at first, in the brand colour (D118). */}
+        {splitNumbers(summary.headline).map((part, i) =>
+          part.number ? (
+            <span key={i} className="font-semibold text-brand tabular-nums">
+              {part.text}
+            </span>
+          ) : (
+            part.text
+          ),
+        )}
+      </p>
       {summary.bullets.length > 0 && (
         <ul className="list-disc pl-5 text-sm text-muted-foreground">
           {summary.bullets.map((bullet) => (

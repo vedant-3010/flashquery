@@ -11,15 +11,17 @@ import { HomeHeader } from '@/features/home/HomeHeader'
 import { ProjectCard } from '@/features/home/ProjectCard'
 import { QuickAsk } from '@/features/home/QuickAsk'
 import { RecentQuestions } from '@/features/home/RecentQuestions'
+import { SharedSection } from '@/features/home/SharedSection'
 import { StartOptions } from '@/features/home/StartOptions'
 import { SettingsDialog } from '@/features/settings/SettingsDialog'
 import { greeting } from '@/lib/greeting'
+import { useAuthStore } from '@/stores/auth'
 import { useProjectsStore } from '@/stores/projects'
 
 /**
- * Home at /app/ (F-HOME-03): a greeting, a quick ask, ways to start, the projects and recent
- * questions; a first-visit welcome before any project exists. "Shared with me" arrives with
- * accounts (M13).
+ * Home at /app/ (F-HOME-03): a greeting, a quick ask, ways to start, the projects, dashboards
+ * shared with you (F-SHARE-05) and recent questions; a first-visit welcome before any project
+ * exists.
  */
 export function HomePage() {
   const hydrated = useProjectsStore((state) => state.hydrated)
@@ -29,6 +31,7 @@ export function HomePage() {
     [projects],
   )
   const latest = sorted[0]
+  const firstName = useAuthStore((state) => state.account?.name.trim().split(/\s+/)[0] ?? '')
 
   useEffect(() => {
     document.title = 'flashQuery'
@@ -41,13 +44,21 @@ export function HomePage() {
         {!hydrated ? (
           <Skeleton className="h-40" />
         ) : !latest ? (
-          <FirstVisit />
+          <>
+            <FirstVisit />
+            <SharedSection />
+          </>
         ) : (
           <>
             <section aria-labelledby="home-greeting" className="grid gap-4">
               <div className="grid gap-1">
-                <h1 id="home-greeting" className="text-2xl font-semibold tracking-tight">
+                {/* The landing's serif voice, the one touch of it in the app (D118). */}
+                <h1
+                  id="home-greeting"
+                  className="font-serif text-[34px] leading-[1.05] tracking-[-0.01em] italic"
+                >
                   {greeting()}
+                  {firstName && `, ${firstName}`}
                 </h1>
                 <p className="text-sm text-muted-foreground">
                   Pick up where you left off, or start something new. Everything here stays in this
@@ -58,8 +69,11 @@ export function HomePage() {
             </section>
             <section aria-labelledby="home-projects" className="grid gap-3">
               <div className="flex items-center justify-between gap-2">
-                <h2 id="home-projects" className="text-sm font-medium">
+                <h2 id="home-projects" className="flex items-baseline gap-1.5 text-sm font-medium">
                   Projects
+                  <span className="text-xs font-normal text-muted-foreground tabular-nums">
+                    {sorted.length}
+                  </span>
                 </h2>
                 <Button asChild variant="outline" size="sm">
                   <Link href={paths.newProject}>
@@ -74,6 +88,7 @@ export function HomePage() {
                 ))}
               </div>
             </section>
+            <SharedSection />
             <StartOptions variant="tiles" />
             <RecentQuestions projects={sorted} />
           </>

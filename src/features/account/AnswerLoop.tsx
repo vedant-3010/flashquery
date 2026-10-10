@@ -1,4 +1,4 @@
-import { ArrowRight, Pause, Play, Sparkles } from 'lucide-react'
+import { ArrowRight, Pause, Play, Search } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { ANSWER_EXAMPLES } from '@/features/account/answerExamples'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
@@ -70,7 +70,7 @@ export function AnswerLoop() {
       <div aria-hidden className="grid gap-3">
         {/* The ask bar. */}
         <div className="flex h-12 items-center gap-3 rounded-full border border-paper/15 bg-paper/[0.06] pr-1.5 pl-4 text-[15px]">
-          <Sparkles className="size-4 shrink-0 text-accent" />
+          <Search className="size-4 shrink-0 text-accent" />
           <span className="min-w-0 flex-1 truncate text-paper">
             {question.slice(0, shownTyped)}
             {shownPhase === 'typing' && <span className="caret ml-px text-accent">|</span>}
@@ -86,7 +86,11 @@ export function AnswerLoop() {
             <div className={cn(LABEL, 'mb-3 flex items-center justify-between')}>
               <span>Answer</span>
               <span>
-                {answered ? 'DuckDB · 23 ms' : shownPhase === 'thinking' ? 'Writing SQL…' : '—'}
+                {answered
+                  ? 'On this device · 23 ms'
+                  : shownPhase === 'thinking'
+                    ? 'Working it out…'
+                    : '—'}
               </span>
             </div>
             {answered && (
@@ -118,7 +122,7 @@ export function AnswerLoop() {
               </ul>
             )}
             <p className="mt-auto pt-3 font-mono text-[10.5px] text-paper/45">
-              sales.csv · 1,000,000 rows · on this device
+              {example.source} · on this device
             </p>
           </div>
 

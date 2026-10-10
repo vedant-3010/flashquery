@@ -120,6 +120,8 @@ export function DashboardSwitcher({ dashboard }: { dashboard: Dashboard }) {
             <AlertDialogDescription>
               Its {dashboard.tiles.length} {dashboard.tiles.length === 1 ? 'tile is' : 'tiles are'}{' '}
               removed from this device. Export it first to keep a copy.
+              {dashboard.cloud &&
+                ' Its shared copy stays shared: stop sharing it first, or later from Home.'}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

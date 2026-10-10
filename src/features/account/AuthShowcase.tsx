@@ -1,4 +1,5 @@
 import { AnswerLoop } from '@/features/account/AnswerLoop'
+import { AUTH_POINTS } from '@/features/account/authPoints'
 
 export interface Showcase {
   /** The headline's serif lead-in… */
@@ -6,8 +7,6 @@ export interface Showcase {
   /** …and its wide line. */
   line: string
 }
-
-const POINTS = ['Files never leave this browser', 'DuckDB on a million rows', 'Your own AI key']
 
 /**
  * The sign-in pages' right half (D115): the landing's voice, its own scene. Ink instead of the
@@ -33,7 +32,7 @@ export function AuthShowcase({ lead, line }: Showcase) {
         <div className="grid gap-5">
           <p className="flex items-center gap-3 font-mono text-[11.5px] tracking-[0.08em] text-paper/55 uppercase">
             <span className="h-px w-8 bg-paper/30" aria-hidden />
-            Your analyst, in a browser tab
+            Your private AI analyst
           </p>
           {/* The landing's headline voice (its HeadlineLines), kept out of the landing's chunk. */}
           <h2 className="text-[clamp(34px,3.1vw,50px)] text-balance text-paper">
@@ -46,7 +45,7 @@ export function AuthShowcase({ lead, line }: Showcase) {
         <AnswerLoop />
       </div>
       <ul className="relative flex flex-wrap gap-x-6 gap-y-2 text-[13px] text-paper/65">
-        {POINTS.map((point) => (
+        {AUTH_POINTS.map((point) => (
           <li key={point} className="flex items-center gap-2">
             <span className="size-1.5 rounded-full bg-accent" aria-hidden />
             {point}

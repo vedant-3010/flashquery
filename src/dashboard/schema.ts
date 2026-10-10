@@ -62,6 +62,14 @@ export const DashboardTileSchema = z.object({
 })
 export type DashboardTile = z.infer<typeof DashboardTileSchema>
 
+/** Where this dashboard's shared copy lives (F-SHARE-01): the cloud id and the version saved. */
+export const CloudLinkSchema = z.object({
+  id: z.string(),
+  version: z.number().int().positive(),
+  savedAt: z.number(),
+})
+export type CloudLink = z.infer<typeof CloudLinkSchema>
+
 export const DashboardSchema = z.object({
   id: z.string(),
   name: z.string().min(1).max(100),
@@ -69,6 +77,8 @@ export const DashboardSchema = z.object({
   filters: z.array(DashboardFilterSchema).max(4),
   /** Colors for its charts (F-VIZ-12); absent: the default in Settings. */
   palette: ChartPaletteSchema.optional(),
+  /** Saved to the account and shared (F-SHARE-01); absent while it's only on this device. */
+  cloud: CloudLinkSchema.optional(),
   createdAt: z.number(),
   updatedAt: z.number(),
 })

@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { cx } from '@/landing/cx'
 import { columnFields, PAYLOAD_BALANCED } from '@/landing/data'
 import { SNAPPY } from '@/landing/motion'
+import { Eyebrow } from '@/landing/Eyebrow'
 import { Reveal } from '@/landing/Reveal'
 import { HeadlineLines } from '@/landing/HeadlineLines'
 
@@ -12,14 +13,23 @@ const MODES: { id: Mode; label: string; summary: string }[] = [
   {
     id: 'strict',
     label: 'Strict',
-    summary: 'Names, types, row counts and your notes. No values from your data, and no results.',
+    summary:
+      'Only the names of your tables and columns, their types and your notes. No values from your data, and no results.',
   },
   {
     id: 'balanced',
     label: 'Balanced',
     summary:
-      'Strict, plus per-column statistics, up to 5 common values and 3 sample rows, with text cut to 40 characters.',
+      'Strict, plus a few statistics, up to 5 common values and 3 sample rows (text cut to 40 characters), so answers come out right more often.',
   },
+]
+
+/** The promise, in plain words (D117); the part to remember is highlighted. */
+const PROMISES: { text: string; mark?: string }[] = [
+  { text: 'Your files never leave your device.' },
+  { text: 'The AI sees an outline of your data, ', mark: 'never the file' },
+  { text: 'You can read every request, exactly as it was sent.' },
+  { text: 'Nothing is shared until you choose, and then only results.' },
 ]
 
 const FIELDS = columnFields()
@@ -108,31 +118,54 @@ function Payload({ mode }: { mode: Mode }) {
  */
 export function PrivacyToggle() {
   const [mode, setMode] = useState<Mode>('balanced')
+  // Phones fold the request away (it's long); wide screens always show it.
+  const [shown, setShown] = useState(false)
   const index = MODES.findIndex((m2) => m2.id === mode)
 
   return (
     <section
       id="privacy"
       aria-labelledby="privacy-title"
-      className="mx-auto max-w-[1200px] px-5 pt-32 md:px-8"
+      className="mx-auto max-w-[1200px] px-5 pt-24 md:px-8 md:pt-32"
     >
       <div className="grid items-start gap-12 lg:grid-cols-12 lg:gap-10">
         <Reveal group className="min-w-0 lg:col-span-5">
-          <Reveal
-            as="p"
-            className="font-mono text-[11.5px] tracking-[0.08em] text-ink-muted uppercase"
-          >
-            Privacy you can read
-          </Reveal>
+          <Eyebrow>Private by design</Eyebrow>
           <Reveal as="div">
             <h2 id="privacy-title" className="mt-4 text-[clamp(36px,4.6vw,60px)] text-balance">
-              <HeadlineLines lead="You decide" line="what the AI sees." />
+              <HeadlineLines lead="Your files stay" line="on your device." />
             </h2>
           </Reveal>
           <Reveal as="p" className="mt-5 max-w-[30rem] text-[16px] leading-[1.6] text-ink-muted">
-            Your file stays in the tab either way. The mode only decides how much of its shape goes
-            with your question. This is the real format, and the app's inspector shows every request
-            exactly like this.
+            flashQuery reads your spreadsheets right in your browser. To answer a question, the AI
+            gets an outline of your data, and you decide how much.
+          </Reveal>
+          <Reveal as="ul" className="mt-6 grid max-w-[30rem] gap-2.5 text-[15px] text-ink">
+            {PROMISES.map((promise) => (
+              <li key={promise.text} className="flex items-start gap-2.5">
+                <svg viewBox="0 0 16 16" className="mt-1 size-4 shrink-0 text-accent" aria-hidden>
+                  <path
+                    d="m3.5 8.5 3 3 6-7"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                <span>
+                  {promise.text}
+                  {promise.mark && (
+                    <>
+                      <span className="rounded-[3px] bg-accent-wash px-[3px] text-accent-ink">
+                        {promise.mark}
+                      </span>
+                      .
+                    </>
+                  )}
+                </span>
+              </li>
+            ))}
           </Reveal>
 
           <Reveal as="div" className="mt-8">
@@ -176,14 +209,40 @@ export function PrivacyToggle() {
               </m.p>
             </AnimatePresence>
             <p className="mt-6 max-w-[28rem] border-t border-hairline pt-4 text-[13.5px] text-ink-muted">
-              No API key? Demo mode sends nothing at all. Prefer a model on your own machine? Point
-              flashQuery at Ollama or LM Studio.
+              Trying the demo? It sends nothing at all. Prefer an AI model on your own computer?
+              That works too.
             </p>
+            <button
+              type="button"
+              aria-expanded={shown}
+              aria-controls="privacy-request"
+              onClick={() => setShown(!shown)}
+              className="mt-5 inline-flex items-center gap-1.5 text-[14px] font-medium text-ink lg:hidden"
+            >
+              {shown ? 'Hide the request' : 'See exactly what’s sent'}
+              <svg
+                viewBox="0 0 16 16"
+                className={cx('size-3.5 transition-transform', shown && 'rotate-180')}
+                aria-hidden
+              >
+                <path
+                  d="m4 6 4 4 4-4"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
           </Reveal>
         </Reveal>
 
-        <Reveal className="min-w-0 lg:col-span-7">
-          <div className="overflow-hidden rounded-[14px] border border-hairline-strong bg-panel shadow-[0_24px_48px_-32px_rgba(21,21,21,.35)]">
+        <Reveal className={cx('min-w-0 lg:col-span-7', !shown && 'max-lg:hidden')}>
+          <div
+            id="privacy-request"
+            className="overflow-hidden rounded-[14px] border border-hairline-strong bg-panel shadow-[0_24px_48px_-32px_rgba(21,21,21,.35)]"
+          >
             <p className="flex items-center gap-2 border-b border-hairline px-4 py-2.5 font-mono text-[11px] text-ink-muted">
               <span className="size-1.5 rounded-full bg-ok" aria-hidden />
               What the AI saw · {mode === 'strict' ? 'Strict' : 'Balanced'}

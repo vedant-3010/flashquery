@@ -1,4 +1,4 @@
-/** Step 1: the file goes into DuckDB inside the tab; the "server" it would go to doesn't exist. */
+/** Step 1: the file goes into the database inside the tab; the "server" it would go to doesn't exist. */
 export function LoadVisual() {
   return (
     <div className="grid h-full content-center gap-6 p-8">
@@ -26,7 +26,7 @@ export function LoadVisual() {
           <p className="font-mono text-[10px] tracking-[0.12em] text-ink-faint uppercase">
             Your browser tab
           </p>
-          <p className="mt-1 text-[13px] font-medium">DuckDB, in WebAssembly</p>
+          <p className="mt-1 text-[13px] font-medium">A database, in your browser</p>
           <p className="tabular font-mono text-[10.5px] text-ink-muted">
             1,000,000 rows · 14 columns
           </p>

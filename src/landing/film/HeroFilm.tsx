@@ -74,7 +74,7 @@ export function HeroFilm() {
           </span>
           <span className="flex items-center gap-1 rounded-full border border-hairline px-2 py-px text-[10px] text-ink-muted">
             <span className="size-1.5 rounded-full bg-ok" aria-hidden />
-            Engine ready
+            Ready
           </span>
         </div>
 

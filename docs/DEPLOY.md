@@ -46,6 +46,8 @@ Then in the browser:
       Parquet or JSON file, and `cdn.jsdelivr.net` after running Python).
 - [ ] With accounts on: **Sign in** → Google, GitHub and email each come back signed in; a guest
       session (DevTools → Network) makes no request to the Supabase host.
+- [ ] Sharing: share a dashboard, copy a view-only link and open it in a private window (no sign-in);
+      revoke it and reload: "This dashboard is no longer shared".
 - [ ] `/app/bench` runs; copy the results with "Copy as Markdown" if you want numbers from real
       hardware.
 - [ ] Set `og:image` in `index.html` to the full URL (`https://<your-domain>/og.png`): some link
@@ -57,7 +59,9 @@ Then in the browser:
    pause after 7 days without requests, and wake on the next one).
 2. Apply the migrations in `supabase/migrations/`: with the Supabase CLI, `supabase link` then
    `supabase db push`; or paste each file into the dashboard's SQL editor, oldest first. They create
-   `profiles` (a display name per user) with row-level security, and `delete_my_account()`.
+   `profiles` (a display name per user) and `delete_my_account()`, then the sharing tables
+   (`dashboards`, `dashboard_members`, `dashboard_invites`, `share_links`) and their functions, all
+   with row-level security.
 3. **Authentication → URL Configuration:** Site URL `https://<your-domain>/app/`; Redirect URLs
    `https://<your-domain>/app/auth/callback` and `https://<your-domain>/app/reset` (add
    `http://localhost:5173/app/**` for local development).
@@ -80,6 +84,11 @@ database, REST, a mail catcher and Studio) and applies `supabase/migrations/`. I
 arrive in Mailpit at http://127.0.0.1:54324; Studio at http://127.0.0.1:54323 shows the users and
 profiles. Google and GitHub need OAuth apps in `config.toml`, so test those on the hosted project.
 `npx supabase stop` stops it (the data is kept for the next start).
+
+A migration added after you started it: `npx supabase migration up` applies it. The row-level
+security tests (`supabase/tests/`, pgTAP) run against the local database with `npx supabase test db`
+(everything they create is rolled back). Run them after changing a policy; CI doesn't, since it has
+no database.
 
 ## Other hosts
 

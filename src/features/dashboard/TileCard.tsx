@@ -5,7 +5,8 @@ import { crossFilterTarget } from '@/dashboard/crossFilter'
 import type { DashboardTile } from '@/dashboard/schema'
 import { TileBody } from '@/features/dashboard/TileBody'
 import { TileMenu } from '@/features/dashboard/TileMenu'
-import { formatEventTime } from '@/lib/format'
+import { useElapsed } from '@/hooks/useElapsed'
+import { formatAgo, formatEventTime } from '@/lib/format'
 import { useDashboardStore } from '@/stores/dashboard'
 import { crossFilterFrom } from '@/stores/crossFilter'
 import { refreshTile } from '@/stores/dashboardJobs'
@@ -19,6 +20,7 @@ export function TileCard({
   onEdit,
   focused = false,
   readOnly = false,
+  draggable = true,
 }: {
   tile: DashboardTile
   onEdit: () => void
@@ -26,6 +28,8 @@ export function TileCard({
   focused?: boolean
   /** Presentation mode: no drag handle, menu or retry. */
   readOnly?: boolean
+  /** False when stacked on a phone: no drag handle (the menu's Size and Move remain). */
+  draggable?: boolean
 }) {
   const status = useDashboardStore((state) => state.status[tile.id])
   const locale = useSettingsStore((state) => state.locale)
@@ -33,6 +37,8 @@ export function TileCard({
   const at = tile.snapshot?.at
   const datasets = useDatasetsStore((s) => s.datasets)
   const filterable = !readOnly && crossFilterTarget(tile, datasets) !== null
+  // "Updated 3 minutes ago" stays true: re-read the clock every minute.
+  const elapsed = useElapsed(at ?? 0, state === 'live' && at !== undefined, 60_000)
 
   return (
     <section
@@ -46,7 +52,7 @@ export function TileCard({
       )}
     >
       <header className="flex items-center gap-1 px-2 pt-1.5">
-        {!readOnly && (
+        {!readOnly && draggable && (
           <span
             className="tile-handle -ml-0.5 flex cursor-grab items-center text-muted-foreground active:cursor-grabbing"
             title="Drag to move"
@@ -55,7 +61,7 @@ export function TileCard({
             <GripVertical className="size-4" />
           </span>
         )}
-        <h3 className="min-w-0 flex-1 truncate text-sm font-medium" title={tile.title}>
+        <h3 className="min-w-0 flex-1 truncate text-[13px] font-medium" title={tile.title}>
           {tile.title}
         </h3>
         {tile.edited && <Badge variant="outline">Edited</Badge>}
@@ -96,7 +102,9 @@ export function TileCard({
       </div>
       {tile.type !== 'text' && at && (
         <p className="shrink-0 px-2 pb-1 text-[11px] text-muted-foreground">
-          {state === 'live' ? 'Updated' : 'Snapshot from'} {formatEventTime(at, locale)}
+          {state === 'live'
+            ? `Updated ${formatAgo(at, locale, at + elapsed)}`
+            : `Snapshot from ${formatEventTime(at, locale)}`}
         </p>
       )}
     </section>

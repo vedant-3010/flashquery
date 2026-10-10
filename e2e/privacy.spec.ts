@@ -29,8 +29,8 @@ test('a demo session only talks to this origin and the pinned CDNs', async ({ pa
   expect([...hosts].filter((host) => !ALLOWED_HOSTS.has(host))).toEqual([])
 })
 
-/** The account service's code: supabase-js and src/platform/ (dev modules or the built chunk). */
-const ACCOUNT_CODE = /supabase|\/platform\/auth|\/assets\/auth-[\w-]+\.js/i
+/** The account service's code: supabase-js and src/platform/ (dev modules or the built chunks). */
+const ACCOUNT_CODE = /supabase|\/platform\/(auth|sharing)|\/assets\/(auth|sharing)-[\w-]+\.js/i
 
 test('with accounts on, guests load no account code and never contact the service (F-SEC-09, G9)', async ({
   page,

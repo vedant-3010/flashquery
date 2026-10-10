@@ -48,7 +48,8 @@ export function ChartPanel(props: ChartPanelProps) {
 
   return (
     <div className="grid gap-2">
-      <div className="flex flex-wrap items-center gap-1.5">
+      {/* Phones keep the icons; the names stay for screen readers (D118). */}
+      <div className="flex flex-wrap items-center gap-1">
         <ChartTypeMenu current={spec.type} choices={choices} onPick={onChange} />
         {spec.type !== 'table' && (
           <ChartSettings
@@ -71,7 +72,7 @@ export function ChartPanel(props: ChartPanelProps) {
         {props.onViewTable && (
           <Button size="xs" variant="ghost" className="ml-auto" onClick={props.onViewTable}>
             <Table2 aria-hidden />
-            View as table
+            <span className="max-md:sr-only">View as table</span>
           </Button>
         )}
       </div>

@@ -14,7 +14,8 @@ export const StartActionSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('files'), files: z.array(z.instanceof(File)).min(1) }),
   z.object({ kind: z.literal('import'), text: z.string() }),
   z.object({ kind: z.literal('ask'), question: z.string().min(1) }),
-  z.object({ kind: z.literal('try') }),
+  // The try demo; no sample (saved before the finance sample) is Global Sales.
+  z.object({ kind: z.literal('try'), sampleId: z.enum(SAMPLE_IDS).optional() }),
 ])
 export type StartAction = z.infer<typeof StartActionSchema>
 

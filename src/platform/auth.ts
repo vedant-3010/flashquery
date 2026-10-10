@@ -1,9 +1,7 @@
 import type { AuthChangeEvent, User } from '@supabase/supabase-js'
-import { AppError } from '@/lib/errors'
 import { z } from '@/lib/zod'
-import { accountsConfig } from '@/platform/config'
 import { accountError } from '@/platform/errors'
-import { supabaseClient } from '@/platform/supabase'
+import { accountClient as client } from '@/platform/supabase'
 
 // Accounts (F-ACCT-01…04): sign-up and sign-in (password, email link, Google, GitHub), password
 // reset, the profile's display name, sign-out and deleting the account. Lazy (see supabase.ts).
@@ -20,18 +18,6 @@ export interface Account {
 }
 
 const ProfileRowSchema = z.object({ id: z.string(), display_name: z.string() })
-
-function client() {
-  const config = accountsConfig()
-  if (!config) {
-    throw new AppError({
-      code: 'accounts_off',
-      message: 'Accounts aren’t set up on this deployment.',
-      detail: null,
-    })
-  }
-  return supabaseClient(config)
-}
 
 /** Where email links and OAuth return to (this deployment's /app/…). */
 const backTo = (path: string) => `${window.location.origin}/app${path}`

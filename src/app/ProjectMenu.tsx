@@ -41,7 +41,8 @@ export function ProjectMenu() {
             variant="ghost"
             size="sm"
             aria-label={`Project: ${project.name}`}
-            className="max-w-36 min-w-0 shrink lg:max-w-48"
+            // On phones the name takes the room the bar has left; wider, it stays compact.
+            className="min-w-14 shrink justify-start max-md:flex-1 md:max-w-36 lg:max-w-48"
           >
             <span className="truncate">{project.name}</span>
             <ChevronDown aria-hidden className="opacity-60" />

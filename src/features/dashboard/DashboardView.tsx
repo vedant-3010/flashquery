@@ -1,4 +1,4 @@
-import { LayoutDashboard, MessageSquareText, Minimize2, Sparkles } from 'lucide-react'
+import { LayoutDashboard, LayoutTemplate, MessageSquareText, Minimize2 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { EmptyState } from '@/components/EmptyState'
 import { Button } from '@/components/ui/button'
@@ -82,7 +82,7 @@ export function DashboardView() {
             description="Pin answers from the workspace, or let the AI propose a dashboard for a dataset."
           >
             <Button size="sm" disabled={datasets.length === 0} onClick={() => setGenerating(true)}>
-              <Sparkles aria-hidden />
+              <LayoutTemplate aria-hidden />
               Generate dashboard
             </Button>
             <Button size="sm" variant="outline" onClick={() => setView('workspace')}>

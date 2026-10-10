@@ -3,19 +3,16 @@ import '@/features/dashboard/grid.css'
 import { useEffect, useMemo } from 'react'
 import ReactGridLayout, { useContainerWidth, type Layout } from 'react-grid-layout'
 import type { Dashboard } from '@/dashboard/schema'
-import { COLS } from '@/dashboard/layout'
+import { GRID_CONFIG, STACK_BELOW_PX } from '@/dashboard/layout'
+import { StackedTiles } from '@/features/dashboard/StackedTiles'
 import { TileCard } from '@/features/dashboard/TileCard'
 import { useDashboardStore } from '@/stores/dashboard'
 import { useUiStore } from '@/stores/ui'
 
-const GRID = {
-  cols: COLS,
-  rowHeight: 72,
-  margin: [12, 12] as const,
-  containerPadding: [0, 0] as const,
-}
-
-/** The 12-column tile grid (F-DASH-02): drag by the handle, resize from the corner. */
+/**
+ * The 12-column tile grid (F-DASH-02): drag by the handle, resize from the corner. On a phone the
+ * tiles stack in one column (D117); the tile menu's Size and Move still arrange the grid.
+ */
 export function DashboardGrid({
   dashboard,
   onEdit,
@@ -52,13 +49,28 @@ export function DashboardGrid({
     [dashboard.tiles],
   )
 
+  const stacked = mounted && width < STACK_BELOW_PX
+
   return (
     <div ref={containerRef}>
-      {mounted && (
+      {stacked && (
+        <StackedTiles tiles={dashboard.tiles}>
+          {(tile) => (
+            <TileCard
+              tile={tile}
+              focused={tile.id === focus?.id}
+              onEdit={() => onEdit(tile.id)}
+              readOnly={readOnly}
+              draggable={false}
+            />
+          )}
+        </StackedTiles>
+      )}
+      {mounted && !stacked && (
         <ReactGridLayout
           width={width}
           layout={layout}
-          gridConfig={GRID}
+          gridConfig={GRID_CONFIG}
           dragConfig={{ enabled: !readOnly, handle: '.tile-handle' }}
           resizeConfig={{ enabled: !readOnly, handles: ['se'] }}
           onLayoutChange={(next) => {

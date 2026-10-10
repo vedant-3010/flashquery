@@ -1,0 +1,82 @@
+{
+  "title": "Finance overview",
+  "tiles": [
+    {
+      "title": "Income, 2025",
+      "sql": "SELECT round(sum(amount), 2) AS income FROM company_finances WHERE type = 'Income' AND year(date) = 2025",
+      "chartHint": {
+        "type": "kpi",
+        "x": null,
+        "y": ["income"],
+        "series": null
+      },
+      "size": "kpi"
+    },
+    {
+      "title": "Expenses, 2025",
+      "sql": "SELECT round(sum(amount), 2) AS expenses FROM company_finances WHERE type = 'Expense' AND year(date) = 2025",
+      "chartHint": {
+        "type": "kpi",
+        "x": null,
+        "y": ["expenses"],
+        "series": null
+      },
+      "size": "kpi"
+    },
+    {
+      "title": "Net profit, 2025",
+      "sql": "SELECT round(sum(CASE WHEN type = 'Income' THEN amount ELSE -amount END), 2) AS net_profit FROM company_finances WHERE year(date) = 2025",
+      "chartHint": {
+        "type": "kpi",
+        "x": null,
+        "y": ["net_profit"],
+        "series": null
+      },
+      "size": "kpi"
+    },
+    {
+      "title": "Owed to us",
+      "sql": "SELECT round(sum(amount + tax), 2) AS owed FROM company_finances WHERE type = 'Income' AND status <> 'Paid'",
+      "chartHint": {
+        "type": "kpi",
+        "x": null,
+        "y": ["owed"],
+        "series": null
+      },
+      "size": "kpi"
+    },
+    {
+      "title": "Income and expenses by month",
+      "sql": "SELECT date_trunc('month', date) AS month,\n       round(sum(amount) FILTER (WHERE type = 'Income'), 2) AS income,\n       round(sum(amount) FILTER (WHERE type = 'Expense'), 2) AS expenses\nFROM company_finances\nGROUP BY ALL\nORDER BY month",
+      "chartHint": {
+        "type": "line",
+        "x": "month",
+        "y": ["income", "expenses"],
+        "series": null
+      },
+      "size": "full"
+    },
+    {
+      "title": "Spend by category, 2025",
+      "sql": "SELECT category, round(sum(amount), 2) AS spend\nFROM company_finances\nWHERE type = 'Expense' AND year(date) = 2025\nGROUP BY ALL\nORDER BY spend DESC",
+      "chartHint": {
+        "type": "hbar",
+        "x": "category",
+        "y": ["spend"],
+        "series": null
+      },
+      "size": "half"
+    },
+    {
+      "title": "Unpaid invoices by age",
+      "sql": "WITH unpaid AS (\n  SELECT amount + tax AS total,\n         (SELECT max(date) FROM company_finances) - due_date AS days_late\n  FROM company_finances\n  WHERE type = 'Income' AND status <> 'Paid'\n)\nSELECT CASE WHEN days_late <= 0 THEN '0 days (not yet due)'\n            WHEN days_late <= 30 THEN '1-30 days late'\n            WHEN days_late <= 60 THEN '31-60 days late'\n            WHEN days_late <= 90 THEN '61-90 days late'\n            ELSE '90+ days late' END AS age,\n       round(sum(total), 2) AS owed,\n       count(*) AS invoices\nFROM unpaid\nGROUP BY ALL\nORDER BY min(days_late)",
+      "chartHint": {
+        "type": "bar",
+        "x": "age",
+        "y": ["owed"],
+        "series": null
+      },
+      "size": "half"
+    }
+  ]
+}

@@ -55,7 +55,7 @@ export function RegisterPage() {
   return (
     <AuthLayout
       title="Create your account"
-      description="Save your projects, and soon share dashboards. Files and queries never leave this browser."
+      description="Free. Save dashboards to your account and share them with your team. Your files never leave this device."
       showcase={SHOWCASE}
       footer={
         <>
@@ -67,7 +67,7 @@ export function RegisterPage() {
           </p>
           <p>
             <Link href={paths.try} className="group inline-flex items-center gap-1 hover:text-ink">
-              Or try it on 1M rows, no account needed
+              Or try it free with sample data, no account needed
               <ArrowRight
                 className="size-3.5 transition-transform group-hover:translate-x-0.5"
                 aria-hidden

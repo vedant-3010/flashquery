@@ -16,6 +16,16 @@ paths:
 - Shortcuts: `/` focuses the ask box, `Ctrl/Cmd+Enter` runs the SQL editor, `Esc` cancels a running question,
   `?` opens the shortcuts dialog (`src/app/ShortcutsDialog.tsx`: list every new shortcut there).
 - Background events (pinned, exported, engine restarted, saved) show a toast (`useToastStore`).
+- Mobile first (D117): no sideways scroll at 390 or 820 px (`e2e/responsive.spec.ts`). Below `md`,
+  top bars keep the project, views and account, and the rest goes in `AppMenu`. Touch targets in the
+  bars are 40 px (`pointer: coarse`, `index.css`). Text fields are ≥ 16 px on phones.
+- Quiet chrome (D118): one status pill in the top bar; an answer's actions show on hover with a
+  mouse (`pointer-fine:`) and always on touch (dashboard tiles keep theirs visible); steps fold
+  once an answer settles. No sparkle
+  icons (lint). `--brand` only for an answer's key figures.
+- Words (D117): business-facing surfaces (Home, start panels, empty states, badges, tours, sign-in)
+  say what happens in plain English; SQL, DuckDB and the like stay in the SQL view, the inspector and
+  the answer's tabs. "AI key" outside Settings.
 - Contrast: `src/lib/contrast.test.ts` checks the theme tokens in `index.css`; keep it passing when
   changing colours (text 4.5:1, chart marks 3:1).
 
@@ -66,7 +76,12 @@ paths:
 - Persist to IndexedDB, debounced 500 ms on change. Export/import as JSON validated by Zod.
 - Text tiles: `src/lib/markdown.ts` subset rendered as React elements; never `dangerouslySetInnerHTML`.
 - Cross-filtering (`src/dashboard/crossFilter.ts`): a click adds a normal dashboard value filter.
-  Presentation mode is read-only. Export: standalone HTML (`src/dashboard/exportHtml.ts`, escaped, its
-  own no-script CSP) and print to PDF.
+  Presentation mode is read-only. Export: standalone HTML (`src/dashboard/exportHtml.ts`, escaped,
+  its own no-script CSP) and print to PDF.
+- Shared dashboards (`src/features/sharing/`, D116) render snapshots in `SharedGrid`, which reads no
+  store: no engine, no project, no key. Nothing uploads without `ConsentDialog`.
+- Below 640 px every dashboard (the grid, presentation, shared views) stacks its tiles with
+  `StackedTiles`: reading order, KPI tiles in pairs; the tile menu's Size and Move still arrange the
+  grid.
 - Chart annotations (`src/charts/annotations.ts`) always carry a text label; stacked charts get only
   the target line.

@@ -2,11 +2,11 @@ import {
   Download,
   Ellipsis,
   FileCode2,
+  LayoutTemplate,
   Palette,
   Presentation,
   Printer,
   RefreshCw,
-  Sparkles,
   Type,
   Upload,
 } from 'lucide-react'
@@ -30,6 +30,7 @@ import { PALETTES } from '@/charts/theme'
 import type { Dashboard } from '@/dashboard/schema'
 import { DashboardSwitcher } from '@/features/dashboard/DashboardSwitcher'
 import { printDashboardHtml, renderDashboardHtml } from '@/features/dashboard/exportDashboard'
+import { ShareButton } from '@/features/sharing/ShareButton'
 import { downloadBytes } from '@/lib/download'
 import { toAppError } from '@/lib/errors'
 import { useDashboardStore } from '@/stores/dashboard'
@@ -37,7 +38,10 @@ import { addTextTile, exportDashboard, importDashboard, refreshAll } from '@/sto
 import { useSettingsStore } from '@/stores/settings'
 import { useToastStore } from '@/stores/toast'
 
-/** Switcher and dashboard actions: generate, add text, refresh all, present, export and import. */
+/**
+ * Switcher and dashboard actions: generate, add text, refresh all, present, share, export and
+ * import.
+ */
 export function DashboardToolbar({
   dashboard,
   onGenerate,
@@ -56,6 +60,7 @@ export function DashboardToolbar({
   const locale = useSettingsStore((state) => state.locale)
   const defaultPalette = useSettingsStore((state) => state.chartPalette)
   const setPalette = useDashboardStore((state) => state.setPalette)
+  const hasTiles = (dashboard?.tiles.length ?? 0) > 0
 
   /** Standalone HTML with the tiles' snapshots (F-DASH-12); printing it gives a PDF. */
   const exportHtml = (print: boolean) => {
@@ -85,33 +90,40 @@ export function DashboardToolbar({
     <div className="flex flex-wrap items-center gap-1.5">
       {dashboard && <DashboardSwitcher dashboard={dashboard} />}
       <div className="ml-auto flex items-center gap-1.5">
-        <Button size="sm" onClick={onGenerate}>
-          <Sparkles aria-hidden />
-          Generate dashboard
-        </Button>
-        <Button size="sm" variant="outline" onClick={() => addTextTile()}>
-          <Type aria-hidden />
-          Add text
-        </Button>
-        {dashboard && dashboard.tiles.length > 0 && (
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={refreshing}
-            onClick={() => void refreshAll(dashboard.id)}
-          >
-            <RefreshCw
-              className={refreshing ? 'animate-spin motion-reduce:animate-none' : ''}
-              aria-hidden
-            />
-            Refresh all
+        {/* Phones: Share and the menu; these move into the menu (its sm:hidden items). */}
+        <div className="flex items-center gap-1.5 max-sm:hidden">
+          <Button size="sm" onClick={onGenerate}>
+            <LayoutTemplate aria-hidden />
+            Generate dashboard
           </Button>
-        )}
-        {dashboard && dashboard.tiles.length > 0 && (
-          <Button size="sm" variant="outline" onClick={onPresent}>
-            <Presentation aria-hidden />
-            Present
+          <Button size="sm" variant="ghost" title="Add text" onClick={() => addTextTile()}>
+            <Type aria-hidden />
+            <span className="max-lg:sr-only">Add text</span>
           </Button>
+          {hasTiles && (
+            <Button
+              size="sm"
+              variant="ghost"
+              title="Refresh all"
+              disabled={refreshing}
+              onClick={() => dashboard && void refreshAll(dashboard.id)}
+            >
+              <RefreshCw
+                className={refreshing ? 'animate-spin motion-reduce:animate-none' : ''}
+                aria-hidden
+              />
+              <span className="max-lg:sr-only">Refresh all</span>
+            </Button>
+          )}
+          {hasTiles && (
+            <Button size="sm" variant="ghost" title="Present" onClick={onPresent}>
+              <Presentation aria-hidden />
+              <span className="max-lg:sr-only">Present</span>
+            </Button>
+          )}
+        </div>
+        {dashboard && (dashboard.tiles.length > 0 || dashboard.cloud) && (
+          <ShareButton dashboard={dashboard} />
         )}
         <input
           ref={input}
@@ -139,6 +151,31 @@ export function DashboardToolbar({
             </IconButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-auto">
+            <DropdownMenuItem className="sm:hidden" onSelect={onGenerate}>
+              <LayoutTemplate aria-hidden />
+              Generate dashboard
+            </DropdownMenuItem>
+            <DropdownMenuItem className="sm:hidden" onSelect={() => addTextTile()}>
+              <Type aria-hidden />
+              Add text
+            </DropdownMenuItem>
+            {hasTiles && (
+              <DropdownMenuItem
+                className="sm:hidden"
+                disabled={refreshing}
+                onSelect={() => dashboard && void refreshAll(dashboard.id)}
+              >
+                <RefreshCw aria-hidden />
+                Refresh all
+              </DropdownMenuItem>
+            )}
+            {hasTiles && (
+              <DropdownMenuItem className="sm:hidden" onSelect={onPresent}>
+                <Presentation aria-hidden />
+                Present
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuSeparator className="sm:hidden" />
             <DropdownMenuItem disabled={!dashboard} onSelect={() => download(true)}>
               <Download aria-hidden />
               Export JSON (with data snapshots)

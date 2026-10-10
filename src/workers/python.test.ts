@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { loadPyodide } from 'pyodide'
 import { describe, expect, it } from 'vitest'
-import { DEMO_FIXTURES } from '@/ai/fixtures'
+import { SALES_DEMO } from '@/ai/fixtures'
 import {
   cleanTraceback,
   createPythonApi,
@@ -128,7 +128,7 @@ describe('createPythonApi (fake runtime)', () => {
   })
 })
 
-const forecast = DEMO_FIXTURES.find((f) => f.plan.kind === 'python')
+const forecast = SALES_DEMO.fixtures.find((f) => f.plan.kind === 'python')
 
 describe.runIf(process.env.RUN_PYODIDE === '1')('real Pyodide', () => {
   it('runs the demo forecast and returns result + summary', async () => {

@@ -143,7 +143,7 @@ export function ChartSettings({ spec, shape, question, currency, onChange }: Cha
       <PopoverTrigger asChild>
         <Button size="xs" variant="ghost">
           <SlidersHorizontal aria-hidden />
-          Chart settings
+          <span className="max-md:sr-only">Chart settings</span>
         </Button>
       </PopoverTrigger>
       <PopoverContent

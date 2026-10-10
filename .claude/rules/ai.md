@@ -96,9 +96,11 @@ paths:
 
 ## Demo mode
 - Active when no API key is set. `FixtureProvider` matches the question (normalized lowercase, or listed
-  aliases) against `src/ai/fixtures/global-sales.json`, which stores `SqlPlan`s only. SQL runs live;
-  summaries use the local template (same as Strict mode), so numbers always match the generated data.
-- Unmatched question → friendly message with the fixture questions as chips and "Add an API key to ask anything".
+  aliases) against the demo sets of the loaded samples (`DEMO_SETS` in `src/ai/fixtures.ts`:
+  `global-sales.json`, and `company-finances.json` for the finance sample, D117), which store
+  `SqlPlan`s only. SQL runs live; summaries use the local template (same as Strict mode), so numbers
+  always match the data.
+- Unmatched question → friendly message with the loaded sets' questions as chips, "Load …" for each sample when none is loaded, and "Add an AI key to ask anything".
 
 ## Evals (M7)
 - `evals/questions.jsonl`: { id, dataset, question, reference_sql (null = should be 'unanswerable'),

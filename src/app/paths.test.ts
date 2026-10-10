@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { DEMO_QUESTIONS } from '@/ai/providers/fixture'
+import { SALES_DEMO } from '@/ai/fixtures'
 import { appUrl, legacyHashPath, loginPath, nextPath, paths, viewFromSegment } from './paths'
 
 describe('routes (F-HOME-01)', () => {
@@ -25,7 +25,7 @@ describe('routes (F-HOME-01)', () => {
   })
 
   it('the try link asks the landing page headline question', () => {
-    expect(DEMO_QUESTIONS[0]).toBe('Which region grew fastest?')
+    expect(SALES_DEMO.fixtures[0]?.question).toBe('Which region grew fastest?')
   })
 
   it('returns to the page that asked for sign-in, never to another site (D115)', () => {

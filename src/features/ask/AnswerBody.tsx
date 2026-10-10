@@ -1,6 +1,6 @@
 import { Info, KeyRound } from 'lucide-react'
 import { useState } from 'react'
-import { DEMO_QUESTIONS } from '@/ai/providers/fixture'
+import { DEMO_SETS, demoQuestions } from '@/ai/fixtures'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { AnswerSummaryView } from '@/features/ask/AnswerSummaryView'
@@ -29,6 +29,7 @@ function Failed({ answer }: { answer: Answer }) {
   const [showDetails, setShowDetails] = useState(false)
   const openSettings = useUiStore((state) => state.setSettingsOpen)
   const loadSample = useDatasetsStore((state) => state.loadSample)
+  const tables = useDatasetsStore((state) => state.datasets.map((d) => d.table).join('\n'))
   const error = answer.error
   if (!error) return null
   return (
@@ -54,21 +55,22 @@ function Failed({ answer }: { answer: Answer }) {
           </>
         )}
       </div>
-      {error.code === 'demo_unmatched' && <Chips questions={DEMO_QUESTIONS} />}
+      {error.code === 'demo_unmatched' && <Chips questions={demoQuestions(tables.split('\n'))} />}
       {(error.code === 'demo_unmatched' || error.code === 'demo_needs_sample') && (
         <div className="flex flex-wrap gap-2">
-          {error.code === 'demo_needs_sample' && (
-            <Button size="sm" onClick={() => loadSample('global-sales-1m')}>
-              Load Global Sales (1M rows)
-            </Button>
-          )}
+          {error.code === 'demo_needs_sample' &&
+            DEMO_SETS.map((set) => (
+              <Button key={set.sampleId} size="sm" onClick={() => loadSample(set.sampleId)}>
+                Load {set.label}
+              </Button>
+            ))}
           <Button
             size="sm"
             variant={error.code === 'demo_unmatched' ? 'default' : 'outline'}
             onClick={() => openSettings(true)}
           >
             <KeyRound aria-hidden />
-            Add an API key to ask anything
+            Add an AI key to ask anything
           </Button>
         </div>
       )}

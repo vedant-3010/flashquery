@@ -1,0 +1,410 @@
+[
+  {
+    "question": "How do monthly income and expenses compare?",
+    "aliases": [
+      "income vs expenses",
+      "income versus expenses",
+      "monthly income and expenses",
+      "compare income and expenses",
+      "income and expenses by month"
+    ],
+    "plan": {
+      "kind": "sql",
+      "title": "Income and expenses by month",
+      "sql": "SELECT date_trunc('month', date) AS month,\n       round(sum(amount) FILTER (WHERE type = 'Income'), 2) AS income,\n       round(sum(amount) FILTER (WHERE type = 'Expense'), 2) AS expenses\nFROM company_finances\nGROUP BY ALL\nORDER BY month",
+      "python": null,
+      "explanation": "Adds up the invoices sent (income) and the bills received (expenses) in each month.",
+      "assumptions": [
+        "Amounts are before tax.",
+        "An invoice or bill counts in the month it was issued, not when it was paid."
+      ],
+      "tablesUsed": ["company_finances"],
+      "columnsUsed": ["company_finances.date", "company_finances.type", "company_finances.amount"],
+      "clarification": null,
+      "alternatives": [],
+      "chartHint": {
+        "type": "line",
+        "x": "month",
+        "y": ["income", "expenses"],
+        "series": null
+      }
+    }
+  },
+  {
+    "question": "What is our net profit by quarter?",
+    "aliases": [
+      "net profit by quarter",
+      "profit by quarter",
+      "quarterly profit",
+      "how much profit did we make each quarter",
+      "quarterly net profit"
+    ],
+    "plan": {
+      "kind": "sql",
+      "title": "Net profit by quarter",
+      "sql": "SELECT year(date) || ' Q' || quarter(date) AS quarter,\n       round(sum(CASE WHEN type = 'Income' THEN amount ELSE -amount END), 2) AS net_profit\nFROM company_finances\nGROUP BY ALL\nORDER BY quarter",
+      "python": null,
+      "explanation": "Takes each quarter's income and subtracts everything spent in it: cost of sales, payroll, rent and other operating expenses.",
+      "assumptions": [
+        "Amounts are before tax.",
+        "An invoice or bill counts in the month it was issued, not when it was paid.",
+        "No depreciation, interest or income tax: the data holds invoices and bills only."
+      ],
+      "tablesUsed": ["company_finances"],
+      "columnsUsed": ["company_finances.date", "company_finances.type", "company_finances.amount"],
+      "clarification": null,
+      "alternatives": [],
+      "chartHint": {
+        "type": "bar",
+        "x": "quarter",
+        "y": ["net_profit"],
+        "series": null
+      }
+    }
+  },
+  {
+    "question": "What were our top expense categories in 2025?",
+    "aliases": [
+      "top expense categories",
+      "biggest expenses",
+      "where did we spend the most in 2025",
+      "expenses by category in 2025",
+      "spend by category"
+    ],
+    "plan": {
+      "kind": "sql",
+      "title": "Spend by category, 2025",
+      "sql": "SELECT category, round(sum(amount), 2) AS spend\nFROM company_finances\nWHERE type = 'Expense' AND year(date) = 2025\nGROUP BY ALL\nORDER BY spend DESC",
+      "python": null,
+      "explanation": "Adds up 2025's bills by expense category, largest first.",
+      "assumptions": ["Amounts are before tax."],
+      "tablesUsed": ["company_finances"],
+      "columnsUsed": [
+        "company_finances.category",
+        "company_finances.type",
+        "company_finances.date",
+        "company_finances.amount"
+      ],
+      "clarification": null,
+      "alternatives": [],
+      "chartHint": {
+        "type": "hbar",
+        "x": "category",
+        "y": ["spend"],
+        "series": null
+      }
+    }
+  },
+  {
+    "question": "Which customers owe us the most?",
+    "aliases": [
+      "who owes us the most",
+      "who owes us money",
+      "outstanding invoices by customer",
+      "unpaid invoices by customer",
+      "accounts receivable by customer",
+      "top debtors"
+    ],
+    "plan": {
+      "kind": "sql",
+      "title": "Unpaid invoices by customer",
+      "sql": "SELECT counterparty AS customer,\n       round(sum(amount + tax), 2) AS owed,\n       count(*) AS invoices\nFROM company_finances\nWHERE type = 'Income' AND status <> 'Paid'\nGROUP BY ALL\nORDER BY owed DESC\nLIMIT 10",
+      "python": null,
+      "explanation": "Adds up every invoice not yet paid, by customer, and shows the ten who owe the most.",
+      "assumptions": [
+        "Owed includes tax: customers pay the invoice total.",
+        "Counts every unpaid invoice, whether or not it is past its due date."
+      ],
+      "tablesUsed": ["company_finances"],
+      "columnsUsed": [
+        "company_finances.counterparty",
+        "company_finances.type",
+        "company_finances.status",
+        "company_finances.amount",
+        "company_finances.tax"
+      ],
+      "clarification": null,
+      "alternatives": [],
+      "chartHint": {
+        "type": "hbar",
+        "x": "customer",
+        "y": ["owed"],
+        "series": null
+      }
+    }
+  },
+  {
+    "question": "How old are our unpaid invoices?",
+    "aliases": [
+      "receivables aging",
+      "accounts receivable aging",
+      "aged receivables",
+      "overdue invoices by age",
+      "how overdue are our invoices",
+      "aging report"
+    ],
+    "plan": {
+      "kind": "sql",
+      "title": "Unpaid invoices by age",
+      "sql": "WITH unpaid AS (\n  SELECT amount + tax AS total,\n         (SELECT max(date) FROM company_finances) - due_date AS days_late\n  FROM company_finances\n  WHERE type = 'Income' AND status <> 'Paid'\n)\nSELECT CASE WHEN days_late <= 0 THEN '0 days (not yet due)'\n            WHEN days_late <= 30 THEN '1-30 days late'\n            WHEN days_late <= 60 THEN '31-60 days late'\n            WHEN days_late <= 90 THEN '61-90 days late'\n            ELSE '90+ days late' END AS age,\n       round(sum(total), 2) AS owed,\n       count(*) AS invoices\nFROM unpaid\nGROUP BY ALL\nORDER BY min(days_late)",
+      "python": null,
+      "explanation": "Sorts the unpaid invoices by how far past their due date they are, and adds up what is owed in each group.",
+      "assumptions": [
+        "“Today” is the last date in the data, 31 December 2025.",
+        "Owed includes tax: customers pay the invoice total."
+      ],
+      "tablesUsed": ["company_finances"],
+      "columnsUsed": [
+        "company_finances.date",
+        "company_finances.due_date",
+        "company_finances.type",
+        "company_finances.status",
+        "company_finances.amount",
+        "company_finances.tax"
+      ],
+      "clarification": null,
+      "alternatives": [],
+      "chartHint": {
+        "type": "bar",
+        "x": "age",
+        "y": ["owed"],
+        "series": null
+      }
+    }
+  },
+  {
+    "question": "What is our gross margin by quarter?",
+    "aliases": [
+      "gross margin by quarter",
+      "gross margin trend",
+      "quarterly gross margin",
+      "what is our gross margin",
+      "gross margin over time"
+    ],
+    "plan": {
+      "kind": "sql",
+      "title": "Gross margin by quarter",
+      "sql": "SELECT date_trunc('quarter', date) AS quarter,\n       round((sum(amount) FILTER (WHERE type = 'Income')\n              - sum(amount) FILTER (WHERE pl_group = 'Cost of sales'))\n             / sum(amount) FILTER (WHERE type = 'Income'), 4) AS gross_margin\nFROM company_finances\nGROUP BY ALL\nORDER BY quarter",
+      "python": null,
+      "explanation": "Takes each quarter's income, subtracts the cost of sales (hosting, contractors and payment fees), and divides by the income.",
+      "assumptions": [
+        "gross_margin is a fraction: 0.8 means 80% of income is left after the cost of sales.",
+        "Amounts are before tax."
+      ],
+      "tablesUsed": ["company_finances"],
+      "columnsUsed": [
+        "company_finances.date",
+        "company_finances.type",
+        "company_finances.pl_group",
+        "company_finances.amount"
+      ],
+      "clarification": null,
+      "alternatives": [],
+      "chartHint": {
+        "type": "line",
+        "x": "quarter",
+        "y": ["gross_margin"],
+        "series": null
+      }
+    }
+  },
+  {
+    "question": "How long do customers take to pay?",
+    "aliases": [
+      "days to pay by customer",
+      "average days to get paid",
+      "which customers pay slowest",
+      "slowest paying customers",
+      "how quickly do customers pay"
+    ],
+    "plan": {
+      "kind": "sql",
+      "title": "Average days to get paid, slowest customers",
+      "sql": "SELECT counterparty AS customer,\n       round(avg(paid_date - date), 1) AS avg_days_to_pay,\n       count(*) AS invoices\nFROM company_finances\nWHERE type = 'Income' AND paid_date IS NOT NULL\nGROUP BY ALL\nORDER BY avg_days_to_pay DESC\nLIMIT 10",
+      "python": null,
+      "explanation": "For each paid invoice, counts the days from the invoice date to the payment, then averages them by customer. The ten slowest are shown.",
+      "assumptions": ["Only paid invoices count: unpaid ones have no payment date yet."],
+      "tablesUsed": ["company_finances"],
+      "columnsUsed": [
+        "company_finances.counterparty",
+        "company_finances.type",
+        "company_finances.date",
+        "company_finances.paid_date"
+      ],
+      "clarification": null,
+      "alternatives": [],
+      "chartHint": {
+        "type": "hbar",
+        "x": "customer",
+        "y": ["avg_days_to_pay"],
+        "series": null
+      }
+    }
+  },
+  {
+    "question": "How much does each department spend?",
+    "aliases": [
+      "spend by department",
+      "expenses by department",
+      "department spending",
+      "which department spends the most",
+      "spending by team"
+    ],
+    "plan": {
+      "kind": "sql",
+      "title": "Spend by department, 2025",
+      "sql": "SELECT department, round(sum(amount), 2) AS spend\nFROM company_finances\nWHERE type = 'Expense' AND year(date) = 2025\nGROUP BY ALL\nORDER BY spend DESC",
+      "python": null,
+      "explanation": "Adds up 2025's bills and payroll by department.",
+      "assumptions": ["Covers 2025, the latest full year in the data.", "Amounts are before tax."],
+      "tablesUsed": ["company_finances"],
+      "columnsUsed": [
+        "company_finances.department",
+        "company_finances.type",
+        "company_finances.date",
+        "company_finances.amount"
+      ],
+      "clarification": null,
+      "alternatives": [],
+      "chartHint": {
+        "type": "bar",
+        "x": "department",
+        "y": ["spend"],
+        "series": null
+      }
+    }
+  },
+  {
+    "question": "Where does our income come from?",
+    "aliases": [
+      "income by category",
+      "revenue by category",
+      "income breakdown",
+      "what share of income comes from each category",
+      "revenue mix"
+    ],
+    "plan": {
+      "kind": "sql",
+      "title": "Income by category",
+      "sql": "SELECT category, round(sum(amount), 2) AS income\nFROM company_finances\nWHERE type = 'Income'\nGROUP BY ALL\nORDER BY income DESC",
+      "python": null,
+      "explanation": "Adds up all invoices by what was sold: subscriptions, services, licenses and training.",
+      "assumptions": ["Covers every year in the data, 2023 to 2025.", "Amounts are before tax."],
+      "tablesUsed": ["company_finances"],
+      "columnsUsed": [
+        "company_finances.category",
+        "company_finances.type",
+        "company_finances.amount"
+      ],
+      "clarification": null,
+      "alternatives": [],
+      "chartHint": {
+        "type": "donut",
+        "x": "category",
+        "y": ["income"],
+        "series": null
+      }
+    }
+  },
+  {
+    "question": "What was our net cash flow each month?",
+    "aliases": [
+      "net cash flow by month",
+      "cash flow",
+      "monthly cash flow",
+      "cash in vs cash out",
+      "cash in and cash out"
+    ],
+    "plan": {
+      "kind": "sql",
+      "title": "Net cash flow by month",
+      "sql": "SELECT date_trunc('month', paid_date) AS month,\n       round(sum(CASE WHEN type = 'Income' THEN amount + tax ELSE -(amount + tax) END), 2) AS net_cash_flow\nFROM company_finances\nWHERE paid_date IS NOT NULL\nGROUP BY ALL\nORDER BY month",
+      "python": null,
+      "explanation": "Counts money in when a customer pays an invoice and money out when a bill is paid, then nets the two for each month.",
+      "assumptions": [
+        "Cash moves on the payment date, including tax.",
+        "Unpaid invoices and bills are left out."
+      ],
+      "tablesUsed": ["company_finances"],
+      "columnsUsed": [
+        "company_finances.paid_date",
+        "company_finances.type",
+        "company_finances.amount",
+        "company_finances.tax"
+      ],
+      "clarification": null,
+      "alternatives": [],
+      "chartHint": {
+        "type": "line",
+        "x": "month",
+        "y": ["net_cash_flow"],
+        "series": null
+      }
+    }
+  },
+  {
+    "question": "What was our net profit in 2025?",
+    "aliases": [
+      "net profit in 2025",
+      "profit in 2025",
+      "2025 profit",
+      "how much profit did we make in 2025",
+      "total profit 2025"
+    ],
+    "plan": {
+      "kind": "sql",
+      "title": "Net profit, 2025",
+      "sql": "SELECT round(sum(CASE WHEN type = 'Income' THEN amount ELSE -amount END), 2) AS net_profit\nFROM company_finances\nWHERE year(date) = 2025",
+      "python": null,
+      "explanation": "Takes 2025's income and subtracts everything spent in 2025.",
+      "assumptions": [
+        "Amounts are before tax.",
+        "No depreciation, interest or income tax: the data holds invoices and bills only."
+      ],
+      "tablesUsed": ["company_finances"],
+      "columnsUsed": ["company_finances.date", "company_finances.type", "company_finances.amount"],
+      "clarification": null,
+      "alternatives": [],
+      "chartHint": {
+        "type": "kpi",
+        "x": null,
+        "y": ["net_profit"],
+        "series": null
+      }
+    }
+  },
+  {
+    "question": "Which vendors did we pay the most in 2025?",
+    "aliases": [
+      "top vendors",
+      "biggest suppliers",
+      "top suppliers in 2025",
+      "who did we pay the most",
+      "largest vendors"
+    ],
+    "plan": {
+      "kind": "sql",
+      "title": "Top vendors, 2025",
+      "sql": "SELECT counterparty AS vendor, round(sum(amount), 2) AS spend\nFROM company_finances\nWHERE type = 'Expense' AND year(date) = 2025 AND category <> 'Payroll'\nGROUP BY ALL\nORDER BY spend DESC\nLIMIT 10",
+      "python": null,
+      "explanation": "Adds up 2025's bills by vendor and shows the ten largest. Payroll is left out: it isn't a vendor.",
+      "assumptions": ["Amounts are before tax."],
+      "tablesUsed": ["company_finances"],
+      "columnsUsed": [
+        "company_finances.counterparty",
+        "company_finances.type",
+        "company_finances.date",
+        "company_finances.category",
+        "company_finances.amount"
+      ],
+      "clarification": null,
+      "alternatives": [],
+      "chartHint": {
+        "type": "hbar",
+        "x": "vendor",
+        "y": ["spend"],
+        "series": null
+      }
+    }
+  }
+]
