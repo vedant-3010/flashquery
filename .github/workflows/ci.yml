@@ -26,6 +26,11 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run build
+        env:
+          # Public config for the e2e's mocked account service (e2e/supabase.ts), so the build's CSP
+          # and the guest-isolation checks see a configured service (F-SEC-08/09). Not a real project.
+          VITE_SUPABASE_URL: https://e2e-project.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_e2e
       - name: Initial JS budget (350 KB gzip)
         run: npm run size
       - run: npx playwright install --with-deps chromium

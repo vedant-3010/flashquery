@@ -8,6 +8,8 @@ import { useDatasetsStore } from '@/stores/datasets'
 // doing anything.
 
 export const TRY_PROJECT_NAME = 'Sample: Global Sales'
+/** Fixed, so it stays the one project guests may open (D115) even after a rename. */
+export const TRY_PROJECT_ID = 'try-global-sales'
 
 export function startTryDemo(): void {
   const question = DEMO_QUESTIONS[0]

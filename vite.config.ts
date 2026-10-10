@@ -4,6 +4,7 @@ import { fileURLToPath, URL } from 'node:url'
 import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import { serviceConnectSources } from './src/platform/serviceUrl.ts'
 
 /**
  * Production Content-Security-Policy (F-SEC-06), as a meta tag in the built index.html (the dev
@@ -35,12 +36,22 @@ export const CONTENT_SECURITY_POLICY: Record<string, string[]> = {
 }
 
 function contentSecurityPolicy(): Plugin {
-  const policy = Object.entries(CONTENT_SECURITY_POLICY)
-    .map(([directive, sources]) => `${directive} ${sources.join(' ')}`)
-    .join('; ')
+  let policy = ''
   return {
     name: 'flashQuery:csp',
     apply: 'build',
+    // The account service, when configured, is the one more host: exactly it, https and wss (D104).
+    configResolved: (config) => {
+      const service = serviceConnectSources(config.env.VITE_SUPABASE_URL)
+      policy = Object.entries(CONTENT_SECURITY_POLICY)
+        .map(([directive, sources]) =>
+          directive === 'connect-src'
+            ? [directive, [...sources, ...service]]
+            : [directive, sources],
+        )
+        .map(([directive, sources]) => `${directive} ${(sources as string[]).join(' ')}`)
+        .join('; ')
+    },
     transformIndexHtml: () => [
       {
         tag: 'meta',
@@ -113,6 +124,7 @@ export default defineConfig({
       'echarts/features',
       'echarts/renderers',
       'xlsx', // imported by the Excel worker
+      '@supabase/supabase-js', // accounts, only once someone signs in (src/platform/)
     ],
   },
   build: {

@@ -2,13 +2,16 @@
 
 flashQuery is a static site: `npm run build` writes everything to `dist/`, and there's no server code and
 no secrets. `vercel.json` sets the build and the response headers. Never add an API key as an
-environment variable: users bring their own key in the app.
+environment variable: users bring their own key in the app. Accounts (sign-in, and from M14 saved and
+shared dashboards) are optional: they need a Supabase project, set up below. Without one, the app
+works as before and shows no sign-in.
 
 ## Vercel
 
 1. In Vercel, **Add New → Project → Import** the GitHub repository.
 2. Keep the settings `vercel.json` provides: framework Vite, install `npm ci`, build `npm run build`,
-   output `dist`. Node comes from `engines` in `package.json` (24.x). No environment variables.
+   output `dist`. Node comes from `engines` in `package.json` (24.x). The only environment variables
+   are the account service's public URL and key (see Accounts); never an LLM key.
 3. **Deploy.** Every push to `main` deploys to production; every pull request gets a preview URL.
 4. Put the production URL in the README (replace the "Live demo" comment at the top) and in the
    repository's About → Website.
@@ -41,10 +44,42 @@ Then in the browser:
 - [ ] DevTools → Console shows no Content-Security-Policy errors.
 - [ ] DevTools → Network shows only the app's own origin (plus `extensions.duckdb.org` after loading a
       Parquet or JSON file, and `cdn.jsdelivr.net` after running Python).
+- [ ] With accounts on: **Sign in** → Google, GitHub and email each come back signed in; a guest
+      session (DevTools → Network) makes no request to the Supabase host.
 - [ ] `/app/bench` runs; copy the results with "Copy as Markdown" if you want numbers from real
       hardware.
 - [ ] Set `og:image` in `index.html` to the full URL (`https://<your-domain>/og.png`): some link
       previews need an absolute URL.
+
+## Accounts (Supabase, optional)
+
+1. Create a project at [supabase.com](https://supabase.com) (the free tier is enough; free projects
+   pause after 7 days without requests, and wake on the next one).
+2. Apply the migrations in `supabase/migrations/`: with the Supabase CLI, `supabase link` then
+   `supabase db push`; or paste each file into the dashboard's SQL editor, oldest first. They create
+   `profiles` (a display name per user) with row-level security, and `delete_my_account()`.
+3. **Authentication → URL Configuration:** Site URL `https://<your-domain>/app/`; Redirect URLs
+   `https://<your-domain>/app/auth/callback` and `https://<your-domain>/app/reset` (add
+   `http://localhost:5173/app/**` for local development).
+4. **Authentication → Providers:** Email is on by default ("Confirm email" on is recommended; the app
+   says so after sign-up). For Google and GitHub, create an OAuth app with each and use the callback
+   URL Supabase shows (`https://<project>.supabase.co/auth/v1/callback`).
+5. In Vercel (Settings → Environment Variables), add the project's **public** values, from Project
+   Settings → API: `VITE_SUPABASE_URL` (`https://<project>.supabase.co`) and
+   `VITE_SUPABASE_PUBLISHABLE_KEY` (the publishable key, `sb_publishable_…`). Never the secret or
+   service-role key. Redeploy: the build adds exactly that host, https and wss, to the CSP.
+6. For local development, put the same two lines in `.env.local` (see `.env.example`), or run
+   Supabase on your computer instead (below).
+
+### Accounts on your computer
+
+With Docker running, `npx supabase start` starts a local Supabase from `supabase/config.toml` (auth,
+database, REST, a mail catcher and Studio) and applies `supabase/migrations/`. It prints the API URL
+(`http://127.0.0.1:54321`) and a publishable key: put them in `.env.local` as `VITE_SUPABASE_URL` and
+`VITE_SUPABASE_PUBLISHABLE_KEY`, and the dev server picks them up. Sign-in links and reset emails
+arrive in Mailpit at http://127.0.0.1:54324; Studio at http://127.0.0.1:54323 shows the users and
+profiles. Google and GitHub need OAuth apps in `config.toml`, so test those on the hosted project.
+`npx supabase stop` stops it (the data is kept for the next start).
 
 ## Other hosts
 

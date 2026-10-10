@@ -12,10 +12,13 @@ import { queueStart, type StartAction } from '@/stores/projectStart'
 export function useStartProject() {
   const [, navigate] = useLocation()
   return useCallback(
-    async (action: StartAction | null, target: { projectId?: string; name?: string } = {}) => {
+    async (
+      action: StartAction | null,
+      target: { projectId?: string; name?: string; newId?: string } = {},
+    ) => {
       const store = useProjectsStore.getState()
       await store.hydrate()
-      const id = target.projectId ?? store.create(target.name).id
+      const id = target.projectId ?? store.create(target.name, target.newId).id
       if (action) await queueStart(id, action, { persist: needsReload(id) })
       navigate(paths.project(id))
     },

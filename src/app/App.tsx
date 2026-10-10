@@ -5,12 +5,15 @@ import { NewProjectRoute } from '@/app/NewProjectRoute'
 import { PanelErrorBoundary } from '@/app/PanelErrorBoundary'
 import { APP_BASE, legacyHashPath } from '@/app/paths'
 import { ProjectRoute } from '@/app/ProjectRoute'
+import { RequireAccount } from '@/app/RequireAccount'
+import { TRY_PROJECT_ID } from '@/app/tryDemo'
 import { TryRoute } from '@/app/TryRoute'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { warmUpEngine } from '@/engine/duckdb'
 import { HomePage } from '@/features/home/HomePage'
 import { useResolvedTheme } from '@/hooks/useResolvedTheme'
 import { applyTheme } from '@/lib/theme'
+import { useAuthStore } from '@/stores/auth'
 import { useFeedbackStore } from '@/stores/feedback'
 import { startFilePersistence } from '@/stores/persistFiles'
 import { useProjectsStore } from '@/stores/projects'
@@ -21,9 +24,35 @@ const BenchPage = lazy(() =>
   import('@/features/bench/BenchPage').then((module) => ({ default: module.BenchPage })),
 )
 
+// The account pages carry the landing's hero film and its motion library: a chunk of their own.
+const LoginPage = lazy(() =>
+  import('@/features/account/LoginPage').then((module) => ({ default: module.LoginPage })),
+)
+const RegisterPage = lazy(() =>
+  import('@/features/account/RegisterPage').then((module) => ({ default: module.RegisterPage })),
+)
+const ForgotPage = lazy(() =>
+  import('@/features/account/ForgotPage').then((module) => ({ default: module.ForgotPage })),
+)
+const ResetPage = lazy(() =>
+  import('@/features/account/ResetPage').then((module) => ({ default: module.ResetPage })),
+)
+const AuthCallbackPage = lazy(() =>
+  import('@/features/account/AuthCallbackPage').then((module) => ({
+    default: module.AuthCallbackPage,
+  })),
+)
+const AccountPage = lazy(() =>
+  import('@/features/account/AccountPage').then((module) => ({ default: module.AccountPage })),
+)
+
+/** While an account page's chunk loads: the paper, so it doesn't flash white. */
+const paper = <div className="paper-scope min-h-dvh" />
+
 // Routes under /app/ (F-HOME-01, D105): Home, a project's workspace, SQL and dashboard, the try
-// link, the benchmark, and placeholders for accounts (M13) and shared links (M14). A project's own
-// data loads when it opens (stores/projectSession.ts); settings and eval cases are global.
+// link, the benchmark, the account pages (F-ACCT, M13) and a placeholder for shared links (M14). A
+// project's own data loads when it opens (stores/projectSession.ts); settings and eval cases are
+// global. Accounts are optional: guests never load the account service (F-SEC-09).
 
 /** v1 links (`/app/#/bench`, `/app/#/try`) go to their routes. */
 function LegacyHashRedirect() {
@@ -47,6 +76,8 @@ export function App() {
       .then(() => startFilePersistence())
     void useProjectsStore.getState().hydrate()
     void useFeedbackStore.getState().hydrate()
+    // Restores a saved session; guests and the demo load nothing for it.
+    useAuthStore.getState().start()
     startRelationshipDetection()
   }, [])
 
@@ -57,8 +88,16 @@ export function App() {
         <Router base={APP_BASE}>
           <LegacyHashRedirect />
           <Switch>
-            <Route path="/" component={HomePage} />
-            <Route path="/new" component={NewProjectRoute} />
+            <Route path="/">
+              <RequireAccount>
+                <HomePage />
+              </RequireAccount>
+            </Route>
+            <Route path="/new">
+              <RequireAccount>
+                <NewProjectRoute />
+              </RequireAccount>
+            </Route>
             <Route path="/try" component={TryRoute} />
             <Route path="/bench">
               <PanelErrorBoundary name="the benchmark">
@@ -67,18 +106,47 @@ export function App() {
                 </Suspense>
               </PanelErrorBoundary>
             </Route>
-            <Route path="/p/:id/:view?" component={ProjectRoute} />
+            {/* The try project stays open to guests; every other project needs the account. */}
+            <Route path="/p/:id/:view?">
+              {(params) =>
+                params.id === TRY_PROJECT_ID ? (
+                  <ProjectRoute />
+                ) : (
+                  <RequireAccount>
+                    <ProjectRoute />
+                  </RequireAccount>
+                )
+              }
+            </Route>
             <Route path="/login">
-              <MessagePage
-                title="Sign-in is coming"
-                description="Accounts arrive with sharing. Everything works without one: your projects stay in this browser."
-              />
+              <Suspense fallback={paper}>
+                <LoginPage />
+              </Suspense>
             </Route>
             <Route path="/register">
-              <MessagePage
-                title="Sign-up is coming"
-                description="Accounts arrive with sharing. Everything works without one: your projects stay in this browser."
-              />
+              <Suspense fallback={paper}>
+                <RegisterPage />
+              </Suspense>
+            </Route>
+            <Route path="/forgot">
+              <Suspense fallback={paper}>
+                <ForgotPage />
+              </Suspense>
+            </Route>
+            <Route path="/reset">
+              <Suspense fallback={paper}>
+                <ResetPage />
+              </Suspense>
+            </Route>
+            <Route path="/auth/callback">
+              <Suspense fallback={paper}>
+                <AuthCallbackPage />
+              </Suspense>
+            </Route>
+            <Route path="/account">
+              <Suspense fallback={paper}>
+                <AccountPage />
+              </Suspense>
             </Route>
             <Route path="/s/:slug">
               <MessagePage

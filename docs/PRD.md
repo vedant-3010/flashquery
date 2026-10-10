@@ -401,9 +401,9 @@ Format: `ID (priority) Title: description. AC: acceptance criteria.`
   is documented in §12.
 - [ ] **F-SEC-07 (P1) Row-level security** (v2) on every Supabase table, with policy tests for the
   owner, a member, a link viewer and a stranger.
-- [ ] **F-SEC-08 (P1) Account service in the CSP** (v2): `connect-src` adds exactly the project's
+- [x] **F-SEC-08 (P1) Account service in the CSP** (v2): `connect-src` adds exactly the project's
   `https://` and `wss://` Supabase host (from `VITE_SUPABASE_URL` at build), never a wildcard (D104).
-- [ ] **F-SEC-09 (P1) Guest isolation** (v2): guests and the demo load no Supabase code and make no
+- [x] **F-SEC-09 (P1) Guest isolation** (v2): guests and the demo load no Supabase code and make no
   request to it. AC: `e2e/privacy.spec.ts` asserts it (G9).
 
 
@@ -465,14 +465,15 @@ Format: `ID (priority) Title: description. AC: acceptance criteria.`
 
 ### 4.18 Accounts (F-ACCT, v2)
 
-- [ ] **F-ACCT-01 (P1) Sign up and log in**: email and password, magic link, Google and GitHub
+- [x] **F-ACCT-01 (P1) Sign up and log in**: email and password, magic link, Google and GitHub
   (Supabase Auth, PKCE); forgot and reset password. AC: the sign-up part of J7 works against a mocked
   Supabase in e2e.
-- [ ] **F-ACCT-02 (P1) Optional accounts**: guests use everything except cloud save and sharing; the
-  demo needs no account (G9).
-- [ ] **F-ACCT-03 (P1) Account menu and profile**: avatar or initials, display name, sign out, delete
-  account (which deletes the user's cloud dashboards).
-- [ ] **F-ACCT-04 (P1) Session**: kept by supabase-js in localStorage; the Supabase chunk loads only when
+- [x] **F-ACCT-02 (P1) Optional accounts**: guests use everything except cloud save and sharing; the
+  demo needs no account (G9). *(Changed by D115: where accounts are set
+  up, the app needs one; the try link and its sample project stay open.)*
+- [x] **F-ACCT-03 (P1) Account menu and profile**: avatar or initials, display name, sign out, delete
+  account (which deletes the user's cloud dashboards). *(Initials only, D114.)*
+- [x] **F-ACCT-04 (P1) Session**: kept by supabase-js in localStorage; the Supabase chunk loads only when
   signing in or when a session exists.
 
 
@@ -600,7 +601,7 @@ ChartSpec      + format2? (the line of a bar-and-line chart)
 ChartData      sampling + 'quantiles' (box plot statistics from DuckDB)
 Project        { id, name, createdAt, updatedAt, lastOpenedAt,                   // local, IndexedDB
                  datasets: string[], dashboards, questions }                       // Home's card (D113)
-Profile        { id, displayName, avatarUrl, createdAt }                         // Supabase
+Profile        { id, displayName, createdAt }                                     // Supabase (D114)
 CloudDashboard { id, ownerId, name, doc: Dashboard (with snapshots), version, updatedAt }
 Membership     { dashboardId, userId, role: 'viewer'|'editor' }
 Invite         { dashboardId, email, role, createdAt }
@@ -1284,6 +1285,76 @@ named "Voice input (unavailable)" where on-device recognition is missing, and pr
   - **e2e:** `openProject(page)` (`e2e/app.ts`, via `/app/new`) replaces `page.goto('/app/')`, and
     `home.spec.ts` covers the migration, separate project data, deep links and starting from Home.
   - **Bundle:** initial JS 303.7 KB gzip (+9 KB: wouter, Home and the project store).
+- **D114** Accounts (M13, F-ACCT-01…04, F-SEC-08, F-SEC-09).
+  - **Off unless configured:** with no `VITE_SUPABASE_URL` and publishable key at build, accounts are
+    off: no sign-in anywhere, and the account pages say the deployment has none.
+  - **Lazy and guest-free:** supabase-js and the account code (`src/platform/`) are one lazy chunk (56
+    KB gzip). It loads only to sign in, to finish a link or OAuth, or when a session is saved here;
+    the app checks for a saved session by its localStorage key, without loading anything. The initial
+    bundle grows 4.4 KB (the pages and the store). `e2e/privacy.spec.ts` proves guests load none of it
+    and make no request to the service.
+  - **Sign-in:** password, email link, Google and GitHub, all with the PKCE flow. Links and providers
+    come back to `/app/auth/callback`, reset links to `/app/reset`. When the project asks new users to
+    confirm their email, sign-up says so.
+  - **Profiles:** a display name only (a trigger makes the profile from the sign-up name or the email),
+    with row-level security: you read and update your own. Initials stand in for avatars, because
+    provider avatar images would be requests to Google's and GitHub's image hosts (§5 privacy).
+  - **Deleting an account:** `delete_my_account()` (security definer, signed-in users only) deletes the
+    user; their profile, and from M14 their cloud dashboards, go with it (`on delete cascade`).
+  - **Migrations** live in `supabase/migrations/` (Supabase CLI names). A static test checks that every
+    table has row-level security and policies, and every security-definer function pins its
+    search_path and is closed to anonymous callers. Tests against a real Postgres come with the
+    sharing tables (F-SEC-07, M14).
+  - **CSP:** the build adds exactly the service's host, https and wss; a malformed URL or a wildcard
+    fails the build (`src/platform/serviceUrl.ts`).
+  - **e2e:** `e2e/supabase.ts` mocks the service for the real supabase-js in the browser: sign-up,
+    password, link, GitHub (the authorize redirect and PKCE exchange), reset, profile, delete. On the
+    dev server, a test points the app at it through `window.__flashQueryAccounts`, which only
+    development builds read. CI builds with the same public URL (`ci.yml`).
+  - **Status before the first render:** the auth store knows "off", "guest" or "checking a saved
+    session" when it's created. Pages render before App's effects run, so a reset link or
+    `/app/account` opened directly would otherwise look signed out for a moment. Strict mode's
+    doubled effects had hidden this in development.
+  - "Clear all local data" also forgets a saved sign-in (the `sb-…` keys).
+  - **Local testing:** `supabase/config.toml` sets up `npx supabase start` for the dev server (site and
+    redirect URLs on localhost:5173; 30 emails an hour instead of 2). The service URL may be plain http
+    only on this computer (`localhost`, `127.0.0.1`), which the CSP already allows for local model
+    servers. Checked by hand against that stack on 2026-10-10:
+    - **Flows:** sign-up (the trigger makes the profile), rename, password sign-in, the email link and
+      the reset link (read from Mailpit), and deletion (user and profile both gone).
+    - **Row-level security:** anonymous visitors see no profiles; a user sees only their own and can't
+      rename anyone else's; anonymous callers can't run `delete_my_account()`.
+- **D115** Sign-in before the app, and the sign-in pages in the landing's look (user request,
+  2026-10-10). This changes F-ACCT-02, where accounts were optional throughout.
+  - **The gate:** where an account service is configured, Home, projects and `/app/new` ask for an
+    account, and the page that asked comes back after sign-in (`?next=`, app paths only: `//host`
+    and `/\host` are refused). Open to everyone: `/app/try` and its project (a fixed id,
+    `try-global-sales`, so a rename keeps it open), the benchmark, the account pages and shared
+    links. With no service configured, nothing is gated.
+  - **Still local:** projects stay in the browser, not in the account, so two people sharing a
+    browser share its projects as before. The gate is about the app, not the data (cloud data is
+    M14).
+  - **The pages:** two halves, related to the landing page but not a copy of its hero.
+    - **Left:** the form on the landing's paper: pill buttons, roomy fields, a serif title, rising
+      in. It comes first, where the eye and the keyboard start.
+    - **Right:** an ink panel with the landing's headline voice in new words ("Welcome back. / Your
+      data never left.", or "Meet your analyst. / It lives in this tab."). Questions type
+      themselves into an ask bar, and their answer assembles: bars, the headline number, and "0
+      bytes uploaded". The first answer uses the landing's real figures (a test keeps them equal).
+      It has a pause button, stops in a hidden tab, and shows one finished answer with reduced
+      motion.
+    - Narrow screens show the form alone. The pages stay light under the app's dark theme, as the
+      landing is.
+  - **No shared code with the landing:** the animations are CSS (`.auth-*` in `index.css`), not the
+    landing's motion library. The palette is in the app theme under the landing's names, mapped by
+    `.paper-scope`, with `.ink-accent` for the panel's lighter violet. An earlier version reused the
+    landing's hero film; that made a chunk both pages shared, which cost the landing 3 KB, and looked
+    the same as the landing. The app's Tailwind no longer scans `src/landing/` (`@source not`), which
+    takes 15 KB off the app's CSS.
+  - **Bundle:** the account pages are a lazy chunk; the app's initial JS (308.5 KB gzip) and the
+    landing's (135.2 KB) are unchanged.
+  - **e2e:** `signIn(page)` (`e2e/app.ts`) mocks the service and restores a saved session before the
+    page loads; `openProject` uses it. Guest checks go through `/app/try`.
 - **D12** Shared hooks live in `src/hooks/` and shared app components in `src/components/` (outside the
 generated `ui/`), matching the shadcn aliases in `components.json`.
 

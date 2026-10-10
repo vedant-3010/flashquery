@@ -16,6 +16,7 @@ import { ProjectMenu } from '@/app/ProjectMenu'
 import { ThemeMenu } from '@/app/ThemeMenu'
 import { BrandMark } from '@/components/BrandMark'
 import { IconButton } from '@/components/IconButton'
+import { AccountMenu } from '@/features/account/AccountMenu'
 import { useResolvedTheme } from '@/hooks/useResolvedTheme'
 import { TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useUiStore } from '@/stores/ui'
@@ -92,6 +93,7 @@ export function TopBar({ showSidebarToggle }: TopBarProps) {
         <IconButton label="Settings" onClick={() => setSettingsOpen(true)}>
           <Settings />
         </IconButton>
+        <AccountMenu />
       </div>
     </header>
   )

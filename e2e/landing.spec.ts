@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { mockSupabase } from './supabase.ts'
 
 // The landing page at / (PRD D99): renders cleanly, the hero film behaves (pause, reduced motion),
 // the privacy toggle shows what each mode sends, it works by keyboard and on a phone, it doesn't
@@ -29,9 +30,11 @@ test('renders the page without errors and links to the app', async ({ page }) =>
   for (const id of ['how', 'privacy', 'performance', 'features', 'faq']) {
     await expect(page.locator(`#${id}`)).toHaveCount(1)
   }
+  // The app asks for an account where accounts are on (D115); the mocked service turns them on.
+  await mockSupabase(page)
   await page.getByRole('link', { name: 'Open the app' }).first().click()
-  await expect(page).toHaveURL(/\/app\/$/)
-  await expect(page.getByRole('heading', { name: 'Ask your data anything' })).toBeVisible()
+  await expect(page).toHaveURL(/\/app\/login$/)
+  await expect(page.getByRole('heading', { level: 1, name: 'Sign in' })).toBeVisible()
   expect(errors).toEqual([])
 })
 

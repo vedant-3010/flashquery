@@ -1,7 +1,12 @@
 @import "tailwindcss";
+/* The landing page has its own build (landing.css): none of its classes belong in the app's CSS. */
+@source not "./landing";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
+/* The landing's headline fonts, for the sign-in pages (D115); downloaded only where they're used. */
+@import "@fontsource-variable/hubot-sans/wdth.css";
+@import "@fontsource/instrument-serif/latin-400-italic.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -140,3 +145,130 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* The landing page's palette and headline fonts (PRD D99), for the sign-in pages (D115), under the
+   landing's own names (keep them in step with src/landing/landing.css). The ink panel's accent is
+   the violet, lightened: .ink-accent. */
+@theme {
+    --font-serif: 'Instrument Serif', ui-serif, Georgia, serif;
+    --font-wide: 'Hubot Sans Variable', ui-sans-serif, system-ui, sans-serif;
+    --color-paper: #f6f3ec;
+    --color-paper-deep: #efeae0;
+    --color-panel: #fbfaf6;
+    --color-ink: #151515;
+    --color-ink-muted: #5e5a52;
+    --color-ink-faint: #8c867b;
+    --color-hairline: #ddd7cb;
+    --color-hairline-strong: #c9c1b2;
+    --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+@layer utilities {
+    /* The sign-in pages: the landing's paper and ink, light whatever the app's theme (the landing
+       is light only). The app's tokens take the paper palette, so form controls match. */
+    .paper-scope {
+        --background: #f6f3ec;
+        --foreground: #151515;
+        --card: #fbfaf6;
+        --card-foreground: #151515;
+        --popover: #fbfaf6;
+        --popover-foreground: #151515;
+        --primary: #151515;
+        --primary-foreground: #f6f3ec;
+        --secondary: #efeae0;
+        --secondary-foreground: #151515;
+        --muted: #efeae0;
+        --muted-foreground: #5e5a52;
+        --accent: #efeae0;
+        --accent-foreground: #151515;
+        --destructive: #a3241c;
+        --border: #ddd7cb;
+        --input: #c9c1b2;
+        --ring: #8c867b;
+        color-scheme: light;
+        color: var(--color-ink);
+        background-color: var(--color-paper);
+        /* The landing's paper grain. */
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.08 0 0 0 0 0.07 0 0 0 0 0.05 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+    /* The sign-in pages' ink panel: the landing's violet, lightened to read on ink (about 9:1). */
+    .ink-accent {
+        --accent: #c4a1ff;
+    }
+    .headline-wide {
+        font-family: var(--font-wide);
+        font-stretch: 112.5%;
+        font-weight: 500;
+        letter-spacing: -0.025em;
+    }
+    .flow-dash {
+        stroke-dasharray: 4 6;
+        animation: flow 1.2s linear infinite;
+    }
+    .caret {
+        animation: caret 1s steps(1) infinite;
+    }
+    /* The sign-in pages' motion (D115), in CSS so they don't load the landing's motion library. */
+    .auth-rise {
+        animation: auth-rise 0.6s var(--ease-out-quart) both;
+        animation-delay: calc(var(--rise, 0) * 70ms + 50ms);
+    }
+    .auth-grow {
+        transform-origin: left;
+        animation: auth-grow 0.7s var(--ease-out-quart) both;
+    }
+    .auth-fade-up {
+        animation: auth-fade-up 0.35s var(--ease-out-quart) both;
+    }
+    .auth-float {
+        animation: auth-float 6s ease-in-out infinite;
+    }
+    .auth-paused .auth-float,
+    .auth-paused .flow-dash,
+    .auth-paused .caret {
+        animation-play-state: paused;
+    }
+    @keyframes auth-rise {
+        from {
+            opacity: 0;
+            transform: translateY(8px);
+        }
+    }
+    @keyframes auth-grow {
+        from {
+            transform: scaleX(0);
+        }
+    }
+    @keyframes auth-fade-up {
+        from {
+            opacity: 0;
+            transform: translateY(6px);
+        }
+    }
+    @keyframes auth-float {
+        50% {
+            transform: translateY(-4px);
+        }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .auth-rise,
+        .auth-grow,
+        .auth-fade-up,
+        .auth-float,
+        .flow-dash,
+        .caret {
+            animation: none;
+        }
+    }
+    @keyframes flow {
+        to {
+            stroke-dashoffset: -20;
+        }
+    }
+    @keyframes caret {
+        50% {
+            opacity: 0;
+        }
+    }
+}
+

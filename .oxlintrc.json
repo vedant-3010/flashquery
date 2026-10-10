@@ -19,6 +19,21 @@
           {
             "name": "zod",
             "message": "Import { z } from '@/lib/zod': it runs Zod jitless, which the production CSP needs (PRD D66)."
+          },
+          {
+            "name": "@supabase/supabase-js",
+            "message": "Only src/platform/ talks to Supabase, as a lazy chunk guests never load (D114): use useAuthStore, or a type-only import.",
+            "allowTypeImports": true
+          },
+          {
+            "name": "@/platform/auth",
+            "message": "Only src/platform/ talks to Supabase, as a lazy chunk guests never load (D114): use useAuthStore, or a type-only import.",
+            "allowTypeImports": true
+          },
+          {
+            "name": "@/platform/supabase",
+            "message": "Only src/platform/ talks to Supabase, as a lazy chunk guests never load (D114): use useAuthStore, or a type-only import.",
+            "allowTypeImports": true
           }
         ]
       }
@@ -41,6 +56,22 @@
       "files": ["src/lib/zod.ts"],
       "rules": {
         "no-restricted-imports": "off"
+      }
+    },
+    {
+      "files": ["src/platform/**", "src/stores/auth.ts", "src/stores/auth.test.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "zod",
+                "message": "Import { z } from '@/lib/zod': it runs Zod jitless, which the production CSP needs (PRD D66)."
+              }
+            ]
+          }
+        ]
       }
     }
   ]

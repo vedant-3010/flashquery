@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { signIn } from './app.ts'
 
 // F-PERF-04: the benchmark page runs every measurement and copies a Markdown table.
 
@@ -7,6 +8,8 @@ test.describe('benchmark page', () => {
 
   test('measures the budgets on 100k rows and copies the results', async ({ page }) => {
     test.setTimeout(180_000)
+    // The benchmark is open to everyone; signed in, its way back reaches Home (D115).
+    await signIn(page)
     await page.goto('/app/bench')
     await expect(page.getByRole('heading', { name: 'Benchmark' })).toBeVisible()
     await page.getByRole('combobox', { name: 'Rows' }).click()
