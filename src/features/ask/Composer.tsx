@@ -1,5 +1,7 @@
 import { KeyRound, Lightbulb, LoaderCircle, Mic, SendHorizontal, Square } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type Ref } from 'react'
+import { Link } from 'wouter'
+import { paths } from '@/app/paths'
 import { demoSetsFor } from '@/ai/fixtures'
 import { suggestionKey } from '@/ai/suggest'
 import { suggestQuestions } from '@/ai/suggestions'
@@ -12,10 +14,14 @@ import { PrivacyMenu } from '@/features/ask/PrivacyMenu'
 import { ScopeMenu } from '@/features/ask/ScopeMenu'
 import { joinSpoken, unavailableReason } from '@/features/ask/speech'
 import { useSpeechInput } from '@/features/ask/useSpeechInput'
+import { HostedNotice } from '@/features/plan/HostedNotice'
+import { HostedStatus } from '@/features/plan/HostedStatus'
 import { useAskStore } from '@/stores/ask'
+import { useAuthStore } from '@/stores/auth'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { useDatasetsStore } from '@/stores/datasets'
-import { activeApiKey, useSettingsStore } from '@/stores/settings'
+import { useAiMode } from '@/stores/aiMode'
+import { useSettingsStore } from '@/stores/settings'
 import { useSuggestionsStore } from '@/stores/suggestions'
 import { useUiStore } from '@/stores/ui'
 
@@ -31,7 +37,9 @@ export function Composer({ inputRef }: { inputRef?: Ref<HTMLTextAreaElement> }) 
   const cancel = useAskStore((state) => state.cancel)
   const running = useAskStore((state) => state.running !== null)
   const datasets = useDatasetsStore((state) => state.datasets)
-  const demo = useSettingsStore((state) => activeApiKey(state) === null)
+  const aiMode = useAiMode()
+  const demo = aiMode === 'demo'
+  const guest = useAuthStore((state) => state.status === 'guest')
   const openSettings = useUiStore((state) => state.setSettingsOpen)
   const scope = useAskStore((state) => state.scope)
   const balanced = useSettingsStore((state) => state.privacyMode === 'balanced')
@@ -161,7 +169,9 @@ export function Composer({ inputRef }: { inputRef?: Ref<HTMLTextAreaElement> }) 
                   disabled={aiPending === key}
                   title={
                     aiError ??
-                    'Sends the schema and a few sample values (Balanced mode), like a question does.'
+                    (aiMode === 'hosted'
+                      ? 'Sends the schema and a few sample values (Balanced mode), like a question does, and uses one hosted question.'
+                      : 'Sends the schema and a few sample values (Balanced mode), like a question does.')
                   }
                   onClick={() => void requestAi(scoped)}
                 >
@@ -180,6 +190,7 @@ export function Composer({ inputRef }: { inputRef?: Ref<HTMLTextAreaElement> }) 
             )}
           </ul>
         )}
+        {aiMode === 'hosted' && <HostedNotice />}
         <form
           className="rounded-2xl border bg-card shadow-[0_6px_24px_-12px_rgb(0_0_0/0.18)] transition-shadow focus-within:shadow-[0_8px_28px_-12px_rgb(0_0_0/0.25)] focus-within:ring-2 focus-within:ring-ring/30 dark:shadow-none"
           onSubmit={(event) => {
@@ -264,7 +275,17 @@ export function Composer({ inputRef }: { inputRef?: Ref<HTMLTextAreaElement> }) 
                 <KeyRound aria-hidden />
                 Add an AI key to ask anything
               </Button>
+              {guest && (
+                <>
+                  or
+                  <Button asChild size="xs" variant="link" className="h-auto px-0">
+                    <Link href={paths.login}>sign in for 3 free questions</Link>
+                  </Button>
+                </>
+              )}
             </span>
+          ) : aiMode === 'hosted' ? (
+            <HostedStatus />
           ) : (
             <span>Only what your privacy mode allows is sent to the AI. Results stay here.</span>
           )}

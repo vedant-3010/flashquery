@@ -44,6 +44,16 @@
             "name": "@/platform/sharing",
             "message": "Only src/platform/ talks to Supabase, as a lazy chunk guests never load (D114): use sharing() from @/stores/sharing, or a type-only import.",
             "allowTypeImports": true
+          },
+          {
+            "name": "@/platform/plans",
+            "message": "Only src/platform/ talks to Supabase, as a lazy chunk guests never load (D114): use src/stores/plan.ts, or a type-only import.",
+            "allowTypeImports": true
+          },
+          {
+            "name": "@/platform/hostedAi",
+            "message": "Only src/platform/ talks to Supabase, as a lazy chunk guests never load (D114): use src/stores/plan.ts, or a type-only import.",
+            "allowTypeImports": true
           }
         ]
       }
@@ -73,7 +83,8 @@
         "src/platform/**",
         "src/stores/auth.ts",
         "src/stores/auth.test.ts",
-        "src/stores/sharing.ts"
+        "src/stores/sharing.ts",
+        "src/stores/plan.ts"
       ],
       "rules": {
         "no-restricted-imports": [

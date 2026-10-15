@@ -185,7 +185,7 @@ async function load() {
       projects.length > 0 ? projects : ((await migrateLegacyData()) ?? projects),
     )
     .catch((error: unknown) => {
-      console.warn('flashQuery: projects could not be loaded', error)
+      console.warn('HushGlance: projects could not be loaded', error)
       return []
     })
   useProjectsStore.setState((state) => ({
@@ -198,7 +198,7 @@ async function load() {
   useProjectsStore.subscribe((state, previous) => {
     if (state.projects === previous.projects) return
     saveRecord(PROJECTS_RECORD, state.projects).catch((error: unknown) =>
-      console.warn('flashQuery: projects could not be saved', error),
+      console.warn('HushGlance: projects could not be saved', error),
     )
   })
 }

@@ -16,7 +16,7 @@ export interface Showcase {
 export function AuthShowcase({ lead, line }: Showcase) {
   return (
     <aside
-      aria-label="About flashQuery"
+      aria-label="About HushGlance"
       className="ink-accent relative hidden min-h-dvh flex-col gap-8 overflow-hidden bg-ink px-10 py-8 text-paper lg:flex xl:px-14"
     >
       {/* Depth: a faint dot grid fading out, and a violet glow behind the headline. */}

@@ -57,7 +57,7 @@ export function ConsentDialog({
           </DialogTitle>
           <DialogDescription>
             {mode === 'share'
-              ? 'These results go to your flashQuery account, so the people you choose can see them.'
+              ? 'These results go to your HushGlance account, so the people you choose can see them.'
               : 'People with access will see these results in place of the ones shared before.'}
           </DialogDescription>
         </DialogHeader>

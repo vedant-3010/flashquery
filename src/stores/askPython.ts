@@ -1,4 +1,6 @@
 import { chooseChart, openChecked, planCall } from '@/ai/pipeline'
+import { knownNames, scrubError } from '@/ai/context'
+import { useDatasetsStore } from '@/stores/datasets'
 import { buildRepairMessages, type PromptMessage } from '@/ai/prompts/planSql'
 import type { AnswerSummary } from '@/ai/schemas'
 import { summarizeLocally } from '@/ai/summary'
@@ -9,7 +11,7 @@ import { dropPythonResult, loadPythonResult, pythonInput } from '@/engine/python
 import { AppError, isCancellation, toAppError } from '@/lib/errors'
 import { formatNumber } from '@/lib/format'
 import type { Answer } from '@/stores/ask'
-import { currentProvider, logRequest } from '@/stores/askSupport'
+import { currentProvider, logRequest, meterFor } from '@/stores/askSupport'
 import { useEngineStore } from '@/stores/engine'
 import { useSettingsStore } from '@/stores/settings'
 import { PYTHON_TIMEOUT_MS, resetPython, runPython } from '@/workers/clients'
@@ -236,10 +238,18 @@ export async function fixPython(id: string): Promise<void> {
   try {
     const settings = useSettingsStore.getState()
     const failed = { ...answer.plan, python: python.code }
-    const repair = buildRepairMessages(messages, failed, python.error ?? 'It failed.', 'Python')
+    // Strict mode: no data value from the traceback (F-PRIV-04).
+    const datasets = useDatasetsStore
+      .getState()
+      .datasets.filter((dataset) => answer.tables.includes(dataset.table))
+    const error = scrubError(python.error ?? 'It failed.', settings.privacyMode, {
+      code: `${python.code}\n${python.inputSql}`,
+      names: knownNames(datasets),
+    })
+    const repair = buildRepairMessages(messages, failed, error, 'Python')
     const { plan } = await planCall(
       {
-        provider: await currentProvider(),
+        provider: await currentProvider(undefined, meterFor(id)),
         answerId: id,
         question: answer.question,
         mode: settings.privacyMode,

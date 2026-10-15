@@ -55,7 +55,7 @@ export function toJsonl(cases: readonly EvalCase[]): string {
         reference_sql: c.referenceSql,
         notes: [c.problem && PROBLEMS[c.problem], c.notes].filter(Boolean).join(': ') || null,
         source: {
-          app: 'flashQuery',
+          app: 'HushGlance',
           fileName: c.fileName,
           schemaHash: c.schemaHash,
           rating: c.rating,
@@ -131,7 +131,7 @@ let hydrating: Promise<void> | null = null
 async function load() {
   const saved = await loadRecord(EVAL_CASES_RECORD, { onCorrupt: backupCorruptRecord }).catch(
     (error: unknown) => {
-      console.warn('flashQuery: eval cases could not be loaded', error)
+      console.warn('HushGlance: eval cases could not be loaded', error)
       return []
     },
   )
@@ -139,7 +139,7 @@ async function load() {
   useFeedbackStore.subscribe((state, previous) => {
     if (state.cases === previous.cases) return
     saveRecord(EVAL_CASES_RECORD, state.cases).catch((error: unknown) =>
-      console.warn('flashQuery: eval cases could not be saved', error),
+      console.warn('HushGlance: eval cases could not be saved', error),
     )
   })
 }

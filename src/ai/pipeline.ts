@@ -5,6 +5,8 @@ import {
   countResultValues,
   fetchResultDigest,
   fetchSamples,
+  knownNames,
+  scrubError,
 } from '@/ai/context'
 import type { AiLogEntry } from '@/ai/log'
 import {
@@ -582,7 +584,12 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineOutcome
             trace: trace.steps,
           }
         }
-        messages = buildRepairMessages(messages, current, describeFailure(failure))
+        // Strict mode: no data value from the error text (F-PRIV-04).
+        const errorText = scrubError(describeFailure(failure), input.mode, {
+          code: `${current.sql ?? ''}\n${current.python ?? ''}`,
+          names: knownNames(input.datasets),
+        })
+        messages = buildRepairMessages(messages, current, errorText)
       }
     }
   } finally {

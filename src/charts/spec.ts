@@ -65,7 +65,7 @@ export const CHART_GROUPS: { label: string; types: ChartType[] }[] = [
 ]
 
 /** Chart colors (F-VIZ-12): set per chart, per dashboard, or as the default in Settings. */
-export const ChartPaletteSchema = z.enum(['flashquery', 'tol', 'okabe', 'mono'])
+export const ChartPaletteSchema = z.enum(['hushglance', 'tol', 'okabe', 'mono'])
 export type ChartPalette = z.infer<typeof ChartPaletteSchema>
 
 export const ValueFormatSchema = z.enum(['number', 'percent', 'currency'])

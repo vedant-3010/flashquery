@@ -60,6 +60,47 @@ const statusOf = (error: unknown): number | null =>
     ? error.status
     : null
 
+/** The proxy's refusals the app acts on (supabase/functions/_shared/aiProxy.ts). */
+export const HOSTED_ERROR_CODES = new Set([
+  'quota_reached',
+  'model_not_in_plan',
+  'model_unknown',
+  'email_unconfirmed',
+  'rate_limited',
+  'call_cap',
+  'hosted_paused',
+  'hosted_unavailable',
+  'not_signed_in',
+])
+
+/** `{ error: { code, message } }` from the proxy, as the OpenAI SDK keeps it on its APIError. */
+function proxyRefusal(error: unknown): { code: string; message: string } | null {
+  if (typeof error !== 'object' || error === null) return null
+  const body = 'error' in error ? error.error : null
+  const source = typeof body === 'object' && body !== null ? body : error
+  const code = 'code' in source && typeof source.code === 'string' ? source.code : null
+  const message = 'message' in source && typeof source.message === 'string' ? source.message : null
+  return code && message && HOSTED_ERROR_CODES.has(code) ? { code, message } : null
+}
+
+/** Hosted AI errors (F-PLAN-01): the proxy's own refusals keep their code; the rest as usual. */
+export function hostedError(error: unknown, model: string, signal?: AbortSignal): AppError {
+  if (error instanceof AppError) return error
+  if (signal?.aborted)
+    return new AppError({ code: 'cancelled', message: 'Cancelled.', detail: null })
+  const refusal = proxyRefusal(error)
+  if (refusal) return new AppError({ ...refusal, detail: null })
+  const fallback = providerError(error, model, signal)
+  // Never "check your key": the key is HushGlance's.
+  return fallback.code === 'ai_auth' || fallback.code === 'ai_forbidden'
+    ? new AppError({
+        code: 'not_signed_in',
+        message: 'Your session ended. Sign in again to use HushGlance AI.',
+        detail: fallback.detail,
+      })
+    : fallback
+}
+
 /** Provider errors → AppError with a message a user can act on. */
 export function providerError(error: unknown, model: string, signal?: AbortSignal): AppError {
   if (error instanceof AppError) return error

@@ -53,7 +53,8 @@ export interface DashboardResponse {
 }
 
 export interface LLMProvider {
-  id: ProviderId | 'fixture'
+  /** 'hushglance': hosted through HushGlance's own OpenRouter account (F-PLAN-01). */
+  id: ProviderId | 'fixture' | 'hushglance'
   model: string
   /** True when planSql sends `messages` to a remote API (and so should be logged). */
   remote: boolean
@@ -79,9 +80,14 @@ export interface ProviderSettings {
   model: string
   /** The planner's effort (F-ASK-16); medium when left out. Summaries always use low. */
   effort?: Effort
-  /** Local OpenAI-compatible server (F-AI-06), already checked by localBaseUrl(). */
+  /** Local OpenAI-compatible server (F-AI-06), already checked by localBaseUrl(); or the hosted
+   * proxy's base URL for OpenRouter (src/platform/hostedAi.ts). */
   baseUrl?: string
-  /** For tests: stands in for the network. */
+  /** OpenRouter: the model that writes summaries, in place of the planner's maker's fast one. */
+  summaryModel?: string
+  /** Through HushGlance's proxy (F-PLAN-01): its refusals become AppErrors the app acts on. */
+  hosted?: boolean
+  /** Stands in for the network: tests, and the hosted proxy's fetch (session token, question id). */
   fetch?: typeof fetch
 }
 

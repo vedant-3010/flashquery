@@ -22,7 +22,7 @@ async function ask(page: Page, question: string) {
 }
 
 const goHome = async (page: Page) => {
-  await page.getByRole('link', { name: 'flashQuery Home' }).click()
+  await page.getByRole('link', { name: 'HushGlance Home' }).click()
   await expect(page).toHaveURL(/\/app\/$/)
 }
 
@@ -42,7 +42,7 @@ test('data saved before projects moves into "My first project"', async ({ page }
   await page.goto('/')
   await page.evaluate(async () => {
     const db = await new Promise<IDBDatabase>((resolve, reject) => {
-      const open = indexedDB.open('flashQuery')
+      const open = indexedDB.open('HushGlance')
       open.onupgradeneeded = () => open.result.createObjectStore('records')
       open.onsuccess = () => resolve(open.result)
       open.onerror = () => reject(open.error)
@@ -109,7 +109,7 @@ test('each project keeps its own data; switching opens a fresh page', async ({ p
   await rename.getByRole('textbox', { name: 'Project name' }).fill('Q3 review')
   await rename.getByRole('button', { name: 'Rename' }).click()
   await expect(page.getByRole('button', { name: 'Project: Q3 review' })).toBeVisible()
-  await expect(page).toHaveTitle('Q3 review · flashQuery')
+  await expect(page).toHaveTitle('Q3 review · HushGlance')
 
   await page.getByRole('button', { name: 'Project: Q3 review' }).click()
   await page.getByRole('menuitem', { name: 'Untitled project' }).click()
@@ -206,7 +206,7 @@ test('starting from Home: files and a workspace go into new projects', async ({ 
     mimeType: 'application/json',
     buffer: Buffer.from(
       JSON.stringify({
-        format: 'flashQuery-workspace',
+        format: 'HushGlance-workspace',
         version: 1,
         exportedAt: Date.now(),
         history: [

@@ -333,3 +333,43 @@ export function countResultValues(digest: ResultDigest): number {
 export function renderDigest(digest: ResultDigest): string {
   return `<data>\n${dataJson(digest)}\n</data>`
 }
+
+/**
+ * Error text for a repair request (F-PRIV-04). Strict mode sends no data values, but a DuckDB or
+ * Python error can quote one ("Could not convert string 'Jane Doe' to INT32", "KeyError: 'ACME'").
+ * In Strict mode quoted text and numbers are kept only when they're already known to the model: in
+ * the SQL or code it wrote, or a table or column name it was given. Everything else becomes "…".
+ * Balanced mode sends the error as it is (it sends sample values anyway).
+ */
+export function scrubError(
+  text: string,
+  mode: PrivacyMode,
+  known: { code: string; names: readonly string[] },
+): string {
+  if (mode !== 'strict') return text
+  const names = new Set(known.names.map((name) => name.toLowerCase()))
+  const written = (value: string) => value.length > 0 && known.code.includes(value)
+  return (
+    text
+      .replace(/'((?:[^'\\\n]|\\.)*)'/g, (match, inner: string) =>
+        written(match) || written(inner) ? match : "'…'",
+      )
+      .replace(/"((?:[^"\\\n]|\\.)*)"/g, (match, inner: string) =>
+        names.has(inner.toLowerCase()) || written(inner) || /^<\w+>$/.test(inner) ? match : '"…"',
+      )
+      // Numbers that aren't in the code: values (line and column positions stay).
+      .replace(/(?<![\w.])-?\d+(?:\.\d+)?(?![\w.])/g, (match, offset: number, whole: string) =>
+        /(?:line|LINE|column|position)\s*$/.test(whole.slice(Math.max(0, offset - 10), offset)) ||
+        new RegExp(`(?<![\\w.])${match.replace('.', '\\.')}(?![\\w.])`).test(known.code)
+          ? match
+          : '…',
+      )
+  )
+}
+
+/** The table and column names a repair may mention in Strict mode (they were sent already). */
+export function knownNames(
+  datasets: readonly Pick<DatasetProfile, 'table' | 'columns'>[],
+): string[] {
+  return datasets.flatMap((dataset) => [dataset.table, ...dataset.columns.map((c) => c.name)])
+}

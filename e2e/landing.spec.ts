@@ -13,7 +13,7 @@ declare global {
 }
 
 const film = (page: Page) =>
-  page.getByRole('figure', { name: /flashQuery answering “Which region grew fastest\?”/ })
+  page.getByRole('figure', { name: /HushGlance answering “Which region grew fastest\?”/ })
 
 test('renders the page without errors and links to the app', async ({ page }) => {
   const errors: string[] = []
@@ -86,9 +86,7 @@ test('the privacy toggle shows what each mode sends', async ({ page }) => {
   await page.goto('/#privacy')
   const section = page.locator('#privacy')
   const payload = section.getByText('<data>').locator('..')
-  await expect(payload).toContainText('"sampleRows"')
-  await expect(payload).toContainText('"distinct": 1461')
-  await section.getByRole('radio', { name: 'Strict' }).click()
+  // Strict first, as the app starts (D122): names and types, no values.
   await expect(section.getByRole('radio', { name: 'Strict' })).toHaveAttribute(
     'aria-checked',
     'true',
@@ -96,7 +94,11 @@ test('the privacy toggle shows what each mode sends', async ({ page }) => {
   await expect(payload).not.toContainText('"sampleRows"')
   await expect(payload).not.toContainText('"distinct"')
   await expect(payload).toContainText('"description": "Order value after discount"')
-  await expect(section).toContainText('No values from your data')
+  await expect(section).toContainText('No value from your data')
+  await expect(section).toContainText('never a row of your data')
+  await section.getByRole('radio', { name: 'Balanced' }).click()
+  await expect(payload).toContainText('"sampleRows"')
+  await expect(payload).toContainText('"distinct": 1461')
 })
 
 test('works by keyboard: skip link, FAQ, focus visible', async ({ page }) => {
@@ -110,7 +112,7 @@ test('works by keyboard: skip link, FAQ, focus visible', async ({ page }) => {
   await page.keyboard.press('Enter')
   await expect(question).toHaveAttribute('aria-expanded', 'true')
   await expect(
-    page.getByText('No server ever sees your files: flashQuery reads them'),
+    page.getByText('No server ever sees your files: HushGlance reads them'),
   ).toBeVisible()
 })
 

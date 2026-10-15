@@ -28,8 +28,8 @@ paths:
 ## Privacy modes (only src/ai/context.ts builds payloads)
 | Mode | What is sent |
 |---|---|
-| Strict | table names, row counts, column names + types, user business notes. No values, no result rows. Answer text is templated locally. |
-| Balanced (default) | Strict + per column: null %, approx distinct, min/max for numeric/date, top-5 values for low-cardinality text (≤ 40 chars each), 3 sample rows (strings truncated to 40 chars). The AI summary gets the result's rows ≤ 50, else column statistics plus the first 10 and 5 highest/lowest rows (`fetchResultDigest`, D41). |
+| Strict (default, D122) | table names, row counts, column names + types, user business notes. No values, no result rows. Answer text is templated locally. |
+| Balanced (opt-in) | Strict + per column: null %, approx distinct, min/max for numeric/date, top-5 values for low-cardinality text (≤ 40 chars each), 3 sample rows (strings truncated to 40 chars). The AI summary gets the result's rows ≤ 50, else column statistics plus the first 10 and 5 highest/lowest rows (`fetchResultDigest`, D41). |
 | Local (P2) | WebLLM on-device; nothing leaves the browser. |
 - Every request is appended to the AI payload log: time, mode, provider, model, exact messages (keys
   redacted), parsed output, token usage, latency. The inspector renders it verbatim, with an estimated
@@ -43,6 +43,13 @@ paths:
   `pickLearned` (`src/ai/learned.ts`: table in scope, same schema hash, shared words), rendered by
   `renderLearnedExamples` in `context.ts` inside `<data>`, Balanced only; one data value each.
 - Provider `local` (F-AI-06, D85): an OpenAI-compatible server on localhost through the OpenAI client.
+- Provider `openrouter` (F-AI-07, D119): the same client, chat completions only, `OPENROUTER_PRIVACY`
+  (zero data retention, no data collection, require parameters) on every request; summaries on the
+  maker's fast model (`openRouterFastModel`). Hosted (F-PLAN-01) is this provider with the proxy's
+  base URL and `hostedFetch` (`src/platform/hostedAi.ts`), id `'hushglance'`; its refusals
+  (`quota_reached`, `model_not_in_plan`, …) keep their codes (`hostedError` in `langchain.ts`).
+- Repair requests: the error text goes through `scrubError` (`context.ts`): in Strict mode, quoted
+  text and numbers not in the model's own SQL/code and not a known name become "…" (F-PRIV-04).
 
 ## Schemas (src/ai/schemas.ts, Zod v4; `.describe()` every field)
 - `SqlPlan`: kind ('sql' | 'python' | 'clarify' | 'unanswerable' | 'explore'), title, sql, python, explanation
@@ -113,5 +120,6 @@ paths:
   no key); `EVAL_ONLY=<id prefix>` runs a subset; `EVAL_MODEL` picks the model; `EVAL_EFFORT` the
   effort (default medium; `auto` per question, as in the app). Add `--silent=false` to see each
   question's result. One run varies by a question or two: compare averages of several runs.
-- The runner reads `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` (`EVAL_PROVIDER=openai` when both are set)
-  from the shell environment: the only place an env key is allowed.
+- The runner reads `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` (`EVAL_PROVIDER=openai` when both are set),
+  or `OPENROUTER_API_KEY` with `EVAL_PROVIDER=openrouter EVAL_MODEL=maker/model` (to list a hosted
+  model, D121: ≥ 90%), from the shell environment: the only place an env key is allowed.

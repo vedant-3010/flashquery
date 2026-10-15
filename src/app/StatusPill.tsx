@@ -165,7 +165,7 @@ export function StatusPill({ engine: withEngine = true }: { engine?: boolean }) 
             onClick={() => setHowItWorksOpen(true)}
           >
             <CircleHelp aria-hidden />
-            How flashQuery handles your data
+            How HushGlance handles your data
           </Button>
         </div>
       </PopoverContent>

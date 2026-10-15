@@ -43,11 +43,11 @@ export function TopBar({ showSidebarToggle }: TopBarProps) {
       {/* Narrow windows keep the icons; the names stay for screen readers. */}
       <Link
         href={paths.home}
-        aria-label="flashQuery Home"
+        aria-label="HushGlance Home"
         className="relative flex shrink-0 items-center gap-1.5 font-semibold"
       >
         <BrandMark className="size-[18px] text-primary" onDark={theme === 'dark'} />
-        <span className="max-xl:sr-only">flashQuery</span>
+        <span className="max-xl:sr-only">HushGlance</span>
       </Link>
       <span aria-hidden className="-mx-1.5 text-muted-foreground/60 max-sm:hidden">
         /

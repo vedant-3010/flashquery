@@ -1,4 +1,4 @@
-// flashQuery's mark (PRD D99): a speech bubble ("ask") holding three rising bars ("data"); the tallest
+// HushGlance's mark (PRD D99): a speech bubble ("ask") holding three rising bars ("data"); the tallest
 // bar carries the accent. Shared by the landing page, the app's top bar and the favicon.
 
 const BUBBLE =

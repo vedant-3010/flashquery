@@ -15,6 +15,7 @@ import { useResolvedTheme } from '@/hooks/useResolvedTheme'
 import { applyTheme } from '@/lib/theme'
 import { useAuthStore } from '@/stores/auth'
 import { useFeedbackStore } from '@/stores/feedback'
+import { startPlans } from '@/stores/plan'
 import { startFilePersistence } from '@/stores/persistFiles'
 import { useProjectsStore } from '@/stores/projects'
 import { startRelationshipDetection } from '@/stores/relationships'
@@ -44,6 +45,15 @@ const AuthCallbackPage = lazy(() =>
 )
 const AccountPage = lazy(() =>
   import('@/features/account/AccountPage').then((module) => ({ default: module.AccountPage })),
+)
+// Plan and billing (F-PLAN-04) and connecting OpenRouter (F-AI-07): small pages of their own.
+const BillingPage = lazy(() =>
+  import('@/features/plan/BillingPage').then((module) => ({ default: module.BillingPage })),
+)
+const ConnectOpenRouterPage = lazy(() =>
+  import('@/features/settings/ConnectOpenRouterPage').then((module) => ({
+    default: module.ConnectOpenRouterPage,
+  })),
 )
 
 // Shared dashboards (F-SHARE-04/05): their own chunk; the account service loads when one opens.
@@ -86,13 +96,15 @@ export function App() {
     void useFeedbackStore.getState().hydrate()
     // Restores a saved session; guests and the demo load nothing for it.
     useAuthStore.getState().start()
+    // Signed in: HushGlance AI's models and the user's questions (F-PLAN-01); guests load nothing.
+    startPlans()
     startRelationshipDetection()
   }, [])
 
   return (
     <TooltipProvider>
       {/* Last resort: panels have their own boundaries, this catches the shell itself. */}
-      <PanelErrorBoundary name="flashQuery">
+      <PanelErrorBoundary name="HushGlance">
         <Router base={APP_BASE}>
           <LegacyHashRedirect />
           <Switch>
@@ -154,6 +166,16 @@ export function App() {
             <Route path="/account">
               <Suspense fallback={paper}>
                 <AccountPage />
+              </Suspense>
+            </Route>
+            <Route path="/account/billing">
+              <Suspense fallback={null}>
+                <BillingPage />
+              </Suspense>
+            </Route>
+            <Route path="/connect/openrouter">
+              <Suspense fallback={null}>
+                <ConnectOpenRouterPage />
               </Suspense>
             </Route>
             {/* A view-only link needs no account (F-SHARE-04). */}

@@ -17,8 +17,8 @@ const TOOLS = [
     body: 'Forecasts, regressions and outliers run as pandas in Pyodide, only after you approve the code. A notebook takes your own cells, with matplotlib.',
   },
   {
-    title: 'Your model, or your machine',
-    body: 'Bring an Anthropic or OpenAI key, or point it at Ollama or LM Studio and keep every request on this computer.',
+    title: 'Any model, or your machine',
+    body: 'HushGlance AI (Claude, GPT and more, zero data retention on every request), your own Anthropic, OpenAI or OpenRouter key, or Ollama and LM Studio to keep every request on this computer.',
   },
   {
     title: 'Joins and lookups it does for you',
@@ -40,7 +40,7 @@ export function ForDataPeople() {
     <section
       id="data-people"
       aria-labelledby="data-people-title"
-      className="mx-auto max-w-[1200px] px-5 pt-24 md:px-8 md:pt-32"
+      className="mx-auto max-w-[1200px] px-5 pt-20 md:px-8 md:pt-32"
     >
       <div className="grid gap-12 lg:grid-cols-12 lg:gap-10">
         <Reveal group className="lg:col-span-5">

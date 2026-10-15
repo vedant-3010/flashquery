@@ -2,14 +2,14 @@ import { m } from 'motion/react'
 import { CountUp } from '@/landing/CountUp'
 import { CtaLink, TextLink } from '@/landing/CtaLink'
 import { EYEBROW, EyebrowRule } from '@/landing/Eyebrow'
-import { BENCH, REGISTER_URL, ROWS, TRY_URL } from '@/landing/data'
+import { BENCH, REGISTER_URL, TRY_URL } from '@/landing/data'
 import { FileDrop } from '@/landing/FileDrop'
 import { HeroFilm } from '@/landing/film/HeroFilm'
 import { reveal, stagger } from '@/landing/motion'
 import { HeadlineLines } from '@/landing/HeadlineLines'
-import { formatNumber } from '@/lib/format'
 
-// Privacy first, then speed, in plain words (D117); every figure is a real measurement (data.ts).
+// Privacy first, then speed, in plain words (D117); every figure is real: the two zeros are how
+// the app works (no upload; Strict by default, D122), the speed is a measurement (data.ts).
 const STATS = [
   {
     value: 0,
@@ -18,10 +18,10 @@ const STATS = [
     label: 'of your files uploaded, ever',
   },
   {
-    value: ROWS,
-    format: (v: number) => formatNumber(Math.round(v), 'en-US'),
-    unit: '',
-    label: `rows of sample data, ready in ${BENCH.stats[0].value} seconds`,
+    value: 0,
+    format: () => '0',
+    unit: 'rows',
+    label: 'of your data sent to the AI, unless you allow it',
   },
   {
     value: BENCH.stats[2].value,
@@ -62,7 +62,8 @@ export function Hero() {
           >
             Open a spreadsheet or export and ask in plain English: which customers owe you the most,
             where costs are rising, how this quarter compares. You get the answer, a chart and the
-            working. Your files stay on your device.
+            working. Your files stay on your device, and the AI never sees a row of them unless you
+            allow it.
           </m.p>
           <m.div variants={reveal} className="mt-9 flex flex-wrap items-center gap-x-6 gap-y-3">
             <FileDrop>
@@ -73,7 +74,7 @@ export function Hero() {
             </CtaLink>
           </m.div>
           <m.p variants={reveal} className="mt-4 text-[13px] text-ink-faint">
-            The demo needs no sign-up and no AI key. Works with Excel, CSV and more.{' '}
+            The demo needs no sign-up. A free account asks about your own files, no AI key needed.{' '}
             <TextLink href="#how" className="text-ink-muted hover:text-ink">
               How it works
             </TextLink>

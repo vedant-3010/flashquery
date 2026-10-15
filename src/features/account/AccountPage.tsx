@@ -127,7 +127,8 @@ function AccountDetails({ account }: { account: Account }) {
             <AlertDialogTitle>Delete your account?</AlertDialogTitle>
             <AlertDialogDescription>
               This deletes your account and every dashboard you saved or shared in the cloud, at
-              once. Your projects in this browser stay.
+              once. Your projects in this browser stay. On Pro? Cancel it first in Plan and billing,
+              so it doesn’t renew.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

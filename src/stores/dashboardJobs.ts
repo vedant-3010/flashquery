@@ -7,6 +7,7 @@ import { getDb } from '@/engine/duckdb'
 import { AppError, toAppError } from '@/lib/errors'
 import type { Answer } from '@/stores/ask'
 import { currentProvider, logRequest, today } from '@/stores/askSupport'
+import { newMeter } from '@/stores/plan'
 import { findTile, useDashboardStore } from '@/stores/dashboard'
 import { useDatasetsStore } from '@/stores/datasets'
 import { useSettingsStore } from '@/stores/settings'
@@ -195,7 +196,7 @@ export async function generate({
   }
   const settings = useSettingsStore.getState()
   const generated = await generateDashboard({
-    provider: await currentProvider(),
+    provider: await currentProvider(undefined, newMeter('dashboard')),
     engine: await getDb(),
     dataset,
     datasets: all,
@@ -239,7 +240,7 @@ export function exportDashboard(
   // Where its shared copy lives is this account's business, not the file's.
   const { cloud: _account, ...dashboard } = found
   const file: DashboardFile = {
-    format: 'flashQuery-dashboard',
+    format: 'HushGlance-dashboard',
     version: 1,
     exportedAt: Date.now(),
     dashboard: {
@@ -253,7 +254,7 @@ export function exportDashboard(
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '_')
     .replace(/^_|_$/g, '')
-  return { fileName: `${base || 'dashboard'}.flashQuery.json`, json: JSON.stringify(file, null, 2) }
+  return { fileName: `${base || 'dashboard'}.HushGlance.json`, json: JSON.stringify(file, null, 2) }
 }
 
 /** Reads an exported file; anything that doesn't match the schema is refused (F-DASH-08). */
@@ -272,7 +273,7 @@ export function importDashboard(text: string): string {
   if (!parsed.success) {
     throw new AppError({
       code: 'import_invalid',
-      message: "This isn't an flashQuery dashboard file (or it is from a newer version).",
+      message: "This isn't an HushGlance dashboard file (or it is from a newer version).",
       detail: parsed.error.issues
         .slice(0, 5)
         .map((issue) => `${issue.path.join('.')}: ${issue.message}`)

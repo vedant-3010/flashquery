@@ -31,7 +31,7 @@ export function HelpMenu({ shortcuts = true }: { shortcuts?: boolean }) {
       <DropdownMenuContent align="end" className="w-60">
         <DropdownMenuItem onSelect={() => ui().setHowItWorksOpen(true)}>
           <CircleHelp aria-hidden />
-          How flashQuery works
+          How HushGlance works
         </DropdownMenuItem>
         {shortcuts && (
           <DropdownMenuItem onSelect={() => ui().setShortcutsOpen(true)}>

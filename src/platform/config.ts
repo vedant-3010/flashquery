@@ -15,12 +15,12 @@ export interface AccountsConfig {
 declare global {
   interface Window {
     /** e2e against the dev server points accounts at a mocked service. Development builds only. */
-    __flashQueryAccounts?: { url: string; key: string }
+    __HushGlanceAccounts?: { url: string; key: string }
   }
 }
 
 export function accountsConfig(): AccountsConfig | null {
-  const override = import.meta.env.DEV ? window.__flashQueryAccounts : undefined
+  const override = import.meta.env.DEV ? window.__HushGlanceAccounts : undefined
   const raw = override ?? {
     url: import.meta.env.VITE_SUPABASE_URL,
     key: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,

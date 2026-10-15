@@ -92,7 +92,7 @@ export type DashboardsRecord = z.infer<typeof DashboardsRecordSchema>
 
 /** The exported file (F-DASH-08). */
 export const DashboardFileSchema = z.object({
-  format: z.literal('flashQuery-dashboard'),
+  format: z.literal('HushGlance-dashboard'),
   version: z.literal(1),
   exportedAt: z.number(),
   dashboard: DashboardSchema,

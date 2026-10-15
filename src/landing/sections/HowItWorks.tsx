@@ -17,7 +17,7 @@ const STEPS: { title: string; body: string; Visual: ComponentType }[] = [
   },
   {
     title: 'The AI gets an outline, not your rows',
-    body: 'Column names and your notes; a few statistics and sample rows only if you allow them. You can read every request, exactly as it was sent.',
+    body: 'Column names, types and your notes, never a row of your data. A few sample values go only if you switch on Balanced. You can read every request, exactly as it was sent.',
     Visual: AskVisual,
   },
   {

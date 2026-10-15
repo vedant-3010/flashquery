@@ -10,6 +10,7 @@ const LINKS = [
   { href: '#privacy', label: 'Privacy' },
   { href: '#who', label: 'Who it’s for' },
   { href: '#features', label: 'Features' },
+  { href: '#pricing', label: 'Pricing' },
   { href: '#faq', label: 'FAQ' },
 ]
 
@@ -45,7 +46,7 @@ export function Nav() {
             className="flex items-center gap-2 text-[15px] font-semibold tracking-tight"
           >
             <BrandMark className="size-[22px] text-ink" />
-            flashQuery
+            HushGlance
           </a>
           <ul className="hidden items-center gap-6 text-[13.5px] text-ink-muted md:flex">
             {LINKS.map((link) => (

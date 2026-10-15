@@ -40,8 +40,8 @@ export const PALETTES: Record<
   ChartPalette,
   { label: string; description: string; light: PaletteColors; dark: PaletteColors }
 > = {
-  flashquery: {
-    label: 'flashQuery',
+  hushglance: {
+    label: 'HushGlance',
     description: 'Violet-led, tuned to stay distinct for every kind of colour blindness.',
     // Found by a search that keeps each pair apart under simulated protan, deutan and tritan vision.
     light: {
@@ -117,7 +117,7 @@ export const PALETTES: Record<
   },
 }
 
-export const DEFAULT_PALETTE: ChartPalette = 'flashquery'
+export const DEFAULT_PALETTE: ChartPalette = 'hushglance'
 
 const SURFACES = {
   light: {

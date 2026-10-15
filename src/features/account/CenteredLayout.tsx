@@ -23,7 +23,7 @@ export function CenteredLayout({
       <header className="flex h-12 shrink-0 items-center border-b px-4">
         <Link href={paths.home} className="flex items-center gap-1.5 font-semibold">
           <BrandMark className="size-[18px] text-primary" onDark={theme === 'dark'} />
-          flashQuery
+          HushGlance
         </Link>
       </header>
       <main className="flex flex-1 items-start justify-center px-4 py-12 sm:items-center">

@@ -189,3 +189,25 @@ export const FINANCE_TRY_URL = '/app/try?sample=company-finances'
 export const LOGIN_URL = '/app/login'
 export const REGISTER_URL = '/app/register'
 export const BENCH_URL = '/app/bench'
+
+// ---- Plans (F-PLAN-05): as the plans and ai_models tables seed them -------------------------
+// supabase/migrations/20261012000000_plans.sql; data.test.ts checks the two agree.
+
+export const PRICING = {
+  freeQuestions: 3,
+  starterQuestions: 100,
+  starterMonthlyUsd: 5,
+  starterYearlyUsd: 50,
+  /** The models Starter (and Free) plan with. */
+  standardModels: ['Claude Sonnet 5', 'GPT-6 Sol'],
+  proQuestions: 300,
+  proMonthlyUsd: 12,
+  proYearlyUsd: 120,
+  /** Questions a premium-model ask uses. */
+  premiumWeight: 5,
+  premiumModels: ['Claude Opus 5.5', 'GPT-6 Astra'],
+} as const
+
+export const TERMS_URL = '/terms.html'
+export const PRIVACY_URL = '/privacy.html'
+export const REFUNDS_URL = '/refunds.html'

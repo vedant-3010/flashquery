@@ -43,7 +43,7 @@ test('with accounts on, guests load no account code and never contact the servic
   await expect(page.getByRole('heading', { level: 1, name: 'Sign in' })).toBeVisible()
   await page.goto('/app/try')
   await expect(page.getByRole('img', { name: /^Bar chart/ })).toBeVisible({ timeout: 60_000 })
-  await expect(page.getByRole('link', { name: 'Sign in' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Sign in', exact: true })).toBeVisible()
 
   expect(urls.filter((url) => url.startsWith(SUPABASE_URL))).toEqual([])
   expect(urls.filter((url) => ACCOUNT_CODE.test(new URL(url).pathname))).toEqual([])

@@ -7,7 +7,7 @@ import { ACCEPTED_EXTENSIONS } from '@/engine/ingest'
 import { useStartProject } from '@/features/home/useStartProject'
 import { toAppError } from '@/lib/errors'
 import { useProjectsStore } from '@/stores/projects'
-import { activeApiKey, useSettingsStore } from '@/stores/settings'
+import { useAiMode } from '@/stores/aiMode'
 import { useToastStore } from '@/stores/toast'
 import { useUiStore } from '@/stores/ui'
 
@@ -22,7 +22,7 @@ export function StartOptions({ variant }: { variant: 'hero' | 'tiles' }) {
   const start = useStartProject()
   const files = useRef<HTMLInputElement>(null)
   const workspace = useRef<HTMLInputElement>(null)
-  const hasKey = useSettingsStore((state) => activeApiKey(state) !== null)
+  const hasKey = useAiMode() !== 'demo'
   const openSettings = useUiStore((state) => state.setSettingsOpen)
   const toast = useToastStore((state) => state.show)
 

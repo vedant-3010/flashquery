@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { ACCEPTED_EXTENSIONS } from '@/engine/ingest'
 import { SAMPLES } from '@/engine/samples'
 import { useDatasetsStore } from '@/stores/datasets'
-import { activeApiKey, useSettingsStore } from '@/stores/settings'
+import { useAiMode } from '@/stores/aiMode'
 import { useUiStore } from '@/stores/ui'
 
 /** A project before any data is loaded (F-SHELL-02, D117): your file or a sample, in one place. */
@@ -16,7 +16,7 @@ export function FirstRun() {
   const loadingTable = useDatasetsStore(
     (state) => state.jobs.find((job) => job.status !== 'error')?.table ?? null,
   )
-  const hasKey = useSettingsStore((state) => activeApiKey(state) !== null)
+  const hasKey = useAiMode() !== 'demo'
   const openSettings = useUiStore((state) => state.setSettingsOpen)
   const openHowItWorks = useUiStore((state) => state.setHowItWorksOpen)
   const setPasteText = useUiStore((state) => state.setPasteText)

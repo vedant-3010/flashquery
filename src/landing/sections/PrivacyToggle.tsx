@@ -14,22 +14,22 @@ const MODES: { id: Mode; label: string; summary: string }[] = [
     id: 'strict',
     label: 'Strict',
     summary:
-      'Only the names of your tables and columns, their types and your notes. No values from your data, and no results.',
+      'The default. Only the names of your tables and columns, their types and your notes. No value from your data, and no results.',
   },
   {
     id: 'balanced',
     label: 'Balanced',
     summary:
-      'Strict, plus a few statistics, up to 5 common values and 3 sample rows (text cut to 40 characters), so answers come out right more often.',
+      'Only if you switch it on: Strict, plus a few statistics, up to 5 common values and 3 sample rows (text cut to 40 characters), so answers come out right more often.',
   },
 ]
 
 /** The promise, in plain words (D117); the part to remember is highlighted. */
 const PROMISES: { text: string; mark?: string }[] = [
   { text: 'Your files never leave your device.' },
-  { text: 'The AI sees an outline of your data, ', mark: 'never the file' },
+  { text: 'By default the AI sees names and types, ', mark: 'never a row of your data' },
+  { text: 'Your questions and answers stay in your browser. We don’t keep them.' },
   { text: 'You can read every request, exactly as it was sent.' },
-  { text: 'Nothing is shared until you choose, and then only results.' },
 ]
 
 const FIELDS = columnFields()
@@ -117,7 +117,7 @@ function Payload({ mode }: { mode: Mode }) {
  * switching between Strict and Balanced. Values from the data are in the accent colour.
  */
 export function PrivacyToggle() {
-  const [mode, setMode] = useState<Mode>('balanced')
+  const [mode, setMode] = useState<Mode>('strict')
   // Phones fold the request away (it's long); wide screens always show it.
   const [shown, setShown] = useState(false)
   const index = MODES.findIndex((m2) => m2.id === mode)
@@ -126,7 +126,7 @@ export function PrivacyToggle() {
     <section
       id="privacy"
       aria-labelledby="privacy-title"
-      className="mx-auto max-w-[1200px] px-5 pt-24 md:px-8 md:pt-32"
+      className="mx-auto max-w-[1200px] px-5 pt-20 md:px-8 md:pt-32"
     >
       <div className="grid items-start gap-12 lg:grid-cols-12 lg:gap-10">
         <Reveal group className="min-w-0 lg:col-span-5">
@@ -137,8 +137,9 @@ export function PrivacyToggle() {
             </h2>
           </Reveal>
           <Reveal as="p" className="mt-5 max-w-[30rem] text-[16px] leading-[1.6] text-ink-muted">
-            flashQuery reads your spreadsheets right in your browser. To answer a question, the AI
-            gets an outline of your data, and you decide how much.
+            HushGlance reads your spreadsheets right in your browser. To answer a question, the AI
+            gets an outline: the names and types of your columns. A few sample values go only if you
+            switch on Balanced.
           </Reveal>
           <Reveal as="ul" className="mt-6 grid max-w-[30rem] gap-2.5 text-[15px] text-ink">
             {PROMISES.map((promise) => (

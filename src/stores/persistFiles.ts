@@ -118,11 +118,11 @@ const loadManifest = () =>
     .then((saved) => {
       manifest = saved
     })
-    .catch((error: unknown) => console.warn('flashQuery: kept files could not be listed', error)))
+    .catch((error: unknown) => console.warn('HushGlance: kept files could not be listed', error)))
 
 const enqueue = (task: () => Promise<void>) => {
   queue = queue.then(task).catch((error: unknown) => {
-    console.warn('flashQuery: keeping files failed', error)
+    console.warn('HushGlance: keeping files failed', error)
   })
   return queue
 }

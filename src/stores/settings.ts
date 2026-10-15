@@ -1,7 +1,7 @@
 import { z } from '@/lib/zod'
 import { create } from 'zustand'
 import { DEFAULT_LOCAL_URL, LOCAL_NO_KEY, localBaseUrl } from '@/ai/localServer'
-import { DEFAULT_MODEL } from '@/ai/models'
+import { DEFAULT_MODEL, HOSTED_DEFAULT_MODEL } from '@/ai/models'
 import { ChartPaletteSchema, type ChartPalette } from '@/charts/spec'
 import {
   EffortSchema,
@@ -18,17 +18,35 @@ import { backupCorruptRecord } from '@/stores/persistence'
 
 // Settings (F-AI-01, F-AI-02). API keys live in memory and are saved to IndexedDB only while
 // "Remember on this device" is on (F-SEC-04). The theme stays in localStorage (PRD D8).
+// New users start in Strict (D122): no value from their data goes to an AI until they choose
+// Balanced. A saved choice is kept.
 
 const KeysSchema = z.object({
   anthropic: z.string().nullable(),
   openai: z.string().nullable(),
+  openrouter: z.string().nullable(),
   local: z.string().nullable(),
 })
+
+/** Who answers a signed-in user (F-PLAN-01): HushGlance's hosted AI, or their own key. */
+export const AiSourceSchema = z.enum(['hosted', 'own'])
+export type AiSource = z.infer<typeof AiSourceSchema>
 type Keys = z.infer<typeof KeysSchema>
 
 const SavedSettingsSchema = z.object({
   provider: ProviderIdSchema,
-  models: z.object({ anthropic: z.string(), openai: z.string(), local: z.string() }),
+  models: z.object({
+    anthropic: z.string(),
+    openai: z.string(),
+    openrouter: z.string(),
+    local: z.string(),
+  }),
+  /** Signed in: HushGlance AI or the user's own key (F-PLAN-01). Guests always use their own. */
+  aiSource: AiSourceSchema,
+  /** The hosted model (an OpenRouter slug from the ai_models table). */
+  hostedModel: z.string(),
+  /** The one-time note on what goes through HushGlance's server was read (F-PLAN-01). */
+  hostedNoticeSeen: z.boolean(),
   /** The planner's reasoning effort, picked in the ask bar (F-ASK-16). */
   effort: EffortSchema,
   /** Chart colors unless a chart or dashboard picks its own (F-VIZ-12). */
@@ -53,11 +71,11 @@ const SavedSettingsSchema = z.object({
 })
 type SavedSettings = z.infer<typeof SavedSettingsSchema>
 
-const NO_KEYS: Keys = { anthropic: null, openai: null, local: null }
+const NO_KEYS: Keys = { anthropic: null, openai: null, openrouter: null, local: null }
 
 export const SETTINGS_RECORD: RecordSpec<SavedSettings> = {
   key: 'settings',
-  version: 7,
+  version: 8,
   schema: SavedSettingsSchema,
   migrations: {
     // v2 (M4): number format and currency.
@@ -80,14 +98,30 @@ export const SETTINGS_RECORD: RecordSpec<SavedSettings> = {
     // v6 (M9): reasoning effort, as before (medium), now chosen in the ask bar.
     5: (data) => ({ ...(data as object), effort: 'medium' }),
     // v7 (M10): chart colors, the new violet-led palette.
-    6: (data) => ({ ...(data as object), chartPalette: 'flashquery' }),
+    6: (data) => ({ ...(data as object), chartPalette: 'hushglance' }),
+    // v8 (M16): OpenRouter, and HushGlance AI for signed-in users unless they saved a key.
+    7: (data) => {
+      const old = data as { models?: object; apiKeys?: Record<string, unknown> }
+      const savedKey = Object.values(old.apiKeys ?? {}).some((key) => typeof key === 'string')
+      return {
+        ...old,
+        models: { ...old.models, openrouter: DEFAULT_MODEL.openrouter },
+        apiKeys: { ...old.apiKeys, openrouter: null },
+        aiSource: savedKey ? 'own' : 'hosted',
+        hostedModel: HOSTED_DEFAULT_MODEL,
+        hostedNoticeSeen: false,
+      }
+    },
   },
   fallback: () => ({
     provider: 'anthropic',
     models: { ...DEFAULT_MODEL },
+    aiSource: 'hosted',
+    hostedModel: HOSTED_DEFAULT_MODEL,
+    hostedNoticeSeen: false,
     effort: 'medium',
-    chartPalette: 'flashquery',
-    privacyMode: 'balanced',
+    chartPalette: 'hushglance',
+    privacyMode: 'strict',
     dateDisplay: 'iso',
     rememberKey: false,
     apiKeys: NO_KEYS,
@@ -114,6 +148,9 @@ interface SettingsState {
   dateDisplay: DateDisplay
   provider: ProviderId
   models: Record<ProviderId, string>
+  aiSource: AiSource
+  hostedModel: string
+  hostedNoticeSeen: boolean
   effort: Effort
   chartPalette: ChartPalette
   /** In memory; see rememberKey. */
@@ -127,6 +164,9 @@ interface SettingsState {
   setPrivacyMode: (mode: PrivacyMode) => void
   setProvider: (provider: ProviderId) => void
   setModel: (provider: ProviderId, model: string) => void
+  setAiSource: (source: AiSource) => void
+  setHostedModel: (model: string) => void
+  setHostedNoticeSeen: (seen: boolean) => void
   setEffort: (effort: Effort) => void
   setChartPalette: (palette: ChartPalette) => void
   setApiKey: (provider: ProviderId, key: string | null) => void
@@ -143,7 +183,7 @@ interface SettingsState {
 
 export const useSettingsStore = create<SettingsState>()((set, get) => ({
   theme: readStoredTheme(),
-  privacyMode: 'balanced',
+  privacyMode: 'strict',
   locale: navigator.language,
   numberLocale: null,
   currency: null,
@@ -153,8 +193,11 @@ export const useSettingsStore = create<SettingsState>()((set, get) => ({
   dateDisplay: 'iso',
   provider: 'anthropic',
   models: { ...DEFAULT_MODEL },
+  aiSource: 'hosted',
+  hostedModel: HOSTED_DEFAULT_MODEL,
+  hostedNoticeSeen: false,
   effort: 'medium',
-  chartPalette: 'flashquery',
+  chartPalette: 'hushglance',
   apiKeys: NO_KEYS,
   baseUrl: DEFAULT_LOCAL_URL,
   rememberKey: false,
@@ -167,6 +210,9 @@ export const useSettingsStore = create<SettingsState>()((set, get) => ({
   setPrivacyMode: (privacyMode) => set({ privacyMode }),
   setProvider: (provider) => set({ provider }),
   setModel: (provider, model) => set({ models: { ...get().models, [provider]: model.trim() } }),
+  setAiSource: (aiSource) => set({ aiSource }),
+  setHostedModel: (hostedModel) => set({ hostedModel }),
+  setHostedNoticeSeen: (hostedNoticeSeen) => set({ hostedNoticeSeen }),
   setEffort: (effort) => set({ effort }),
   setChartPalette: (chartPalette) => set({ chartPalette }),
   setApiKey: (provider, key) =>
@@ -189,7 +235,7 @@ async function load() {
   const saved = await loadRecord(SETTINGS_RECORD, { onCorrupt: backupCorruptRecord }).catch(
     (error: unknown) => {
       // IndexedDB unavailable (private mode, blocked storage): run with defaults, in memory.
-      console.warn('flashQuery: settings could not be loaded', error)
+      console.warn('HushGlance: settings could not be loaded', error)
       return SETTINGS_RECORD.fallback()
     },
   )
@@ -205,6 +251,9 @@ async function persist(state: SettingsState) {
   const record: SavedSettings = {
     provider: state.provider,
     models: state.models,
+    aiSource: state.aiSource,
+    hostedModel: state.hostedModel,
+    hostedNoticeSeen: state.hostedNoticeSeen,
     effort: state.effort,
     chartPalette: state.chartPalette,
     privacyMode: state.privacyMode,
@@ -219,7 +268,7 @@ async function persist(state: SettingsState) {
     persistFiles: state.persistFiles,
   }
   await saveRecord(SETTINGS_RECORD, record).catch((error: unknown) =>
-    console.warn('flashQuery: settings could not be saved', error),
+    console.warn('HushGlance: settings could not be saved', error),
   )
 }
 

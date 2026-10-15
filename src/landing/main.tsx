@@ -4,7 +4,7 @@ import './landing.css'
 import { Landing } from '@/landing/Landing'
 
 const rootElement = document.getElementById('root')
-if (!rootElement) throw new Error('flashQuery: #root element missing from index.html')
+if (!rootElement) throw new Error('HushGlance: #root element missing from index.html')
 
 createRoot(rootElement).render(
   <StrictMode>

@@ -62,7 +62,7 @@ async function load() {
   const saved = await loadRecord(inProject(HISTORY_RECORD), {
     onCorrupt: backupCorruptRecord,
   }).catch((error: unknown) => {
-    console.warn('flashQuery: history could not be loaded', error)
+    console.warn('HushGlance: history could not be loaded', error)
     return []
   })
   // Keep anything added before hydration finished.
@@ -73,7 +73,7 @@ async function load() {
   useHistoryStore.subscribe((state, previous) => {
     if (state.entries === previous.entries) return
     saveRecord(inProject(HISTORY_RECORD), state.entries).catch((error: unknown) =>
-      console.warn('flashQuery: history could not be saved', error),
+      console.warn('HushGlance: history could not be saved', error),
     )
   })
 }

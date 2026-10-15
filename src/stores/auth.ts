@@ -69,7 +69,7 @@ export const useAuthStore = create<AuthState>()((set, get) => {
       void get()
         .connect()
         .catch((error: unknown) => {
-          console.warn('flashQuery: the saved session could not be restored', error)
+          console.warn('HushGlance: the saved session could not be restored', error)
           signedOut()
         })
     },

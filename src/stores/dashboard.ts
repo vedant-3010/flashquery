@@ -254,7 +254,7 @@ async function load() {
   const saved = await loadRecord(inProject(DASHBOARDS_RECORD), {
     onCorrupt: backupCorruptRecord,
   }).catch((error: unknown) => {
-    console.warn('flashQuery: dashboards could not be loaded', error)
+    console.warn('HushGlance: dashboards could not be loaded', error)
     return DASHBOARDS_RECORD.fallback()
   })
   // Keep anything created before loading finished (e.g. a tile pinned right away).
@@ -274,7 +274,7 @@ function saveNow() {
   saveTimer = undefined
   const { dashboards, activeId } = useDashboardStore.getState()
   saveRecord(inProject(DASHBOARDS_RECORD), { dashboards, activeId }).catch((error: unknown) =>
-    console.warn('flashQuery: dashboards could not be saved', error),
+    console.warn('HushGlance: dashboards could not be saved', error),
   )
 }
 

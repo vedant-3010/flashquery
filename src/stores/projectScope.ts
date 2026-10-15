@@ -24,13 +24,13 @@ export function projectScope(): string | null {
 
 export function setProjectScope(projectId: string): void {
   if (current !== null && current !== projectId) {
-    throw new Error('flashQuery: another project is already open in this page')
+    throw new Error('HushGlance: another project is already open in this page')
   }
   current = projectId
 }
 
 /** `spec` for the open project. Throws when none is open: project data never goes to a global key. */
 export function inProject<T>(spec: RecordSpec<T>): RecordSpec<T> {
-  if (current === null) throw new Error(`flashQuery: no project is open to load "${spec.key}"`)
+  if (current === null) throw new Error(`HushGlance: no project is open to load "${spec.key}"`)
   return { ...spec, key: projectKey(current, spec.key) }
 }

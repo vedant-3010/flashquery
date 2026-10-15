@@ -9,11 +9,11 @@ import { HeadlineLines } from '@/landing/HeadlineLines'
 const QUESTIONS = [
   {
     q: 'Is my file uploaded anywhere?',
-    a: 'No. No server ever sees your files: flashQuery reads them inside your browser, and they stay on your device. To answer, the AI gets an outline of your data (column names, and a few samples only if you allow it), and you can read every request.',
+    a: 'No. No server ever sees your files: HushGlance reads them inside your browser, and they stay on your device. To answer, the AI gets an outline of your data: column names and types by default, a few sample values only if you switch on Balanced. You can read every request.',
   },
   {
     q: 'Do I need to know SQL or formulas?',
-    a: 'No. Ask the way you would ask a colleague: “which customers owe us the most?” flashQuery works out the query, the chart and a short summary. The query is there to read or change if you want it.',
+    a: 'No. Ask the way you would ask a colleague: “which customers owe us the most?” HushGlance works out the query, the chart and a short summary. The query is there to read or change if you want it.',
   },
   {
     q: 'What files can I use?',
@@ -21,23 +21,23 @@ const QUESTIONS = [
   },
   {
     q: 'Is it free? Do I need an AI key?',
-    a: 'Trying it is free, with no sign-up: demo mode answers example questions about sample sales and finance data. To ask about your own files, add a key from Anthropic or OpenAI (you pay them for what you use), or use an AI model on your own computer.',
+    a: 'Trying it is free, with no sign-up: demo mode answers example questions about sample sales and finance data. A free account gets 3 questions with HushGlance AI, no key needed; Starter gives you 100 a month and Pro 300. Or bring your own key from Anthropic, OpenAI or OpenRouter (you pay them for what you use), or use an AI model on your own computer (Ollama, LM Studio), and nothing at all leaves it: free, with no limit.',
+  },
+  {
+    q: 'What does HushGlance’s own AI see?',
+    a: 'Only what your privacy mode allows. In Strict mode, the default: your question and your tables’ and columns’ names and types, never a value. If you switch on Balanced, also a few sample values. It passes through our server and OpenRouter to the model, and every request requires zero data retention: no one keeps it, and we don’t log it. Your files never leave your device.',
+  },
+  {
+    q: 'What do you keep about me?',
+    a: 'Your account (email and name), your plan (from Dodo Payments; we never see your card), how many HushGlance AI questions you’ve asked but never what you asked, and the dashboards you choose to share, until you delete them. Your files, your questions and their answers stay in your browser.',
   },
   {
     q: 'Can I share with my team or my accountant?',
-    a: 'Yes. Invite people by email, as viewers or editors, or send a view-only link that you can revoke at any time. They see the dashboard’s results without your files or a key.',
-  },
-  {
-    q: 'What exactly happens when I share?',
-    a: 'Sharing uploads only the dashboard results you choose to share: each tile’s title, chart and last result (at most 5,000 rows), after a dialog lists exactly what will go. Your files never upload.',
+    a: 'Yes. Invite people by email, as viewers or editors, or send a view-only link you can revoke at any time. Sharing uploads only the dashboard results you choose (each tile’s title, chart and last result, at most 5,000 rows), after a dialog lists exactly what will go. Your files never upload.',
   },
   {
     q: 'How accurate is it?',
-    a: 'On our test set of 53 questions over two datasets, even a small, low-cost AI model answers about 94% correctly. Every answer shows its working (the assumptions made and the query), so you can check it, and correct it if needed.',
-  },
-  {
-    q: 'Can I keep everything on my computer?',
-    a: 'Yes. Point flashQuery at an AI model running on your own computer (through Ollama or LM Studio), and not even the outline of your data leaves it.',
+    a: 'On our test set of 53 questions over two datasets, even a small, low-cost AI model answers about 94% correctly in Balanced mode. Strict mode sends no values, so questions about an exact name or code are harder for it. Every answer shows its working (the assumptions made and the query), so you can check it, and correct it if needed.',
   },
 ]
 
@@ -98,7 +98,7 @@ export function Faq() {
     <section
       id="faq"
       aria-labelledby="faq-title"
-      className="mx-auto max-w-[1200px] px-5 pt-24 md:px-8 md:pt-32"
+      className="mx-auto max-w-[1200px] px-5 pt-20 md:px-8 md:pt-32"
     >
       <div className="grid gap-10 lg:grid-cols-12">
         <Reveal className="lg:col-span-4">

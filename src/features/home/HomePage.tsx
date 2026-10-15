@@ -13,6 +13,7 @@ import { QuickAsk } from '@/features/home/QuickAsk'
 import { RecentQuestions } from '@/features/home/RecentQuestions'
 import { SharedSection } from '@/features/home/SharedSection'
 import { StartOptions } from '@/features/home/StartOptions'
+import { UpgradeDialog } from '@/features/plan/UpgradeDialog'
 import { SettingsDialog } from '@/features/settings/SettingsDialog'
 import { greeting } from '@/lib/greeting'
 import { useAuthStore } from '@/stores/auth'
@@ -34,7 +35,7 @@ export function HomePage() {
   const firstName = useAuthStore((state) => state.account?.name.trim().split(/\s+/)[0] ?? '')
 
   useEffect(() => {
-    document.title = 'flashQuery'
+    document.title = 'HushGlance'
   }, [])
 
   return (
@@ -95,6 +96,7 @@ export function HomePage() {
         )}
       </main>
       <SettingsDialog inProject={false} />
+      <UpgradeDialog />
       <HowItWorksDialog inspector={false} />
       <Toaster />
     </div>

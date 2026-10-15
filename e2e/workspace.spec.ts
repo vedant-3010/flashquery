@@ -70,7 +70,7 @@ test('notes come back with the data; the workspace exports, clears and imports',
   await settings.getByRole('button', { name: 'Export workspace' }).click()
   const file = await (await download).path()
   const bundle = JSON.parse(await readFile(file, 'utf8'))
-  expect(bundle.format).toBe('flashQuery-workspace')
+  expect(bundle.format).toBe('HushGlance-workspace')
   expect(bundle.history[0].text).toBe('Which region grew fastest?')
   expect(Object.values(bundle.notes)).toEqual([
     {
@@ -103,7 +103,7 @@ async function keptCount(page: Page): Promise<number> {
   return page.evaluate(
     (key) =>
       new Promise<number>((resolve) => {
-        const open = indexedDB.open('flashQuery')
+        const open = indexedDB.open('HushGlance')
         open.onerror = () => resolve(-1)
         open.onsuccess = () => {
           const db = open.result

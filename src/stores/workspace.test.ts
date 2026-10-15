@@ -60,8 +60,8 @@ describe('workspace files', () => {
   })
 
   it('refuses other files', () => {
-    expect(() => importWorkspace('{"format":"flashQuery-dashboard"}')).toThrow(
-      /isn't an flashQuery workspace/,
+    expect(() => importWorkspace('{"format":"HushGlance-dashboard"}')).toThrow(
+      /isn't an HushGlance workspace/,
     )
     expect(() => importWorkspace('nope')).toThrow("This file isn't valid JSON.")
   })

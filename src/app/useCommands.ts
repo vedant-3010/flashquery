@@ -7,7 +7,8 @@ import { useAskStore } from '@/stores/ask'
 import { useDashboardStore } from '@/stores/dashboard'
 import { useDatasetsStore } from '@/stores/datasets'
 import { useHistoryStore } from '@/stores/history'
-import { activeApiKey, useSettingsStore } from '@/stores/settings'
+import { useAiMode } from '@/stores/aiMode'
+import { useSettingsStore } from '@/stores/settings'
 import { useSqlStore } from '@/stores/sql'
 import { useUiStore } from '@/stores/ui'
 
@@ -26,7 +27,7 @@ export function useCommands(): Command[] {
   const datasets = useDatasetsStore((state) => state.datasets)
   const history = useHistoryStore((state) => state.entries)
   const dashboards = useDashboardStore((state) => state.dashboards)
-  const demo = useSettingsStore((state) => activeApiKey(state) === null)
+  const demo = useAiMode() === 'demo'
   const privacyMode = useSettingsStore((state) => state.privacyMode)
   const [, navigate] = useLocation()
 
@@ -185,7 +186,7 @@ export function useCommands(): Command[] {
       },
       {
         id: 'how',
-        label: 'How flashQuery works',
+        label: 'How HushGlance works',
         group: 'Help',
         keywords: 'privacy',
         run: () => ui.setHowItWorksOpen(true),

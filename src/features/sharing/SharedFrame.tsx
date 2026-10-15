@@ -23,7 +23,7 @@ const ACCESS: Record<Role | 'link', string> = {
 /**
  * The page around a shared dashboard (F-SHARE-05): the brand, the account, and the dashboard's
  * name, who shared it, when it was updated and your access. Visitors without an account get a way
- * to try flashQuery themselves.
+ * to try HushGlance themselves.
  */
 export function SharedFrame({
   title,
@@ -50,7 +50,7 @@ export function SharedFrame({
   const brand = (
     <>
       <BrandMark className="size-[18px] text-primary" onDark={theme === 'dark'} />
-      flashQuery
+      HushGlance
     </>
   )
 

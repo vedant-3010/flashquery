@@ -26,6 +26,11 @@ paths:
 - Words (D117): business-facing surfaces (Home, start panels, empty states, badges, tours, sign-in)
   say what happens in plain English; SQL, DuckDB and the like stay in the SQL view, the inspector and
   the answer's tabs. "AI key" outside Settings.
+- Plans (M16): the upgrade dialog (`src/features/plan/UpgradeDialog.tsx`) is mounted once per page
+  (AppShell, Home, Plan and billing) and opened through `usePlanStore().openUpgrade(reason)`. The
+  ask box shows the hosted meter (`HostedStatus`) and, once, what goes through our server
+  (`HostedNotice`). Prices on the landing page come from `PRICING` in `src/landing/data.ts`, checked
+  against the plans migration.
 - Contrast: `src/lib/contrast.test.ts` checks the theme tokens in `index.css`; keep it passing when
   changing colours (text 4.5:1, chart marks 3:1).
 

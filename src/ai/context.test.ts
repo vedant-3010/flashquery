@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { ColumnProfile, DatasetProfile } from '@/engine/types'
-import { buildContext, countDataValues, renderContext } from './context'
+import { buildContext, countDataValues, renderContext, scrubError } from './context'
 
 // F-ASK-02: exactly which fields each privacy mode sends.
 
@@ -213,5 +213,48 @@ describe('suggested joins (F-PROF-07)', () => {
     const context = buildContext({ datasets: [dataset], mode: 'balanced', relationships: [join] })
     expect(context.joins).toBeUndefined()
     expect(renderContext(context)).not.toContain('suggestedJoins')
+  })
+})
+
+describe('scrubError (F-PRIV-04)', () => {
+  const known = {
+    code: "SELECT region, CAST(customer AS INTEGER) AS id FROM global_sales WHERE region = 'APAC' LIMIT 10",
+    names: ['global_sales', 'region', 'customer', 'revenue'],
+  }
+
+  it('keeps names, the model’s own SQL and positions; drops values from the data', () => {
+    const error = [
+      "Conversion Error: Could not convert string 'Jane Doe' to INT32",
+      'Binder Error: Referenced column "revenu" not found! Candidate bindings: "revenue", "region"',
+      "LINE 1: SELECT region ... WHERE region = 'APAC' LIMIT 10",
+      'Out of Range Error: value 98765.43 is out of range at position 17',
+    ].join('\n')
+    const scrubbed = scrubError(error, 'strict', known)
+    expect(scrubbed).not.toContain('Jane Doe')
+    expect(scrubbed).not.toContain('98765.43')
+    expect(scrubbed).not.toContain('revenu"')
+    expect(scrubbed).toContain("Could not convert string '…' to INT32")
+    expect(scrubbed).toContain('"revenue", "region"')
+    expect(scrubbed).toContain("region = 'APAC' LIMIT 10")
+    expect(scrubbed).toContain('LINE 1:')
+    expect(scrubbed).toContain('position 17')
+  })
+
+  it('scrubs Python tracebacks the same way', () => {
+    const traceback = [
+      'Traceback (most recent call last):',
+      '  File "<exec>", line 3, in <module>',
+      "KeyError: 'ACME Holdings'",
+      "ValueError: could not convert string to float: '12,500'",
+    ].join('\n')
+    const scrubbed = scrubError(traceback, 'strict', { code: "result = df['region']", names: [] })
+    expect(scrubbed).toContain('File "<exec>", line 3')
+    expect(scrubbed).not.toContain('ACME')
+    expect(scrubbed).not.toContain('12,500')
+  })
+
+  it('leaves Balanced mode alone (it sends sample values anyway)', () => {
+    const error = "Could not convert string 'Jane Doe' to INT32"
+    expect(scrubError(error, 'balanced', known)).toBe(error)
   })
 })

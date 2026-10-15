@@ -13,6 +13,7 @@ import { HowItWorksDialog } from '@/features/ask/HowItWorksDialog'
 import { DatasetsPanel } from '@/features/datasets/DatasetsPanel'
 import { FileDropZone } from '@/features/datasets/FileDropZone'
 import { PasteDataDialog } from '@/features/datasets/PasteDataDialog'
+import { UpgradeDialog } from '@/features/plan/UpgradeDialog'
 import { SettingsDialog } from '@/features/settings/SettingsDialog'
 import { ScratchpadView } from '@/features/sql/ScratchpadView'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
@@ -152,6 +153,7 @@ export function AppShell() {
       </div>
       <FileDropZone />
       <SettingsDialog />
+      <UpgradeDialog />
       <ShortcutsDialog />
       <CommandPalette />
       <PasteDataDialog />

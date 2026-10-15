@@ -134,7 +134,7 @@ test('without an account service, nothing asks to sign in', async ({ page }) => 
   test.skip(Boolean(process.env.CI), 'CI builds with the mocked service configured.')
   // Off for this page even when .env.local configures a local service (development builds only).
   await page.addInitScript(() => {
-    window.__flashQueryAccounts = { url: '', key: '' }
+    window.__HushGlanceAccounts = { url: '', key: '' }
   })
   const requests: string[] = []
   page.on('request', (request) => requests.push(request.url()))
@@ -171,6 +171,6 @@ test('the app asks for an account; the try link and its project stay open (D115)
   const answer = page.getByRole('article', { name: 'Which region grew fastest?' })
   await expect(answer.getByRole('img', { name: /^Bar chart/ })).toBeVisible({ timeout: 60_000 })
   // Its Home link asks for the account again.
-  await page.getByRole('link', { name: 'flashQuery Home' }).click()
+  await page.getByRole('link', { name: 'HushGlance Home' }).click()
   await expect(page).toHaveURL(/\/app\/login$/)
 })

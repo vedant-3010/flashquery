@@ -112,7 +112,7 @@ test.describe('J4: dashboard (F-DASH-02…10)', () => {
     const download = page.waitForEvent('download')
     await exportItem.click()
     const file = JSON.parse(readFileSync((await (await download).path()) ?? '', 'utf8'))
-    expect(file).toMatchObject({ format: 'flashQuery-dashboard', version: 1 })
+    expect(file).toMatchObject({ format: 'HushGlance-dashboard', version: 1 })
     expect(file.dashboard.tiles).toHaveLength(5)
     expect(file.dashboard.filters).toEqual([
       {

@@ -10,7 +10,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { PrivacyModeSchema } from '@/ai/schemas'
 import { FormatSettings } from '@/features/settings/FormatSettings'
 import { LocalDataSettings } from '@/features/settings/LocalDataSettings'
-import { ProviderSettings } from '@/features/settings/ProviderSettings'
+import { AiSettings } from '@/features/settings/AiSettings'
 import { PythonSettings } from '@/features/settings/PythonSettings'
 import { PRIVACY_MODES } from '@/features/settings/privacyText'
 import { useSettingsStore } from '@/stores/settings'
@@ -41,7 +41,7 @@ export function SettingsDialog({ inProject = true }: { inProject?: boolean }) {
           <h3 id="settings-ai" className="text-sm font-medium">
             AI provider
           </h3>
-          <ProviderSettings />
+          <AiSettings />
         </section>
 
         <section aria-labelledby="settings-privacy" className="grid gap-3 border-t pt-4">
@@ -61,7 +61,7 @@ export function SettingsDialog({ inProject = true }: { inProject?: boolean }) {
                   <div className="grid gap-1 text-xs">
                     <Label htmlFor={`privacy-${mode}`} className="text-sm">
                       {info.label}
-                      {mode === 'balanced' && (
+                      {mode === 'strict' && (
                         <span className="font-normal text-muted-foreground">(default)</span>
                       )}
                     </Label>

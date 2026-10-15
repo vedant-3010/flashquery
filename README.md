@@ -1,13 +1,13 @@
-# flashQuery
+# HushGlance
 
 **A private AI analyst for your business data. Ask in plain English; your files never leave your
 device.**
 
 <!-- Live demo: add the Vercel URL here after the first deploy (see docs/DEPLOY.md). -->
 
-![flashQuery demo: loading a 1M-row sample, asking "Which region grew fastest?", checking the SQL, a trend chart, a generated dashboard, the privacy model, dark mode](docs/demo.png)
+![HushGlance demo: loading a 1M-row sample, asking "Which region grew fastest?", checking the SQL, a trend chart, a generated dashboard, the privacy model, dark mode](docs/demo.png)
 
-flashQuery is for founders, finance and accounting people, and anyone in business who wants answers
+HushGlance is for founders, finance and accounting people, and anyone in business who wants answers
 from their spreadsheets without waiting on a report: open an Excel or CSV export (or Parquet, JSON,
 pasted cells), ask a question, and get a chart, a table and a short explanation, then pin it to a
 dashboard and share the results. It runs entirely in the browser. An LLM writes DuckDB SQL from
@@ -15,8 +15,10 @@ your question, and DuckDB-WASM runs it on your device, so the rows stay with you
 privacy mode allows (column names, and optionally a few statistics and sample values) goes to the AI
 provider you choose, with your own key, and every request is shown in an inspector exactly as sent.
 
-No key? Demo mode answers a set of questions about two samples, with live SQL: a generated 1M-row
-sales dataset, and a small company's finances (invoices and bills: receivables, margins, cash flow).
+No key? Sign in for 3 free questions with HushGlance AI (hosted models through OpenRouter, with zero
+data retention forced on every request; Starter adds 100 a month and Pro 300), or try demo mode with no sign-up: it
+answers a set of questions about two samples, with live SQL: a generated 1M-row sales dataset, and a
+small company's finances (invoices and bills: receivables, margins, cash flow).
 
 ## What it does
 
@@ -65,8 +67,8 @@ switched off. Details, threading and a sequence diagram of the pipeline:
 |---|---|
 | Demo (no key) | Nothing. Answers are recorded plans; their SQL runs live in your browser. |
 | Local server | The Strict or Balanced payload, to a model server on your own computer. |
-| Strict | Table and column names and types, row counts, your notes. No values, no results. |
-| Balanced (default) | Strict, plus per-column statistics, up to 5 common values, 3 sample rows (text cut to 40 characters), and the answer's result (≤ 50 rows, or a digest) for the AI summary. |
+| Strict (default, D122) | Table and column names and types, row counts, your notes. No values, no results. |
+| Balanced (opt-in) | Strict, plus per-column statistics, up to 5 common values, 3 sample rows (text cut to 40 characters), and the answer's result (≤ 50 rows, or a digest) for the AI summary. |
 
 Data values are treated as untrusted text: they're sent as JSON inside a delimited block the model is
 told never to follow. A production Content-Security-Policy limits network access to the two LLM APIs,
@@ -144,6 +146,11 @@ Deploying: [docs/DEPLOY.md](docs/DEPLOY.md) (Vercel; any static host that serves
 - **Bring your own key, called from the browser**: no server to run or trust, and the user decides
   what to share. The cost is that the key lives in the page; it stays in memory unless the user opts
   in to remembering it, and the CSP limits where it can be sent.
+- **A hosted option that can't keep what it carries**: no provider issues short-lived browser keys,
+  so HushGlance AI needs a proxy (a Supabase Edge Function). It stores token counts only, logs status
+  lines only, and forces OpenRouter's zero-data-retention routing on every request, so no model
+  provider keeps the prompt either. Quotas live in Postgres (row-level security, an advisory lock per
+  user); Pro is sold through Dodo Payments' hosted checkout, changed only by a signed webhook.
 - **No COOP/COEP headers**: DuckDB runs single-threaded, but the app works on any static host, and
   the CDNs and LLM APIs don't need cross-origin isolation headers. Queries are fast enough that the
   trade is worth it.

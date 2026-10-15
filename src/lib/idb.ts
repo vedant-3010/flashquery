@@ -16,7 +16,7 @@ export interface KeyValueStore {
 }
 
 let database: ReturnType<typeof createStore> | null = null
-const idbDatabase = () => (database ??= createStore('flashQuery', 'records'))
+const idbDatabase = () => (database ??= createStore('HushGlance', 'records'))
 
 export const idbStore: KeyValueStore = {
   get: (key) => get(key, idbDatabase()),
@@ -82,9 +82,9 @@ export async function loadRecord<T>(
     return spec.fallback()
   }
 
-  if (!isEnvelope(raw)) return reset('Not a saved flashQuery record.')
+  if (!isEnvelope(raw)) return reset('Not a saved HushGlance record.')
   if (raw.version > spec.version) {
-    return reset(`Saved by a newer version of flashQuery (v${raw.version}).`)
+    return reset(`Saved by a newer version of HushGlance (v${raw.version}).`)
   }
   let data = raw.data
   for (let version = raw.version; version < spec.version; version += 1) {

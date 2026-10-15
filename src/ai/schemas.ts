@@ -10,7 +10,7 @@ export const PrivacyModeSchema = z
   .describe('What the AI may see; see the privacy-mode table in .claude/rules/ai.md')
 export type PrivacyMode = z.infer<typeof PrivacyModeSchema>
 
-export const ProviderIdSchema = z.enum(['anthropic', 'openai', 'local'])
+export const ProviderIdSchema = z.enum(['anthropic', 'openai', 'openrouter', 'local'])
 export type ProviderId = z.infer<typeof ProviderIdSchema>
 
 /**

@@ -55,7 +55,7 @@ for (const size of SIZES) {
         // Settings, the theme and how it works are under More.
         await page.getByRole('button', { name: 'More', exact: true }).click()
         await expect(page.getByRole('menuitem', { name: 'Settings' })).toBeVisible()
-        await expect(page.getByRole('menu', { name: 'More' })).toContainText('Privacy: Balanced')
+        await expect(page.getByRole('menu', { name: 'More' })).toContainText('Privacy: Strict')
       } else {
         await expect(page.getByRole('button', { name: 'Settings' })).toBeVisible()
       }

@@ -2,7 +2,7 @@
 # https://supabase.com/docs/guides/local-development/cli/config
 # A string used to distinguish different Supabase projects on the same host. Defaults to the
 # working directory name when running `supabase init`.
-project_id = "flashquery"
+project_id = "hushglance"
 
 [api]
 enabled = true
@@ -157,7 +157,7 @@ max_indexes = 5
 enabled = true
 # The base URL of your website. Used as an allow-list for redirects and for constructing URLs used
 # in emails.
-# flashQuery's dev server (npm run dev); production URLs are set in the hosted project (docs/DEPLOY.md).
+# HushGlance's dev server (npm run dev); production URLs are set in the hosted project (docs/DEPLOY.md).
 site_url = "http://localhost:5173/app/"
 # The public URL that Auth serves on. Defaults to the API external URL with `/auth/v1` appended.
 # external_url = ""
@@ -392,6 +392,15 @@ deno_version = 2
 
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
+
+# Edge Functions (M16, PRD D119–D120). ai: signed-in users only, so the platform checks the JWT
+# first; the function then checks the quota. billing: Dodo's webhook carries no JWT (the function
+# verifies its signature), and checkout and portal verify the user themselves.
+[functions.ai]
+verify_jwt = true
+
+[functions.billing]
+verify_jwt = false
 
 [analytics]
 enabled = true

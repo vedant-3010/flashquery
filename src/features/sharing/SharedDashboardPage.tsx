@@ -48,7 +48,7 @@ export function SharedDashboardPage({ source }: { source: SharedSource }) {
   const name = state.status === 'ready' ? state.shared.name : null
 
   useEffect(() => {
-    document.title = name ? `${name} · flashQuery` : 'Shared dashboard · flashQuery'
+    document.title = name ? `${name} · HushGlance` : 'Shared dashboard · HushGlance'
   }, [name])
 
   if (state.status === 'loading') {

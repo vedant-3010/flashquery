@@ -1,6 +1,6 @@
-# flashQuery architecture
+# HushGlance architecture
 
-flashQuery is a static single-page app with no backend. Your files are loaded into DuckDB-WASM inside the
+HushGlance is a static single-page app with no backend. Your files are loaded into DuckDB-WASM inside the
 browser tab. The only network traffic is the AI provider you pick, with your own key, plus the pinned
 CDNs for Pyodide and DuckDB's parquet/json extensions. This document covers where code runs, what an
 answer goes through, and where data may cross the device boundary. Requirements and feature IDs live
@@ -139,8 +139,8 @@ sequenceDiagram
 |---|---|
 | Demo (no key) | Nothing. Answers are recorded plans; their SQL runs live on the device. |
 | Local server | The Strict or Balanced payload, to an OpenAI-compatible server on this computer (Ollama, LM Studio); nothing leaves the machine. |
-| Strict | Table names, row counts, column names and types, the user's notes. No values and no results; summaries are written locally. |
-| Balanced (default) | Strict, plus per-column null %, approximate distinct counts, min/max, up to 5 common values (≤ 40 chars), 3 sample rows. The AI summary gets the result (≤ 50 rows, otherwise statistics plus the first 10 and 5 highest/lowest rows). |
+| Strict (default, D122) | Table names, row counts, column names and types, the user's notes. No values and no results; summaries are written locally. |
+| Balanced (opt-in) | Strict, plus per-column null %, approximate distinct counts, min/max, up to 5 common values (≤ 40 chars), 3 sample rows. The AI summary gets the result (≤ 50 rows, otherwise statistics plus the first 10 and 5 highest/lowest rows). |
 
 - Only `src/ai/context.ts` builds payloads. `e2e/ai-provider.spec.ts` asserts that a Strict request
   contains no sample values, top values, min/max or result rows.
@@ -178,7 +178,7 @@ replaced by defaults, never half-loaded.
 | `notes` | business notes by schema hash, so re-loading the same file brings them back |
 | `evalCases` | 👍/👎 cases saved from answers, exportable in the evals format |
 | `suggestions` | AI-suggested questions by schema hash |
-| `persistedDatasets` | opt-in only: how to load each kept file again; the bytes live in OPFS (`flashQuery-files/`) |
+| `persistedDatasets` | opt-in only: how to load each kept file again; the bytes live in OPFS (`HushGlance-files/`) |
 
 Files are stored only if the user turns on "Keep loaded files on this device": then their bytes go
 to the Origin Private File System and are loaded again at startup. Otherwise the user loads them
@@ -189,7 +189,7 @@ handles, re-applies column type overrides and reopens every answer's view.
 
 A tile stores its SQL, chart spec and a snapshot. It renders the snapshot at once, then re-runs
 through `src/dashboard/run.ts` (the same guard) when its tables are loaded. Dashboard filters create
-filtered views (`flashQuery_filtered_<table>`), and the tile SQL's table references are rewritten through
+filtered views (`HushGlance_filtered_<table>`), and the tile SQL's table references are rewritten through
 the AST to point at them (`src/engine/filters.ts`), so filters work on any tile without string editing.
 Clicking a bar or slice adds such a filter (cross-filtering). A dashboard can be presented full screen
 (read-only), or exported as a standalone HTML file of its snapshots (inline SVG, no scripts) that

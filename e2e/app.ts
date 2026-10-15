@@ -64,3 +64,14 @@ export async function answerSteps(answer: Locator): Promise<Locator> {
   }
   return answer.getByRole('list', { name: 'Progress' })
 }
+
+/**
+ * Balanced mode, for checks of what only Balanced sends (sample rows, the AI summary, exploration,
+ * AI suggestions, learned examples). New users start in Strict (D122).
+ */
+export async function chooseBalanced(page: Page): Promise<void> {
+  await page.getByRole('button', { name: /^Status: Strict/ }).click()
+  await page.getByRole('radio', { name: /Balanced/ }).click()
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('button', { name: /^Status: Balanced/ })).toBeVisible()
+}

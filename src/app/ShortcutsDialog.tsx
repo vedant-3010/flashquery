@@ -38,7 +38,7 @@ export function ShortcutsDialog() {
         <DialogHeader>
           <DialogTitle>Keyboard shortcuts</DialogTitle>
           <DialogDescription>
-            Everything in flashQuery also works from the keyboard.
+            Everything in HushGlance also works from the keyboard.
           </DialogDescription>
         </DialogHeader>
         <dl className="grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-2 text-sm">

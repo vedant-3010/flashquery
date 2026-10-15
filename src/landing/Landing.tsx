@@ -9,6 +9,7 @@ import { Hero } from '@/landing/sections/Hero'
 import { HowItWorks } from '@/landing/sections/HowItWorks'
 import { Nav } from '@/landing/sections/Nav'
 import { PrivacyToggle } from '@/landing/sections/PrivacyToggle'
+import { Pricing } from '@/landing/sections/Pricing'
 import { WhoItsFor } from '@/landing/sections/WhoItsFor'
 
 /**
@@ -39,6 +40,7 @@ export function Landing() {
           <FeatureIndex />
           <HowItWorks />
           <ForDataPeople />
+          <Pricing />
           <Faq />
           <FinalCta />
         </main>
