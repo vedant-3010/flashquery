@@ -21,7 +21,7 @@ const CARDS: Card[] = [
     choice: 'upload',
     icon: Upload,
     title: 'Your file',
-    description: 'Excel, CSV and more. Read on this device, never uploaded.',
+    description: 'Excel, CSV and more. Read on this device, never sent to an AI.',
     sample: false,
   },
   {

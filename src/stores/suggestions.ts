@@ -6,6 +6,7 @@ import type { DatasetProfile } from '@/engine/types'
 import { loadRecord, saveRecord, type RecordSpec } from '@/lib/idb'
 import { isCancellation, toAppError } from '@/lib/errors'
 import { currentProvider, logRequest } from '@/stores/askSupport'
+import { newMeter } from '@/stores/plan'
 import { backupCorruptRecord } from '@/stores/persistence'
 import { inProject } from '@/stores/projectScope'
 
@@ -44,7 +45,10 @@ export const useSuggestionsStore = create<SuggestionsState>()((set, get) => ({
     controller = current
     set({ pending: key, error: null })
     try {
-      const [provider, engine] = await Promise.all([currentProvider(), getDb()])
+      const [provider, engine] = await Promise.all([
+        currentProvider(undefined, newMeter('suggest')),
+        getDb(),
+      ])
       const questions = await suggestWithAi({
         provider,
         runner: engine,
@@ -70,14 +74,14 @@ async function load() {
   const saved = await loadRecord(inProject(SUGGESTIONS_RECORD), {
     onCorrupt: backupCorruptRecord,
   }).catch((error: unknown) => {
-    console.warn('flashQuery: suggestions could not be loaded', error)
+    console.warn('HushGlance: suggestions could not be loaded', error)
     return {}
   })
   useSuggestionsStore.setState((state) => ({ byKey: { ...saved, ...state.byKey } }))
   useSuggestionsStore.subscribe((state, previous) => {
     if (state.byKey === previous.byKey) return
     saveRecord(inProject(SUGGESTIONS_RECORD), state.byKey).catch((error: unknown) =>
-      console.warn('flashQuery: suggestions could not be saved', error),
+      console.warn('HushGlance: suggestions could not be saved', error),
     )
   })
 }

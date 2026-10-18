@@ -13,7 +13,7 @@ export function MessagePage({ title, description }: { title: string; description
       <header className="flex h-12 shrink-0 items-center border-b px-4">
         <Link href={paths.home} className="flex items-center gap-1.5 font-semibold">
           <BrandMark className="size-[18px] text-primary" onDark={theme === 'dark'} />
-          flashQuery
+          HushGlance
         </Link>
       </header>
       <main className="flex flex-1 flex-col items-center justify-center gap-4 p-6 text-center">

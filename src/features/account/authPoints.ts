@@ -1,6 +1,6 @@
 /** What the sign-in pages promise (D117): the ink panel's list, and under the form where it's hidden. */
 export const AUTH_POINTS = [
-  'Files never leave your device',
+  'Your rows never go to the AI',
   'Answers, charts and dashboards',
-  'Share results, not files',
+  'Encrypted on every device',
 ]

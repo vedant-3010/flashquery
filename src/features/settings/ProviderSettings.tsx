@@ -1,5 +1,6 @@
-import { CircleCheck, Eye, EyeOff, LoaderCircle } from 'lucide-react'
+import { CircleCheck, Eye, EyeOff, Link2, LoaderCircle } from 'lucide-react'
 import { useState } from 'react'
+import { useLocation } from 'wouter'
 import { LOCAL_PRESETS, localBaseUrl } from '@/ai/localServer'
 import { DEFAULT_MODEL, findModel, MODELS, PROVIDER_LABELS, requestEffort } from '@/ai/models'
 import { TEST_PROMPT } from '@/ai/prompts/testConnection'
@@ -18,6 +19,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { toAppError } from '@/lib/errors'
+import { OpenRouterModelInput } from '@/features/settings/OpenRouterModelInput'
+import { connectOpenRouter } from '@/features/settings/openRouterConnect'
 import { useAiLogStore } from '@/stores/aiLog'
 import { activeApiKey, useSettingsStore } from '@/stores/settings'
 
@@ -32,6 +35,9 @@ export function ProviderSettings() {
   const { setProvider, setModel, setApiKey, setRememberKey, setBaseUrl } = useSettingsStore()
   const credential = useSettingsStore(activeApiKey)
   const local = provider === 'local'
+  const openRouter = provider === 'openrouter'
+  const [location] = useLocation()
+  const [connecting, setConnecting] = useState(false)
   const validUrl = local ? localBaseUrl(baseUrl) : null
   const [showKey, setShowKey] = useState(false)
   const [test, setTest] = useState<TestState>({ status: 'idle' })
@@ -135,7 +141,7 @@ export function ProviderSettings() {
           {validUrl === null ? (
             <p role="alert" className="text-xs text-destructive">
               Use a server on this computer (http://localhost:… or http://127.0.0.1:…).
-              flashQuery&apos;s security policy blocks other addresses.
+              HushGlance&apos;s security policy blocks other addresses.
             </p>
           ) : (
             <p className="text-xs text-muted-foreground">
@@ -159,7 +165,13 @@ export function ProviderSettings() {
             spellCheck={false}
             className="font-mono"
             placeholder={
-              provider === 'anthropic' ? 'sk-ant-…' : local ? 'Usually not needed' : 'sk-…'
+              provider === 'anthropic'
+                ? 'sk-ant-…'
+                : openRouter
+                  ? 'sk-or-…'
+                  : local
+                    ? 'Usually not needed'
+                    : 'sk-…'
             }
             value={key}
             onChange={(event) => {
@@ -179,11 +191,44 @@ export function ProviderSettings() {
         <p className="text-xs text-muted-foreground">
           {local
             ? 'Sent only to your local server.'
-            : `Sent only to ${PROVIDER_LABELS[provider]}, straight from this browser. Without a key, flashQuery runs in demo mode.`}
+            : openRouter
+              ? 'Sent only to OpenRouter, straight from this browser. Every request demands zero data retention, so no provider keeps what you ask.'
+              : `Sent only to ${PROVIDER_LABELS[provider]}, straight from this browser. Without a key, HushGlance runs in demo mode.`}
         </p>
+        {openRouter && (
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={connecting}
+              onClick={() => {
+                setConnecting(true)
+                connectOpenRouter(location).catch(() => setConnecting(false))
+              }}
+            >
+              {connecting ? (
+                <LoaderCircle className="animate-spin" aria-hidden />
+              ) : (
+                <Link2 aria-hidden />
+              )}
+              Connect OpenRouter
+            </Button>
+            <span className="text-xs text-muted-foreground">
+              Sign in at OpenRouter and approve: no key to copy.
+            </span>
+          </div>
+        )}
       </div>
 
-      {local ? (
+      {openRouter ? (
+        <OpenRouterModelInput
+          value={model}
+          onChange={(value) => {
+            setModel(provider, value)
+            setTest({ status: 'idle' })
+          }}
+        />
+      ) : local ? (
         <div className="grid gap-2">
           <Label htmlFor="ai-model">Model</Label>
           <Input

@@ -49,8 +49,9 @@ export function startTryDemo(sampleId?: SampleId): void {
   const loading = () => useDatasetsStore.getState().jobs.some((job) => job.table === demo.table)
   if (!ready() && !loading()) useDatasetsStore.getState().loadSample(demo.sampleId)
 
+  // Always the prepared answer: with HushGlance AI or a key, it would spend a question on a demo.
   const ask = () => {
-    if (question) void useAskStore.getState().ask(question)
+    if (question) void useAskStore.getState().ask(question, { demo: true })
   }
   if (ready()) {
     ask()

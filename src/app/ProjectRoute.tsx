@@ -48,9 +48,9 @@ export function ProjectRoute() {
 
   useEffect(() => {
     if (!name) return
-    document.title = `${name} · flashQuery`
+    document.title = `${name} · HushGlance`
     return () => {
-      document.title = 'flashQuery'
+      document.title = 'HushGlance'
     }
   }, [name])
 

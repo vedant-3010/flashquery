@@ -140,7 +140,7 @@ export function PeopleSection({ cloudId }: { cloudId: string }) {
       </form>
       <p className="text-xs text-muted-foreground">
         Editors can arrange tiles and change titles and text; nobody else can invite. An invite
-        works once that address signs in to flashQuery.
+        works once that address signs in to HushGlance.
       </p>
       <FormError error={error} />
       {people === null ? (

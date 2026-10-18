@@ -8,15 +8,19 @@ import {
   type KeyValueStore,
   type RecordSpec,
 } from '@/lib/idb'
+import { mergeRemoved, RemovedProjectSchema, type RemovedProject } from '@/lib/syncMerge'
 import { DASHBOARDS_RECORD } from '@/stores/dashboard'
 import { HISTORY_RECORD } from '@/stores/history'
 import { backupCorruptRecord } from '@/stores/persistence'
-import { forgetProjectFiles, PERSISTED_RECORD } from '@/stores/persistFiles'
+import { PERSISTED_RECORD } from '@/stores/keptDatasets'
+import { forgetProjectFiles } from '@/stores/persistFiles'
 import { PROJECT_RECORD_KEYS, projectKey } from '@/stores/projectScope'
 
 // Projects (F-HOME-02, D113): each has its own datasets (kept files), history, notes, dashboards
 // and suggestions under `p:<id>:…` keys; settings and eval cases stay global. The list itself is
 // one global record. Data saved before projects existed moves into "My first project".
+// Signed in, projects save to the account, encrypted (M17, src/stores/sync.ts), unless marked
+// "Keep on this device only"; a deleted one leaves a marker so it goes from every device.
 
 export const ProjectSchema = z.object({
   id: z.string(),
@@ -29,14 +33,29 @@ export const ProjectSchema = z.object({
   /** …how many dashboards and questions it has. */
   dashboards: z.number(),
   questions: z.number(),
+  /** "Keep on this device only" (M17): never saved to the account. */
+  localOnly: z.boolean(),
 })
 export type Project = z.infer<typeof ProjectSchema>
 export type ProjectSummary = Pick<Project, 'datasets' | 'dashboards' | 'questions'>
 
 export const PROJECTS_RECORD: RecordSpec<Project[]> = {
   key: 'projects',
-  version: 1,
+  version: 2,
   schema: z.array(ProjectSchema),
+  migrations: {
+    // v2 (M17): projects save to the account unless kept on this device.
+    1: (data) =>
+      Array.isArray(data) ? data.map((p: object) => ({ ...p, localOnly: false })) : data,
+  },
+  fallback: () => [],
+}
+
+/** Projects removed from the account (deleted, or kept on one device only), for the other devices. */
+export const REMOVED_PROJECTS_RECORD: RecordSpec<RemovedProject[]> = {
+  key: 'removedProjects',
+  version: 1,
+  schema: z.array(RemovedProjectSchema),
   fallback: () => [],
 }
 
@@ -55,6 +74,7 @@ export function newProject(name: string, now = Date.now()): Project {
     datasets: [],
     dashboards: 0,
     questions: 0,
+    localOnly: false,
   }
 }
 
@@ -116,6 +136,8 @@ export async function migrateLegacyData(
 
 interface ProjectsState {
   projects: Project[]
+  /** Removed from the account: other devices remove (or stop syncing) them too. */
+  removed: RemovedProject[]
   hydrated: boolean
   /** The project this page has open (null until one is): opening another one reloads the page. */
   openId: string | null
@@ -127,12 +149,26 @@ interface ProjectsState {
   remove: (id: string) => Promise<void>
   setOpen: (id: string) => void
   updateSummary: (id: string, summary: ProjectSummary) => void
+  /** "Keep on this device only" on or off (the sync removes or saves the account's copy). */
+  setLocalOnly: (id: string, localOnly: boolean) => void
+  /** Another device's changes (the account sync): the merged list, and projects deleted there. */
+  applyMerged: (projects: Project[], removed: RemovedProject[], deleted: string[]) => Promise<void>
+}
+
+/** A project's records and kept files, gone from this device. */
+async function forgetProject(id: string) {
+  await forgetProjectFiles(id)
+  const prefix = projectKey(id, '')
+  for (const key of await idbStore.keys()) {
+    if (key.startsWith(prefix)) await idbStore.del(key)
+  }
 }
 
 let hydrating: Promise<void> | null = null
 
 export const useProjectsStore = create<ProjectsState>()((set, get) => ({
   projects: [],
+  removed: [],
   hydrated: false,
   openId: null,
   hydrate: () => (hydrating ??= load()),
@@ -152,12 +188,15 @@ export const useProjectsStore = create<ProjectsState>()((set, get) => ({
     }))
   },
   remove: async (id) => {
-    set((state) => ({ projects: state.projects.filter((p) => p.id !== id) }))
-    await forgetProjectFiles(id)
-    const prefix = projectKey(id, '')
-    for (const key of await idbStore.keys()) {
-      if (key.startsWith(prefix)) await idbStore.del(key)
-    }
+    const project = get().projects.find((p) => p.id === id)
+    set((state) => ({
+      projects: state.projects.filter((p) => p.id !== id),
+      removed:
+        project && !project.localOnly
+          ? mergeRemoved(state.removed, [{ id, at: Date.now(), kind: 'deleted' }])
+          : state.removed,
+    }))
+    await forgetProject(id)
     // The shorter list is saved too, so a reload right after can't bring the project back.
     await whenSaved()
   },
@@ -177,6 +216,20 @@ export const useProjectsStore = create<ProjectsState>()((set, get) => ({
         return same ? p : { ...p, ...summary, updatedAt: Date.now() }
       }),
     })),
+  setLocalOnly: (id, localOnly) => {
+    const now = Date.now()
+    set((state) => ({
+      projects: state.projects.map((p) => (p.id === id ? { ...p, localOnly, updatedAt: now } : p)),
+      removed: localOnly
+        ? mergeRemoved(state.removed, [{ id, at: now, kind: 'unsynced' }])
+        : state.removed.filter((marker) => marker.id !== id),
+    }))
+  },
+  applyMerged: async (projects, removed, deleted) => {
+    set({ projects, removed })
+    for (const id of deleted) await forgetProject(id)
+    await whenSaved()
+  },
 }))
 
 async function load() {
@@ -185,20 +238,30 @@ async function load() {
       projects.length > 0 ? projects : ((await migrateLegacyData()) ?? projects),
     )
     .catch((error: unknown) => {
-      console.warn('flashQuery: projects could not be loaded', error)
+      console.warn('HushGlance: projects could not be loaded', error)
       return []
     })
+  const removed = await loadRecord(REMOVED_PROJECTS_RECORD, {
+    onCorrupt: backupCorruptRecord,
+  }).catch(() => [])
   useProjectsStore.setState((state) => ({
     projects: [
       ...state.projects,
       ...saved.filter((p) => !state.projects.some((q) => q.id === p.id)),
     ],
+    removed: mergeRemoved(state.removed, removed),
     hydrated: true,
   }))
   useProjectsStore.subscribe((state, previous) => {
-    if (state.projects === previous.projects) return
-    saveRecord(PROJECTS_RECORD, state.projects).catch((error: unknown) =>
-      console.warn('flashQuery: projects could not be saved', error),
-    )
+    if (state.projects !== previous.projects) {
+      saveRecord(PROJECTS_RECORD, state.projects).catch((error: unknown) =>
+        console.warn('HushGlance: projects could not be saved', error),
+      )
+    }
+    if (state.removed !== previous.removed) {
+      saveRecord(REMOVED_PROJECTS_RECORD, state.removed).catch((error: unknown) =>
+        console.warn('HushGlance: removed projects could not be saved', error),
+      )
+    }
   })
 }

@@ -62,9 +62,9 @@ export function everyNthSql(
   const partition = series ? `PARTITION BY ${quoteIdent(series)} ` : ''
   const order = quoteIdent(x)
   return (
-    `SELECT ${selectList(result)} FROM (SELECT *, row_number() OVER (${partition}ORDER BY ${order}) AS flashQuery_rn, ` +
-    `count(*) OVER (${partition.trimEnd()}) AS flashQuery_n FROM ${result.relation}) AS s ` +
-    `WHERE (flashQuery_rn - 1) % ${step} = 0 OR flashQuery_rn = flashQuery_n ORDER BY ${order}`
+    `SELECT ${selectList(result)} FROM (SELECT *, row_number() OVER (${partition}ORDER BY ${order}) AS HushGlance_rn, ` +
+    `count(*) OVER (${partition.trimEnd()}) AS HushGlance_n FROM ${result.relation}) AS s ` +
+    `WHERE (HushGlance_rn - 1) % ${step} = 0 OR HushGlance_rn = HushGlance_n ORDER BY ${order}`
   )
 }
 

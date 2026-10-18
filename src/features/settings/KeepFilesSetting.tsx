@@ -38,7 +38,7 @@ export function KeepFilesSetting() {
         <Label htmlFor="keep-files">Keep loaded files on this device</Label>
         <p className="text-xs text-muted-foreground">
           {supported
-            ? `Saves each file you load in this browser's private storage, so your tables come back after a reload. Nothing is uploaded. Turning this off deletes the saved files.${used !== null ? ` This site uses ${formatBytes(used, locale)} of storage.` : ''}`
+            ? `Saves each file you load in this browser's private storage, so your tables come back after a reload. Projects saved to your account always keep theirs (and save them there, encrypted). Turning this off deletes the other saved files.${used !== null ? ` This site uses ${formatBytes(used, locale)} of storage.` : ''}`
             : "This browser can't keep files (it lacks the Origin Private File System)."}
         </p>
       </div>

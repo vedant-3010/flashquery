@@ -9,7 +9,8 @@ import { formatDuration, formatEventTime, formatNumber, formatUsd } from '@/lib/
 import { cn } from '@/lib/utils'
 import { UsageSummary } from '@/features/explain/UsageSummary'
 import { useAiLogStore } from '@/stores/aiLog'
-import { activeApiKey, useSettingsStore } from '@/stores/settings'
+import { useAiMode } from '@/stores/aiMode'
+import { useSettingsStore } from '@/stores/settings'
 
 const PURPOSES: Record<AiLogEntry['purpose'], string> = {
   plan: 'Write SQL',
@@ -76,7 +77,7 @@ function Entry({ entry }: { entry: AiLogEntry }) {
               navigator.clipboard
                 .writeText(JSON.stringify(entry, null, 2))
                 .then(() => setCopied(true))
-                .catch((error: unknown) => console.warn('flashQuery: copy failed', error))
+                .catch((error: unknown) => console.warn('HushGlance: copy failed', error))
             }}
           >
             <ClipboardCopy aria-hidden />
@@ -108,7 +109,7 @@ function Entry({ entry }: { entry: AiLogEntry }) {
 export function AiInspector() {
   const entries = useAiLogStore((state) => state.entries)
   const clear = useAiLogStore((state) => state.clear)
-  const demo = useSettingsStore((state) => activeApiKey(state) === null)
+  const demo = useAiMode() === 'demo'
 
   if (entries.length === 0) {
     return (

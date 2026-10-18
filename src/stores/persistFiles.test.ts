@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { SAMPLES } from '@/engine/samples'
-import { describeInput, toDatasetInput, type PersistedDataset } from './persistFiles'
+import { describeInput, toDatasetInput, type PersistedDataset } from '@/stores/keptDatasets'
 
 // F-DATA-12: what is kept for each kind of input, and how it loads again.
 
@@ -14,6 +14,7 @@ const entry = (described: ReturnType<typeof describeInput>): PersistedDataset =>
   ignoreErrors: false,
   overrides: [],
   savedAt: 0,
+  cloud: null,
 })
 
 describe('kept datasets (F-DATA-12)', () => {

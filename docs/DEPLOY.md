@@ -1,6 +1,8 @@
-# Deploying flashQuery
+# Deploying HushGlance
 
-flashQuery is a static site: `npm run build` writes everything to `dist/`, and there's no server code and
+Launching for real (domain, email, sign-in providers, payments, checks): [`RELEASE.md`](RELEASE.md).
+
+HushGlance is a static site: `npm run build` writes everything to `dist/`, and there's no server code and
 no secrets. `vercel.json` sets the build and the response headers. Never add an API key as an
 environment variable: users bring their own key in the app. Accounts (sign-in, and from M14 saved and
 shared dashboards) are optional: they need a Supabase project, set up below. Without one, the app
@@ -60,8 +62,8 @@ Then in the browser:
 2. Apply the migrations in `supabase/migrations/`: with the Supabase CLI, `supabase link` then
    `supabase db push`; or paste each file into the dashboard's SQL editor, oldest first. They create
    `profiles` (a display name per user) and `delete_my_account()`, then the sharing tables
-   (`dashboards`, `dashboard_members`, `dashboard_invites`, `share_links`) and their functions, all
-   with row-level security.
+   (`dashboards`, `dashboard_members`, `dashboard_invites`, `share_links`) and their functions, then
+   the plans tables (M16, below), all with row-level security.
 3. **Authentication → URL Configuration:** Site URL `https://<your-domain>/app/`; Redirect URLs
    `https://<your-domain>/app/auth/callback` and `https://<your-domain>/app/reset` (add
    `http://localhost:5173/app/**` for local development).
@@ -89,6 +91,75 @@ A migration added after you started it: `npx supabase migration up` applies it. 
 security tests (`supabase/tests/`, pgTAP) run against the local database with `npx supabase test db`
 (everything they create is rolled back). Run them after changing a policy; CI doesn't, since it has
 no database.
+
+## HushGlance AI and Pro (M16, optional)
+
+Step by step, with every key, a free local test and the move to live payments:
+[`HOSTED_AI_SETUP.md`](HOSTED_AI_SETUP.md). The summary:
+
+Hosted models for signed-in users without a key (D119), and Pro through Dodo Payments (D120). Needs
+the accounts setup above, the `20261012000000_plans.sql` migration, and two Edge Functions. Without
+them the app works as before: own keys and the demo.
+
+**Supabase plan.** Free projects pause after 7 days without requests; a paid product needs Supabase
+Pro (also raises the Edge Function wall clock from 150 s to 400 s).
+
+**OpenRouter**
+1. Create an account at [openrouter.ai](https://openrouter.ai), buy credits (5.5% fee), and turn off
+   auto top-up, or cap it.
+2. **Settings → Privacy:** turn on zero data retention for every model group and turn off prompt
+   logging. The proxy forces both per request too; this is a second lock.
+3. Create a dedicated API key for HushGlance with a **credit limit**: the hard ceiling on spend.
+
+**Dodo Payments** (test mode first)
+1. Create an account at [dodopayments.com](https://dodopayments.com); stay in test mode.
+2. **Products:** four subscription products: Starter monthly ($5) and yearly ($50), Pro monthly
+   ($12) and yearly ($120). Copy their product ids (`pdt_…`).
+3. **Developer → API keys:** a key for the function. **Developer → Webhooks:** endpoint
+   `https://<project>.supabase.co/functions/v1/billing/webhook`, all `subscription.*` events; copy
+   the signing secret (`whsec_…`).
+4. **Customer portal:** on, with cancelling allowed.
+5. Before going live: fill in every `[bracketed]` placeholder in `public/terms.html`,
+   `privacy.html` and `refunds.html`, have them reviewed, complete Dodo's business verification,
+   then switch `DODO_API_BASE` and the keys to live.
+
+**Secrets and deploy** (Supabase CLI, linked to the project):
+
+```sh
+npx supabase secrets set \
+  OPENROUTER_API_KEY=sk-or-… \
+  APP_ORIGINS=https://<your-domain> \
+  AI_DAILY_BUDGET_USD=20 \
+  DODO_API_BASE=https://test.dodopayments.com \
+  DODO_API_KEY=… \
+  DODO_WEBHOOK_SECRET=whsec_… \
+  DODO_PRODUCT_STARTER_MONTHLY=pdt_… \
+  DODO_PRODUCT_STARTER_YEARLY=pdt_… \
+  DODO_PRODUCT_PRO_MONTHLY=pdt_… \
+  DODO_PRODUCT_PRO_YEARLY=pdt_…
+npx supabase db push            # the plans migration
+npx supabase functions deploy ai billing
+```
+
+`ai` keeps the platform's JWT check (`verify_jwt = true` in `config.toml`); `billing` turns it off
+for Dodo's webhook and checks the user itself for checkout and the portal. `AI_DAILY_BUDGET_USD`
+pauses hosted AI for everyone once the last 24 hours cost that much.
+
+**Check it:**
+- Sign in on the deployment without a key: the ask bar shows "3 free questions left".
+- Ask once; Supabase → Edge Functions → `ai` → Logs shows `ai 200 anthropic/claude-sonnet-5 …ms`
+  and nothing else (never a prompt).
+- Upgrade with a Dodo test card; back on Plan and billing, Pro arrives within seconds (the
+  `billing` logs show `billing webhook subscription.active: applied`).
+
+**Locally:** `npx supabase start`, then copy `supabase/functions/.env.example` to
+`supabase/functions/.env` and run `npx supabase functions serve --env-file supabase/functions/.env`.
+Point `OPENROUTER_UPSTREAM` at a stub to ask without spending credits.
+
+**Adding a hosted model** (D121): run the eval through OpenRouter
+(`OPENROUTER_API_KEY=… EVAL_PROVIDER=openrouter EVAL_MODEL=maker/model npm run evals`; it costs
+credits), and if it scores ≥ 90%, `update public.ai_models set enabled = true, eval_accuracy = …
+where id = '…'` (or insert a new row). Prices, weights and plan limits are rows too.
 
 ## Other hosts
 

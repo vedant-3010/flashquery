@@ -115,7 +115,7 @@ export function preludeCode(dateColumns: readonly string[]): string {
 
 /** Collects `result` (a DataFrame, or a Series) and `summary` after the user's code ran. */
 export const COLLECT_CODE = `
-def __flashQuery_collect():
+def __HushGlance_collect():
     import pandas as pd
     out = {"result": None, "rows": None, "summary": None, "error": None}
     r = globals().get("result")
@@ -136,7 +136,7 @@ def __flashQuery_collect():
         out["summary"] = str(s)[:${MAX_SUMMARY_CHARS}]
     return out
 
-__flashQuery_collect()
+__HushGlance_collect()
 `
 
 /** The traceback without Pyodide's own frames, and not too long. */

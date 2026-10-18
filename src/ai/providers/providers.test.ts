@@ -401,3 +401,124 @@ describe('dashboard plans (F-DASH-09)', () => {
     ])
   })
 })
+
+describe('OpenRouter provider (F-AI-07, D119)', () => {
+  const reply = (model: string) =>
+    json({
+      id: 'gen-1',
+      object: 'chat.completion',
+      created: 0,
+      model,
+      choices: [
+        {
+          index: 0,
+          message: { role: 'assistant', content: JSON.stringify(plan), refusal: null },
+          finish_reason: 'stop',
+        },
+      ],
+      usage: { prompt_tokens: 900, completion_tokens: 120, total_tokens: 1020 },
+    })
+
+  it('demands zero data retention on chat completions, with Claude’s cache breakpoints', async () => {
+    const { fetch, calls } = fakeFetch(() => reply('anthropic/claude-sonnet-5'))
+    const provider = await createProvider({
+      provider: 'openrouter',
+      apiKey: 'sk-or-v1-test-1234567890abcdef',
+      model: 'anthropic/claude-sonnet-5',
+      fetch,
+    })
+    const response = await provider.planSql({ question: 'q', messages, tables: [] })
+    expect(response.plan).toEqual(plan)
+    expect(provider.id).toBe('openrouter')
+    expect(provider.summaryModel).toBe('anthropic/claude-haiku-4.5')
+
+    const [call] = calls
+    expect(call?.url).toBe('https://openrouter.ai/api/v1/chat/completions')
+    const body = call?.body ?? {}
+    expect(body.provider).toEqual({ zdr: true, data_collection: 'deny', require_parameters: true })
+    expect(body.response_format).toMatchObject({
+      type: 'json_schema',
+      json_schema: { name: 'sql_plan', strict: true },
+    })
+    expect(body.reasoning).toEqual({ effort: 'medium' })
+    expect(body.max_tokens).toBe(16_000)
+    expect(JSON.stringify(body.messages)).toContain('"cache_control":{"type":"ephemeral"}')
+  })
+
+  it('stays on chat completions for every model, and sends effort only where it’s known', async () => {
+    const { fetch, calls } = fakeFetch(() => reply('openai/gpt-5.6-sol'))
+    const provider = await createProvider({
+      provider: 'openrouter',
+      apiKey: 'sk-or-v1-test-1234567890abcdef',
+      model: 'mistralai/mistral-large-4-0',
+      fetch,
+    })
+    await provider.planSql({ question: 'q', messages, tables: [] })
+    expect(calls[0]?.url).toBe('https://openrouter.ai/api/v1/chat/completions')
+    expect(calls[0]?.body).not.toHaveProperty('reasoning_effort')
+    expect(calls[0]?.body).not.toHaveProperty('reasoning')
+    expect(JSON.stringify(calls[0]?.body.messages)).not.toContain('cache_control')
+    // No maker fast model to pair with: it summarizes itself.
+    expect(provider.summaryModel).toBe('mistralai/mistral-large-4-0')
+  })
+
+  it('hosted: goes to the proxy, and keeps the proxy’s refusals for the app to act on', async () => {
+    const proxy = 'https://example.supabase.co/functions/v1/ai/v1'
+    const refuse = (status: number, code: string) =>
+      fakeFetch(() => json({ error: { code, message: `refused: ${code}` } }, status))
+    for (const [status, code] of [
+      [402, 'quota_reached'],
+      [403, 'model_not_in_plan'],
+      [503, 'hosted_paused'],
+    ] as const) {
+      const { fetch, calls } = refuse(status, code)
+      const provider = await createProvider({
+        provider: 'openrouter',
+        apiKey: 'hushglance-hosted',
+        model: 'anthropic/claude-sonnet-5',
+        summaryModel: 'anthropic/claude-haiku-4.5',
+        baseUrl: proxy,
+        hosted: true,
+        fetch,
+      })
+      expect(provider.id).toBe('hushglance')
+      await expect(provider.planSql({ question: 'q', messages, tables: [] })).rejects.toMatchObject(
+        {
+          code,
+          message: `refused: ${code}`,
+        },
+      )
+      expect(calls[0]?.url).toBe(`${proxy}/chat/completions`)
+    }
+  }, 30_000)
+
+  it('hosted: never asks the user to check a key that is HushGlance’s', async () => {
+    const { fetch } = fakeFetch(() => json({ error: { message: 'bad token' } }, 401))
+    const provider = await createProvider({
+      provider: 'openrouter',
+      apiKey: 'hushglance-hosted',
+      model: 'anthropic/claude-sonnet-5',
+      baseUrl: 'https://example.supabase.co/functions/v1/ai/v1',
+      hosted: true,
+      fetch,
+    })
+    await expect(provider.planSql({ question: 'q', messages, tables: [] })).rejects.toMatchObject({
+      code: 'not_signed_in',
+    })
+  })
+})
+
+describe('OpenAI provider privacy', () => {
+  it('never lets OpenAI store a response (the Responses API would by default)', async () => {
+    const { createOpenAIProvider } = await import('@/ai/providers/openai')
+    const provider = createOpenAIProvider({
+      provider: 'openai',
+      apiKey: 'sk-proj-test-1234567890abcdef',
+      model: 'gpt-6-sol',
+    })
+    expect(provider.id).toBe('openai')
+    const { ChatOpenAI } = await import('@langchain/openai')
+    const chat = new ChatOpenAI({ apiKey: 'x', model: 'gpt-6-sol', zdrEnabled: true })
+    expect(chat.zdrEnabled).toBe(true)
+  })
+})

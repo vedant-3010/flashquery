@@ -28,7 +28,7 @@ for (const size of SIZES) {
       await expect(page.getByRole('heading', { level: 1, name: 'Sign in' })).toBeVisible()
       await fitsTheScreen(page)
       // The ink panel is for wide screens; its promise shows under the form here.
-      await expect(page.getByRole('main').getByText('Share results, not files')).toBeVisible()
+      await expect(page.getByRole('main').getByText('Encrypted on every device')).toBeVisible()
       await page.goto('/app/register')
       await expect(
         page.getByRole('heading', { level: 1, name: 'Create your account' }),
@@ -55,7 +55,7 @@ for (const size of SIZES) {
         // Settings, the theme and how it works are under More.
         await page.getByRole('button', { name: 'More', exact: true }).click()
         await expect(page.getByRole('menuitem', { name: 'Settings' })).toBeVisible()
-        await expect(page.getByRole('menu', { name: 'More' })).toContainText('Privacy: Balanced')
+        await expect(page.getByRole('menu', { name: 'More' })).toContainText('Privacy: Strict')
       } else {
         await expect(page.getByRole('button', { name: 'Settings' })).toBeVisible()
       }

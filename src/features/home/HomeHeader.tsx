@@ -19,7 +19,7 @@ export function HomeHeader() {
     <header className="flex h-12 shrink-0 items-center gap-3 border-b px-3">
       <Link href={paths.home} className="flex items-center gap-1.5 font-semibold">
         <BrandMark className="size-[18px] text-primary" onDark={theme === 'dark'} />
-        flashQuery
+        HushGlance
       </Link>
       <div className="ml-auto flex items-center gap-2">
         {/* Phones: the extras are in More (AppMenu), so the account stays on screen. */}

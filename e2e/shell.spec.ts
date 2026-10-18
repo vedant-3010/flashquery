@@ -102,10 +102,11 @@ test.describe('how it works (F-SHIP-04)', () => {
   test('explains the privacy modes and opens the AI inspector', async ({ page }) => {
     await openProject(page)
     await page.getByRole('button', { name: 'Help and appearance' }).click()
-    await page.getByRole('menuitem', { name: 'How flashQuery works' }).click()
-    const dialog = page.getByRole('dialog', { name: 'How flashQuery works' })
+    await page.getByRole('menuitem', { name: 'How HushGlance works' }).click()
+    const dialog = page.getByRole('dialog', { name: 'How HushGlance works' })
     const modes = dialog.getByRole('table', { name: 'What the AI receives in each privacy mode' })
-    await expect(modes.getByRole('rowheader', { name: /Balanced/ })).toContainText('(yours)')
+    // New users start in Strict (D122).
+    await expect(modes.getByRole('rowheader', { name: /Strict/ })).toContainText('(yours)')
     await expect(modes).toContainText('No values, no results.')
     await expect(dialog).toContainText('Demo mode sends nothing')
 

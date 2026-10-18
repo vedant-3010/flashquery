@@ -8,19 +8,20 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { activeApiKey, useSettingsStore } from '@/stores/settings'
+import { useAiMode } from '@/stores/aiMode'
+import { useSettingsStore } from '@/stores/settings'
 import { useUiStore } from '@/stores/ui'
 
 // Plain words first (D117): what happens to your file, what the AI sees, how answers are checked,
 // and what sharing sends. The details follow in the table.
 const STEPS = [
   {
-    title: 'Your file stays on your device',
-    text: 'flashQuery reads it right here, in your browser, with a built-in database. Your files are never uploaded.',
+    title: 'Your file is read on your device',
+    text: 'HushGlance analyses it right here, in your browser, with a built-in database. Signed in, your projects and files are saved to your account encrypted on this device first, so only your passphrase opens them: we can’t read them, and they never go to an AI.',
   },
   {
     title: 'The AI sees the outline, not your rows',
-    text: "Table and column names. In Balanced mode, also a few statistics and sample values, and the answer's result (up to 50 rows) to write its summary. Strict mode sends no values at all.",
+    text: "Table and column names and types: in Strict mode, the default, no value from your data is ever sent. If you choose Balanced, also a few statistics and sample values, and the answer's result (up to 50 rows) to write its summary.",
   },
   {
     title: 'The AI writes the query; your device runs it',
@@ -32,7 +33,7 @@ const STEPS = [
   },
   {
     title: 'Sharing is your choice',
-    text: "Signed in, you can share a dashboard's results with people or by link. A dialog lists exactly what will upload first; your files never do.",
+    text: "Signed in, you can share a dashboard's results with people or by link. A dialog lists exactly what will be shared first; your files never are.",
   },
 ]
 
@@ -61,16 +62,18 @@ export function HowItWorksDialog({ inspector = true }: { inspector?: boolean }) 
   const setSidePanelTab = useUiStore((state) => state.setSidePanelTab)
   const setSettingsOpen = useUiStore((state) => state.setSettingsOpen)
   const mode = useSettingsStore((state) => state.privacyMode)
-  const demo = useSettingsStore((state) => activeApiKey(state) === null)
+  const aiMode = useAiMode()
+  const demo = aiMode === 'demo'
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>How flashQuery works</DialogTitle>
+          <DialogTitle>How HushGlance works</DialogTitle>
           <DialogDescription>
-            Add your own AI key (Anthropic, OpenAI, or a model on your computer). Without one, demo
-            mode answers example questions about the samples.
+            Ask with HushGlance AI (sign in: 3 free questions, then Pro), or your own AI key
+            (Anthropic, OpenAI, OpenRouter, or a model on your computer). Without either, demo mode
+            answers example questions about the samples.
           </DialogDescription>
         </DialogHeader>
         <ol className="grid gap-3 text-sm">
@@ -110,7 +113,9 @@ export function HowItWorksDialog({ inspector = true }: { inspector?: boolean }) 
         <p className="text-xs text-muted-foreground">
           {demo
             ? 'Demo mode sends nothing: its answers are prepared in advance, and the numbers are worked out on your device.'
-            : 'Requests go straight from your browser to the AI provider with your key. Your rows and files stay here.'}{' '}
+            : aiMode === 'hosted'
+              ? 'HushGlance AI passes each request through our server to the model, through OpenRouter, with zero data retention required: none of us keeps it. Your rows and files stay here.'
+              : 'Requests go straight from your browser to the AI provider with your key. Your rows and files stay here.'}{' '}
           Voice questions are recognized on this device; no audio leaves it.
         </p>
         <DialogFooter>

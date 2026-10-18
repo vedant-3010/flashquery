@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<title>Privacy policy · HushGlance</title>
+<!-- Draft for review before going live (F-PLAN-05). Fill in every [bracketed] placeholder. -->
+<style>
+  :root { color-scheme: light dark; --ink: #1d1a17; --muted: #5d574f; --paper: #f7f4ee; --line: #ddd6ca; --accent: #5500aa; }
+  @media (prefers-color-scheme: dark) { :root { --ink: #f1ece4; --muted: #b3aca1; --paper: #161412; --line: #37322c; --accent: #c4a1ff; } }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 16px/1.65 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 44rem; margin: 0 auto; padding: 48px 20px 80px; }
+  a { color: var(--accent); }
+  h1 { font-size: 2.2rem; line-height: 1.15; margin: 0 0 .25rem; }
+  h2 { font-size: 1.2rem; margin: 2.2rem 0 .4rem; }
+  p, li { color: var(--muted); }
+  .top { display: flex; justify-content: space-between; font-size: .9rem; border-bottom: 1px solid var(--line); padding-bottom: 12px; margin-bottom: 32px; }
+  .updated { font-size: .9rem; }
+</style>
+</head>
+<body>
+<main>
+<div class="top"><a href="/">HushGlance</a><span><a href="/terms.html">Terms</a> · <a href="/privacy.html">Privacy</a> · <a href="/refunds.html">Refunds</a></span></div>
+<h1>Privacy policy</h1>
+<p class="updated">Last updated: 15 October 2026</p>
+
+<p>HushGlance is built so that we see as little as possible. This page says exactly what we do and don't get.</p>
+
+<h2>Your files and projects</h2>
+<p>Your files are read and analysed inside your browser: no server of ours analyses them, and they are never sent to an AI model.</p>
+<p>When you sign in, your projects (their files, questions, answers' queries, dashboards and notes) are saved to your account so you can use them on any device. Before anything is saved, it is encrypted in your browser (AES-256-GCM) with a key that only your passphrase or your recovery key opens. We never receive your passphrase, your recovery key or that key in a usable form, so we cannot read what you save, and nor can anyone who gets access to our storage.</p>
+<p>What we can see about your saved workspace: that it exists, how many records and files it has, their sizes, when they changed, and short record names such as "history" or "dashboards" (never your project or file names). Projects you mark "Keep on this device only", the demo, and everything you do without an account stay in your browser.</p>
+<p>If you forget your passphrase and lose your recovery key, we cannot recover your saved workspace.</p>
+
+<h2>What goes to an AI model</h2>
+<p>To write a query, HushGlance sends a model only what your privacy mode allows. <strong>Strict</strong>: your question and the names and types of your tables and columns, never a value from your data. <strong>Balanced</strong>: also a few sample values and, for the written summary, the answer's result rows (up to 50). The app's AI inspector shows every request exactly as sent.</p>
+<ul>
+<li><strong>Your own key</strong> (Anthropic, OpenAI or OpenRouter): requests go straight from your browser to that provider, under its terms. They never pass through us.</li>
+<li><strong>A model on your computer</strong>: nothing leaves your device.</li>
+<li><strong>HushGlance AI</strong> (hosted): requests pass through our server to OpenRouter, which routes them to the model's provider. Every request requires zero data retention, so only providers that keep nothing are used. We don't store or log the content of requests or answers.</li>
+</ul>
+
+<h2>What we keep</h2>
+<ul>
+<li><strong>Your account</strong>: email address, display name, and how you sign in.</li>
+<li><strong>Usage of HushGlance AI</strong>: for each request, the model, token counts, cost, status and time, never its content. We use this for your allowance, to prevent abuse and to run the service.</li>
+<li><strong>Your subscription</strong>: plan, status, renewal dates and your Dodo Payments customer and subscription IDs. We never see your card details.</li>
+<li><strong>Your encrypted workspace</strong>: as above, readable only with your passphrase or recovery key, until you delete it.</li>
+<li><strong>Dashboards you share</strong>: their layout, titles, queries and results, readable by the people you share them with, until you stop sharing or delete them.</li>
+</ul>
+<p>No analytics, no advertising and no tracking cookies.</p>
+
+<h2>Who processes data for us</h2>
+<ul>
+<li>Supabase: accounts, database, encrypted file storage and our server functions.</li>
+<li>Vercel: serving the website and the app.</li>
+<li>OpenRouter, and the model providers it routes to with zero data retention: HushGlance AI requests only.</li>
+<li>Dodo Payments: payments, as merchant of record (see its privacy policy).</li>
+</ul>
+
+<h2>Your choices</h2>
+<p>You can use HushGlance without an account. In the app's Settings you can delete your saved workspace from your account at any time (your browser keeps its copy). Deleting your account deletes your profile, your encrypted workspace and files, your shared dashboards and your usage records. To ask for a copy of your data or for anything else, contact us below.</p>
+
+<h2>Contact</h2>
+<p>Questions about this page: <a href="mailto:[contact email]">[contact email]</a>.</p>
+</main>
+</body>
+</html>

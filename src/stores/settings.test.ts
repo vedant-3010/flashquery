@@ -5,9 +5,20 @@ import { activeApiKey, SETTINGS_RECORD } from './settings'
 
 // Settings v5 (F-AI-06): a local OpenAI-compatible server needs a localhost URL and a model, no key.
 // Settings v6 (F-ASK-16): the planner's effort, chosen in the ask bar. v7 (F-VIZ-12): chart colors.
+// v8 (F-PLAN-01): OpenRouter, and hosted AI for signed-in users who didn't save a key.
 
-const keys = { anthropic: null, openai: null, local: null }
-const models = { anthropic: 'claude-sonnet-5', openai: 'gpt-6-sol', local: 'qwen2.5-coder:7b' }
+const keys = { anthropic: null, openai: null, openrouter: null, local: null }
+const models = {
+  anthropic: 'claude-sonnet-5',
+  openai: 'gpt-6-sol',
+  openrouter: 'anthropic/claude-sonnet-5',
+  local: 'qwen2.5-coder:7b',
+}
+const HOSTED = {
+  aiSource: 'hosted',
+  hostedModel: 'anthropic/claude-sonnet-5',
+  hostedNoticeSeen: false,
+}
 
 describe('settings', () => {
   it('migrates v4 settings to v5 with the local server defaults', async () => {
@@ -28,24 +39,28 @@ describe('settings', () => {
     expect(saved).toMatchObject({
       provider: 'openai',
       privacyMode: 'strict',
-      apiKeys: { openai: 'sk-test-key', local: null },
-      models: { local: 'qwen2.5-coder:7b' },
+      apiKeys: { openai: 'sk-test-key', local: null, openrouter: null },
+      models: { local: 'qwen2.5-coder:7b', openrouter: 'anthropic/claude-sonnet-5' },
+      // They saved a key: keep using it after signing in.
+      aiSource: 'own',
       baseUrl: 'http://localhost:11434/v1',
       persistFiles: false,
       effort: 'medium',
-      chartPalette: 'flashquery',
+      chartPalette: 'hushglance',
     })
   })
 
   it('migrates v5 settings to v6 keeping the effort they had (medium)', async () => {
+    const { openrouter: _model, ...v5Models } = models
+    const { openrouter: _key, ...v5Keys } = keys
     const v5 = {
       provider: 'anthropic',
-      models,
+      models: v5Models,
       baseUrl: 'http://localhost:11434/v1',
       privacyMode: 'balanced',
       dateDisplay: 'iso',
       rememberKey: false,
-      apiKeys: keys,
+      apiKeys: v5Keys,
       numberLocale: null,
       currency: null,
       autoRunPython: false,
@@ -55,8 +70,11 @@ describe('settings', () => {
     const store = memoryStore({ settings: { version: 5, savedAt: 0, data: v5 } })
     expect(await loadRecord(SETTINGS_RECORD, { store })).toEqual({
       ...v5,
+      models,
+      apiKeys: keys,
       effort: 'medium',
-      chartPalette: 'flashquery',
+      chartPalette: 'hushglance',
+      ...HOSTED,
     })
   })
 

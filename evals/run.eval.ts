@@ -18,7 +18,8 @@ import { toAppError } from '@/lib/errors'
 import { createTestEngine } from '@/test/duckdb'
 import { EVAL_ROWS, loadEvalDatasets, loadQuestions } from '@/test/evalData'
 
-// NL→SQL eval runner (F-QA-04): `ANTHROPIC_API_KEY=… npm run evals` (or `OPENAI_API_KEY=…`). Runs every question in
+// NL→SQL eval runner (F-QA-04): `ANTHROPIC_API_KEY=… npm run evals` (or `OPENAI_API_KEY=…`, or
+// `OPENROUTER_API_KEY=… EVAL_PROVIDER=openrouter EVAL_MODEL=maker/model`). Runs every question in
 // evals/questions.jsonl through the real pipeline (same prompts, guard and self-correction as the
 // app, Balanced mode), runs the reference SQL on the same data, compares the results and writes
 // evals/report.md. The key comes from the shell environment: the only place an env key is read.
@@ -27,13 +28,20 @@ import { EVAL_ROWS, loadEvalDatasets, loadQuestions } from '@/test/evalData'
 // key: a stand-in provider answers with the reference SQL, which checks the harness (expect 100%).
 
 // The provider whose key is in the shell; EVAL_PROVIDER=openai picks OpenAI when both keys are set.
-const providerId: 'anthropic' | 'openai' =
-  process.env.EVAL_PROVIDER === 'openai' ||
-  (!process.env.ANTHROPIC_API_KEY && Boolean(process.env.OPENAI_API_KEY))
-    ? 'openai'
-    : 'anthropic'
-const apiKey =
-  (providerId === 'openai' ? process.env.OPENAI_API_KEY : process.env.ANTHROPIC_API_KEY) ?? ''
+// EVAL_PROVIDER=openrouter (OPENROUTER_API_KEY, EVAL_MODEL=maker/model) checks a model for the
+// hosted list (F-PLAN-01, D121): through OpenRouter with zero data retention forced, as hosted.
+const KEYS = {
+  anthropic: process.env.ANTHROPIC_API_KEY,
+  openai: process.env.OPENAI_API_KEY,
+  openrouter: process.env.OPENROUTER_API_KEY,
+} as const
+const providerId: keyof typeof KEYS =
+  process.env.EVAL_PROVIDER === 'openrouter'
+    ? 'openrouter'
+    : process.env.EVAL_PROVIDER === 'openai' || (!KEYS.anthropic && Boolean(KEYS.openai))
+      ? 'openai'
+      : 'anthropic'
+const apiKey = KEYS[providerId] ?? ''
 const dryRun = process.env.EVAL_DRY_RUN === '1'
 const model = process.env.EVAL_MODEL ?? DEFAULT_MODEL[providerId]
 const only = process.env.EVAL_ONLY ?? ''

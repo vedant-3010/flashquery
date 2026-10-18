@@ -49,3 +49,36 @@ describe('landing data', () => {
     expect(GROWTH[0]?.region).toBe('APAC')
   })
 })
+
+describe('landing pricing (F-PLAN-05)', () => {
+  it('matches the plans the database seeds', async () => {
+    const { readFileSync } = await import('node:fs')
+    const { PRICING } = await import('./data')
+    // Tests run from the project root.
+    const sql = readFileSync('supabase/migrations/20261012000000_plans.sql', 'utf8')
+    expect(sql).toContain(`('free', 'Free', ${PRICING.freeQuestions}, 'lifetime'`)
+    expect(sql).toContain(
+      `('starter', 'Starter', ${PRICING.starterQuestions}, 'month', array['standard'], ${PRICING.starterMonthlyUsd}, ${PRICING.starterYearlyUsd})`,
+    )
+    expect(sql).toContain(
+      `('pro', 'Pro', ${PRICING.proQuestions}, 'month', array['standard', 'premium'], ${PRICING.proMonthlyUsd}, ${PRICING.proYearlyUsd})`,
+    )
+    for (const label of PRICING.standardModels) {
+      expect(sql).toMatch(new RegExp(`'${label}'[^)]*'standard', 1,[^)]*true`))
+    }
+    for (const label of PRICING.premiumModels) {
+      expect(sql).toMatch(
+        new RegExp(`'${label}'[^)]*'premium', ${PRICING.premiumWeight},[^)]*true`),
+      )
+    }
+    // Storage (M17): the vault migration sets each plan's room in bytes.
+    const vault = readFileSync('supabase/migrations/20261016000000_vault.sql', 'utf8')
+    for (const [plan, gb] of [
+      ['free', PRICING.freeStorageGb],
+      ['starter', PRICING.starterStorageGb],
+      ['pro', PRICING.proStorageGb],
+    ] as const) {
+      expect(vault).toContain(`when '${plan}' then ${gb * 1_000_000_000}\n`)
+    }
+  })
+})

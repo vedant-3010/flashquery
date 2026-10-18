@@ -60,7 +60,7 @@ describe('Supabase migrations', () => {
     },
   )
 
-  it('creates the profiles and sharing tables', () => {
+  it('creates the profiles, sharing and plans tables', () => {
     expect(tables).toEqual(
       expect.arrayContaining([
         'public.profiles',
@@ -68,7 +68,39 @@ describe('Supabase migrations', () => {
         'public.dashboard_members',
         'public.dashboard_invites',
         'public.share_links',
+        'public.ai_models',
+        'public.plans',
+        'public.subscriptions',
+        'public.billing_events',
+        'public.ai_questions',
+        'public.ai_usage',
       ]),
     )
+  })
+
+  it('gives clients no way to write plans, subscriptions or usage (F-PLAN-02)', () => {
+    for (const table of [
+      'ai_models',
+      'plans',
+      'subscriptions',
+      'billing_events',
+      'ai_questions',
+      'ai_usage',
+    ]) {
+      expect(sql).not.toMatch(
+        new RegExp(`create policy "[^"]+" on public\\.${table}\\s+for (insert|update|delete|all)`),
+      )
+    }
+  })
+
+  it('lets only the service role meter and bill (the Edge Functions)', () => {
+    for (const fn of ['ai_begin', 'ai_finish', 'billing_apply']) {
+      expect(sql).toMatch(
+        new RegExp(`grant execute on function public\\.${fn}\\([^)]*\\) to service_role;`),
+      )
+      expect(sql).not.toMatch(
+        new RegExp(`grant execute on function public\\.${fn}\\([^)]*\\) to [^;]*authenticated`),
+      )
+    }
   })
 })

@@ -1,4 +1,4 @@
-import { LogOut, UserRound } from 'lucide-react'
+import { CreditCard, LogOut, UserRound } from 'lucide-react'
 import { Link, useLocation } from 'wouter'
 import { paths } from '@/app/paths'
 import { Button } from '@/components/ui/button'
@@ -54,6 +54,10 @@ export function AccountMenu() {
         <DropdownMenuItem onSelect={() => navigate(paths.account)}>
           <UserRound aria-hidden />
           Account
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => navigate(paths.billing)}>
+          <CreditCard aria-hidden />
+          Plan and billing
         </DropdownMenuItem>
         <DropdownMenuItem
           onSelect={() =>

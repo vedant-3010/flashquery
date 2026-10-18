@@ -33,7 +33,7 @@ test.describe('benchmark page', () => {
     expect(markdown).toContain('| Metric | Result | Budget | |')
     expect(markdown).toContain('100,000 rows')
 
-    await page.getByRole('link', { name: 'Back to flashQuery' }).click()
+    await page.getByRole('link', { name: 'Back to HushGlance' }).click()
     await expect(page.getByRole('heading', { name: 'What do you want to look at?' })).toBeVisible()
   })
 })

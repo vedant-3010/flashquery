@@ -55,7 +55,7 @@ export function WhoItsFor() {
     <section
       id="who"
       aria-labelledby="who-title"
-      className="mx-auto max-w-[1200px] px-5 pt-24 md:px-8 md:pt-32"
+      className="mx-auto max-w-[1200px] px-5 pt-20 md:px-8 md:pt-32"
     >
       <Reveal group className="max-w-[52rem]">
         <Eyebrow>Who it’s for</Eyebrow>

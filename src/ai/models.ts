@@ -75,14 +75,21 @@ export const MODELS: ModelInfo[] = [
 export const DEFAULT_MODEL: Record<ProviderId, string> = {
   anthropic: 'claude-sonnet-5',
   openai: 'gpt-6-sol',
+  // OpenRouter slugs (maker/model), checked on openrouter.ai/api/v1/models (2026-10-11).
+  openrouter: 'anthropic/claude-sonnet-5',
   // A suggestion for Ollama; local servers name their own models (F-AI-06).
   local: 'qwen2.5-coder:7b',
 }
+
+/** HushGlance AI's default (F-PLAN-01): an OpenRouter slug, listed in the ai_models table. */
+export const HOSTED_DEFAULT_MODEL = 'anthropic/claude-sonnet-5'
 
 /** For cheap, latency-sensitive calls (e.g. suggested questions, M7). */
 export const FAST_MODEL: Record<ProviderId, string> = {
   anthropic: 'claude-haiku-4-5-20251001',
   openai: 'gpt-6-luna',
+  /** OpenRouter: the planner's maker's fast model (openRouterFastModel), else the planner. */
+  openrouter: '',
   /** Empty: a local server uses its one model for everything. */
   local: '',
 }
@@ -90,7 +97,33 @@ export const FAST_MODEL: Record<ProviderId, string> = {
 export const PROVIDER_LABELS: Record<ProviderId, string> = {
   anthropic: 'Anthropic',
   openai: 'OpenAI',
+  openrouter: 'OpenRouter',
   local: 'Local server (OpenAI-compatible)',
+}
+
+/** OpenRouter's fast model for a maker, for summaries and suggestions (its slugs, not ours). */
+const OPENROUTER_FAST: Record<string, string> = {
+  anthropic: 'anthropic/claude-haiku-4.5',
+  openai: 'openai/gpt-6-luna',
+}
+
+/** The model that writes summaries for an OpenRouter planner: its maker's fast one, or itself. */
+export function openRouterFastModel(model: string): string {
+  return OPENROUTER_FAST[model.split('/')[0] ?? ''] ?? model
+}
+
+/**
+ * The effort an OpenRouter request sends: only for models we know take it (by their own ID after
+ * the maker), since OpenRouter routes only to endpoints that support every parameter we send.
+ */
+export function openRouterEffort(model: string, effort: Effort): RequestEffort | null {
+  return requestEffort(model.split('/')[1] ?? '', effort)
+}
+
+/** "anthropic/claude-sonnet-5" → "claude-sonnet-5": a short label for an OpenRouter slug. */
+export function openRouterShortLabel(model: string): string {
+  const id = model.split('/')[1] ?? model
+  return findModel(id) ? shortModelLabel(id) : id
 }
 
 export function modelsFor(provider: ProviderId): ModelInfo[] {

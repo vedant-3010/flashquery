@@ -13,7 +13,10 @@ import { HowItWorksDialog } from '@/features/ask/HowItWorksDialog'
 import { DatasetsPanel } from '@/features/datasets/DatasetsPanel'
 import { FileDropZone } from '@/features/datasets/FileDropZone'
 import { PasteDataDialog } from '@/features/datasets/PasteDataDialog'
+import { UpgradeDialog } from '@/features/plan/UpgradeDialog'
 import { SettingsDialog } from '@/features/settings/SettingsDialog'
+import { SyncDialogs } from '@/features/sync/SyncDialogs'
+import { SyncNotice } from '@/features/sync/SyncNotice'
 import { ScratchpadView } from '@/features/sql/ScratchpadView'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { looksLikeTable } from '@/lib/tsv'
@@ -124,6 +127,9 @@ export function AppShell() {
           </Sheet>
         )}
         <main className="flex min-w-0 flex-1 flex-col">
+          <div className="empty:hidden px-3 pt-3">
+            <SyncNotice where="project" />
+          </div>
           <TabsContent value="workspace" className="flex min-h-0 flex-col">
             <PanelErrorBoundary name="the workspace">
               <AskView />
@@ -152,6 +158,8 @@ export function AppShell() {
       </div>
       <FileDropZone />
       <SettingsDialog />
+      <UpgradeDialog />
+      <SyncDialogs />
       <ShortcutsDialog />
       <CommandPalette />
       <PasteDataDialog />

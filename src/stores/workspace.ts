@@ -14,7 +14,7 @@ import { DatasetNotesSchema, useNotesStore } from '@/stores/notes'
 // unless the user opts in to dashboard snapshots. Clear all local data (F-EXP-04).
 
 export const WorkspaceFileSchema = z.object({
-  format: z.literal('flashQuery-workspace'),
+  format: z.literal('HushGlance-workspace'),
   version: z.literal(1),
   exportedAt: z.number(),
   history: z.array(HistoryEntrySchema),
@@ -29,7 +29,7 @@ export function exportWorkspace({ snapshots }: { snapshots: boolean }): {
   json: string
 } {
   const file: WorkspaceFile = {
-    format: 'flashQuery-workspace',
+    format: 'HushGlance-workspace',
     version: 1,
     exportedAt: Date.now(),
     history: useHistoryStore.getState().entries,
@@ -43,7 +43,7 @@ export function exportWorkspace({ snapshots }: { snapshots: boolean }): {
     evalCases: useFeedbackStore.getState().cases,
   }
   const day = new Date(file.exportedAt).toISOString().slice(0, 10)
-  return { fileName: `flashQuery-workspace-${day}.json`, json: JSON.stringify(file, null, 2) }
+  return { fileName: `HushGlance-workspace-${day}.json`, json: JSON.stringify(file, null, 2) }
 }
 
 /** Adds an exported workspace to this one: history and notes merge, dashboards come in as copies. */
@@ -66,7 +66,7 @@ export function importWorkspace(text: string): {
   if (!parsed.success) {
     throw new AppError({
       code: 'import_invalid',
-      message: "This isn't an flashQuery workspace file (or it is from a newer version).",
+      message: "This isn't an HushGlance workspace file (or it is from a newer version).",
       detail: parsed.error.issues
         .slice(0, 5)
         .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
@@ -82,7 +82,7 @@ export function importWorkspace(text: string): {
   const dashboards = useDashboardStore.getState()
   for (const dashboard of file.dashboards) {
     dashboards.importDashboard({
-      format: 'flashQuery-dashboard',
+      format: 'HushGlance-dashboard',
       version: 1,
       exportedAt: file.exportedAt,
       dashboard,
@@ -100,7 +100,7 @@ export function importWorkspace(text: string): {
   }
 }
 
-/** Removes everything flashQuery saved in this browser (a sign-in too), then starts again on Home (F-EXP-04). */
+/** Removes everything HushGlance saved in this browser (a sign-in too), then starts again on Home (F-EXP-04). */
 export async function clearLocalData(): Promise<void> {
   await idbStore.clear()
   await clearOpfs()

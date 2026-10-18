@@ -4,11 +4,11 @@ import { handleSharing, mockCloud, type MockCloud } from './supabaseSharing.ts'
 // A mocked account service (F-ACCT, M13) for e2e: just enough of Supabase Auth (GoTrue), the
 // profiles table and the sharing tables (supabaseSharing.ts, M14) for the real supabase-js in the
 // browser. The dev server learns the URL from
-// window.__flashQueryAccounts; CI's production build is built with the same URL (ci.yml).
+// window.__HushGlanceAccounts; CI's production build is built with the same URL (ci.yml).
 
 declare global {
   interface Window {
-    __flashQueryAccounts?: { url: string; key: string }
+    __HushGlanceAccounts?: { url: string; key: string }
   }
 }
 
@@ -85,7 +85,7 @@ export async function mockSupabase(
 ): Promise<MockSupabase> {
   await page.addInitScript(
     ({ url, key }) => {
-      window.__flashQueryAccounts = { url, key }
+      window.__HushGlanceAccounts = { url, key }
     },
     { url: SUPABASE_URL, key: SUPABASE_KEY },
   )
@@ -187,6 +187,11 @@ export async function mockSupabase(
       const user = fromToken()
       state.users = state.users.filter((u) => u !== user)
       return route.fulfill({ status: 204, headers: CORS })
+    }
+    // What PostgREST answers for a table or function this deployment doesn't have.
+    const missing = path.startsWith('/rest/v1/rpc/') ? 'PGRST202' : 'PGRST205'
+    if (path.startsWith('/rest/v1/')) {
+      return json(route, 404, { code: missing, message: `Not mocked: ${path}`, details: null })
     }
     return fail(route, 404, 'not_found', `Not mocked: ${path}`)
   })

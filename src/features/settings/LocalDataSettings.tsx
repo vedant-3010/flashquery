@@ -36,7 +36,7 @@ export function LocalDataSettings({ inProject = true }: { inProject?: boolean })
   }
 
   const downloadCases = () => {
-    const fileName = `flashQuery-eval-cases-${new Date().toISOString().slice(0, 10)}.jsonl`
+    const fileName = `HushGlance-eval-cases-${new Date().toISOString().slice(0, 10)}.jsonl`
     downloadBytes(new TextEncoder().encode(toJsonl(cases)), fileName, 'application/jsonl')
     toast(`Exported ${fileName}.`)
   }
@@ -55,8 +55,8 @@ export function LocalDataSettings({ inProject = true }: { inProject?: boolean })
   return (
     <div className="grid gap-3 text-sm">
       <p className="text-xs text-muted-foreground">
-        Settings, projects (history, dashboards, notes) and eval cases are saved in this browser
-        only. Files are saved only if you choose to keep them.
+        Settings and eval cases are saved in this browser only. Projects (history, dashboards,
+        notes, files) are saved here too and, signed in, to your account, encrypted.
       </p>
       <KeepFilesSetting />
       {!inProject && (
@@ -152,7 +152,7 @@ export function LocalDataSettings({ inProject = true }: { inProject?: boolean })
             <AlertDialogTitle>Clear all local data?</AlertDialogTitle>
             <AlertDialogDescription>
               This removes your settings (including a remembered API key), history, dashboards,
-              notes and any kept files from this browser, then reloads flashQuery. Export your
+              notes and any kept files from this browser, then reloads HushGlance. Export your
               workspace first to keep a copy.
             </AlertDialogDescription>
           </AlertDialogHeader>

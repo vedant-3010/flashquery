@@ -25,8 +25,11 @@ export interface IngestJob {
   id: string
   label: string
   table: string
-  status: 'loading' | 'profiling' | 'choose-sheet' | 'error'
+  /** 'downloading': a kept file coming from the account (M17), before it loads. */
+  status: 'downloading' | 'loading' | 'profiling' | 'choose-sheet' | 'error'
   startedAt: number
+  /** How much of a download is done (0–1), while downloading. */
+  progress: number | null
   /** Size guardrail shown while loading. */
   warning: string | null
   error: AppErrorData | null
@@ -51,9 +54,20 @@ interface DatasetsState {
   setNotes: (id: string, notes: DatasetNotes) => void
   /** Adds a job for `stored` and runs it (re-import, paste: stores/datasetEdits.ts). */
   startJob: (job: { id: string; label: string; table: string }, stored: StoredInput) => void
+  /** Downloads a kept file from the account (M17, F-SYNC-04), then loads it like startJob. */
+  downloadJob: (job: { id: string; label: string; table: string }, download: Download) => void
   /** Replaces a dataset's profile (after a column type change). */
   replaceDataset: (dataset: DatasetProfile) => void
 }
+
+/** Fetches a kept file's input, reporting progress (0–1); rejects when `signal` aborts. */
+export type Download = (
+  onProgress: (fraction: number) => void,
+  signal: AbortSignal,
+) => Promise<StoredInput>
+
+/** Downloads by job, kept for Retry. */
+const downloads = new Map<string, Download>()
 
 let counter = 0
 /** Ids are ordered: the catalog lists datasets in the order they were added, not finished. */
@@ -76,7 +90,9 @@ export const useDatasetsStore = create<DatasetsState>()((set, get) => {
       (table) => table !== except,
     )
 
-  const addJob = (job: Omit<IngestJob, 'status' | 'startedAt' | 'error' | 'sheets' | 'canRetry'>) =>
+  const addJob = (
+    job: Omit<IngestJob, 'status' | 'startedAt' | 'error' | 'sheets' | 'canRetry' | 'progress'>,
+  ) =>
     set((state) => ({
       jobs: [
         ...state.jobs,
@@ -84,12 +100,45 @@ export const useDatasetsStore = create<DatasetsState>()((set, get) => {
           ...job,
           status: 'loading',
           startedAt: Date.now(),
+          progress: null,
           error: null,
           sheets: null,
           canRetry: true,
         },
       ],
     }))
+
+  async function downloadThenRun(id: string) {
+    const download = downloads.get(id)
+    const job = findJob(id)
+    if (!download || !job) return
+    const controller = new AbortController()
+    controllers.set(id, controller)
+    patchJob(id, { status: 'downloading', progress: 0, error: null, startedAt: Date.now() })
+    try {
+      const stored = await download((progress) => patchJob(id, { progress }), controller.signal)
+      controllers.delete(id)
+      if (!findJob(id)) return
+      downloads.delete(id)
+      inputs.set(id, stored)
+      void runJob(id)
+    } catch (error) {
+      controllers.delete(id)
+      if (controller.signal.aborted || isCancellation(error)) {
+        downloads.delete(id)
+        removeJob(id)
+        return
+      }
+      failJob(
+        id,
+        toAppError(
+          error,
+          'download_failed',
+          `${job.label} couldn't be downloaded from your account.`,
+        ),
+      )
+    }
+  }
 
   async function runJob(id: string) {
     const stored = inputs.get(id)
@@ -247,6 +296,7 @@ export const useDatasetsStore = create<DatasetsState>()((set, get) => {
     },
 
     retryJob: (jobId, { skipBadRows = false } = {}) => {
+      if (downloads.has(jobId)) return void downloadThenRun(jobId)
       const stored = inputs.get(jobId)
       if (stored) {
         inputs.set(jobId, { ...stored, ignoreErrors: stored.ignoreErrors || skipBadRows })
@@ -265,7 +315,7 @@ export const useDatasetsStore = create<DatasetsState>()((set, get) => {
         // Not running (choosing a sheet, parsing Excel, or failed): just drop it.
         removeJob(jobId)
         forgetInput(jobId)
-        for (const map of [excelFiles, workbooks, excelParseMs]) map.delete(jobId)
+        for (const map of [excelFiles, workbooks, excelParseMs, downloads]) map.delete(jobId)
       }
     },
 
@@ -335,6 +385,13 @@ export const useDatasetsStore = create<DatasetsState>()((set, get) => {
       inputs.set(job.id, stored)
       addJob({ ...job, warning: null })
       void runJob(job.id)
+    },
+
+    downloadJob: (job, download) => {
+      if (get().jobs.some((j) => j.id === job.id)) return
+      downloads.set(job.id, download)
+      addJob({ ...job, warning: null })
+      void downloadThenRun(job.id)
     },
 
     replaceDataset: (dataset) =>

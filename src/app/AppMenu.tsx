@@ -25,7 +25,8 @@ import {
 import { ThemePreferenceSchema } from '@/lib/theme'
 import { cn } from '@/lib/utils'
 import { useEngineStore } from '@/stores/engine'
-import { activeApiKey, useSettingsStore } from '@/stores/settings'
+import { useAiMode } from '@/stores/aiMode'
+import { useSettingsStore } from '@/stores/settings'
 import { useUiStore } from '@/stores/ui'
 
 const ENGINE = {
@@ -41,7 +42,7 @@ const ENGINE = {
  */
 export function AppMenu({ inProject }: { inProject: boolean }) {
   const mode = useSettingsStore((state) => state.privacyMode)
-  const demo = useSettingsStore((state) => activeApiKey(state) === null)
+  const demo = useAiMode() === 'demo'
   const theme = useSettingsStore((state) => state.theme)
   const setTheme = useSettingsStore((state) => state.setTheme)
   const engine = useEngineStore((state) => state.status)
@@ -114,7 +115,7 @@ export function AppMenu({ inProject }: { inProject: boolean }) {
         </DropdownMenuSub>
         <DropdownMenuItem onSelect={() => ui().setHowItWorksOpen(true)}>
           <CircleHelp aria-hidden />
-          How flashQuery works
+          How HushGlance works
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

@@ -25,7 +25,7 @@ const FEATURES: { title: string; body: string; tags: string; Preview: ComponentT
   },
   {
     title: 'Ask in plain English',
-    body: 'Type your question, or say it. Unsure how something is spelled in your data? It checks before it answers.',
+    body: 'Type your question, or say it: your voice is recognized on your device. Follow-ups build on the last answer.',
     tags: 'Typed or spoken · Checks first',
     Preview: AskVignette,
   },
@@ -82,7 +82,7 @@ export function FeatureIndex() {
     <section
       id="features"
       aria-labelledby="features-title"
-      className="mx-auto max-w-[1200px] px-5 pt-24 md:px-8 md:pt-32"
+      className="mx-auto max-w-[1200px] px-5 pt-20 md:px-8 md:pt-32"
     >
       <Reveal group className="max-w-[52rem]">
         <Eyebrow>All in one place</Eyebrow>

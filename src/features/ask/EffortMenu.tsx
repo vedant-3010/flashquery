@@ -1,5 +1,5 @@
 import { ChevronDown, Gauge } from 'lucide-react'
-import { EFFORT_OPTIONS, requestEffort } from '@/ai/models'
+import { EFFORT_OPTIONS, openRouterEffort, requestEffort } from '@/ai/models'
 import { EffortSchema } from '@/ai/schemas'
 import { Button } from '@/components/ui/button'
 import {
@@ -10,7 +10,8 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { activeApiKey, useSettingsStore } from '@/stores/settings'
+import { useAiMode } from '@/stores/aiMode'
+import { useSettingsStore } from '@/stores/settings'
 
 /**
  * How hard the model thinks before writing SQL (F-ASK-16), for models that take an effort; Auto
@@ -20,8 +21,12 @@ import { activeApiKey, useSettingsStore } from '@/stores/settings'
 export function EffortMenu() {
   const settings = useSettingsStore()
   const { effort, setEffort } = settings
-  if (activeApiKey(settings) === null) return null
-  if (requestEffort(settings.models[settings.provider], effort) === null) return null
+  const mode = useAiMode()
+  if (mode === 'demo') return null
+  const model = mode === 'hosted' ? settings.hostedModel : settings.models[settings.provider]
+  const takes =
+    mode === 'hosted' || settings.provider === 'openrouter' ? openRouterEffort : requestEffort
+  if (takes(model, effort) === null) return null
   const label = EFFORT_OPTIONS.find((option) => option.id === effort)?.label ?? effort
 
   return (

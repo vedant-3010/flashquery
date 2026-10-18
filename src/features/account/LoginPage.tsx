@@ -62,7 +62,7 @@ export function LoginPage() {
   return (
     <AuthLayout
       title="Sign in"
-      description="Your files stay on this device. Dashboards shared with you are waiting in your account."
+      description="Your projects are waiting, encrypted so only you can read them. So are dashboards shared with you."
       footer={
         <>
           <p>

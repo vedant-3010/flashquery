@@ -107,7 +107,7 @@ export function ShareDialog({
             <p>
               Stop sharing? The shared copy, its people and its links are deleted: anyone opening a
               link sees that it’s no longer shared.
-              {onUpdate && ' The dashboard stays on this device.'}
+              {onUpdate && ' The dashboard stays in your project.'}
             </p>
             <div className="flex justify-end gap-2">
               <Button variant="outline" disabled={stopping} onClick={() => setConfirmStop(false)}>

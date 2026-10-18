@@ -3,7 +3,7 @@
 ;(function () {
   var pref = 'system'
   try {
-    pref = localStorage.getItem('flashQuery:theme') || 'system'
+    pref = localStorage.getItem('HushGlance:theme') || 'system'
   } catch {
     // Storage blocked (private mode, sandbox): fall back to the system preference.
   }

@@ -23,7 +23,8 @@ import {
 import { isCancellation, toAppError } from '@/lib/errors'
 import { generate } from '@/stores/dashboardJobs'
 import { useDatasetsStore } from '@/stores/datasets'
-import { activeApiKey, useSettingsStore } from '@/stores/settings'
+import { useAiMode } from '@/stores/aiMode'
+import { useSettingsStore } from '@/stores/settings'
 import { useToastStore } from '@/stores/toast'
 
 const ICONS = {
@@ -42,7 +43,7 @@ export function GenerateDialog({
   onOpenChange: (open: boolean) => void
 }) {
   const datasets = useDatasetsStore((state) => state.datasets)
-  const demo = useSettingsStore((state) => activeApiKey(state) === null)
+  const demo = useAiMode() === 'demo'
   const mode = useSettingsStore((state) => state.privacyMode)
   // Demo mode builds dashboards for the samples: offer a loaded one first.
   const preferred = datasets.find((d) => demoSetsFor([d.table]).length > 0) ?? datasets[0]

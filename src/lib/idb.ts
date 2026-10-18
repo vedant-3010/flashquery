@@ -16,7 +16,7 @@ export interface KeyValueStore {
 }
 
 let database: ReturnType<typeof createStore> | null = null
-const idbDatabase = () => (database ??= createStore('flashQuery', 'records'))
+const idbDatabase = () => (database ??= createStore('HushGlance', 'records'))
 
 export const idbStore: KeyValueStore = {
   get: (key) => get(key, idbDatabase()),
@@ -48,7 +48,7 @@ export interface Envelope {
   data: unknown
 }
 
-function isEnvelope(value: unknown): value is Envelope {
+export function isEnvelope(value: unknown): value is Envelope {
   return (
     typeof value === 'object' &&
     value !== null &&
@@ -57,6 +57,34 @@ function isEnvelope(value: unknown): value is Envelope {
     Number.isInteger(value.version) &&
     'data' in value
   )
+}
+
+/**
+ * A saved envelope read with `spec`: migrated and validated, or why it can't be. `newer`: saved by
+ * a newer version of the app (another device can be ahead of this one).
+ */
+export function parseEnvelope<T>(
+  spec: RecordSpec<T>,
+  raw: unknown,
+): { ok: true; data: T } | { ok: false; reason: string; newer: boolean } {
+  const fail = (reason: string, newer = false) => ({ ok: false as const, reason, newer })
+  if (!isEnvelope(raw)) return fail('Not a saved HushGlance record.')
+  if (raw.version > spec.version) {
+    return fail(`Saved by a newer version of HushGlance (v${raw.version}).`, true)
+  }
+  let data = raw.data
+  for (let version = raw.version; version < spec.version; version += 1) {
+    const migrate = spec.migrations?.[version]
+    if (!migrate) return fail(`No migration from version ${version}.`)
+    try {
+      data = migrate(data)
+    } catch (error) {
+      return fail(`Migration from version ${version} failed: ${String(error)}`)
+    }
+  }
+  const parsed = spec.schema.safeParse(data)
+  if (!parsed.success) return fail(`Invalid data: ${parsed.error.issues[0]?.message ?? 'unknown'}`)
+  return { ok: true, data: parsed.data }
 }
 
 export async function loadRecord<T>(
@@ -74,35 +102,33 @@ export async function loadRecord<T>(
 ): Promise<T> {
   const raw = await store.get(spec.key)
   if (raw === undefined) return spec.fallback()
-
-  const reset = async (reason: string) => {
-    if (readOnly) return spec.fallback()
-    onCorrupt?.({ key: spec.key, reason, raw })
-    await store.del(spec.key)
-    return spec.fallback()
-  }
-
-  if (!isEnvelope(raw)) return reset('Not a saved flashQuery record.')
-  if (raw.version > spec.version) {
-    return reset(`Saved by a newer version of flashQuery (v${raw.version}).`)
-  }
-  let data = raw.data
-  for (let version = raw.version; version < spec.version; version += 1) {
-    const migrate = spec.migrations?.[version]
-    if (!migrate) return reset(`No migration from version ${version}.`)
-    try {
-      data = migrate(data)
-    } catch (error) {
-      return reset(`Migration from version ${version} failed: ${String(error)}`)
-    }
-  }
-  const parsed = spec.schema.safeParse(data)
-  if (!parsed.success) return reset(`Invalid data: ${parsed.error.issues[0]?.message ?? 'unknown'}`)
-  return parsed.data
+  const parsed = parseEnvelope(spec, raw)
+  if (parsed.ok) return parsed.data
+  if (readOnly) return spec.fallback()
+  onCorrupt?.({ key: spec.key, reason: parsed.reason, raw })
+  await store.del(spec.key)
+  return spec.fallback()
 }
 
 /** Saves still being written, so a page that is about to reload can wait for them (D113). */
 const writing = new Set<Promise<void>>()
+
+async function track(write: Promise<void>): Promise<void> {
+  writing.add(write)
+  try {
+    await write
+  } finally {
+    writing.delete(write)
+  }
+}
+
+/** Hears about every save to IndexedDB (the account sync, M17): the record's key and envelope. */
+export type SaveListener = (key: string, envelope: Envelope) => void
+let saveListener: SaveListener | null = null
+
+export function onRecordSaved(listener: SaveListener | null): void {
+  saveListener = listener
+}
 
 export async function saveRecord<T>(
   spec: RecordSpec<T>,
@@ -114,13 +140,29 @@ export async function saveRecord<T>(
     savedAt: Date.now(),
     data: spec.schema.parse(value),
   }
-  const write = store.set(spec.key, envelope)
-  writing.add(write)
-  try {
-    await write
-  } finally {
-    writing.delete(write)
-  }
+  await track(store.set(spec.key, envelope))
+  if (store === idbStore) saveListener?.(spec.key, envelope)
+}
+
+/** A record as saved (no migration or validation), or undefined. */
+export async function readEnvelope(
+  key: string,
+  store: KeyValueStore = idbStore,
+): Promise<Envelope | undefined> {
+  const raw = await store.get(key)
+  return isEnvelope(raw) ? raw : undefined
+}
+
+/**
+ * Writes a record another device saved (the account sync), as it was saved: it loads, migrates and
+ * validates like any other, and isn't announced back to the sync.
+ */
+export function writeEnvelope(
+  key: string,
+  envelope: Envelope,
+  store: KeyValueStore = idbStore,
+): Promise<void> {
+  return track(store.set(key, envelope))
 }
 
 /** Resolves once every save started so far has finished (or failed). */

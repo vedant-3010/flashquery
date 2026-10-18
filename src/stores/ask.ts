@@ -10,6 +10,7 @@ import {
   type SqlResult,
 } from '@/ai/pipeline'
 import type { LLMProvider } from '@/ai/providers'
+import { fixtureProvider } from '@/ai/providers/fixture'
 import type { AnswerSummary, PrivacyMode, SqlPlan } from '@/ai/schemas'
 import { Trace, type TraceStep } from '@/ai/trace'
 import type { ChartSpec } from '@/charts/spec'
@@ -26,12 +27,13 @@ import {
   setPythonInput,
   type PythonRun,
 } from '@/stores/askPython'
-import { currentProvider, logRequest, release, today, turns } from '@/stores/askSupport'
+import { currentProvider, logRequest, meterFor, release, today, turns } from '@/stores/askSupport'
+import { currentAiMode } from '@/stores/aiMode'
 import { useDatasetsStore } from '@/stores/datasets'
 import { useFeedbackStore } from '@/stores/feedback'
 import { useHistoryStore } from '@/stores/history'
 import { activeRelationships } from '@/stores/relationships'
-import { activeApiKey, useSettingsStore } from '@/stores/settings'
+import { useSettingsStore } from '@/stores/settings'
 
 // The answer feed (F-ASK-01…12): one question runs at a time; each becomes an answer card with a
 // chart (F-VIZ). In Balanced mode the AI summary replaces the local one once it arrives.
@@ -71,7 +73,8 @@ interface AskState {
   /** Tables questions are about; null = all loaded tables. */
   scope: string[] | null
   running: string | null
-  ask: (question: string) => Promise<void>
+  /** `demo`: answer from the prepared demo set (the try link's opening question costs nothing). */
+  ask: (question: string, options?: { demo?: boolean }) => Promise<void>
   cancel: () => void
   runEditedSql: (id: string, sql: string) => Promise<void>
   /** Switches or adjusts an answer's chart; reads new chart data when the chart needs it. */
@@ -136,7 +139,7 @@ export const useAskStore = create<AskState>()((set, get) => {
       })
       .catch((error: unknown) => {
         // Shown in the timeline and trace; the local summary stays.
-        if (!isCancellation(error)) console.warn('flashQuery: the AI summary failed', error)
+        if (!isCancellation(error)) console.warn('HushGlance: the AI summary failed', error)
       })
       .finally(() => {
         if (summaries.get(id) === current) summaries.delete(id)
@@ -148,7 +151,7 @@ export const useAskStore = create<AskState>()((set, get) => {
     scope: null,
     running: null,
 
-    ask: async (question) => {
+    ask: async (question, options) => {
       const text = question.trim()
       if (!text) return
       get().cancel()
@@ -170,7 +173,7 @@ export const useAskStore = create<AskState>()((set, get) => {
             question: text,
             createdAt: Date.now(),
             status: 'running',
-            demo: !activeApiKey(settings),
+            demo: options?.demo === true || currentAiMode() === 'demo',
             tables: datasets.map((dataset) => dataset.table),
             trace: [],
             plan: null,
@@ -202,7 +205,12 @@ export const useAskStore = create<AskState>()((set, get) => {
           settings.effort === 'auto'
             ? autoEffort(text, { tables: datasets.length, hasHistory: history.length > 0 })
             : null
-        const [provider, engine] = await Promise.all([currentProvider(auto?.effort), getDb()])
+        const [provider, engine] = await Promise.all([
+          options?.demo ? fixtureProvider : currentProvider(auto?.effort, meterFor(id)),
+          getDb(),
+        ])
+        // Hosted AI may turn out not to be offered here (the demo answers instead), or the reverse.
+        patch(id, { demo: provider.id === 'fixture' })
         const outcome = await runPipeline({
           answerId: id,
           question: text,
@@ -313,7 +321,7 @@ export const useAskStore = create<AskState>()((set, get) => {
         release(find(id)?.result ?? null)
         patch(id, { ...answered(executed), edited: true, error: null, trace: trace.steps })
         record('answered', executed.summary.headline, executed.result.rowCount)
-        summarize(id, await currentProvider(), settings.privacyMode)
+        summarize(id, await currentProvider(undefined, meterFor(id)), settings.privacyMode)
       } catch (error) {
         // The edited SQL failed: keep the previous result; the SQL tab shows why.
         const failure = toAppError(error)
@@ -336,7 +344,7 @@ export const useAskStore = create<AskState>()((set, get) => {
     remove: (id) => {
       const python = find(id)?.python ?? null
       releasePython(id, python).catch((error: unknown) =>
-        console.warn('flashQuery: could not free a Python result', error),
+        console.warn('HushGlance: could not free a Python result', error),
       )
       summaries.get(id)?.abort()
       release(find(id)?.result ?? null)

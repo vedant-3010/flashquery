@@ -13,10 +13,14 @@ import { QuickAsk } from '@/features/home/QuickAsk'
 import { RecentQuestions } from '@/features/home/RecentQuestions'
 import { SharedSection } from '@/features/home/SharedSection'
 import { StartOptions } from '@/features/home/StartOptions'
+import { UpgradeDialog } from '@/features/plan/UpgradeDialog'
 import { SettingsDialog } from '@/features/settings/SettingsDialog'
+import { SyncDialogs } from '@/features/sync/SyncDialogs'
+import { SyncNotice } from '@/features/sync/SyncNotice'
 import { greeting } from '@/lib/greeting'
 import { useAuthStore } from '@/stores/auth'
 import { useProjectsStore } from '@/stores/projects'
+import { useSyncStore } from '@/stores/sync'
 
 /**
  * Home at /app/ (F-HOME-03): a greeting, a quick ask, ways to start, the projects, dashboards
@@ -32,15 +36,19 @@ export function HomePage() {
   )
   const latest = sorted[0]
   const firstName = useAuthStore((state) => state.account?.name.trim().split(/\s+/)[0] ?? '')
+  const saved = useSyncStore((state) => state.status === 'ready' || state.status === 'syncing')
 
   useEffect(() => {
-    document.title = 'flashQuery'
+    document.title = 'HushGlance'
   }, [])
 
   return (
     <div className="flex min-h-dvh flex-col bg-background">
       <HomeHeader />
       <main className="mx-auto grid w-full max-w-5xl content-start gap-10 px-4 py-8 sm:px-6">
+        <div className="-mb-6 empty:hidden">
+          <SyncNotice where="home" />
+        </div>
         {!hydrated ? (
           <Skeleton className="h-40" />
         ) : !latest ? (
@@ -61,8 +69,10 @@ export function HomePage() {
                   {firstName && `, ${firstName}`}
                 </h1>
                 <p className="text-sm text-muted-foreground">
-                  Pick up where you left off, or start something new. Everything here stays in this
-                  browser.
+                  Pick up where you left off, or start something new.{' '}
+                  {saved
+                    ? 'Saved to your account, encrypted: only you can read it.'
+                    : 'Everything here stays in this browser.'}
                 </p>
               </div>
               <QuickAsk project={latest} />
@@ -95,6 +105,8 @@ export function HomePage() {
         )}
       </main>
       <SettingsDialog inProject={false} />
+      <UpgradeDialog />
+      <SyncDialogs prompt />
       <HowItWorksDialog inspector={false} />
       <Toaster />
     </div>

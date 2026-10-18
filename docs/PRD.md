@@ -1,17 +1,17 @@
-# flashQuery: Product Requirements Document
+# HushGlance: Product Requirements Document
 
 > Living document. Claude Code: read the relevant section before building a feature. Tick a feature's
 > checkbox only when its acceptance criteria (AC) and the Definition of Done in `CLAUDE.md` are met.
 > Record deviations and new decisions in §12.
 
-Version 2.0 (draft) · 2026-10-08 · v1: 2026-09-27
+Version 2.1 (draft) · 2026-10-12 (M16) · v2: 2026-10-08 · v1: 2026-09-27
 
 ---
 
 ## 1. Summary
 
-flashQuery is a privacy-first AI data analyst that runs entirely in the browser. Users upload a CSV, Excel,
-Parquet or JSON file and ask questions in plain English. flashQuery translates the question into DuckDB SQL
+HushGlance is a privacy-first AI data analyst that runs entirely in the browser. Users upload a CSV, Excel,
+Parquet or JSON file and ask questions in plain English. HushGlance translates the question into DuckDB SQL
 with an LLM, executes it locally in DuckDB-WASM, picks an appropriate chart, explains what it did and why,
 and lets the user assemble answers into a drag-and-drop dashboard. Statistical and forecasting questions
 can run as Python (pandas) in the browser via Pyodide.
@@ -25,6 +25,13 @@ projects and lets a signed-in user save dashboards to the cloud and share them b
 account service stores only what the user explicitly saves or shares (a dashboard and its results),
 after a dialog shows exactly what will upload. Guests, and the no-key demo, use everything else with
 no account and no request to the account service (D100).
+
+**M17: the workspace on every device, end-to-end encrypted.** A signed-in user's projects (files,
+questions, dashboards, notes) are saved to their account so they can work on any device, encrypted
+in the browser first with a key only their passphrase or recovery key opens: the service stores
+ciphertext it can't read (D123). Analysis still runs in the browser, and the AI still gets only what
+the privacy mode allows (Strict by default, D122). Projects marked "Keep on this device only", the
+try projects and guests never sync.
 
 ### 1.1 Problem
 
@@ -63,6 +70,11 @@ in under 2 s for up to 12 tiles.
 - **G7** Voice questions work with no audio leaving the device.
 - **G8** ≥ 90% execution accuracy on the eval set, measured before and after the M11 changes.
 - **G9** Guests and the demo make no request to the account service (automated test).
+- **G10** A signed-in user with no key gets 3 answers from HushGlance AI, and nothing they ask is
+stored by us or by any model provider (zero data retention forced on every hosted request, M16).
+- **G11** A project made on one device opens on another, with its files, questions and dashboards,
+and no request body to the account service contains a plaintext cell, question or name (automated
+canary, M17).
 
 
 
@@ -78,7 +90,8 @@ in under 2 s for up to 12 tiles.
 
 ### 1.4a Non-goals (v2)
 
-- Uploading or storing source files, or running queries on a server.
+- Running queries on a server, or any server reading users' files (files are stored only end-to-end
+  encrypted, M17, D123).
 - Real-time co-editing (edits save with a version check instead), scheduled refresh, alerts.
 - Live database or warehouse connections (still files only).
 - Fine-tuning a model (D108).
@@ -128,6 +141,17 @@ words appear in the box as they're spoken → Enter → answer. The audio is rec
 (no sign-up) → the finance sample loads and answers "How do monthly income and expenses compare?" →
 asks "Which customers owe us the most?" → generates the finance dashboard → signs up to share it with
 their team.
+- **J11 No key, then a paid plan (v2, M16)**: a finance lead signs up → opens a project with their export →
+asks 3 questions with HushGlance AI (no key; a note says what goes through our server, and that no
+one keeps it) → the meter reads "No free questions left" → the 4th opens "Upgrade to Pro" → Dodo's
+hosted checkout → back on Plan and billing, Pro arrives → asks a 4th, on any device they sign in to.
+- **J12 A second laptop (v2, M17)**: Rahul signs up on his work laptop → Home offers "Save your
+workspace to your account" (what will be saved, what we can see) → he picks a passphrase and saves
+the recovery key → loads an export, asks two questions, pins one → at home, signs in on his own
+laptop → "Unlock your workspace" → the passphrase (or the recovery key and a new passphrase) → the
+project is on Home → he opens it: the file downloads, decrypts and loads, the questions and the
+dashboard are there. A payroll project he marked "Keep on this device only" never left the work
+laptop.
 
 ---
 
@@ -224,8 +248,9 @@ Format: `ID (priority) Title: description. AC: acceptance criteria.`
 - [x] **F-AI-01 (P0) Bring your own key**: provider (Anthropic default, OpenAI), masked key, model picker
   from `src/ai/models.ts` + custom model ID, "Test connection", "Remember on this device" (IndexedDB) with
   a plain warning. AC: key never appears in logs, exports or the inspector.
-- [x] **F-AI-02 (P0) Privacy modes**: Strict / Balanced (default), with a plain-language list of exactly
-  what each sends; badge in the top bar. AC: switching takes effect on the next question.
+- [x] **F-AI-02 (P0) Privacy modes**: Strict (the default since D122) / Balanced, with a
+  plain-language list of exactly what each sends; badge in the top bar. AC: switching takes effect
+  on the next question.
 - [x] **F-AI-03 (P0) Demo mode**: automatic with no key; `FixtureProvider` answers the curated questions for
   Global Sales (§9); labelled "Demo answers are pre-recorded; SQL runs live on your device".
 - [x] **F-AI-04 (P1) Usage meter**: tokens and estimated cost per answer and per session (editable price
@@ -321,7 +346,7 @@ Format: `ID (priority) Title: description. AC: acceptance criteria.`
 - [x] **F-VIZ-11 (P1) Chart style** (v2): a refined default (Geist labels, hairline dashed grids,
   rounded bars, soft area gradients, hover dims other series, end-of-line labels for ≤ 4 series, a
   redesigned tooltip, entrance animation off with reduced motion).
-- [x] **F-VIZ-12 (P1) Palettes** (v2): flashQuery (violet-led), Tol bright, Okabe-Ito, Mono; per chart,
+- [x] **F-VIZ-12 (P1) Palettes** (v2): HushGlance (violet-led), Tol bright, Okabe-Ito, Mono; per chart,
   per dashboard, default in Settings. AC: the default is colour-blind-safe; the contrast test covers
   every palette (marks ≥ 3:1).
 
@@ -524,6 +549,73 @@ device.)*
 
 **Later (not planned):** comments on tiles, team workspaces, embedding a dashboard, a public gallery,
 refresh from a connected device.
+
+### 4.21 Plans and hosted AI (F-PLAN, v2)
+
+- [x] **F-PLAN-01 (P1) HushGlance AI**: signed-in users ask without a key. Requests go through the
+  `ai` Edge Function to OpenRouter with HushGlance's key, which never reaches the browser; the proxy
+  forces `provider: { zdr, data_collection: deny, require_parameters }`, a model list and output
+  caps, and never stores or logs a body. Only what the privacy mode allows is sent (`context.ts`,
+  as for any provider); the AI inspector shows every request. AC: `src/test/edge/aiProxy.test.ts`
+  (forcing, caps, no bodies in the log); `e2e/hosted.spec.ts` (headers, ZDR, Strict sends no values).
+- [x] **F-PLAN-02 (P1) Free questions and the meter**: 3 hosted questions per account, ever (an ask
+  with its repairs, summary and Python fix is one; so is a generated dashboard or "Suggest with AI");
+  sign-in and a confirmed email required; a failed first call gives the question back. AC: pgTAP
+  (`supabase/tests/plans.test.sql`): the 4th is refused, ids aren't charged twice, 8 calls a question,
+  races can't take the last one.
+- [x] **F-PLAN-03 (P1) Starter and Pro through Dodo Payments**: Starter $5/month or $50/year, 100
+  questions a month on the standard models; Pro $12/month or $120/year, 300 questions a month, plus
+  the premium models (Claude Opus 5.5, GPT-6 Astra) at 5 each. Dodo hosts the checkout and the
+  customer portal (no payment script on our pages); Starter → Pro is Dodo's prorated plan change,
+  not a second subscription. The signed webhook (Standard Webhooks, 5-minute window, once per
+  delivery, never older over newer) is the only thing that changes a subscription, and its product
+  names the plan. AC: `src/test/edge/billing.test.ts`; pgTAP for Starter, the plan change, cancel,
+  on hold and renewal; `e2e/hosted.spec.ts` for both checkouts.
+- [x] **F-PLAN-04 (P1) Plan and billing**: `/app/account/billing` shows the plan, the period's
+  questions and the renewal; "Manage subscription" opens Dodo's portal; back from checkout it waits
+  for Pro. The upgrade dialog opens when the questions run out or for a premium model.
+- [x] **F-PLAN-05 (P2) Pricing and legal pages**: a pricing section on the landing page (figures
+  checked against the plans table in `data.test.ts`); drafts of Terms, Privacy and Refunds at
+  `/terms.html`, `/privacy.html` and `/refunds.html` (to fill in and review before going live).
+- [x] **F-AI-07 (P2) Own OpenRouter account**: "Connect OpenRouter" (OAuth PKCE, no key to copy)
+  or a pasted key; any model with structured outputs on a zero-retention endpoint; every request
+  demands zero data retention. The CSP adds `https://openrouter.ai` (D119).
+- [x] **F-PRIV-04 (P1) Strict errors**: a repair request in Strict mode carries no data value from
+  the error text or traceback (`scrubError` in `context.ts`), and OpenAI requests never let OpenAI
+  store a response (`zdrEnabled`).
+
+### 4.22 The encrypted workspace (F-SYNC, v2, M17)
+
+- [x] **F-SYNC-01 (P1) Set up**: signed in, Home offers "Save your workspace to your account" once a
+  day until it's done: what will be saved (projects, questions, dashboards, files), what we can see
+  (sizes and dates), a passphrase (≥ 10 characters, typed twice), "Remember on this device", then
+  the recovery key, shown once (copy, download, "I've saved it"). AC: `src/lib/vault.test.ts`; J12.
+- [x] **F-SYNC-02 (P1) Unlock on another device**: "Unlock your workspace" with the passphrase, or the
+  recovery key and a new passphrase (the old one stops working); "Not now" keeps working on the
+  device, unsynced. A wrong passphrase says so. AC: J12 (wrong passphrase, recovery key).
+- [x] **F-SYNC-03 (P1) Records sync**: the project list and each project's history, dashboards,
+  notes, suggestions and file list, encrypted per record (additional data: owner, place, version);
+  saved 3 s after a change with the version it replaces (`sync_put`); pulled on unlock, on focus and
+  every minute. The later save wins per record; the project list merges per project, and deleted
+  projects leave a marker. A change to the open project offers "Reload". AC:
+  `src/lib/syncMerge.test.ts`, `src/stores/syncEngine.test.ts`, pgTAP (`supabase/tests/vault.test.sql`).
+- [x] **F-SYNC-04 (P1) Files**: a project saved to the account always keeps its files; each is
+  encrypted in 4 MiB chunks, its space reserved within the plan, its chunks uploaded (a cut-short
+  upload resumes); a device without it downloads, decrypts and loads it, with progress on the
+  dataset row. Files no list mentions are deleted after a week. AC: chunk tests in
+  `vault.test.ts`; storage policies in pgTAP; J12.
+- [x] **F-SYNC-05 (P1) Settings → Saved to your account**: status and last save, storage used of the
+  plan's (Free 500 MB, Starter 5 GB, Pro 25 GB), Sync now, Change passphrase, New recovery key, Lock
+  on this device, Delete cloud copy (this device keeps its copy). Storage full: a notice with "Get
+  more storage"; new files stay on the device. The status pill shows the state. AC: pgTAP quota
+  refusals; J12 (storage full).
+- [x] **F-SYNC-06 (P1) Keep on this device only**: per project, from the project menu or its card on
+  Home (cards show "Account" or "This device"); turning it on deletes the project's records and
+  files from the account, and other devices keep their copy but stop syncing it. The try projects
+  never sync. AC: `syncEngine.test.ts`; J12.
+- [x] **F-SEC-10 (P0) Nothing readable leaves**: no request body to the account service carries a
+  file's cells, a question, a column or project name, or the passphrase. AC: the J12 canary over
+  every request from both devices; the engine test's canary.
 
 ---
 
@@ -756,6 +848,12 @@ Supabase; the guest privacy e2e passes.
 uploads before consent.
 - **M15 UX refresh**: F-UX-01…05. DoD: J10 works; no sideways scroll at 390 and 820 px; both bundle
 budgets hold; no sparkle icons (D118).
+- **M16 Plans and hosted AI**: F-PLAN-01…05, F-AI-07, F-PRIV-04. DoD: J11 works against mocked
+services; the quota and billing rules pass pgTAP; the proxy and webhook pass unit tests; guests still
+make no request to the account service; both bundle budgets hold.
+- **M17 Encrypted workspace**: F-SYNC-01…06, F-SEC-10. DoD: J12 works against mocked services, with
+the canary; the vault's rules pass pgTAP; guests still make no request to the account service; both
+bundle budgets hold; the landing page's phone length stays under 9,500 px.
 
 ---
 
@@ -799,7 +897,7 @@ multithreading and Pyodide interrupt buffers. Revisit as P2.
 - **D6** LangChain.js for provider abstraction + Zod structured output, hidden behind `LLMProvider` so it
 can be swapped.
 - **D7** Package manager: npm.
-- **D8** Theme preference lives in `localStorage` (`flashQuery:theme`), not IndexedDB: `public/theme-init.js`
+- **D8** Theme preference lives in `localStorage` (`HushGlance:theme`), not IndexedDB: `public/theme-init.js`
 must read it synchronously in `<head>` to avoid a light flash before first paint. The script is an
 external file, not inline, so the F-SEC-06 CSP can keep `script-src 'self'`. Everything else still
 persists to IndexedDB (F-EXP-02).
@@ -940,7 +1038,7 @@ or a table's first rows. Whether a tile is live, refreshing or out of date is pe
 the dashboard's filters. The chart the user picked is kept while it still fits the result,
 otherwise it is chosen again.
 - **D51** Filters (F-DASH-10): one date range and up to 3 value filters, each on one table's column.
-A filtered table becomes a temp view (`flashQuery_filtered_<table>`); tile SQL is rewritten by
+A filtered table becomes a temp view (`HushGlance_filtered_<table>`); tile SQL is rewritten by
 renaming base-table references in DuckDB's own syntax tree (`json_serialize_sql` →
 `json_deserialize_sql`), which round-trips every demo query; a CTE wrapper is the fallback. Value
 lists come from `SELECT DISTINCT` (≤ 100). Measured on 1M rows: the 5-tile demo dashboard
@@ -960,7 +1058,7 @@ full-width trends, then breakdowns in pairs. Demo mode replays a 6-tile fixture 
 (never HTML; only http(s)/mailto links), and toasts are our own. react-grid-layout v2 loads with
 the dashboard (lazy chunk, 27 KB gzip). The tile menu's Size and Move earlier/later are the
 keyboard alternative to dragging and resizing.
-- **D56** Dashboard files (F-DASH-08): `{ format: 'flashQuery-dashboard', version: 1, dashboard }`,
+- **D56** Dashboard files (F-DASH-08): `{ format: 'HushGlance-dashboard', version: 1, dashboard }`,
 exported with data snapshots or without (layout and SQL only, no data). Imports are validated with
 Zod, get fresh ids and a unique name, and their SQL only ever runs through the guard.
 - **D57** Bundle after M5: initial JS 244 KB gzip (+9 KB for pinning and dashboard state). F-ASK-08 and
@@ -992,7 +1090,7 @@ Python answers can't be pinned: refreshing such a tile would mean running Python
 (`@codemirror/lang-python`) would be a new dependency.
 - **D65** Bundle after M6: initial JS 249 KB gzip (+5 KB); the Python worker is a 26 KB chunk, and
 Pyodide itself comes from the CDN.
-- **D66** Production CSP (F-SEC-06) is a `<meta>` tag injected at build by the `flashQuery:csp` Vite
+- **D66** Production CSP (F-SEC-06) is a `<meta>` tag injected at build by the `HushGlance:csp` Vite
 plugin: `default-src 'self'`; `script-src 'self' 'wasm-unsafe-eval'` (DuckDB and Pyodide compile
 wasm); `worker-src 'self' blob:`; `connect-src 'self'` + api.anthropic.com, api.openai.com,
 cdn.jsdelivr.net (Pyodide), extensions.duckdb.org (parquet/json); `style-src 'self' 'unsafe-inline'` because CodeMirror and Radix's scroll lock inject `<style>` elements; `img-src 'self' data: blob:`; `font-src 'self'`; `object-src 'none'`; `base-uri 'self'`; `form-action 'none'`. Zod runs jitless so no `unsafe-eval` is needed: every module imports `z` from `src/lib/zod.ts`,
@@ -1014,7 +1112,7 @@ data is loaded, not an overlay: nothing to position or trap focus in. Remembered
 - **D70** Business notes (F-PROF-05) are saved by `schemaHash` (IndexedDB `notes`), so loading the
 same file again restores them. Currency is part of a column's free-text unit. Notes are sent in
 every privacy mode, inside `<data>`, as the user's own text.
-- **D71** Workspace bundle (F-EXP-03): `flashQuery-workspace` v1 JSON with history, dashboards (tile
+- **D71** Workspace bundle (F-EXP-03): `HushGlance-workspace` v1 JSON with history, dashboards (tile
 snapshots only when the user picks "Export with dashboard data"), notes and eval cases; never
 settings or keys. Import merges: history by id, dashboards as copies with new ids, notes by
 schema. "Clear all local data" (F-EXP-04) clears IndexedDB and the theme key, then reloads.
@@ -1120,7 +1218,7 @@ renderer, KPIs, the first 50 table rows, markdown text) with its own CSP (no scr
 everything from the data escaped. "Print or save as PDF" opens that file and the browser's print
 dialog. PNG isn't offered: it would need a DOM-to-image dependency.
 - **D95** Kept files (F-DATA-12): an opt-in setting (`persistFiles`, settings v5). Each loaded file's bytes
-go to OPFS (`flashQuery-files/<dataset id>`), and an IndexedDB manifest (`persistedDatasets` v1) records
+go to OPFS (`HushGlance-files/<dataset id>`), and an IndexedDB manifest (`persistedDatasets` v1) records
 how to load it again (CSV options, sheet, type overrides). Samples are regenerated, not stored. The
 manifest is replayed at startup through the normal ingest jobs; entries survive an engine restart and
 jobs still loading. Turning the setting off, or "Clear all local data", deletes the files.
@@ -1211,14 +1309,14 @@ named "Voice input (unavailable)" where on-device recognition is missing, and pr
     entrance (none with reduced motion).
   - **Treemap tiles:** explicit tints with the theme's text colour (about 5:1 or better), because
     ECharts' level colour mapping didn't apply to one-level treemaps.
-  - **Palettes:** flashQuery (violet-led, the new default), Tol bright, Okabe-Ito (darkened on white)
+  - **Palettes:** HushGlance (violet-led, the new default), Tol bright, Okabe-Ito (darkened on white)
     and Mono. Chosen per chart, per dashboard, or as the default (settings v7).
   - **Keeping choices:** a chart's own colors and annotations carry through re-fitting its columns,
     switching type and re-running a dashboard tile (`keepChoices` in `select.ts`). Before this,
     a tile edit or refresh reset them to the default.
   - **Colour-blind safety, tested:** `src/lib/colorVision.ts` simulates protan, deutan and tritan
     vision (Machado 2009) and measures CIE76 ΔE. Every palette keeps each pair ≥ 6 apart (Tol's own
-    floor); the default keeps ≥ 12 (13.7 at worst). The flashQuery colours came from a search under
+    floor); the default keeps ≥ 12 (13.7 at worst). The HushGlance colours came from a search under
     those constraints plus 3:1 contrast.
   - **Code layout:** builders moved to `src/charts/build/`, option builders to
     `src/charts/options/`, and the new shapes to `shapeMore.ts`; public imports are unchanged.
@@ -1337,7 +1435,7 @@ named "Voice input (unavailable)" where on-device recognition is missing, and pr
     fails the build (`src/platform/serviceUrl.ts`).
   - **e2e:** `e2e/supabase.ts` mocks the service for the real supabase-js in the browser: sign-up,
     password, link, GitHub (the authorize redirect and PKCE exchange), reset, profile, delete. On the
-    dev server, a test points the app at it through `window.__flashQueryAccounts`, which only
+    dev server, a test points the app at it through `window.__HushGlanceAccounts`, which only
     development builds read. CI builds with the same public URL (`ci.yml`).
   - **Status before the first render:** the auth store knows "off", "guest" or "checking a saved
     session" when it's created. Pages render before App's effects run, so a reset link or
@@ -1563,6 +1661,115 @@ named "Voice input (unavailable)" where on-device recognition is missing, and pr
     - Tried and reverted at review: the handle and menu on hover only, and KPI tiles without the
       full figure. Both are as before.
     - Add text, Refresh all and Present are quiet buttons, icons only below `lg`.
+- **D119** HushGlance AI: hosted models through OpenRouter, with zero data retention forced (M16,
+  F-PLAN-01, F-AI-07; user request, 2026-10-11).
+  - **Why a server at all:** no model provider issues short-lived browser keys, so hosted requests
+    must pass through ours to add the key. The own-key path is unchanged: straight from the browser.
+  - **Why OpenRouter:** one key and one OpenAI-compatible API for every maker's models, no markup
+    on tokens (5.5% on credits), and `provider.zdr` restricts routing to endpoints that keep
+    nothing. The proxy forces it with `data_collection: deny` and `require_parameters` on every
+    request, whatever the client sent, so a client can't opt out.
+  - **What we keep:** token counts, cost, model, status and time per call (`ai_usage`). Never a
+    request or a response; the function logs status lines only (a unit test captures the log).
+  - **The promise:** "passes through HushGlance and OpenRouter to the model; none of us keeps it".
+    The privacy mode still decides what's in the request; the inspector shows it.
+  - **Shape:** the client reuses the OpenAI-compatible provider (`provider: 'openrouter'`) with the
+    proxy's base URL and a fetch that adds the session token and the question's meter
+    (`src/platform/hostedAi.ts`); everything else the SDK sends is dropped. Chat completions only
+    (`ChatOpenAICompletions`), no streaming, no tools beyond functions, no OpenRouter plugins.
+  - **Not offered** where the deployment has no listed models (the catalog can't load): the app
+    behaves as before, own key or demo. Guests load nothing (G9).
+  - **Own OpenRouter accounts** (F-AI-07) need `https://openrouter.ai` in `connect-src`: the only
+    CSP change. Connecting uses OpenRouter's PKCE flow; the key is kept like any other.
+  - **The try link** answers its opening question from the demo set, whoever is signed in: it would
+    otherwise spend a free question on a sample.
+- **D120** Starter and Pro through Dodo Payments, hosted checkout only (M16, F-PLAN-03; user
+  request; Starter added 2026-10-15).
+  - Dodo is the merchant of record: it sells the subscription, collects sales tax worldwide, issues
+    invoices and handles refunds and disputes.
+  - The browser is redirected to Dodo's checkout and customer portal, so no payment script runs on
+    our pages and the CSP is unchanged (`form-action 'none'` doesn't govern navigation).
+  - Subscriptions change only through the signed webhook: Standard Webhooks HMAC-SHA256 over
+    `{id}.{timestamp}.{body}`, constant-time compare, 5-minute window; each delivery applied once
+    (`billing_events`) and never older over newer (`event_at`). A paid plan lasts to the end of a
+    cancelled or past-due period; on hold, failed or expired means free.
+  - Each plan has a monthly and a yearly Dodo product (`DODO_PRODUCT_{STARTER,PRO}_{MONTHLY,YEARLY}`);
+    the webhook maps the product to the plan. Someone already subscribed who picks the other plan
+    gets `POST /subscriptions/{id}/change-plan` (`prorated_immediately`) instead of a checkout, and
+    `subscription.plan_changed` brings the new plan.
+  - Test mode first (`DODO_API_BASE`); going live needs Dodo's business verification and the legal
+    pages filled in.
+- **D121** Plans, metering and the hosted model list (M16, F-PLAN-02).
+  - **Free:** 3 questions per account, ever, standard models. **Starter** (added 2026-10-15, user
+    request): 100 a month, standard models, a cheap way in for occasional use. **Pro:** 300 a month,
+    premium models at 5 each. A question is an ask with its repairs, explorations, summary and Python fix (one
+    client-chosen id, charged once, then capped at 8 calls within 2 hours, so reusing an id buys
+    nothing); a dashboard or "Suggest with AI" is one too.
+  - Enforced in Postgres (`ai_begin`, security definer, service role only), serialized per person
+    with an advisory lock; a failed first call gives the question back. Also: a confirmed email, 20
+    calls a minute per person, and a daily spend breaker (`AI_DAILY_BUDGET_USD`).
+  - **The list** (`ai_models`) holds models with structured outputs on a zero-retention endpoint
+    (checked on OpenRouter's lists, 2026-10-11): Claude Sonnet 5 and GPT-6 Sol (standard), Claude
+    Opus 5.5 and GPT-6 Astra (premium), Claude Haiku 4.5 and GPT-6 Luna (summaries). Gemini 3.8
+    Flash, DeepSeek V4 Pro, Grok 4.7 and Mistral Large 4 wait for an eval run through OpenRouter
+    (`EVAL_PROVIDER=openrouter`, ≥ 90%). Limits, prices and weights are rows, not code.
+  - **Cost per question** (about 3.6k planning tokens, `evals/report.md`): ≈ $0.013–0.016 on a
+    standard model with its summary, up to ≈ $0.08 at the call cap; to be confirmed by a hosted run.
+- **D122** Strict is the default privacy mode (user request, 2026-10-15; supersedes the Balanced
+  default from v1).
+  - **Why:** the flagship promise is "no row of your data goes to the AI unless you allow it". With
+    Balanced as the default it wasn't true out of the box: Balanced sends 3 sample rows, up to 5
+    common values per column and up to 50 result rows for the summary.
+  - **What changes:**
+    - New users start in Strict. A saved choice is kept.
+    - Balanced is one click away (the status pill, the ask bar, Settings), and its description
+      says it's the user's choice.
+    - With HushGlance AI, Strict also means our server never carries a data value.
+  - **The cost:** in Strict there's no AI-written summary (it's written on the device), no value
+    lookups before answering (F-ASK-15), no AI-suggested questions and no learned examples.
+    Questions that hinge on an exact name or code are harder. The published accuracy figure
+    (≈ 94%) is Balanced's; a Strict eval run is a follow-up.
+  - **The landing page says it plainly:**
+    - "0 rows of your data sent to the AI, unless you allow it";
+    - a privacy section that opens on Strict;
+    - "What do you keep about me?" in the FAQ: the account, the plan, question counts (never the
+      questions), and shared dashboards (M17 adds the encrypted workspace, which we can't read).
+- **D123** The encrypted workspace (M17; user request, 2026-10-15: "store the files and the
+  questions… use the application wherever they want… the promise is I don't send your data to the
+  LLMs").
+  - **Why:** kept only in one browser, a user's work stops at that browser. The promise moves from
+    "it never leaves your computer" to "the AI never sees your rows, and we can't read what you
+    save".
+  - **Keys** (`src/lib/vault.ts`, WebCrypto only): one random AES-GCM-256 data key per account,
+    stored by the service only wrapped twice: with a PBKDF2-SHA256 key from the passphrase (600,000
+    iterations, a random salt) and with a 256-bit recovery key shown once (Crockford base32). A
+    wrong passphrase fails the unwrap. Changing either re-wraps; nothing is re-encrypted. Unlocked,
+    the key is a non-extractable `CryptoKey`, kept in IndexedDB only with "Remember on this device"
+    (forgotten on sign-out and "Lock").
+  - **Data:** each record is the local envelope, encrypted with a fresh IV and additional data
+    `hushglance/record/<user>/<scope>/<key>/<version>`; files in 4 MiB chunks with
+    `hushglance/chunk/<user>/<file>/<index>/<total>`, so the service can't swap or reorder them.
+  - **Server** (`…_vault.sql`): `vaults`, `sync_records` (optimistic versions, the service's clock,
+    owner fixed), `vault_files` (reserved only through `vault_reserve`) and a private `vault` bucket
+    whose insert policy needs a reservation and an index below its chunk count. Records and files
+    count against `plans.storage_bytes` (decimal: 500 MB, 5 GB, 25 GB). No vault, no saving
+    (`sync_put` and `vault_reserve` refuse), so a device still running after the cloud copy was
+    deleted elsewhere can't save under the old key; each sync checks the vault is the same one.
+  - **What the service sees:** that a vault exists, record names (`history`, …), project ids
+    (random), sizes, chunk counts and times. Never contents, file or project names, or questions.
+  - **Merging (deviation from the plan's per-kind rules):** each project record is one unit and the
+    later save wins (the devices' clocks); the project list merges per project with markers for
+    deletions. Per-kind merges (history unions and the like) would bring deleted entries back
+    without a shared base; the cost is that two devices editing the same project at the same time
+    keep the later one, and the other sees "Changed on another device · Reload".
+  - **Limits we accept:** a malicious service could serve an older copy of a record (rollback;
+    additional data prevents swaps, not rollback). A lost passphrase and recovery key means the
+    cloud copy can't be opened; devices that still have the data can set up again. Clock skew
+    between devices can order two near-simultaneous saves wrongly.
+  - **Unchanged:** analysis in the browser; the AI context per privacy mode (Strict by default);
+    shared dashboards (plaintext results after consent, D116); guests and the demo never sync.
+  - **Cost:** the app's initial JS grows by ≈ 15 KB gzip (339.6 of 350 KB); a candidate for a lazy
+    chunk if the budget tightens.
 - **D12** Shared hooks live in `src/hooks/` and shared app components in `src/components/` (outside the
 generated `ui/`), matching the shadcn aliases in `components.json`.
 

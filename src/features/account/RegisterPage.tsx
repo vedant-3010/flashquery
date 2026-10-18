@@ -55,7 +55,7 @@ export function RegisterPage() {
   return (
     <AuthLayout
       title="Create your account"
-      description="Free. Save dashboards to your account and share them with your team. Your files never leave this device."
+      description="Free. Your projects on every device, encrypted so only you can read them. Your rows never go to an AI."
       showcase={SHOWCASE}
       footer={
         <>

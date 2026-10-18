@@ -37,7 +37,7 @@ export function AuthLayout({
               className="flex items-center gap-2 text-[15px] font-semibold tracking-tight text-ink"
             >
               <BrandMark className="size-[18px] text-ink lg:size-[20px]" />
-              flashQuery
+              HushGlance
             </a>
           </header>
           <div className="flex flex-1 items-center justify-center px-6 py-10">

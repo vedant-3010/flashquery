@@ -20,6 +20,10 @@ export const paths = {
   /** Where email links and Google/GitHub sign-in come back to (PKCE ?code=). */
   authCallback: '/auth/callback',
   account: '/account',
+  /** Plan and billing (F-PLAN-04): Dodo's checkout and portal come back here. */
+  billing: '/account/billing',
+  /** Where OpenRouter's sign-in comes back with a code (F-AI-07, PKCE). */
+  connectOpenRouter: '/connect/openrouter',
   /** A view-only link (F-SHARE-04): open to anyone holding it. */
   sharedLink: (slug: string) => `/s/${slug}`,
   /** A dashboard shared with you, or your own shared copy (F-SHARE-05). */

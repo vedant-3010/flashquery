@@ -1,5 +1,5 @@
 /// <reference types="vitest/config" />
-// flashQuery:vite-config
+// HushGlance:vite-config
 import { fileURLToPath, URL } from 'node:url'
 import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
@@ -20,6 +20,8 @@ export const CONTENT_SECURITY_POLICY: Record<string, string[]> = {
     "'self'",
     'https://api.anthropic.com',
     'https://api.openai.com',
+    // OpenRouter with the user's own account: chat, its model lists and connecting (F-AI-07, D119).
+    'https://openrouter.ai',
     'https://cdn.jsdelivr.net',
     'https://extensions.duckdb.org',
     // A local OpenAI-compatible server (Ollama, LM Studio), on this computer only (F-AI-06, D85).
@@ -38,7 +40,7 @@ export const CONTENT_SECURITY_POLICY: Record<string, string[]> = {
 function contentSecurityPolicy(): Plugin {
   let policy = ''
   return {
-    name: 'flashQuery:csp',
+    name: 'HushGlance:csp',
     apply: 'build',
     // The account service, when configured, is the one more host: exactly it, https and wss (D104).
     configResolved: (config) => {
@@ -59,6 +61,35 @@ function contentSecurityPolicy(): Plugin {
         injectTo: 'head-prepend',
       },
     ],
+  }
+}
+
+/**
+ * Link previews (F-PLAN-05): X, LinkedIn and Slack want absolute URLs, so a build with
+ * VITE_SITE_URL (https://hushglance.com, set in Vercel) gives the landing page its canonical URL,
+ * og:url and an absolute og:image. Without it (local, CI) the page keeps its relative image.
+ */
+function siteMeta(): Plugin {
+  let site: string | null = null
+  return {
+    name: 'HushGlance:site-meta',
+    apply: 'build',
+    configResolved: (config) => {
+      const value = config.env.VITE_SITE_URL?.trim().replace(/\/+$/, '')
+      site = value && /^https:\/\/[^/]+$/.test(value) ? value : null
+    },
+    transformIndexHtml: {
+      order: 'post',
+      handler: (html, context) => {
+        if (!site || context.path !== '/index.html') return html
+        return html
+          .replace('content="/og.png"', `content="${site}/og.png"`)
+          .replace(
+            '</head>',
+            `    <link rel="canonical" href="${site}/" />\n    <meta property="og:url" content="${site}/" />\n  </head>`,
+          )
+      },
+    },
   }
 }
 
@@ -88,14 +119,14 @@ function appRoutes(): Plugin {
     next()
   }
   return {
-    name: 'flashQuery:app-routes',
+    name: 'HushGlance:app-routes',
     configureServer: (server) => void server.middlewares.use(middleware),
     configurePreviewServer: (server) => void server.middlewares.use(middleware),
   }
 }
 
 export default defineConfig({
-  plugins: [react(), tailwindcss(), contentSecurityPolicy(), appRoutes()],
+  plugins: [react(), tailwindcss(), contentSecurityPolicy(), siteMeta(), appRoutes()],
   resolve: {
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
   },

@@ -13,7 +13,8 @@ export function FirstVisit() {
           What do you want to look at?
         </h1>
         <PrivacyLine>
-          Open a spreadsheet or export, or try a sample. Your files stay on this device.
+          Open a spreadsheet or export, or try a sample. Your files are read on this device. The AI
+          never sees your rows.
         </PrivacyLine>
       </div>
       <StartOptions variant="hero" />

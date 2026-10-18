@@ -1,5 +1,5 @@
 import { expect, test, type Page, type Route } from '@playwright/test'
-import { answerSteps, openProject } from './app.ts'
+import { answerSteps, chooseBalanced, openProject } from './app.ts'
 
 // J2 and J6 with a real provider code path (LangChain + the Anthropic SDK in the browser) against a
 // mocked https://api.anthropic.com. A live call with a real key stays a manual check.
@@ -186,7 +186,7 @@ async function settingsSaved(page: Page, remembered: boolean) {
       page.evaluate(
         () =>
           new Promise<string | null>((resolve) => {
-            const open = indexedDB.open('flashQuery')
+            const open = indexedDB.open('HushGlance')
             open.onerror = () => resolve(null)
             open.onsuccess = () => {
               const db = open.result
@@ -345,6 +345,8 @@ test.describe('AI summary (F-ASK-12)', () => {
     await addKey(page)
     await page.keyboard.press('Escape')
     await loadSales(page)
+    // What only Balanced sends; new users start in Strict (D122).
+    await chooseBalanced(page)
 
     const answer = await ask(page, 'Revenue by country and channel')
     await expect(answer.getByText(AI_HEADLINE)).toBeVisible()
@@ -372,6 +374,8 @@ test.describe('J6: privacy check (F-AI-02, F-EXPL-04, F-SEC-03, F-SEC-04)', () =
     await addKey(page)
     await page.keyboard.press('Escape')
     await loadSales(page)
+    // What only Balanced sends; new users start in Strict (D122).
+    await chooseBalanced(page)
 
     const total = await ask(page, 'Total revenue')
     await expect(total.getByRole('tab', { name: 'Chart' })).toBeVisible()
@@ -428,6 +432,8 @@ test.describe('J6: privacy check (F-AI-02, F-EXPL-04, F-SEC-03, F-SEC-04)', () =
     await addKey(page, { remember: true })
     await page.keyboard.press('Escape')
     await loadSales(page)
+    // What only Balanced sends; new users start in Strict (D122).
+    await chooseBalanced(page)
 
     const chips = page.getByRole('list', { name: 'Suggested questions' })
     await expect(chips.getByRole('button', { name: 'Total revenue by region' })).toBeVisible()
@@ -583,6 +589,8 @@ test.describe('multi-step exploration (F-ASK-15)', () => {
     await addKey(page)
     await page.keyboard.press('Escape')
     await loadSales(page)
+    // What only Balanced sends; new users start in Strict (D122).
+    await chooseBalanced(page)
 
     const answer = await ask(page, 'Revenue for each sales channel')
     await expect(answer.getByRole('heading', { name: 'Revenue by channel' })).toBeVisible()
@@ -651,6 +659,8 @@ test.describe('better answers (F-ASK-18, F-ASK-20, F-ASK-21)', () => {
     await addKey(page)
     await page.keyboard.press('Escape')
     await loadSales(page)
+    // What only Balanced sends; new users start in Strict (D122).
+    await chooseBalanced(page)
 
     await ask(page, 'Total revenue')
     // ask() matches names by substring; later questions start with the same words.

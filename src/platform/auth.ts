@@ -1,7 +1,9 @@
 import type { AuthChangeEvent, User } from '@supabase/supabase-js'
+import { AppError } from '@/lib/errors'
 import { z } from '@/lib/zod'
 import { accountError } from '@/platform/errors'
 import { accountClient as client } from '@/platform/supabase'
+import { deleteEverything } from '@/platform/vault'
 
 // Accounts (F-ACCT-01…04): sign-up and sign-in (password, email link, Google, GitHub), password
 // reset, the profile's display name, sign-out and deleting the account. Lazy (see supabase.ts).
@@ -137,6 +139,10 @@ export async function signOut(): Promise<void> {
 
 /** Deletes the account and everything it saved in the cloud (the database cascades), then signs out. */
 export async function deleteAccount(): Promise<void> {
+  // Stored files aren't rows: they go first (M17). A deployment without them has nothing to delete.
+  await deleteEverything().catch((error: unknown) => {
+    if (!(error instanceof AppError && error.code === 'vault_unavailable')) throw error
+  })
   const { error } = await client().rpc('delete_my_account')
   if (error) throw accountError(error)
   // The user is gone; only this browser's copy of the session is left to drop.

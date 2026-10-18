@@ -104,7 +104,7 @@ describe('dashboard files (F-DASH-08)', () => {
     const tileId = state().addTile(id, chartTile('A'))
     const withData = exportDashboard(id, { snapshots: true })
     const withoutData = exportDashboard(id, { snapshots: false })
-    expect(withData?.fileName).toBe('sales_overview.flashQuery.json')
+    expect(withData?.fileName).toBe('sales_overview.HushGlance.json')
     expect(JSON.parse(withoutData?.json ?? '{}').dashboard.tiles[0].snapshot).toBeNull()
 
     const imported = importDashboard(withData?.json ?? '')
@@ -116,13 +116,13 @@ describe('dashboard files (F-DASH-08)', () => {
     expect(state().activeId).toBe(imported)
   })
 
-  it('refuses files that are not flashQuery dashboards', () => {
+  it('refuses files that are not HushGlance dashboards', () => {
     expect(() => importDashboard('not json')).toThrow("This file isn't valid JSON.")
-    expect(() => importDashboard('{"format":"other"}')).toThrow(/isn't an flashQuery dashboard/)
+    expect(() => importDashboard('{"format":"other"}')).toThrow(/isn't an HushGlance dashboard/)
     const id = state().createDashboard()
     const file = JSON.parse(exportDashboard(id, { snapshots: true })?.json ?? '{}')
     file.dashboard.tiles = [{ ...chartTile('x'), id: 't', layout: { x: 99, y: 0, w: 1, h: 1 } }]
-    expect(() => importDashboard(JSON.stringify(file))).toThrow(/isn't an flashQuery dashboard/)
+    expect(() => importDashboard(JSON.stringify(file))).toThrow(/isn't an HushGlance dashboard/)
   })
 })
 

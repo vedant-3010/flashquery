@@ -1,7 +1,8 @@
 // Records docs/demo.png, the README's animated demo (F-SHIP-02): an APNG (animated PNG) of the app in
 // demo mode, assembled from Playwright screenshots. APNG instead of GIF: full colour, crisp text, no
-// ffmpeg or new dependency (PRD D82). Run after `npm run build`:
+// ffmpeg or new dependency (PRD D82). Run after a build without accounts (so no sign-in gate):
 //
+//   VITE_SUPABASE_URL= VITE_SUPABASE_PUBLISHABLE_KEY= npm run build
 //   node scripts/record-demo.mjs
 //
 // It serves dist/ with `vite preview`, drives the app with Playwright (Chromium) and writes the file.
@@ -113,13 +114,17 @@ try {
     return answer
   }
 
-  await page.goto(`http://localhost:${PORT}/app/`)
-  await page.getByRole('heading', { name: 'Ask your data anything' }).waitFor()
+  // Home → a new project (accounts are off in this build, so no sign-in), then the 1M-row sample.
+  await page.goto(`http://localhost:${PORT}/app/new`)
+  await page.getByRole('heading', { name: 'What do you want to look at?' }).waitFor()
   await shot(2000)
 
-  await page.getByRole('button', { name: 'Try sample data (1M rows)' }).click()
+  await page.getByRole('button', { name: 'Try sample data', exact: true }).click()
+  await page.getByRole('menuitem', { name: 'Global Sales · 1M rows' }).click()
   await page.getByRole('region', { name: 'Global Sales · 1M rows' }).waitFor({ timeout: 60_000 })
-  await page.getByRole('button', { name: 'Skip the tour' }).click()
+  const tour = page.getByRole('region', { name: 'Quick tour' })
+  await tour.waitFor({ timeout: 5_000 }).catch(() => undefined)
+  if (await tour.isVisible()) await tour.getByRole('button', { name: 'Skip the tour' }).click()
   await shot(1600)
 
   const growth = await ask('Which region grew fastest?')
@@ -140,8 +145,9 @@ try {
   await dialog.waitFor({ state: 'hidden', timeout: 30_000 })
   await shot(3200, 1500)
 
-  await page.getByRole('button', { name: 'How flashQuery works' }).click()
-  await page.getByRole('dialog', { name: 'How flashQuery works' }).waitFor()
+  await page.getByRole('button', { name: 'Help and appearance' }).click()
+  await page.getByRole('menuitem', { name: 'How HushGlance works' }).click()
+  await page.getByRole('dialog', { name: 'How HushGlance works' }).waitFor()
   await shot(3200)
   await page.keyboard.press('Escape')
 

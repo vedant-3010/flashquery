@@ -55,7 +55,7 @@ export function HeroFilm() {
   return (
     <figure
       ref={root}
-      aria-label={`flashQuery answering “${DEMO_QUESTION}” on a 1,000,000-row file: APAC grew fastest, +140% from 2022 to 2025. The file is never uploaded.`}
+      aria-label={`HushGlance answering “${DEMO_QUESTION}” on a 1,000,000-row file: APAC grew fastest, +140% from 2022 to 2025. The file is never uploaded.`}
       className="relative"
       onPointerEnter={() => setHovered(true)}
       onPointerLeave={() => setHovered(false)}
@@ -67,10 +67,10 @@ export function HeroFilm() {
         {/* The app's own top bar, in miniature. */}
         <div className="flex h-9 items-center gap-2 border-b border-hairline px-3 text-[11px]">
           <BrandMark className="size-3.5 text-ink" />
-          <span className="font-medium text-ink">flashQuery</span>
+          <span className="font-medium text-ink">HushGlance</span>
           <span className="text-ink-faint">/ Workspace</span>
           <span className="ml-auto rounded-full border border-hairline px-2 py-px text-[10px] text-ink-muted">
-            Balanced
+            Strict
           </span>
           <span className="flex items-center gap-1 rounded-full border border-hairline px-2 py-px text-[10px] text-ink-muted">
             <span className="size-1.5 rounded-full bg-ok" aria-hidden />
