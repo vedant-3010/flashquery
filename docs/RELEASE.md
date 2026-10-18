@@ -14,8 +14,9 @@ you can't speed up.
 
 - **Code:** everything since M13 is on your machine, not on GitHub's `main`:
   - M14 (sharing) and M15 (UX refresh) are committed.
-  - M16 (hosted AI, Free / Starter / Pro) and the HushGlance rename are **uncommitted** on
-    `m16-plans`.
+  - M16 (hosted AI, Free / Starter / Pro) and the HushGlance rename are committed on `m16-plans`.
+  - M17 (the encrypted workspace: projects and files on every device) is **uncommitted** on
+    `m17-cloud-workspace`.
 - **Tests:** all passing: unit, database (pgTAP), browser (e2e) on the production build.
 - **Release fixes, already made:**
   - The social preview image (`public/og.png`) and README demo (`docs/demo.png`) are re-recorded
@@ -103,11 +104,13 @@ Do this while you wait on Dodo.
   ```sh
   npx supabase login
   npx supabase link --project-ref <project-ref>   # the "abcd" of abcd.supabase.co
-  npx supabase db push                            # profiles, sharing, plans
+  npx supabase db push                            # profiles, sharing, plans, vault
   ```
 
 - [ ] Check it: Table Editor shows every table with "RLS enabled". Advisors → Security shows no
       errors.
+- [ ] **Storage:** a bucket named `vault`, **private**, with a 4.5 MB file limit (the vault
+      migration creates it). Don't make it public; its policies are in the migration.
 - [ ] **API Keys:** note the URL and the **publishable** key (`sb_publishable_…`) for Vercel.
       Never copy the secret key anywhere: the functions get it automatically.
 
@@ -258,6 +261,16 @@ Use a fresh browser profile. Every item should pass before you take real money.
 - [ ] Share a dashboard: the consent dialog, an invite by email, a view-only link opened in a
       private window, then revoke it.
 
+**Your workspace on two devices**
+- [ ] Home offers "Save your workspace to your account": set a passphrase, save the recovery key.
+- [ ] Load a file and ask a question. In a second browser, sign in, unlock with the passphrase:
+      the project, its question and its file are there.
+- [ ] Supabase → Table Editor → `sync_records`: only base64 ciphertext. Storage → `vault`: chunk
+      files, no readable names.
+- [ ] A third browser: unlock with the recovery key and a new passphrase.
+- [ ] Settings → Saved to your account shows storage used of 500 MB (Free).
+- [ ] A project set to "Keep on this device only" disappears from `sync_records`.
+
 **Phone**
 - [ ] The landing page and the app on a real phone.
 
@@ -267,7 +280,8 @@ Use a fresh browser profile. Every item should pass before you take real money.
       [opengraph.xyz](https://www.opengraph.xyz/). You should see the HushGlance image and title.
 
 **Housekeeping**
-- [ ] Delete the test accounts (Account → Delete account). Cancel the test subscriptions in Dodo.
+- [ ] Delete the test accounts (Account → Delete account). Storage → `vault` is empty afterwards.
+      Cancel the test subscriptions in Dodo.
 
 ## 9. Paid checks (small, worth doing once)
 

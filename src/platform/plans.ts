@@ -22,7 +22,9 @@ export async function loadCatalog(): Promise<Catalog> {
     client().from('ai_models').select('id, label, maker, description, tier, weight').order('sort'),
     client()
       .from('plans')
-      .select('id, label, questions, period, tiers, price_monthly_usd, price_yearly_usd'),
+      .select(
+        'id, label, questions, period, tiers, price_monthly_usd, price_yearly_usd, storage_bytes',
+      ),
   ])
   if (models.error) throw accountError(models.error)
   if (plans.error) throw accountError(plans.error)

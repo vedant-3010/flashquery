@@ -21,6 +21,7 @@ import { FormError } from '@/features/account/FormError'
 import { useAuthAction } from '@/features/account/useAuthAction'
 import type { Account } from '@/platform/auth'
 import { useAuthStore } from '@/stores/auth'
+import { useSyncStore } from '@/stores/sync'
 import { useToastStore } from '@/stores/toast'
 
 const PROVIDERS: Record<string, string> = {
@@ -126,9 +127,9 @@ function AccountDetails({ account }: { account: Account }) {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete your account?</AlertDialogTitle>
             <AlertDialogDescription>
-              This deletes your account and every dashboard you saved or shared in the cloud, at
-              once. Your projects in this browser stay. On Pro? Cancel it first in Plan and billing,
-              so it doesn’t renew.
+              This deletes your account, your encrypted workspace and every dashboard you shared, at
+              once. Your projects in this browser stay. On a paid plan? Cancel it first in Plan and
+              billing, so it doesn’t renew.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -138,6 +139,7 @@ function AccountDetails({ account }: { account: Account }) {
               onClick={() =>
                 void run(async () => {
                   await useAuthStore.getState().deleteAccount()
+                  await useSyncStore.getState().accountDeleted()
                   return true
                 }).then((done) => {
                   if (done) leave('Your account was deleted.')

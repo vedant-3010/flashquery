@@ -1,6 +1,6 @@
 import { CtaLink } from '@/landing/CtaLink'
 import { cx } from '@/landing/cx'
-import { PRICING, REGISTER_URL } from '@/landing/data'
+import { PRICING, REGISTER_URL, storageLabel } from '@/landing/data'
 import { Eyebrow } from '@/landing/Eyebrow'
 import { HeadlineLines } from '@/landing/HeadlineLines'
 import { Reveal } from '@/landing/Reveal'
@@ -17,7 +17,7 @@ const PLANS = [
     points: [
       `${PRICING.freeQuestions} questions with HushGlance AI, no key needed`,
       'Unlimited with your own key: Anthropic, OpenAI, OpenRouter, or a model on your computer',
-      'Share dashboards by invite or view-only link',
+      `${storageLabel(PRICING.freeStorageGb)} of encrypted storage: your projects on any device`,
     ],
     cta: { href: REGISTER_URL, label: 'Create an account' },
     featured: false,
@@ -29,7 +29,7 @@ const PLANS = [
     points: [
       `${PRICING.starterQuestions} questions a month with HushGlance AI, on any device you sign in to`,
       `Standard models: ${PRICING.standardModels.join(' and ')}`,
-      'Zero data retention on every request: no one keeps what you ask',
+      `${storageLabel(PRICING.starterStorageGb)} of encrypted storage`,
     ],
     cta: { href: REGISTER_URL, label: 'Start free, upgrade any time' },
     featured: false,
@@ -41,7 +41,7 @@ const PLANS = [
     points: [
       `${PRICING.proQuestions} questions a month with HushGlance AI, on any device you sign in to`,
       `Premium models too (${PRICING.premiumModels.join(', ')}), ${PRICING.premiumWeight} questions each`,
-      'Zero data retention on every request: no one keeps what you ask',
+      `${storageLabel(PRICING.proStorageGb)} of encrypted storage`,
     ],
     cta: { href: REGISTER_URL, label: 'Start free, upgrade any time' },
     featured: true,
@@ -66,8 +66,9 @@ export function Pricing() {
           as="p"
           className="mt-5 max-w-[36rem] text-[16px] leading-[1.6] text-ink-muted max-md:hidden"
         >
-          Your files stay on your device on every plan. Bring your own AI key and HushGlance is free
-          for good; Starter and Pro are for asking without one.
+          On every plan your rows never go to an AI, and what you save is encrypted so only you can
+          read it. Bring your own AI key and HushGlance is free for good; Starter and Pro are for
+          asking without one.
         </Reveal>
       </Reveal>
 

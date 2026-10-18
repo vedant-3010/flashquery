@@ -206,7 +206,14 @@ export const PRICING = {
   /** Questions a premium-model ask uses. */
   premiumWeight: 5,
   premiumModels: ['Claude Opus 5.5', 'GPT-6 Astra'],
+  /** Encrypted storage per plan (M17), in GB (decimal, as the app shows it). */
+  freeStorageGb: 0.5,
+  starterStorageGb: 5,
+  proStorageGb: 25,
 } as const
+
+/** "500 MB", "5 GB": a plan's storage on the page. */
+export const storageLabel = (gb: number) => (gb < 1 ? `${gb * 1000} MB` : `${gb} GB`)
 
 export const TERMS_URL = '/terms.html'
 export const PRIVACY_URL = '/privacy.html'

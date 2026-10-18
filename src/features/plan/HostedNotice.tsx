@@ -27,7 +27,7 @@ export function HostedNotice() {
             ? 'your tables’ names and column types (Strict mode: no values)'
             : 'your tables’ structure with a few sample values (Balanced mode)'}{' '}
           go through our server and OpenRouter to the model. Every request demands zero data
-          retention: none of us keeps it. Your files never leave this device.
+          retention: none of us keeps it.{mode === 'strict' && ' No row of your data reaches it.'}
         </p>
         <p>
           <Button

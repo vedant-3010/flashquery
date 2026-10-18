@@ -71,5 +71,14 @@ describe('landing pricing (F-PLAN-05)', () => {
         new RegExp(`'${label}'[^)]*'premium', ${PRICING.premiumWeight},[^)]*true`),
       )
     }
+    // Storage (M17): the vault migration sets each plan's room in bytes.
+    const vault = readFileSync('supabase/migrations/20261016000000_vault.sql', 'utf8')
+    for (const [plan, gb] of [
+      ['free', PRICING.freeStorageGb],
+      ['starter', PRICING.starterStorageGb],
+      ['pro', PRICING.proStorageGb],
+    ] as const) {
+      expect(vault).toContain(`when '${plan}' then ${gb * 1_000_000_000}\n`)
+    }
   })
 })

@@ -65,6 +65,7 @@ const PLANS = [
     tiers: ['standard'],
     price_monthly_usd: null,
     price_yearly_usd: null,
+    storage_bytes: 500000000,
   },
   {
     id: 'starter',
@@ -74,6 +75,7 @@ const PLANS = [
     tiers: ['standard'],
     price_monthly_usd: 5,
     price_yearly_usd: 50,
+    storage_bytes: 5000000000,
   },
   {
     id: 'pro',
@@ -83,6 +85,7 @@ const PLANS = [
     tiers: ['standard', 'premium'],
     price_monthly_usd: 12,
     price_yearly_usd: 120,
+    storage_bytes: 25000000000,
   },
 ]
 

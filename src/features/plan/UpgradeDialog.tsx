@@ -12,7 +12,7 @@ import {
 import { FormError } from '@/features/account/FormError'
 import { cn } from '@/lib/utils'
 import { toAppError, type AppErrorData } from '@/lib/errors'
-import { formatDate } from '@/lib/format'
+import { formatBytes, formatDate } from '@/lib/format'
 import {
   plannerModels,
   upgradesFrom,
@@ -27,7 +27,7 @@ import { useToastStore } from '@/stores/toast'
 import { useUiStore } from '@/stores/ui'
 
 /** What a plan includes, from the catalog (so the dialog follows the plans table). */
-function pointsFor(plan: Plan, catalog: Catalog): string[] {
+function pointsFor(plan: Plan, catalog: Catalog, locale: string): string[] {
   const premium = plannerModels(catalog).filter((model) => model.tier === 'premium')
   const standard = plannerModels(catalog).filter((model) => model.tier === 'standard')
   return [
@@ -35,6 +35,7 @@ function pointsFor(plan: Plan, catalog: Catalog): string[] {
     plan.tiers.includes('premium') && premium.length > 0
       ? `Premium models too (${premium.map((model) => model.label).join(', ')}), ${premium[0]?.weight ?? 5} questions each`
       : `Standard models: ${standard.map((model) => model.label).join(', ')}`,
+    `${formatBytes(plan.storage_bytes, locale)} of encrypted storage for your files and projects`,
     'Zero data retention on every request: no one keeps your prompts',
   ]
 }
@@ -173,7 +174,7 @@ export function UpgradeDialog() {
                       </span>
                     </p>
                     <ul className="grid flex-1 gap-1.5 text-sm">
-                      {pointsFor(plan, catalog).map((line) => (
+                      {pointsFor(plan, catalog, locale).map((line) => (
                         <li key={line} className="flex gap-2">
                           <Check className="mt-0.5 size-4 shrink-0 text-brand" aria-hidden />
                           {line}

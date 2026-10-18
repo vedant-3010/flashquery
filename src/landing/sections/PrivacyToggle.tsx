@@ -26,9 +26,9 @@ const MODES: { id: Mode; label: string; summary: string }[] = [
 
 /** The promise, in plain words (D117); the part to remember is highlighted. */
 const PROMISES: { text: string; mark?: string }[] = [
-  { text: 'Your files never leave your device.' },
   { text: 'By default the AI sees names and types, ', mark: 'never a row of your data' },
-  { text: 'Your questions and answers stay in your browser. We don’t keep them.' },
+  { text: 'Your files and questions are encrypted on your device before they’re saved.' },
+  { text: 'Every device you sign in to opens them with your passphrase. We never can.' },
   { text: 'You can read every request, exactly as it was sent.' },
 ]
 
@@ -133,13 +133,13 @@ export function PrivacyToggle() {
           <Eyebrow>Private by design</Eyebrow>
           <Reveal as="div">
             <h2 id="privacy-title" className="mt-4 text-[clamp(36px,4.6vw,60px)] text-balance">
-              <HeadlineLines lead="Your files stay" line="on your device." />
+              <HeadlineLines lead="Encrypted for you." line="Never sent to an AI." />
             </h2>
           </Reveal>
           <Reveal as="p" className="mt-5 max-w-[30rem] text-[16px] leading-[1.6] text-ink-muted">
-            HushGlance reads your spreadsheets right in your browser. To answer a question, the AI
-            gets an outline: the names and types of your columns. A few sample values go only if you
-            switch on Balanced.
+            HushGlance analyses your spreadsheets right in your browser. To answer a question, the
+            AI gets an outline: the names and types of your columns. A few sample values go only if
+            you switch on Balanced.
           </Reveal>
           <Reveal as="ul" className="mt-6 grid max-w-[30rem] gap-2.5 text-[15px] text-ink">
             {PROMISES.map((promise) => (

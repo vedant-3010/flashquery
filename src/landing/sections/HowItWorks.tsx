@@ -12,7 +12,7 @@ import { HeadlineLines } from '@/landing/HeadlineLines'
 const STEPS: { title: string; body: string; Visual: ComponentType }[] = [
   {
     title: 'Your file opens on your device',
-    body: 'A full database built into your browser reads it where it is. Nothing is uploaded: no server ever sees your files.',
+    body: 'A full database built into your browser reads it where it is: no server analyses your files. Saved to your account, they’re encrypted first, so only you can open them.',
     Visual: LoadVisual,
   },
   {

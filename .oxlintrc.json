@@ -51,6 +51,11 @@
             "allowTypeImports": true
           },
           {
+            "name": "@/platform/vault",
+            "message": "Only src/platform/ talks to Supabase, as a lazy chunk guests never load (D114): use src/stores/sync.ts, or a type-only import.",
+            "allowTypeImports": true
+          },
+          {
             "name": "@/platform/hostedAi",
             "message": "Only src/platform/ talks to Supabase, as a lazy chunk guests never load (D114): use src/stores/plan.ts, or a type-only import.",
             "allowTypeImports": true
@@ -84,7 +89,8 @@
         "src/stores/auth.ts",
         "src/stores/auth.test.ts",
         "src/stores/sharing.ts",
-        "src/stores/plan.ts"
+        "src/stores/plan.ts",
+        "src/stores/sync.ts"
       ],
       "rules": {
         "no-restricted-imports": [

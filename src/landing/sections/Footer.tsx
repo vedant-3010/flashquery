@@ -29,8 +29,8 @@ export function Footer() {
             <BrandMark className="size-5 text-ink" /> HushGlance
           </p>
           <p className="mt-3 max-w-[26rem] text-[14px] text-ink-muted">
-            A private AI analyst for your business data: answers, charts and dashboards, with your
-            files kept on your device. Made by Vedant Dandge.
+            A private AI analyst for your business data: answers, charts and dashboards, your rows
+            never sent to an AI. Made by Vedant Dandge.
           </p>
         </div>
         <ul className="grid grid-cols-2 content-start gap-2 text-[14px] text-ink-muted md:col-span-3 md:grid-cols-1">

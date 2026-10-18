@@ -13,6 +13,7 @@ import { LocalDataSettings } from '@/features/settings/LocalDataSettings'
 import { AiSettings } from '@/features/settings/AiSettings'
 import { PythonSettings } from '@/features/settings/PythonSettings'
 import { PRIVACY_MODES } from '@/features/settings/privacyText'
+import { SyncSettings } from '@/features/sync/SyncSettings'
 import { useSettingsStore } from '@/stores/settings'
 import { useUiStore } from '@/stores/ui'
 
@@ -32,8 +33,8 @@ export function SettingsDialog({ inProject = true }: { inProject?: boolean }) {
         <DialogHeader>
           <DialogTitle>Settings</DialogTitle>
           <DialogDescription>
-            Your data stays in this browser. These settings decide which AI writes the SQL and what
-            it may see.
+            Your rows are never sent to an AI unless you allow it. These settings decide which AI
+            writes the SQL, what it may see, and where your work is saved.
           </DialogDescription>
         </DialogHeader>
 
@@ -102,6 +103,8 @@ export function SettingsDialog({ inProject = true }: { inProject?: boolean }) {
           </h3>
           <PythonSettings />
         </section>
+
+        <SyncSettings />
 
         <section aria-labelledby="settings-data" className="grid gap-3 border-t pt-4">
           <h3 id="settings-data" className="text-sm font-medium">

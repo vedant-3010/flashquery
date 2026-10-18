@@ -4,16 +4,18 @@ Privacy-first AI data analyst that runs entirely in the browser. Users load a CS
 file and ask questions in plain English ("Which region grew fastest?"). HushGlance writes DuckDB SQL with an
 LLM, runs it client-side in DuckDB-WASM, picks a chart, explains its reasoning, and lets users pin answers
 to a drag-and-drop dashboard. Stats/forecast questions can run as Python (pandas) via Pyodide.
-No server ever sees the user's files: analysis runs in the browser. Only what the active privacy mode
-allows is sent (Strict, the default since D122: names and types only; Balanced, opt-in: a few sample
-values too) to the LLM provider the user picks with their own API key,
+No server can read the user's files: analysis runs in the browser, and a signed-in user's projects
+and files are saved to their account end-to-end encrypted (M17, D123: a key only their passphrase or
+recovery key opens). Only what the active privacy mode allows is sent (Strict, the default since
+D122: names and types only; Balanced, opt-in: a few sample values too) to the LLM provider the user
+picks with their own API key,
 or, for a signed-in user without one, to HushGlance AI (M16, D119): our `ai` Edge Function passes the
 request to OpenRouter with zero data retention forced and stores none of it (3 free questions, then
 Starter or Pro through Dodo Payments, D120–D121).
 v2 (PRD D100) adds accounts (Supabase): a Home page with projects, and dashboards saved to the cloud
 and shared by invite or link. Where an account service is configured, the app asks for an account;
 the try demo (`/app/try`) stays open (D115). The account service stores only what a signed-in user
-explicitly saves or shares; guests and the demo never talk to it. It speaks to founders, finance and
+saves (encrypted, M17) or shares; guests and the demo never talk to it. It speaks to founders, finance and
 accounting people and anyone in business first, privacy before everything, with one section for data
 people (D117): business-facing copy avoids DuckDB, WebAssembly, p95, GROUP BY, BYOK, Pyodide and
 "schema"; the SQL view, inspector and "For data people" keep the technical words.
@@ -21,12 +23,13 @@ people (D117): business-facing copy avoids DuckDB, WebAssembly, p95, GROUP BY, B
 - Requirements, feature IDs (e.g. `F-ASK-05`), acceptance criteria (AC) and milestones: `docs/PRD.md`.
   Read the relevant section before starting any feature.
 - Area rules load automatically from `.claude/rules/` (data engine, AI pipeline, UI).
-- Progress = ticked checkboxes in `docs/PRD.md` §4. Milestone order: `docs/PRD.md` §10 (v2: M9–M14).
+- Progress = ticked checkboxes in `docs/PRD.md` §4. Milestone order: `docs/PRD.md` §10 (v2: M9–M17).
 
 ## Product principles (use these to break ties)
-1. **Private by default**: raw rows never leave the device beyond what the privacy mode allows, and the
-   user can inspect every payload sent to the AI. Nothing goes to the account service without the
-   user confirming a dialog that lists exactly what will upload (v2, D103).
+1. **Private by default**: no row goes to an AI beyond what the privacy mode allows, and the user can
+   inspect every payload sent to the AI. Nothing readable goes to the account service: saved work is
+   encrypted in the browser first (M17, D123), and a shared dashboard uploads only after a dialog
+   lists exactly what will go (v2, D103).
 2. **Explainable**: every answer shows its SQL, a plain-English explanation, its assumptions, and why that
    chart was chosen. SQL is editable and re-runnable.
 3. **Never block the UI**: heavy work runs in workers; the app stays responsive on 1M+ rows.
@@ -104,7 +107,7 @@ src/
   components/   shared app components (EmptyState, IconButton); ui/ = shadcn/ui primitives (generated)
   hooks/        shared React hooks (useMediaQuery, useResolvedTheme)
   features/     home/ datasets/ grid/ sql/ ask/ explain/ charts/ dashboard/ python/ settings/ bench/
-                account/ sharing/  (React only)
+                account/ sharing/ plan/ sync/  (React only)
   engine/       duckdb init, ingest, catalog, profile, query, normalize, sqlGuard, samples, export,
                 chartData, filters (dashboard filter views + AST table rewrite)
   ai/           models, providers, prompts/, schemas, context, pipeline, dashboard, fixtures/  (no React/DOM)
@@ -113,9 +116,10 @@ src/
                 (→ ECharts option; builders in options/), theme (palettes)  (pure)
   workers/      *.worker.ts (Comlink wiring only) + clients.ts (typed main-thread clients)
   stores/       zustand stores      lib/  format, errors, theme, ids, idb      types/  shared types
-  platform/     (v2) the only code that talks to Supabase: client, auth, cloud dashboards, sharing
+  platform/     (v2) the only code that talks to Supabase: client, auth, cloud dashboards, sharing,
+                plans, hosted AI, the encrypted workspace (vault.ts)
   test/         setup, fixtures
-docs/           PRD.md, ARCHITECTURE.md, DEPLOY.md, demo.png     evals/ (questions.jsonl, run.eval.ts)
+docs/           PRD.md, ARCHITECTURE.md, SECURITY.md, DEPLOY.md, RELEASE.md, demo.png     evals/ (questions.jsonl, run.eval.ts)
 e2e/ (Playwright)     scripts/ (sample + fixture generators, record-demo, record-og)
 ```
 
@@ -161,6 +165,13 @@ e2e/ (Playwright)     scripts/ (sample + fixture generators, record-demo, record
   - Payments: Dodo's hosted checkout and portal by redirect, never a payment script on our pages; a
     subscription changes only through the verified webhook.
   - Strict mode sends no data value in error text either (`scrubError` in `context.ts`).
+- The encrypted workspace (M17, D123, `docs/SECURITY.md`):
+  - Everything saved to the account is encrypted in the browser first (`src/lib/vault.ts`): records
+    and file chunks with additional data naming their place. Never send a plaintext project record,
+    file, name or question to Supabase; `e2e/sync.spec.ts` has a canary for it.
+  - The data key is a non-extractable `CryptoKey`; it's stored (IndexedDB, `vaultKey`) only with
+    "Remember on this device". The passphrase and recovery key never leave the browser.
+  - Projects marked "Keep on this device only" and the try projects never sync.
 - Voice input uses on-device speech recognition only (D106): no audio leaves the device.
 
 ## Performance rules
@@ -290,6 +301,17 @@ e2e/ (Playwright)     scripts/ (sample + fixture generators, record-demo, record
   `--radix-*-content-available-height`, or they run off short screens (D111).
 - The generated `DropdownMenuContent` is as wide as its trigger: give every menu a width
   (`w-auto` to fit its items, or e.g. `w-72`), and `truncate` long names (table names) with a `title`.
+- The encrypted workspace (M17): `src/platform/vault.ts` is reached only through `src/stores/sync.ts`
+  (lint). The session (`syncSession.ts`) holds the vault and the key; the engine (`syncEngine.ts`, no
+  React or Supabase, tested against a fake) pushes records 3 s after `saveRecord` announces them
+  (`onRecordSaved` in `idb.ts`) and pulls changes; another device's records are written with
+  `writeEnvelope`, which isn't announced back. Which local records sync: `remoteName` in
+  `syncMeta.ts` (`projects` and `PROJECT_RECORD_KEYS`). A new per-project record syncs once it's in
+  `PROJECT_RECORD_KEYS` and the engine's specs (`syncHost.ts`). Kept files: a synced project always
+  keeps its files (`keepsFiles` in `persistFiles.ts`), uploaded and downloaded through
+  `setCloudFiles` (`syncFiles.ts`). Projects are v2 (`localOnly`), the kept-files list v2 (`cloud`).
+  e2e: `mockVault(page, state)` from `e2e/vault.ts` after `signIn` (one state for several devices);
+  without it the vault tables answer 404 and syncing is "not offered", so other specs are unaffected.
 - Voice input (`src/features/ask/speech.ts`): never call `SpeechRecognition.available()` until the mic
   is pressed. Playwright's Chromium has the API but crashes the tab on that call (real Chrome answers).
   e2e uses a fake on-device recognizer (`e2e/voice.spec.ts`); don't click the mic without one.

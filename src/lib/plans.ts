@@ -29,6 +29,8 @@ export const PlanSchema = z.object({
   tiers: z.array(TierSchema),
   price_monthly_usd: z.coerce.number().nullable(),
   price_yearly_usd: z.coerce.number().nullable(),
+  /** The encrypted workspace's room (M17): files and saved records. */
+  storage_bytes: z.coerce.number(),
 })
 export type Plan = z.infer<typeof PlanSchema>
 

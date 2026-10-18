@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { RenameProjectDialog } from '@/features/home/RenameProjectDialog'
+import { KeepLocalDialog, KeepLocalMenuItem } from '@/features/sync/KeepLocal'
 import { useProjectsStore } from '@/stores/projects'
 
 const MAX_LISTED = 8
@@ -21,7 +22,7 @@ export function ProjectMenu() {
   const [, navigate] = useLocation()
   const openId = useProjectsStore((state) => state.openId)
   const projects = useProjectsStore((state) => state.projects)
-  const [renaming, setRenaming] = useState(false)
+  const [dialog, setDialog] = useState<'rename' | 'local' | null>(null)
   const project = projects.find((p) => p.id === openId)
   const others = useMemo(
     () =>
@@ -61,10 +62,11 @@ export function ProjectMenu() {
               <DropdownMenuSeparator />
             </>
           )}
-          <DropdownMenuItem onSelect={() => setRenaming(true)}>
+          <DropdownMenuItem onSelect={() => setDialog('rename')}>
             <Pencil aria-hidden />
             Rename…
           </DropdownMenuItem>
+          <KeepLocalMenuItem project={project} onKeepLocal={() => setDialog('local')} />
           <DropdownMenuItem onSelect={() => navigate(paths.newProject)}>
             <Plus aria-hidden />
             New project
@@ -75,7 +77,16 @@ export function ProjectMenu() {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      <RenameProjectDialog project={project} open={renaming} onOpenChange={setRenaming} />
+      <RenameProjectDialog
+        project={project}
+        open={dialog === 'rename'}
+        onOpenChange={(open) => setDialog(open ? 'rename' : null)}
+      />
+      <KeepLocalDialog
+        project={project}
+        open={dialog === 'local'}
+        onOpenChange={(open) => setDialog(open ? 'local' : null)}
+      />
     </>
   )
 }

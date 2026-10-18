@@ -3,14 +3,15 @@ import { useState } from 'react'
 import { IconButton } from '@/components/IconButton'
 import { Button } from '@/components/ui/button'
 import { useElapsed } from '@/hooks/useElapsed'
-import { formatDuration, formatNumber } from '@/lib/format'
+import { formatDuration, formatNumber, formatPercent } from '@/lib/format'
 import { useDatasetsStore, type IngestJob } from '@/stores/datasets'
 import { useSettingsStore } from '@/stores/settings'
 
 export function IngestJobRow({ job }: { job: IngestJob }) {
   const locale = useSettingsStore((state) => state.locale)
   const { cancelJob, retryJob, chooseSheet } = useDatasetsStore()
-  const running = job.status === 'loading' || job.status === 'profiling'
+  const running =
+    job.status === 'downloading' || job.status === 'loading' || job.status === 'profiling'
   const elapsed = useElapsed(job.startedAt, running)
   const [showDetails, setShowDetails] = useState(false)
 
@@ -35,11 +36,33 @@ export function IngestJobRow({ job }: { job: IngestJob }) {
           <p className="truncate font-medium" title={job.label}>
             {job.label}
           </p>
-          {running && (
-            <p className="text-xs text-muted-foreground tabular-nums">
-              {job.status === 'profiling' ? 'Profiling columns' : 'Loading'} ·{' '}
-              {formatDuration(elapsed, locale)}
-            </p>
+          {job.status === 'downloading' ? (
+            <>
+              <p className="text-xs text-muted-foreground tabular-nums">
+                Downloading from your account ·{' '}
+                {formatPercent(job.progress ?? 0, locale, { maxFractionDigits: 0 })}
+              </p>
+              <div
+                role="progressbar"
+                aria-label={`Downloading ${job.label}`}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={Math.round((job.progress ?? 0) * 100)}
+                className="mt-1 h-1 overflow-hidden rounded-full bg-muted"
+              >
+                <div
+                  className="h-full bg-foreground/60 transition-[width] motion-reduce:transition-none"
+                  style={{ width: `${(job.progress ?? 0) * 100}%` }}
+                />
+              </div>
+            </>
+          ) : (
+            running && (
+              <p className="text-xs text-muted-foreground tabular-nums">
+                {job.status === 'profiling' ? 'Profiling columns' : 'Loading'} ·{' '}
+                {formatDuration(elapsed, locale)}
+              </p>
+            )
           )}
           {running && job.warning && (
             <p className="mt-1 text-xs text-amber-700 dark:text-amber-400">{job.warning}</p>

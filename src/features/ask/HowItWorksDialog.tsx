@@ -16,8 +16,8 @@ import { useUiStore } from '@/stores/ui'
 // and what sharing sends. The details follow in the table.
 const STEPS = [
   {
-    title: 'Your file stays on your device',
-    text: 'HushGlance reads it right here, in your browser, with a built-in database. Your files are never uploaded.',
+    title: 'Your file is read on your device',
+    text: 'HushGlance analyses it right here, in your browser, with a built-in database. Signed in, your projects and files are saved to your account encrypted on this device first, so only your passphrase opens them: we can’t read them, and they never go to an AI.',
   },
   {
     title: 'The AI sees the outline, not your rows',
@@ -33,7 +33,7 @@ const STEPS = [
   },
   {
     title: 'Sharing is your choice',
-    text: "Signed in, you can share a dashboard's results with people or by link. A dialog lists exactly what will upload first; your files never do.",
+    text: "Signed in, you can share a dashboard's results with people or by link. A dialog lists exactly what will be shared first; your files never are.",
   },
 ]
 

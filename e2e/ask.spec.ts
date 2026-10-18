@@ -26,7 +26,7 @@ test.describe('J1: first run without a key (F-SHELL-02, F-AI-03)', () => {
     await signIn(page)
     await page.goto('/app/')
     await expect(page.getByRole('heading', { name: 'What do you want to look at?' })).toBeVisible()
-    await expect(page.getByText('Your files stay on this device.')).toBeVisible()
+    await expect(page.getByText('Your files are read on this device.')).toBeVisible()
     await expect(page.getByRole('button', { name: 'Demo mode', exact: true })).toBeVisible()
 
     await page

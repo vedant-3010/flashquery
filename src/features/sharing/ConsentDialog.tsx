@@ -121,7 +121,7 @@ export function ConsentDialog({
               <li className="flex items-start gap-2">
                 <CircleX className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
                 <span>
-                  <span className="font-medium">Never uploaded:</span> your files, any other rows,
+                  <span className="font-medium">Never shared:</span> your files, any other rows,
                   which files the results came from, the dashboard’s filters, your API keys.
                 </span>
               </li>

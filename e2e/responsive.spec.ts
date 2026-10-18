@@ -28,7 +28,7 @@ for (const size of SIZES) {
       await expect(page.getByRole('heading', { level: 1, name: 'Sign in' })).toBeVisible()
       await fitsTheScreen(page)
       // The ink panel is for wide screens; its promise shows under the form here.
-      await expect(page.getByRole('main').getByText('Share results, not files')).toBeVisible()
+      await expect(page.getByRole('main').getByText('Encrypted on every device')).toBeVisible()
       await page.goto('/app/register')
       await expect(
         page.getByRole('heading', { level: 1, name: 'Create your account' }),

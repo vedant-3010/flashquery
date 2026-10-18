@@ -56,7 +56,7 @@ export function FileDropZone() {
         <FileUp className="size-10 text-primary" />
         <p className="text-base font-medium">Drop files to load them</p>
         <p className="text-sm text-muted-foreground">
-          CSV, TSV, Excel, Parquet or JSON. Files stay on this device.
+          CSV, TSV, Excel, Parquet or JSON. Read on this device, never sent to an AI.
         </p>
       </div>
     </div>

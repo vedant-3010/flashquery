@@ -15,7 +15,7 @@ const STEPS = [
   },
   {
     title: 'Build a dashboard',
-    text: 'Pin answers, or let the AI generate a dashboard in the Dashboard tab. It stays on this device until you choose to share it.',
+    text: 'Pin answers, or let the AI generate a dashboard in the Dashboard tab. Nobody else sees it until you choose to share it.',
   },
 ]
 

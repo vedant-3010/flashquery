@@ -20,6 +20,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { RenameProjectDialog } from '@/features/home/RenameProjectDialog'
+import { KeepLocalDialog, KeepLocalMenuItem, ProjectPlace } from '@/features/sync/KeepLocal'
 import { formatAgo } from '@/lib/format'
 import { useProjectsStore, type Project } from '@/stores/projects'
 import { useSettingsStore } from '@/stores/settings'
@@ -32,7 +33,7 @@ export function ProjectCard({ project }: { project: Project }) {
   const locale = useSettingsStore((state) => state.locale)
   const remove = useProjectsStore((state) => state.remove)
   const toast = useToastStore((state) => state.show)
-  const [dialog, setDialog] = useState<'rename' | 'delete' | null>(null)
+  const [dialog, setDialog] = useState<'rename' | 'delete' | 'local' | null>(null)
   const shown = project.datasets.slice(0, 3)
   const more = project.datasets.length - shown.length
 
@@ -72,6 +73,7 @@ export function ProjectCard({ project }: { project: Project }) {
               <Pencil aria-hidden />
               Rename…
             </DropdownMenuItem>
+            <KeepLocalMenuItem project={project} onKeepLocal={() => setDialog('local')} />
             <DropdownMenuItem variant="destructive" onSelect={() => setDialog('delete')}>
               <Trash2 aria-hidden />
               Delete…
@@ -96,11 +98,19 @@ export function ProjectCard({ project }: { project: Project }) {
       ) : (
         <p className="text-sm text-muted-foreground">No data yet</p>
       )}
-      <p className="text-xs text-muted-foreground">
-        {count(project.dashboards, 'dashboard')} · {count(project.questions, 'question')} · opened{' '}
-        {formatAgo(project.lastOpenedAt, locale)}
+      <p className="flex flex-wrap items-center gap-x-1 text-xs text-muted-foreground">
+        <span>
+          {count(project.dashboards, 'dashboard')} · {count(project.questions, 'question')} · opened{' '}
+          {formatAgo(project.lastOpenedAt, locale)}
+        </span>
+        <ProjectPlace project={project} />
       </p>
 
+      <KeepLocalDialog
+        project={project}
+        open={dialog === 'local'}
+        onOpenChange={(open) => setDialog(open ? 'local' : null)}
+      />
       <RenameProjectDialog
         project={project}
         open={dialog === 'rename'}
@@ -115,8 +125,9 @@ export function ProjectCard({ project }: { project: Project }) {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete {project.name}?</AlertDialogTitle>
             <AlertDialogDescription>
-              Its history, dashboards, notes and kept files are deleted from this browser. Export
-              its workspace first (Settings, inside the project) to keep a copy.
+              Its history, dashboards, notes and kept files are deleted from this browser and, if
+              it’s saved to your account, from there and your other devices too. Export its
+              workspace first (Settings, inside the project) to keep a copy.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

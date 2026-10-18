@@ -53,7 +53,7 @@ export function FirstRun() {
           What do you want to look at?
         </h1>
         <PrivacyLine>
-          Your files stay on this device. Only what your privacy setting allows goes to the AI.
+          Your files are read on this device. Only what your privacy setting allows goes to the AI.
         </PrivacyLine>
       </div>
       {waiting && (

@@ -113,7 +113,7 @@ test.describe('J7 and J8: sharing a dashboard (F-SHARE-01…05, F-SHARE-07)', ()
       table.getByRole('row', { name: /^Revenue by region Chart 5 region, revenue/ }),
     ).toBeVisible()
     await expect(consent.getByTestId('upload-total')).toHaveText(/^6 tiles · \d+ rows · [\d.]+ KB$/)
-    await expect(consent).toContainText('Never uploaded: your files')
+    await expect(consent).toContainText('Never shared: your files')
     expect(service.calls.filter((call) => call.includes('/rest/v1/dashboards'))).toEqual([])
     await consent.getByRole('button', { name: 'Upload and share' }).click()
 

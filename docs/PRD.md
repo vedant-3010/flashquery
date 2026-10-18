@@ -26,6 +26,13 @@ account service stores only what the user explicitly saves or shares (a dashboar
 after a dialog shows exactly what will upload. Guests, and the no-key demo, use everything else with
 no account and no request to the account service (D100).
 
+**M17: the workspace on every device, end-to-end encrypted.** A signed-in user's projects (files,
+questions, dashboards, notes) are saved to their account so they can work on any device, encrypted
+in the browser first with a key only their passphrase or recovery key opens: the service stores
+ciphertext it can't read (D123). Analysis still runs in the browser, and the AI still gets only what
+the privacy mode allows (Strict by default, D122). Projects marked "Keep on this device only", the
+try projects and guests never sync.
+
 ### 1.1 Problem
 
 - People hold spreadsheets they can't or won't upload to cloud AI tools (customer, finance, HR data).
@@ -65,6 +72,9 @@ in under 2 s for up to 12 tiles.
 - **G9** Guests and the demo make no request to the account service (automated test).
 - **G10** A signed-in user with no key gets 3 answers from HushGlance AI, and nothing they ask is
 stored by us or by any model provider (zero data retention forced on every hosted request, M16).
+- **G11** A project made on one device opens on another, with its files, questions and dashboards,
+and no request body to the account service contains a plaintext cell, question or name (automated
+canary, M17).
 
 
 
@@ -80,7 +90,8 @@ stored by us or by any model provider (zero data retention forced on every hoste
 
 ### 1.4a Non-goals (v2)
 
-- Uploading or storing source files, or running queries on a server.
+- Running queries on a server, or any server reading users' files (files are stored only end-to-end
+  encrypted, M17, D123).
 - Real-time co-editing (edits save with a version check instead), scheduled refresh, alerts.
 - Live database or warehouse connections (still files only).
 - Fine-tuning a model (D108).
@@ -134,6 +145,13 @@ their team.
 asks 3 questions with HushGlance AI (no key; a note says what goes through our server, and that no
 one keeps it) → the meter reads "No free questions left" → the 4th opens "Upgrade to Pro" → Dodo's
 hosted checkout → back on Plan and billing, Pro arrives → asks a 4th, on any device they sign in to.
+- **J12 A second laptop (v2, M17)**: Rahul signs up on his work laptop → Home offers "Save your
+workspace to your account" (what will be saved, what we can see) → he picks a passphrase and saves
+the recovery key → loads an export, asks two questions, pins one → at home, signs in on his own
+laptop → "Unlock your workspace" → the passphrase (or the recovery key and a new passphrase) → the
+project is on Home → he opens it: the file downloads, decrypts and loads, the questions and the
+dashboard are there. A payroll project he marked "Keep on this device only" never left the work
+laptop.
 
 ---
 
@@ -566,7 +584,38 @@ refresh from a connected device.
   the error text or traceback (`scrubError` in `context.ts`), and OpenAI requests never let OpenAI
   store a response (`zdrEnabled`).
 
-**Later (M17):** the workspace on every device, end-to-end encrypted (F-SYNC).
+### 4.22 The encrypted workspace (F-SYNC, v2, M17)
+
+- [x] **F-SYNC-01 (P1) Set up**: signed in, Home offers "Save your workspace to your account" once a
+  day until it's done: what will be saved (projects, questions, dashboards, files), what we can see
+  (sizes and dates), a passphrase (≥ 10 characters, typed twice), "Remember on this device", then
+  the recovery key, shown once (copy, download, "I've saved it"). AC: `src/lib/vault.test.ts`; J12.
+- [x] **F-SYNC-02 (P1) Unlock on another device**: "Unlock your workspace" with the passphrase, or the
+  recovery key and a new passphrase (the old one stops working); "Not now" keeps working on the
+  device, unsynced. A wrong passphrase says so. AC: J12 (wrong passphrase, recovery key).
+- [x] **F-SYNC-03 (P1) Records sync**: the project list and each project's history, dashboards,
+  notes, suggestions and file list, encrypted per record (additional data: owner, place, version);
+  saved 3 s after a change with the version it replaces (`sync_put`); pulled on unlock, on focus and
+  every minute. The later save wins per record; the project list merges per project, and deleted
+  projects leave a marker. A change to the open project offers "Reload". AC:
+  `src/lib/syncMerge.test.ts`, `src/stores/syncEngine.test.ts`, pgTAP (`supabase/tests/vault.test.sql`).
+- [x] **F-SYNC-04 (P1) Files**: a project saved to the account always keeps its files; each is
+  encrypted in 4 MiB chunks, its space reserved within the plan, its chunks uploaded (a cut-short
+  upload resumes); a device without it downloads, decrypts and loads it, with progress on the
+  dataset row. Files no list mentions are deleted after a week. AC: chunk tests in
+  `vault.test.ts`; storage policies in pgTAP; J12.
+- [x] **F-SYNC-05 (P1) Settings → Saved to your account**: status and last save, storage used of the
+  plan's (Free 500 MB, Starter 5 GB, Pro 25 GB), Sync now, Change passphrase, New recovery key, Lock
+  on this device, Delete cloud copy (this device keeps its copy). Storage full: a notice with "Get
+  more storage"; new files stay on the device. The status pill shows the state. AC: pgTAP quota
+  refusals; J12 (storage full).
+- [x] **F-SYNC-06 (P1) Keep on this device only**: per project, from the project menu or its card on
+  Home (cards show "Account" or "This device"); turning it on deletes the project's records and
+  files from the account, and other devices keep their copy but stop syncing it. The try projects
+  never sync. AC: `syncEngine.test.ts`; J12.
+- [x] **F-SEC-10 (P0) Nothing readable leaves**: no request body to the account service carries a
+  file's cells, a question, a column or project name, or the passphrase. AC: the J12 canary over
+  every request from both devices; the engine test's canary.
 
 ---
 
@@ -802,8 +851,9 @@ budgets hold; no sparkle icons (D118).
 - **M16 Plans and hosted AI**: F-PLAN-01…05, F-AI-07, F-PRIV-04. DoD: J11 works against mocked
 services; the quota and billing rules pass pgTAP; the proxy and webhook pass unit tests; guests still
 make no request to the account service; both bundle budgets hold.
-- **M17 Sync (planned)**: the workspace on every device, end-to-end encrypted with a passphrase;
-files stay on the device.
+- **M17 Encrypted workspace**: F-SYNC-01…06, F-SEC-10. DoD: J12 works against mocked services, with
+the canary; the vault's rules pass pgTAP; guests still make no request to the account service; both
+bundle budgets hold; the landing page's phone length stays under 9,500 px.
 
 ---
 
@@ -1683,7 +1733,43 @@ named "Voice input (unavailable)" where on-device recognition is missing, and pr
     - "0 rows of your data sent to the AI, unless you allow it";
     - a privacy section that opens on Strict;
     - "What do you keep about me?" in the FAQ: the account, the plan, question counts (never the
-      questions), and shared dashboards. Files, questions and answers stay in the browser.
+      questions), and shared dashboards (M17 adds the encrypted workspace, which we can't read).
+- **D123** The encrypted workspace (M17; user request, 2026-10-15: "store the files and the
+  questions… use the application wherever they want… the promise is I don't send your data to the
+  LLMs").
+  - **Why:** kept only in one browser, a user's work stops at that browser. The promise moves from
+    "it never leaves your computer" to "the AI never sees your rows, and we can't read what you
+    save".
+  - **Keys** (`src/lib/vault.ts`, WebCrypto only): one random AES-GCM-256 data key per account,
+    stored by the service only wrapped twice: with a PBKDF2-SHA256 key from the passphrase (600,000
+    iterations, a random salt) and with a 256-bit recovery key shown once (Crockford base32). A
+    wrong passphrase fails the unwrap. Changing either re-wraps; nothing is re-encrypted. Unlocked,
+    the key is a non-extractable `CryptoKey`, kept in IndexedDB only with "Remember on this device"
+    (forgotten on sign-out and "Lock").
+  - **Data:** each record is the local envelope, encrypted with a fresh IV and additional data
+    `hushglance/record/<user>/<scope>/<key>/<version>`; files in 4 MiB chunks with
+    `hushglance/chunk/<user>/<file>/<index>/<total>`, so the service can't swap or reorder them.
+  - **Server** (`…_vault.sql`): `vaults`, `sync_records` (optimistic versions, the service's clock,
+    owner fixed), `vault_files` (reserved only through `vault_reserve`) and a private `vault` bucket
+    whose insert policy needs a reservation and an index below its chunk count. Records and files
+    count against `plans.storage_bytes` (decimal: 500 MB, 5 GB, 25 GB). No vault, no saving
+    (`sync_put` and `vault_reserve` refuse), so a device still running after the cloud copy was
+    deleted elsewhere can't save under the old key; each sync checks the vault is the same one.
+  - **What the service sees:** that a vault exists, record names (`history`, …), project ids
+    (random), sizes, chunk counts and times. Never contents, file or project names, or questions.
+  - **Merging (deviation from the plan's per-kind rules):** each project record is one unit and the
+    later save wins (the devices' clocks); the project list merges per project with markers for
+    deletions. Per-kind merges (history unions and the like) would bring deleted entries back
+    without a shared base; the cost is that two devices editing the same project at the same time
+    keep the later one, and the other sees "Changed on another device · Reload".
+  - **Limits we accept:** a malicious service could serve an older copy of a record (rollback;
+    additional data prevents swaps, not rollback). A lost passphrase and recovery key means the
+    cloud copy can't be opened; devices that still have the data can set up again. Clock skew
+    between devices can order two near-simultaneous saves wrongly.
+  - **Unchanged:** analysis in the browser; the AI context per privacy mode (Strict by default);
+    shared dashboards (plaintext results after consent, D116); guests and the demo never sync.
+  - **Cost:** the app's initial JS grows by ≈ 15 KB gzip (339.6 of 350 KB); a candidate for a lazy
+    chunk if the budget tightens.
 - **D12** Shared hooks live in `src/hooks/` and shared app components in `src/components/` (outside the
 generated `ui/`), matching the shadcn aliases in `components.json`.
 

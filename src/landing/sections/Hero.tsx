@@ -8,20 +8,21 @@ import { HeroFilm } from '@/landing/film/HeroFilm'
 import { reveal, stagger } from '@/landing/motion'
 import { HeadlineLines } from '@/landing/HeadlineLines'
 
-// Privacy first, then speed, in plain words (D117); every figure is real: the two zeros are how
-// the app works (no upload; Strict by default, D122), the speed is a measurement (data.ts).
+// Privacy first, then speed, in plain words (D117); every figure is real: the zero is how the app
+// works (Strict by default, D122), 256-bit is the encryption of everything saved (AES-256, D123),
+// the speed is a measurement (data.ts).
 const STATS = [
-  {
-    value: 0,
-    format: () => '0',
-    unit: 'bytes',
-    label: 'of your files uploaded, ever',
-  },
   {
     value: 0,
     format: () => '0',
     unit: 'rows',
     label: 'of your data sent to the AI, unless you allow it',
+  },
+  {
+    value: 256,
+    format: (v: number) => `${Math.round(v)}`,
+    unit: 'bit',
+    label: 'encryption of all you save, on your device',
   },
   {
     value: BENCH.stats[2].value,
@@ -53,7 +54,7 @@ export function Hero() {
               accent
               burst="data"
               lead="Ask your data anything."
-              line="It never leaves your computer."
+              line="The AI never sees your rows."
             />
           </m.h1>
           <m.p
@@ -62,8 +63,8 @@ export function Hero() {
           >
             Open a spreadsheet or export and ask in plain English: which customers owe you the most,
             where costs are rising, how this quarter compares. You get the answer, a chart and the
-            working. Your files stay on your device, and the AI never sees a row of them unless you
-            allow it.
+            working. The AI sees the outline of your data, never a row unless you allow it, and your
+            work is encrypted for you on every device.
           </m.p>
           <m.div variants={reveal} className="mt-9 flex flex-wrap items-center gap-x-6 gap-y-3">
             <FileDrop>

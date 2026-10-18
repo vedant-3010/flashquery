@@ -19,6 +19,7 @@ import { startPlans } from '@/stores/plan'
 import { startFilePersistence } from '@/stores/persistFiles'
 import { useProjectsStore } from '@/stores/projects'
 import { startRelationshipDetection } from '@/stores/relationships'
+import { startSync } from '@/stores/sync'
 import { useSettingsStore } from '@/stores/settings'
 
 const BenchPage = lazy(() =>
@@ -98,6 +99,8 @@ export function App() {
     useAuthStore.getState().start()
     // Signed in: HushGlance AI's models and the user's questions (F-PLAN-01); guests load nothing.
     startPlans()
+    // Signed in: the encrypted workspace on every device (M17); guests load nothing for it.
+    startSync()
     startRelationshipDetection()
   }, [])
 

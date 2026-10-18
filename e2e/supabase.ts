@@ -188,6 +188,11 @@ export async function mockSupabase(
       state.users = state.users.filter((u) => u !== user)
       return route.fulfill({ status: 204, headers: CORS })
     }
+    // What PostgREST answers for a table or function this deployment doesn't have.
+    const missing = path.startsWith('/rest/v1/rpc/') ? 'PGRST202' : 'PGRST205'
+    if (path.startsWith('/rest/v1/')) {
+      return json(route, 404, { code: missing, message: `Not mocked: ${path}`, details: null })
+    }
     return fail(route, 404, 'not_found', `Not mocked: ${path}`)
   })
   return state

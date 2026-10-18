@@ -8,6 +8,7 @@ import { useDatasetsStore } from '@/stores/datasets'
 import { useHistoryStore } from '@/stores/history'
 import { useNotesStore } from '@/stores/notes'
 import {
+  keepsFiles,
   restorePersistedDatasets,
   startFilePersistence,
   whenFilesSaved,
@@ -68,7 +69,8 @@ async function open(id: string): Promise<OpenOutcome> {
     useSuggestionsStore.getState().hydrate(),
   ])
   startFilePersistence()
-  if (useSettingsStore.getState().persistFiles) await restorePersistedDatasets()
+  // Kept files (the setting, or a project saved to the account): the rest arrive on unlock.
+  if (keepsFiles(id)) await restorePersistedDatasets()
   trackSummary(id)
   return 'open'
 }
@@ -156,7 +158,10 @@ function whenDatasetsSettled(): Promise<void> {
   const busy = () =>
     useDatasetsStore
       .getState()
-      .jobs.some((job) => job.status === 'loading' || job.status === 'profiling')
+      .jobs.some(
+        (job) =>
+          job.status === 'downloading' || job.status === 'loading' || job.status === 'profiling',
+      )
   if (!busy()) return Promise.resolve()
   return new Promise((resolve) => {
     const stop = useDatasetsStore.subscribe(() => {

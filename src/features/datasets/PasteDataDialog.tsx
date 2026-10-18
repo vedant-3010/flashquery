@@ -82,7 +82,8 @@ export function PasteDataDialog() {
         <DialogHeader>
           <DialogTitle>Paste data</DialogTitle>
           <DialogDescription>
-            Make a table from cells copied in a spreadsheet. Nothing leaves this device.
+            Make a table from cells copied in a spreadsheet. It’s read on this device, never sent to
+            an AI.
           </DialogDescription>
         </DialogHeader>
         {open && <PasteForm initial={pasteText} onDone={() => setPasteText(null)} />}

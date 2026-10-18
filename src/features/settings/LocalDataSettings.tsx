@@ -55,8 +55,8 @@ export function LocalDataSettings({ inProject = true }: { inProject?: boolean })
   return (
     <div className="grid gap-3 text-sm">
       <p className="text-xs text-muted-foreground">
-        Settings, projects (history, dashboards, notes) and eval cases are saved in this browser
-        only. Files are saved only if you choose to keep them.
+        Settings and eval cases are saved in this browser only. Projects (history, dashboards,
+        notes, files) are saved here too and, signed in, to your account, encrypted.
       </p>
       <KeepFilesSetting />
       {!inProject && (

@@ -1,4 +1,4 @@
-import { CircleHelp, RotateCcw, ShieldCheck } from 'lucide-react'
+import { CircleHelp, Cloud, CloudOff, Lock, RotateCcw, ShieldCheck } from 'lucide-react'
 import { useState } from 'react'
 import type { PrivacyMode } from '@/ai/schemas'
 import { PrivacyModeSchema } from '@/ai/schemas'
@@ -13,6 +13,7 @@ import { useDatasetsStore } from '@/stores/datasets'
 import { useEngineStore, type EngineStatus, type PythonStatus } from '@/stores/engine'
 import { restartEngine } from '@/stores/engineRestart'
 import { useSettingsStore } from '@/stores/settings'
+import { useSyncStore, type SyncStatus } from '@/stores/sync'
 import { useUiStore } from '@/stores/ui'
 
 const MODE_LABEL: Record<PrivacyMode, string> = { strict: 'Strict', balanced: 'Balanced' }
@@ -25,6 +26,20 @@ const ENGINE: Record<EngineStatus, { label: string; dot: string }> = {
   },
   ready: { label: 'Engine ready', dot: 'bg-emerald-500' },
   error: { label: 'Engine error', dot: 'bg-destructive' },
+}
+
+/** The encrypted workspace in the pill (M17): only once there's one to report on. */
+const SYNC: Partial<Record<SyncStatus, { label: string; detail: string }>> = {
+  ready: { label: 'saved to your account', detail: 'Encrypted and saved to your account.' },
+  syncing: { label: 'saving to your account', detail: 'Saving to your account…' },
+  error: {
+    label: 'not saved to your account',
+    detail: 'Couldn’t save to your account. Changes stay here and save when it’s back.',
+  },
+  locked: {
+    label: 'account locked',
+    detail: 'Locked on this device: unlock to save and see your other projects.',
+  },
 }
 
 const PYTHON: Record<PythonStatus, string> = {
@@ -45,6 +60,9 @@ export function StatusPill({ engine: withEngine = true }: { engine?: boolean }) 
   const setHowItWorksOpen = useUiStore((state) => state.setHowItWorksOpen)
   const { status, version, error, python } = useEngineStore()
   const restarting = useDatasetsStore((state) => state.restarting)
+  const syncStatus = useSyncStore((state) => state.status)
+  const openSync = useSyncStore((state) => state.openDialog)
+  const sync = SYNC[syncStatus]
   const [showDetails, setShowDetails] = useState(false)
   const engine = restarting
     ? { label: 'Engine restarting', dot: ENGINE.loading.dot }
@@ -55,12 +73,28 @@ export function StatusPill({ engine: withEngine = true }: { engine?: boolean }) 
       <PopoverTrigger asChild>
         <button
           type="button"
-          aria-label={`Status: ${MODE_LABEL[mode]}${withEngine ? `, ${engine.label.toLowerCase()}` : ''}`}
+          aria-label={`Status: ${MODE_LABEL[mode]}${sync ? `, ${sync.label}` : ''}${withEngine ? `, ${engine.label.toLowerCase()}` : ''}`}
           className="inline-flex h-6 items-center gap-1.5 rounded-full border px-2.5 text-xs font-medium hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
         >
           <ShieldCheck className="size-3.5 text-muted-foreground" aria-hidden />
           <span className="max-lg:sr-only">Privacy: </span>
           {MODE_LABEL[mode]}
+          {sync && (
+            <span title={sync.detail} className="text-muted-foreground [&>svg]:size-3.5">
+              {syncStatus === 'error' ? (
+                <CloudOff className="text-destructive" aria-hidden />
+              ) : syncStatus === 'locked' ? (
+                <Lock aria-hidden />
+              ) : (
+                <Cloud
+                  aria-hidden
+                  className={cn(
+                    syncStatus === 'syncing' && 'animate-pulse motion-reduce:animate-none',
+                  )}
+                />
+              )}
+            </span>
+          )}
           {withEngine && (
             <span
               className={cn('ml-0.5 size-1.5 rounded-full', engine.dot)}
@@ -96,6 +130,23 @@ export function StatusPill({ engine: withEngine = true }: { engine?: boolean }) 
             ))}
           </RadioGroup>
         </section>
+        {sync && (
+          <section aria-labelledby="status-sync" className="grid gap-2 border-t p-3">
+            <h3 id="status-sync" className="text-xs font-medium text-muted-foreground">
+              Your workspace
+            </h3>
+            <p className="text-xs">{sync.detail}</p>
+            {syncStatus === 'locked' ? (
+              <Button size="xs" className="w-fit" onClick={() => openSync('unlock')}>
+                Unlock
+              </Button>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                Encrypted on this device first: we can’t read it.
+              </p>
+            )}
+          </section>
+        )}
         {withEngine && (
           <section aria-labelledby="status-engine" className="grid gap-2 border-t p-3">
             <h3
@@ -115,7 +166,7 @@ export function StatusPill({ engine: withEngine = true }: { engine?: boolean }) 
               {status === 'ready' && <EngineMemory />}
             </dl>
             <p className="text-xs text-muted-foreground">
-              Both run inside this browser tab. Your data is never uploaded.
+              Both run inside this browser tab: your rows are analysed here, never on a server.
             </p>
             {status === 'error' && error && (
               <div className="grid gap-2">

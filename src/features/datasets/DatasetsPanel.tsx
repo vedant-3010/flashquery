@@ -40,7 +40,7 @@ export function DatasetsPanel({ onClose }: { onClose?: () => void }) {
         <EmptyState
           icon={Database}
           title="No datasets yet"
-          description="Drop a spreadsheet anywhere, or use the buttons above. Files never leave this device."
+          description="Drop a spreadsheet anywhere, or use the buttons above. Your rows are never sent to an AI."
         />
       ) : (
         <div className="min-h-0 flex-1 overflow-y-auto pb-4">
