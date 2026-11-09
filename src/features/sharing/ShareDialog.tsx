@@ -79,7 +79,7 @@ export function ShareDialog({
               {savedAt
                 ? `Shared copy uploaded ${formatAgo(savedAt, locale)}.`
                 : 'Its shared copy holds the results you uploaded.'}{' '}
-              Your files stay on your device.
+              Your files are never shared.
             </span>
             <a
               href={appUrl(paths.shared(cloudId))}

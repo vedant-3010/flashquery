@@ -54,6 +54,16 @@ describe('vercel.json', () => {
     expect(headerFor('/index.html', 'X-Content-Type-Options')).toBe('nosniff')
   })
 
+  it('lets our own pages use the microphone for voice questions, and nothing else', () => {
+    // Voice input (D106) is recognized on the device but still needs the microphone: microphone=()
+    // would block it for our own pages too (D124).
+    const policy = headerFor('/app/p/x', 'Permissions-Policy') ?? ''
+    expect(policy).toContain('microphone=(self)')
+    for (const feature of ['camera=()', 'geolocation=()', 'payment=()', 'usb=()']) {
+      expect(policy).toContain(feature)
+    }
+  })
+
   it('sends /app to /app/, where the app lives (the landing page is at /, PRD D99)', () => {
     expect(config.redirects).toContainEqual({
       source: '/app',

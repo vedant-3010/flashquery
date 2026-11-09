@@ -2,5 +2,5 @@
 export const AUTH_POINTS = [
   'Your rows never go to the AI',
   'Answers, charts and dashboards',
-  'Encrypted on every device',
+  'Saved encrypted: only you can read it',
 ]

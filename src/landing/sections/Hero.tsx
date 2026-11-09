@@ -22,7 +22,7 @@ const STATS = [
     value: 256,
     format: (v: number) => `${Math.round(v)}`,
     unit: 'bit',
-    label: 'encryption of all you save, on your device',
+    label: 'encryption of your saved workspace, on your device',
   },
   {
     value: BENCH.stats[2].value,
@@ -64,7 +64,7 @@ export function Hero() {
             Open a spreadsheet or export and ask in plain English: which customers owe you the most,
             where costs are rising, how this quarter compares. You get the answer, a chart and the
             working. The AI sees the outline of your data, never a row unless you allow it, and your
-            work is encrypted for you on every device.
+            work saves to your account encrypted, to pick up on any device.
           </m.p>
           <m.div variants={reveal} className="mt-9 flex flex-wrap items-center gap-x-6 gap-y-3">
             <FileDrop>

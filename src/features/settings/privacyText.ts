@@ -8,7 +8,7 @@ export const PRIVACY_MODES: Record<
 > = {
   strict: {
     label: 'Strict',
-    summary: 'The default: only the shape of your data leaves this device, never a value from it.',
+    summary: 'The default: only the shape of your data goes to the AI, never a value from it.',
     sends: ['Table names and row counts', 'Column names and types', 'Notes you add to datasets'],
     never: ['Any values from your data', 'Query results (answers are summarized on this device)'],
   },

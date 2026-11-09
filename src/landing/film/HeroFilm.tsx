@@ -55,7 +55,7 @@ export function HeroFilm() {
   return (
     <figure
       ref={root}
-      aria-label={`HushGlance answering “${DEMO_QUESTION}” on a 1,000,000-row file: APAC grew fastest, +140% from 2022 to 2025. The file is never uploaded.`}
+      aria-label={`HushGlance answering “${DEMO_QUESTION}” on a 1,000,000-row file: APAC grew fastest, +140% from 2022 to 2025. The file never goes to the AI.`}
       className="relative"
       onPointerEnter={() => setHovered(true)}
       onPointerLeave={() => setHovered(false)}
