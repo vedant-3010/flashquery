@@ -60,6 +60,7 @@ export const useSyncStore = create<SyncState>()((set) => ({
   changedElsewhere: false,
   newerApp: false,
   linked: false,
+  linkedUser: null,
   openDialog: (dialog) => set({ dialog, asked: true }),
   closeDialog: () => set({ dialog: null, asked: true }),
   setUp: (passphrase, remember) => session.setUp(passphrase, remember),

@@ -1,4 +1,4 @@
-import { LogOut, Trash2 } from 'lucide-react'
+import { Eraser, LogOut, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { Link, Redirect, useLocation } from 'wouter'
 import { paths } from '@/app/paths'
@@ -23,6 +23,7 @@ import type { Account } from '@/platform/auth'
 import { useAuthStore } from '@/stores/auth'
 import { useSyncStore } from '@/stores/sync'
 import { useToastStore } from '@/stores/toast'
+import { clearLocalData } from '@/stores/workspace'
 
 const PROVIDERS: Record<string, string> = {
   email: 'your email',
@@ -43,7 +44,7 @@ export function AccountPage() {
 function AccountDetails({ account }: { account: Account }) {
   const [, navigate] = useLocation()
   const [name, setName] = useState(account.name)
-  const [confirming, setConfirming] = useState(false)
+  const [confirming, setConfirming] = useState<'delete' | 'clear' | null>(null)
   const { pending, error, run } = useAuthAction()
   const toast = useToastStore((state) => state.show)
 
@@ -101,6 +102,14 @@ function AccountDetails({ account }: { account: Account }) {
         </div>
       </form>
       <FormError error={error} />
+      {error?.code === 'subscription_active' && (
+        <Link
+          href={paths.billing}
+          className="w-fit text-sm text-primary underline-offset-4 hover:underline"
+        >
+          Open Plan and billing
+        </Link>
+      )}
       <div className="flex flex-wrap gap-2 border-t pt-4">
         <Button
           variant="outline"
@@ -117,19 +126,57 @@ function AccountDetails({ account }: { account: Account }) {
           <LogOut aria-hidden />
           Sign out
         </Button>
-        <Button variant="destructive" disabled={pending} onClick={() => setConfirming(true)}>
+        <Button variant="outline" disabled={pending} onClick={() => setConfirming('clear')}>
+          <Eraser aria-hidden />
+          Sign out and clear this browser…
+        </Button>
+        <Button variant="destructive" disabled={pending} onClick={() => setConfirming('delete')}>
           <Trash2 aria-hidden />
           Delete account…
         </Button>
       </div>
-      <AlertDialog open={confirming} onOpenChange={setConfirming}>
+      <AlertDialog
+        open={confirming === 'clear'}
+        onOpenChange={(open) => setConfirming(open ? 'clear' : null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Sign out and clear this browser?</AlertDialogTitle>
+            <AlertDialogDescription>
+              For a shared or borrowed computer. Your projects, files, settings and any saved AI key
+              are removed from this browser. Projects saved to your account come back when you sign
+              in and unlock; ones kept on this device only are gone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={() =>
+                void run(async () => {
+                  // Changes still waiting to be saved go to the account first.
+                  await useSyncStore.getState().retry()
+                  await useAuthStore.getState().signOut()
+                  await clearLocalData()
+                })
+              }
+            >
+              Sign out and clear
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <AlertDialog
+        open={confirming === 'delete'}
+        onOpenChange={(open) => setConfirming(open ? 'delete' : null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete your account?</AlertDialogTitle>
             <AlertDialogDescription>
               This deletes your account, your encrypted workspace and every dashboard you shared, at
               once. Your projects in this browser stay. On a paid plan? Cancel it first in Plan and
-              billing, so it doesn’t renew.
+              billing: an account with a plan still charging can’t be deleted.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

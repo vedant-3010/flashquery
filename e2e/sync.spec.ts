@@ -6,7 +6,7 @@ import { mockVault, mockVaultState, type MockVault } from './vault.ts'
 // unlocked with the passphrase or the recovery key, and the account service only ever receives
 // ciphertext. Two browser contexts are two devices of one account, sharing one mocked service.
 
-const PASSPHRASE = 'correct horse battery staple'
+const PASSPHRASE = 'orange tractor whisper lamp'
 const QUESTION = 'Which region grew fastest?'
 const CSV = {
   name: 'customers.csv',
@@ -99,8 +99,8 @@ test.describe('J12: the encrypted workspace on a second device (F-SYNC)', () => 
     await unlock
       .getByLabel('Recovery key', { exact: true })
       .fill(recoveryKey.toLowerCase().replaceAll('-', ' '))
-    await unlock.getByLabel('New passphrase').fill('a brand new passphrase')
-    await unlock.getByLabel('Type it again').fill('a brand new passphrase')
+    await unlock.getByLabel('New passphrase').fill('velvet harbor quiz 2026')
+    await unlock.getByLabel('Type it again').fill('velvet harbor quiz 2026')
     await unlock.getByRole('button', { name: 'Unlock' }).click()
     await expect(unlock).toBeHidden({ timeout: 15_000 })
 

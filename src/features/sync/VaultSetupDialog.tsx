@@ -125,8 +125,8 @@ export function VaultSetupDialog() {
               <div className="grid gap-1">
                 <Label htmlFor="vault-setup-remember">Remember on this device</Label>
                 <p className="text-xs text-muted-foreground">
-                  Keeps the unlocked key in this browser (it can’t be copied out), so you don’t type
-                  the passphrase each visit. Leave off on shared computers.
+                  Keeps the unlocked key in this browser, so you don’t type the passphrase each
+                  visit (the page can use it but never read it out). Leave off on shared computers.
                 </p>
               </div>
             </div>

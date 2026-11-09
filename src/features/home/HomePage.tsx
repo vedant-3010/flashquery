@@ -16,7 +16,9 @@ import { StartOptions } from '@/features/home/StartOptions'
 import { UpgradeDialog } from '@/features/plan/UpgradeDialog'
 import { SettingsDialog } from '@/features/settings/SettingsDialog'
 import { SyncDialogs } from '@/features/sync/SyncDialogs'
+import { OtherAccountNotice } from '@/features/sync/OtherAccountNotice'
 import { SyncNotice } from '@/features/sync/SyncNotice'
+import { useOtherAccount } from '@/features/sync/useOtherAccount'
 import { greeting } from '@/lib/greeting'
 import { useAuthStore } from '@/stores/auth'
 import { useProjectsStore } from '@/stores/projects'
@@ -37,6 +39,7 @@ export function HomePage() {
   const latest = sorted[0]
   const firstName = useAuthStore((state) => state.account?.name.trim().split(/\s+/)[0] ?? '')
   const saved = useSyncStore((state) => state.status === 'ready' || state.status === 'syncing')
+  const otherAccount = useOtherAccount()
 
   useEffect(() => {
     document.title = 'HushGlance'
@@ -51,6 +54,8 @@ export function HomePage() {
         </div>
         {!hydrated ? (
           <Skeleton className="h-40" />
+        ) : otherAccount ? (
+          <OtherAccountNotice />
         ) : !latest ? (
           <>
             <FirstVisit />

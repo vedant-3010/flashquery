@@ -53,6 +53,8 @@ export interface SyncReport {
   newerApp: boolean
   /** This browser's projects already save to the account (unlocking adds nothing new). */
   linked: boolean
+  /** The account this browser's workspace saves to (known without the network), or null. */
+  linkedUser: string | null
 }
 
 const missing = (code: string, message: string) => new AppError({ code, message, detail: null })
@@ -90,6 +92,7 @@ export class SyncSession {
     this.metaLoaded = loadRecord(SYNC_META_RECORD)
       .then((saved) => {
         this.meta = saved
+        this.report({ linkedUser: saved?.userId ?? null })
       })
       .catch((error: unknown) => console.warn('HushGlance: sync state could not be read', error))
     return this.metaLoaded
@@ -218,7 +221,7 @@ export class SyncSession {
         await forgetKey()
         this.linkFiles()
       }
-      this.report({ linked: this.meta !== null })
+      this.report({ linked: this.meta !== null, linkedUser: this.meta?.userId ?? null })
       if (!vault) return this.report({ status: 'setup' })
       const key = await rememberedKey(userId, vault.createdAt)
       if (key) return await this.begin(key)
@@ -254,7 +257,7 @@ export class SyncSession {
     }))
     await this.saveMeta()
     await engine.scan()
-    this.report({ status: 'ready', dialog: null, error: null, linked: true })
+    this.report({ status: 'ready', dialog: null, error: null, linked: true, linkedUser: owner })
     this.linkFiles()
     // Linked and saved here: the first sync runs on (a reload now loses nothing).
     void this.run('sync').then(() => {
@@ -371,7 +374,7 @@ export class SyncSession {
   async unlink(): Promise<void> {
     this.vault = null
     this.meta = null
-    this.report({ linked: false })
+    this.report({ linked: false, linkedUser: null })
     await this.saveMeta()
     await forgetKey()
   }

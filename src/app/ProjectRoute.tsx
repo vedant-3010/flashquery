@@ -4,6 +4,9 @@ import { Redirect, useLocation, useParams } from 'wouter'
 import { AppShell } from '@/app/AppShell'
 import { MessagePage } from '@/app/MessagePage'
 import { appUrl, paths, viewFromSegment } from '@/app/paths'
+import { isTryProject } from '@/app/tryDemo'
+import { OtherAccountNotice } from '@/features/sync/OtherAccountNotice'
+import { useOtherAccount } from '@/features/sync/useOtherAccount'
 import { openProject, runPendingStart, type OpenOutcome } from '@/stores/projectSession'
 import { useProjectsStore } from '@/stores/projects'
 import { useUiStore } from '@/stores/ui'
@@ -18,8 +21,11 @@ export function ProjectRoute() {
   const [, navigate] = useLocation()
   const [opened, setOpened] = useState<{ id: string; outcome: OpenOutcome } | null>(null)
   const name = useProjectsStore((state) => state.projects.find((p) => p.id === id)?.name)
+  // Another account's project on a shared computer (D124): not opened. The try projects are anyone's.
+  const hidden = useOtherAccount() && !isTryProject(id)
 
   useEffect(() => {
+    if (hidden) return
     let live = true
     void openProject(id).then((outcome) => {
       if (outcome === 'open') void runPendingStart(id)
@@ -28,7 +34,7 @@ export function ProjectRoute() {
     return () => {
       live = false
     }
-  }, [id])
+  }, [id, hidden])
 
   // URL → view (links, Back and Forward).
   useEffect(() => {
@@ -55,6 +61,7 @@ export function ProjectRoute() {
   }, [name])
 
   if (view === null) return <Redirect to={paths.project(id)} replace />
+  if (hidden) return <OtherAccountNotice />
   const outcome = opened?.id === id ? opened.outcome : null
   if (outcome === 'missing') {
     return (

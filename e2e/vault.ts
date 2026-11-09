@@ -178,6 +178,15 @@ export async function mockVault(page: Page, state: MockVault): Promise<MockVault
     return json(route, 200, { ok: true, used: used(state), limit: state.limit })
   })
 
+  // A reservation goes only once its chunks are gone (…_hardening.sql).
+  await page.route(`${SUPABASE_URL}/rest/v1/rpc/vault_release`, async (route) => {
+    if (route.request().method() === 'OPTIONS') return empty(route)
+    const { file } = body(route) as { file: string }
+    const left = [...state.objects.keys()].some((path) => path.split('/')[1] === file)
+    if (!left) state.files.delete(file)
+    return json(route, 200, !left)
+  })
+
   await page.route(`${SUPABASE_URL}/rest/v1/rpc/vault_usage`, (route) =>
     json(route, 200, { used: used(state), limit: state.limit }),
   )
