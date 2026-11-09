@@ -85,7 +85,37 @@ passphrase or the recovery key.
   key, as it could read the data the page already shows. The production CSP (no inline scripts,
   named hosts only) is the defence; "Remember on this device" is off-able for shared computers.
 - **Metadata.** Sizes, counts and timing are visible to the service.
+- **Offline guessing.** Whoever holds the database (us, or someone who breaks in) can try
+  passphrases against the wrapped key, at 600,000 PBKDF2 rounds each. A passphrase needs 12
+  characters and is refused when it's a pattern or made of the words tried first
+  (`src/features/sync/passphrase.ts`); the recovery key (256 bits) can't be guessed.
+- **Shared computers.** Projects live in the browser, not per account. While another account is
+  signed in, the projects of the account this browser saves to stay hidden (`useOtherAccount`);
+  "Sign out and clear this browser" (Account) removes them, and any saved AI key, for good.
 - **Shared dashboards** are plaintext by design: the people they're shared with must read them.
+
+## Spending and storage limits (D124)
+
+Limits that keep one account from running up costs for everyone, checked on the server:
+
+- **Hosted AI:** a question's later calls stay at the price it was charged (a fast model for its
+  summary, or one of the same weight or less); each question has a spend limit
+  (`ai_models.max_question_usd`); each person a daily one (`plans.daily_usd`); and all of hosted AI
+  a global one (`AI_DAILY_BUDGET_USD`), under the OpenRouter key's own credit limit.
+- **Storage:** a file reserves exactly the chunks its size needs; a reservation is released only
+  once its chunks are gone (`vault_release`); records and files count against the plan.
+- **Sharing:** at most 100 shared dashboards per owner, 5 MB each.
+- **Payments:** a full refund or a lost dispute ends the paid plan at once; a subscription whose
+  period ended more than 3 days ago with no webhook stops counting; an account with a plan still
+  charging can't be deleted (cancel first); a subscription waiting on a payment goes to the portal,
+  not a second checkout.
+
+## About the prompts
+
+The prompts are part of the app, which runs in the browser, so they ship with its JavaScript, and
+the AI inspector shows every request exactly as sent: that's a promise, not a leak. They hold no
+secret. What they could be misused for is the hosted proxy as a free model, which the limits above
+prevent.
 
 ## Other controls (unchanged)
 

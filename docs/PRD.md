@@ -1770,6 +1770,48 @@ named "Voice input (unavailable)" where on-device recognition is missing, and pr
     shared dashboards (plaintext results after consent, D116); guests and the demo never sync.
   - **Cost:** the app's initial JS grows by ≈ 15 KB gzip (339.6 of 350 KB); a candidate for a lazy
     chunk if the budget tightens.
+- **D124** Release hardening (user request, 2026-10-28: "I want to be safe before release": prompts,
+  stored API keys, payments, and claims the product doesn't deliver). A read-only audit, then fixes
+  (`supabase/migrations/…_hardening.sql`, tested in `supabase/tests/hardening.test.sql`;
+  `docs/SECURITY.md`).
+  - **Hosted AI spend:**
+    - a question's later calls stay at the price it was charged (before, one question at weight 1
+      could make 7 premium calls);
+    - each question has a spend limit (`ai_models.max_question_usd`: $0.15 standard, $0.75
+      premium, $0.05 fast);
+    - each person has a daily limit (`plans.daily_usd`: Free $0.50, Starter $2, Pro $5), so one
+      account can't trip the global breaker that pauses hosted AI for everyone.
+  - **Storage:**
+    - `vault_reserve` requires exactly the chunks a size needs (1 byte could reserve 100,000);
+    - reservations go only through `vault_release`, once their chunks are gone;
+    - at most 100 shared dashboards per owner.
+  - **Payments:**
+    - payments are remembered (`billing_payments`), so a full refund or a dispute the money went
+      back on (Dodo's events name only the payment) ends the paid plan at once;
+    - `active` stops counting 3 days after its period with no webhook;
+    - checkout sends a subscription waiting on a payment to the portal;
+    - `delete_my_account` refuses while a plan can still charge (cancel first; the app checks
+      before deleting anything).
+  - **Claims:**
+    - voice input was blocked in production (`Permissions-Policy: microphone=()`); now
+      `microphone=(self)`;
+    - copy that overclaimed was reworded: "encrypted on every device" (each device keeps a plain
+      copy in its browser), "all you save" (shared dashboards are plaintext by design), "the file is
+      never uploaded" (saved work is, encrypted);
+    - Refunds and Privacy say what a refund does and what Supabase and Dodo keep.
+  - **Keys and devices:**
+    - a backup of an unreadable record no longer contains a saved AI key;
+    - passphrases need 12 characters and can't be the first ones anyone tries;
+    - another account's projects stay hidden on a shared computer;
+    - "Sign out and clear this browser" removes them.
+  - **Supply chain:**
+    - 0 advisories in `npm audit`;
+    - `shadcn` (a CLI) moved to dev dependencies;
+    - npm only (the stray pnpm lockfile removed), as Vercel builds with `npm ci`.
+  - **Not changed, on purpose:**
+    - the prompts ship in the browser bundle and the repo is public: they hold no secret, and the
+      inspector shows every request by design;
+    - CAPTCHA stays off at launch (a third-party script), to turn on if free accounts are farmed.
 - **D12** Shared hooks live in `src/hooks/` and shared app components in `src/components/` (outside the
 generated `ui/`), matching the shadcn aliases in `components.json`.
 

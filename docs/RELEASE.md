@@ -171,7 +171,8 @@ Details: HOSTED_AI_SETUP A7 and B3.
   Note the four `pdt_…` ids.
 - [ ] **Developer → API Keys:** a test key.
 - [ ] **Developer → Webhooks:** endpoint `https://<project-ref>.supabase.co/functions/v1/billing/webhook`,
-      all `subscription.*` events. Note its `whsec_…` secret.
+      with all `subscription.*` events, `payment.succeeded`, `refund.succeeded` and all `dispute.*`
+      events (a full refund or a lost dispute ends the paid plan, D124). Note its `whsec_…` secret.
 - [ ] **Customer portal:** on, with cancelling allowed. **Branding:** the HushGlance name and logo.
 - [ ] **Payouts:** your bank account. **Verification:** in progress since day 1.
 
@@ -305,16 +306,40 @@ Use a fresh browser profile. Every item should pass before you take real money.
   ```
 
 - [ ] **One real purchase:** buy Starter with your own card, check that it arrives, then refund it
-      from Dodo.
+      from Dodo: Plan and billing goes back to Free within a minute. Cancel the subscription in Dodo
+      too, so it doesn't renew.
 - [ ] **Set real limits:** raise the OpenRouter key's credit limit and `AI_DAILY_BUDGET_USD` to what
       you'll spend in a bad day.
+
+## Security checks before launch
+
+The release review (PRD D124) fixed what code can; these are settings only you can change.
+
+- [ ] **Supabase → Authentication:** anonymous sign-ins off; email confirmation, minimum password
+      length 8 and leaked-password protection on (section 3).
+- [ ] **Supabase → Advisors → Security:** no errors.
+- [ ] **Supabase → Logs Explorer:** after a few hosted questions, open the `ai` function's logs:
+      only lines like `ai 200 anthropic/claude-sonnet-5 1834ms`, never a request or an answer.
+- [ ] **OpenRouter:** the key's credit limit set, prompt logging off, Zero Data Retention on
+      (section 4). The FAQ's "no one keeps it" depends on these.
+- [ ] **Headers:** `curl -sI https://hushglance.com/app/` shows `strict-transport-security`,
+      `content-security-policy: frame-ancestors 'none'`, `permissions-policy` with
+      `microphone=(self)` (voice questions), and `x-robots-tag: noindex, nofollow`.
+- [ ] **Edge function secrets:** `OPENROUTER_UPSTREAM` is **not** set, and `APP_ORIGINS` lists only
+      your own domains.
+- [ ] **GitHub (the repo is public):** Settings → Code security: secret scanning, push protection
+      and Dependabot alerts on. Anything committed is public once pushed, including in history.
+- [ ] **CAPTCHA stays off at launch** (it would add a third-party script). If `ai_usage` shows many
+      new free accounts each spending their 3 questions, turn on Supabase's Turnstile CAPTCHA, with
+      a CSP entry for it (PRD D66).
 
 ## 11. Launch
 
 - [ ] **GitHub:** set the repo's description and website to `https://hushglance.com`. The README
       already has the new demo.
 - [ ] **Announce** where your users are (LinkedIn, X, communities for founders and finance people).
-      Lead with the privacy story: files never leave the device, and every request is visible.
+      Lead with the privacy story: the AI never sees your rows, saved work is encrypted so only the
+      user can read it, and every request is visible.
 - [ ] **Watch the first day closely** (section 12): the function logs, the spend, Dodo and the
       support inbox.
 
