@@ -1,4 +1,4 @@
-import { ArrowRight, MailCheck } from 'lucide-react'
+import { MailCheck } from 'lucide-react'
 import { useState } from 'react'
 import { Link, Redirect, useSearch } from 'wouter'
 import { nextPath, paths } from '@/app/paths'
@@ -9,6 +9,7 @@ import { AccountsOff } from '@/features/account/AccountsOff'
 import { AuthLayout } from '@/features/account/AuthLayout'
 import type { Showcase } from '@/features/account/AuthShowcase'
 import { FormError } from '@/features/account/FormError'
+import { GuestLink } from '@/features/account/GuestLink'
 import { GitHubIcon, GoogleIcon } from '@/features/account/ProviderIcons'
 import { FIELD, PILL, PILL_OUTLINE, TEXT_LINK } from '@/features/account/styles'
 import { useAuthAction } from '@/features/account/useAuthAction'
@@ -65,15 +66,7 @@ export function RegisterPage() {
               Sign in
             </Link>
           </p>
-          <p>
-            <Link href={paths.try} className="group inline-flex items-center gap-1 hover:text-ink">
-              Or try it free with sample data, no account needed
-              <ArrowRight
-                className="size-3.5 transition-transform group-hover:translate-x-0.5"
-                aria-hidden
-              />
-            </Link>
-          </p>
+          <GuestLink />
         </>
       }
     >

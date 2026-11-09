@@ -1,17 +1,20 @@
 import { ShieldCheck, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { usePlanStore } from '@/stores/plan'
 import { useSettingsStore } from '@/stores/settings'
 import { useUiStore } from '@/stores/ui'
 
 /**
  * Before the first hosted question (F-PLAN-01, D119): what goes through HushGlance's server, in
- * this privacy mode, and that nobody keeps it. Shown until dismissed.
+ * this privacy mode, and that nobody keeps it; for a guest (D125), also how their free questions
+ * are counted. Shown until dismissed.
  */
 export function HostedNotice() {
   const seen = useSettingsStore((state) => state.hostedNoticeSeen)
   const mode = useSettingsStore((state) => state.privacyMode)
   const dismiss = useSettingsStore((state) => state.setHostedNoticeSeen)
   const openSettings = useUiStore((state) => state.setSettingsOpen)
+  const guest = usePlanStore((state) => state.audience === 'guest')
   if (seen) return null
   return (
     <aside
@@ -29,6 +32,12 @@ export function HostedNotice() {
           go through our server and OpenRouter to the model. Every request demands zero data
           retention: none of us keeps it.{mode === 'strict' && ' No row of your data reaches it.'}
         </p>
+        {guest && (
+          <p className="text-muted-foreground">
+            Without an account, your free questions are counted by your internet address: our server
+            keeps a scrambled code made from it (never the address) for 2 days.
+          </p>
+        )}
         <p>
           <Button
             size="xs"

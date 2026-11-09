@@ -38,12 +38,16 @@ test('with accounts on, guests load no account code and never contact the servic
   await mockSupabase(page)
   const urls: string[] = []
   page.on('request', (request) => urls.push(request.url()))
-  // The sign-in page itself loads no account code until someone signs in.
+  // Home is a guest's too (D125), and so is the sign-in page: no account code until someone signs in.
   await page.goto('/app/')
+  await expect(page.getByRole('heading', { name: 'What do you want to look at?' })).toBeVisible()
+  await page.goto('/app/login')
   await expect(page.getByRole('heading', { level: 1, name: 'Sign in' })).toBeVisible()
   await page.goto('/app/try')
   await expect(page.getByRole('img', { name: /^Bar chart/ })).toBeVisible({ timeout: 60_000 })
   await expect(page.getByRole('link', { name: 'Sign in', exact: true })).toBeVisible()
+  // HushGlance AI is only offered: nothing contacts the service until a guest turns it on.
+  await expect(page.getByRole('button', { name: /^try HushGlance AI free/ })).toBeVisible()
 
   expect(urls.filter((url) => url.startsWith(SUPABASE_URL))).toEqual([])
   expect(urls.filter((url) => ACCOUNT_CODE.test(new URL(url).pathname))).toEqual([])

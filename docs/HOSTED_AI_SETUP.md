@@ -27,6 +27,7 @@ email, sign-in providers, go-live) is in `docs/RELEASE.md`.
 | `DODO_API_BASE` | `https://test.dodopayments.com` or `https://live.dodopayments.com` | — | Function secrets | No |
 | `APP_ORIGINS` | `https://hushglance.app,https://www.hushglance.app` | Your site's address(es) | Function secrets | No |
 | `AI_DAILY_BUDGET_USD` | `20` | You choose | Function secrets | No |
+| `GUEST_KEY_SECRET` | 64 hex characters | `openssl rand -hex 32` | Function secrets. Unset: no HushGlance AI without an account (D125) | Yes |
 | `OPENROUTER_UPSTREAM` | `http://host.docker.internal:8787/v1/chat/completions` | — | **Local only**, for the free stand-in. Never set it in production | No |
 
 **Function secrets** means:
@@ -93,6 +94,7 @@ OPENROUTER_API_KEY=local-stand-in          # anything: the stand-in ignores it
 OPENROUTER_UPSTREAM=http://host.docker.internal:8787/v1/chat/completions
 APP_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
 AI_DAILY_BUDGET_USD=20
+GUEST_KEY_SECRET=local-guest-secret-at-least-32-characters   # guests' 3 a day (D125)
 ```
 
 Then, in a terminal of its own:
@@ -283,6 +285,7 @@ ignored):
 OPENROUTER_API_KEY=sk-or-v1-…
 APP_ORIGINS=https://<your-domain>
 AI_DAILY_BUDGET_USD=20
+GUEST_KEY_SECRET=<openssl rand -hex 32>
 DODO_API_BASE=https://test.dodopayments.com
 DODO_API_KEY=<Dodo test API key>
 DODO_WEBHOOK_SECRET=whsec_<from B3>

@@ -24,6 +24,18 @@ function required(get: Get, name: string): string {
   return value
 }
 
+/**
+ * GUEST_KEY_SECRET (D125): keys the hash a guest's IP address becomes. Unset: no HushGlance AI
+ * without an account. Set, it must be long enough that the hashes can't be guessed back
+ * (`openssl rand -hex 32`); changing it starts every guest's day afresh.
+ */
+function guestSecret(get: Get): string | null {
+  const value = get('GUEST_KEY_SECRET')?.trim()
+  if (!value) return null
+  if (value.length < 32) throw new Error('GUEST_KEY_SECRET must be at least 32 characters')
+  return value
+}
+
 export function readAiConfig(get: Get): AiConfig {
   // Unset means no daily limit; 0 pauses hosted AI at once (the kill switch, docs/RELEASE.md).
   const rawBudget = get('AI_DAILY_BUDGET_USD')?.trim()
@@ -34,6 +46,7 @@ export function readAiConfig(get: Get): AiConfig {
     upstreamUrl: upstream(get),
     appOrigins: originsFrom(required(get, 'APP_ORIGINS')),
     dailyBudgetUsd: Number.isFinite(budget) && budget >= 0 ? budget : null,
+    guestKeySecret: guestSecret(get),
   }
 }
 

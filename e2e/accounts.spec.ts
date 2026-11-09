@@ -20,8 +20,10 @@ async function signIn(page: Page, email: string, password: string) {
 
 test('sign up with email, sign out, and sign in again (J7)', async ({ page }) => {
   const service = await mockSupabase(page)
-  // Home asks for an account first (D115).
+  // Home is open to guests (D125); its top bar leads to an account.
   await page.goto('/app/')
+  await expect(page.getByRole('heading', { name: 'What do you want to look at?' })).toBeVisible()
+  await page.getByRole('link', { name: 'Sign in', exact: true }).click()
   await expect(page).toHaveURL(/\/app\/login$/)
   await page.getByRole('link', { name: 'Create an account' }).click()
   await expect(page).toHaveURL(/\/app\/register$/)
@@ -41,7 +43,9 @@ test('sign up with email, sign out, and sign in again (J7)', async ({ page }) =>
 
   await account.click()
   await page.getByRole('menuitem', { name: 'Sign out' }).click()
-  await expect(page).toHaveURL(/\/app\/login$/)
+  // Signed out, Home stays, as a guest's.
+  await expect(page.getByRole('link', { name: 'Sign in', exact: true })).toBeVisible()
+  await expect(page).toHaveURL(/\/app\/$/)
 
   await signIn(page, 'meera@example.com', 'correct horse battery')
   await expect(page.getByRole('button', { name: 'Account: Meera Iyer' })).toBeVisible()
@@ -109,7 +113,7 @@ test('a session survives a reload; the account page renames and deletes', async 
 
   await page.getByRole('button', { name: 'Delete account…' }).click()
   await page.getByRole('alertdialog').getByRole('button', { name: 'Delete account' }).click()
-  await expect(page).toHaveURL(/\/app\/login$/)
+  await expect(page).toHaveURL(/\/app\/$/)
   await expect(page.getByText('Your account was deleted.')).toBeVisible()
   expect(service.calls).toContain('POST /rest/v1/rpc/delete_my_account')
   expect(service.users).toEqual([])
@@ -146,31 +150,35 @@ test('without an account service, nothing asks to sign in', async ({ page }) => 
   expect(requests.filter((url) => url.startsWith(SUPABASE_URL))).toEqual([])
 })
 
-test('the app asks for an account; the try link and its project stay open (D115)', async ({
+test('guests use Home and projects without an account; shared dashboards still ask (D125)', async ({
   page,
 }) => {
-  await mockSupabase(page, { users: [meera] })
-  // A project's link, signed out: sign in, then back to that page.
-  await page.goto('/app/p/some-project/dashboard')
-  await expect(page).toHaveURL(/\/app\/login\?next=%2Fp%2Fsome-project%2Fdashboard$/)
+  const service = await mockSupabase(page, { users: [meera] })
+  // A new project opens as a guest, and its link works on the next visit.
+  await page.goto('/app/new')
+  await expect(page).toHaveURL(/\/app\/p\/[\w-]+$/, { timeout: 15_000 })
+  await expect(page.getByRole('tablist', { name: 'Views' })).toBeVisible()
+  const project = page.url()
+  await page.goto('/app/')
+  await page.goto(project)
+  await expect(page.getByRole('tablist', { name: 'Views' })).toBeVisible()
+
+  // A dashboard shared with you needs the account: sign in, then back to that page.
+  await page.goto('/app/shared/some-dashboard')
+  await expect(page).toHaveURL(/\/app\/login\?next=%2Fshared%2Fsome-dashboard$/)
   await page.getByLabel('Email').fill(meera.email)
   await page.getByLabel('Password').fill(meera.password)
   await page.getByRole('button', { name: 'Sign in', exact: true }).click()
-  await expect(page).toHaveURL(/\/app\/p\/some-project\/dashboard$/)
-  await expect(page.getByRole('heading', { name: 'Project not found' })).toBeVisible()
+  await expect(page).toHaveURL(/\/app\/shared\/some-dashboard$/)
 
-  // Signed out, "Try it on 1M rows" still answers, with no account.
-  await page.getByRole('link', { name: 'Go to Home' }).click()
+  // The sign-in page's way on without one goes Home.
+  await page.goto('/app/')
   await page.getByRole('button', { name: 'Account: Meera Iyer' }).click()
   await page.getByRole('menuitem', { name: 'Sign out' }).click()
-  await expect(page).toHaveURL(/\/app\/login$/)
-  await page
-    .getByRole('link', { name: 'Or try it free with sample data, no account needed' })
-    .click()
-  await expect(page).toHaveURL(/\/app\/p\/try-global-sales$/)
-  const answer = page.getByRole('article', { name: 'Which region grew fastest?' })
-  await expect(answer.getByRole('img', { name: /^Bar chart/ })).toBeVisible({ timeout: 60_000 })
-  // Its Home link asks for the account again.
-  await page.getByRole('link', { name: 'HushGlance Home' }).click()
-  await expect(page).toHaveURL(/\/app\/login$/)
+  await page.goto('/app/login')
+  await page.getByRole('link', { name: 'Or continue without an account' }).click()
+  await expect(page).toHaveURL(/\/app\/$/)
+  await expect(page.getByRole('link', { name: 'Sign in', exact: true })).toBeVisible()
+  // Nothing about the guest's visit asked the service for more than the sign-in itself.
+  expect(service.calls.filter((call) => call.includes('/functions/'))).toEqual([])
 })

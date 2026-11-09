@@ -74,6 +74,8 @@ describe('Supabase migrations', () => {
         'public.billing_events',
         'public.ai_questions',
         'public.ai_usage',
+        'public.guest_limits',
+        'public.guest_questions',
       ]),
     )
   })

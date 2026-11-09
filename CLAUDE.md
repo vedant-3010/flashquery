@@ -13,9 +13,11 @@ or, for a signed-in user without one, to HushGlance AI (M16, D119): our `ai` Edg
 request to OpenRouter with zero data retention forced and stores none of it (3 free questions, then
 Starter or Pro through Dodo Payments, D120–D121).
 v2 (PRD D100) adds accounts (Supabase): a Home page with projects, and dashboards saved to the cloud
-and shared by invite or link. Where an account service is configured, the app asks for an account;
-the try demo (`/app/try`) stays open (D115). The account service stores only what a signed-in user
-saves (encrypted, M17) or shares; guests and the demo never talk to it. It speaks to founders, finance and
+and shared by invite or link. Since D125 guests use Home and projects on their device without an
+account (`VITE_SIGN_IN_REQUIRED=true` brings back D115's sign-in gate), and can turn on 3 free
+HushGlance AI questions a day, counted per IP address by a keyed hash. The account service stores
+only what a signed-in user saves (encrypted, M17) or shares; guests and the demo never talk to it,
+until a guest turns on HushGlance AI. It speaks to founders, finance and
 accounting people and anyone in business first, privacy before everything, with one section for data
 people (D117): business-facing copy avoids DuckDB, WebAssembly, p95, GROUP BY, BYOK, Pyodide and
 "schema"; the SQL view, inspector and "For data people" keep the technical words.
@@ -148,7 +150,9 @@ e2e/ (Playwright)     scripts/ (sample + fixture generators, record-demo, record
 - No analytics or third-party requests besides the chosen LLM API and the pinned CDNs (Pyodide, DuckDB extensions).
 - v2 account service (D100–D104):
   - Only `src/platform/` talks to Supabase, and it's a lazy chunk. Guests and the demo load none of it
-    and make no request to it (`e2e/privacy.spec.ts`).
+    and make no request to it (`e2e/privacy.spec.ts`), until a guest turns on HushGlance AI
+    (`guestAi`, D125): then only the public model list and the `ai` function, through
+    `src/platform/guestAi.ts` (plain fetch, no supabase-js, no session; `e2e/hosted.spec.ts` J13).
   - Nothing uploads without the share-consent dialog listing exactly what will go (tiles, rows,
     columns). Shared dashboards carry results only, never source files.
   - The CSP allows exactly the project's `https://` and `wss://` Supabase host, never a wildcard.
@@ -165,6 +169,10 @@ e2e/ (Playwright)     scripts/ (sample + fixture generators, record-demo, record
   - Payments: Dodo's hosted checkout and portal by redirect, never a payment script on our pages; a
     subscription changes only through the verified webhook.
   - Strict mode sends no data value in error text either (`scrubError` in `context.ts`).
+  - Guests (D125): a guest's IP address never leaves the `ai` function: only its HMAC with
+    `GUEST_KEY_SECRET` (`_shared/guest.ts`) reaches the database, logs or OpenRouter. The address
+    comes from `cf-connecting-ip` or the last `x-forwarded-for` entry, never the first. An invalid
+    session is refused, never treated as a guest. Guest limits are the `guest_limits` row.
 - The encrypted workspace (M17, D123, `docs/SECURITY.md`):
   - Everything saved to the account is encrypted in the browser first (`src/lib/vault.ts`): records
     and file chunks with additional data naming their place. Never send a plaintext project record,
@@ -255,9 +263,11 @@ e2e/ (Playwright)     scripts/ (sample + fixture generators, record-demo, record
   after `ConsentDialog`. A policy must not rely on `dashboard_role()` to see a row being inserted
   (the insert reads it back): check `owner_id` on the row. e2e: `mockCloud()` (`e2e/supabaseSharing.ts`)
   passed to `signIn`/`mockSupabase` lets several pages (owner, member, guest) share one service.
-- Sign-in gate (D115): `RequireAccount` wraps Home, `/new` and projects (not the try project,
-  `TRY_PROJECT_ID`). e2e: `openProject`/`signIn` (`e2e/app.ts`) sign in to the mock first; guest
-  checks use `/app/try`. The sign-in pages share the landing's palette (in the app theme under the
+- Sign-in gate (D115, off since D125): `RequireAccount openToGuests` wraps Home, `/new` and projects
+  and lets guests through unless `SIGN_IN_REQUIRED` (`src/app/access.ts`, from
+  `VITE_SIGN_IN_REQUIRED`); `/shared/:id` always needs the account. A browser linked to an account
+  hides its projects from guests (`useOtherAccount`). e2e: `openProject`/`signIn` (`e2e/app.ts`)
+  still sign in to the mock first; guest checks use `/app/new` or `/app/try` with `mockSupabase`. The sign-in pages share the landing's palette (in the app theme under the
   landing's names: keep it in step with `landing.css`; `.paper-scope`, `.ink-accent`) but no code:
   importing a landing module into the app splits a chunk off the landing page. Their animations are
   CSS (`.auth-*`). The app's Tailwind skips `src/landing/` (`@source not` in `index.css`).
@@ -280,16 +290,19 @@ e2e/ (Playwright)     scripts/ (sample + fixture generators, record-demo, record
 - New users start in Strict (D122). e2e checks of what only Balanced sends (sample rows, the AI
   summary, exploration, AI suggestions, learned examples) call `chooseBalanced(page)` from
   `e2e/app.ts` first.
-- Settings are v8 (v5: local server, kept files; v6: effort; v7: chart palette; v8: OpenRouter,
-  `aiSource`, `hostedModel`, `hostedNoticeSeen`). A new saved field needs a migration in
+- Settings are v9 (v5: local server, kept files; v6: effort; v7: chart palette; v8: OpenRouter,
+  `aiSource`, `hostedModel`, `hostedNoticeSeen`; v9: `guestAi`). A new saved field needs a migration in
   `SETTINGS_RECORD`.
 - Who answers (M16): `useAiMode()` / `currentAiMode()` (`src/stores/aiMode.ts`) is 'hosted', 'own' or
   'demo'; use it, not `activeApiKey(...) === null`, for "is this demo mode?". `currentProvider(effort,
   meter)` takes the hosted question's meter: `meterFor(answerId)` for an ask and everything after it,
   `newMeter('dashboard' | 'suggest')` otherwise. The plan calls (`@/platform/plans`,
-  `@/platform/hostedAi`) are reached only through `src/stores/plan.ts` (lint). Hosted AI is "not
-  offered" when the catalog can't load (e2e's mock answers 404 unless `mockHosted()` from
-  `e2e/hosted.ts` is added after `signIn`): signed-in specs stay in demo mode by default.
+  `@/platform/hostedAi`, `@/platform/guestAi`) are reached only through `src/stores/plan.ts`
+  (lint); its `audience` is 'account' or 'guest'. Hosted is for a signed-in user, or a guest with
+  `guestAi` on (`hostedEligible`); "offered" via `useHostedOffered()`. Hosted AI is "not offered"
+  when the catalog can't load (e2e's mock answers 404 unless `mockHosted()` from `e2e/hosted.ts` is
+  added after `signIn`, or `mockHosted(page, { guest: true })` for a guest): specs stay in demo
+  mode by default.
 - The try link's opening question always uses the demo set (`ask(q, { demo: true })`), so it never
   spends a hosted question or the user's key.
 - OpenRouter (provider `openrouter`, own key or hosted) goes through `ChatOpenAICompletions` (chat
@@ -315,8 +328,9 @@ e2e/ (Playwright)     scripts/ (sample + fixture generators, record-demo, record
 - Voice input (`src/features/ask/speech.ts`): never call `SpeechRecognition.available()` until the mic
   is pressed. Playwright's Chromium has the API but crashes the tab on that call (real Chrome answers).
   e2e uses a fake on-device recognizer (`e2e/voice.spec.ts`); don't click the mic without one.
-- Guests see a "sign in for 3 free questions" link next to the demo note: match the top bar's sign-in
-  link with `{ name: 'Sign in', exact: true }`.
+- Guests see "try HushGlance AI free (3 questions a day, no account)" next to the demo note (once
+  on but unavailable: "sign in for 3 free questions"): match the top bar's sign-in link with
+  `{ name: 'Sign in', exact: true }`.
 - The ask bar's model chip is named "Model: …", so match the top bar's badge with
   `{ name: 'Demo mode', exact: true }` (it shows "Demo" on medium screens; the name keeps "mode").
   Privacy and the engine share one pill (`StatusPill`, D118), named "Status: Strict, engine

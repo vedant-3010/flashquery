@@ -40,13 +40,14 @@
 <ul>
 <li><strong>Your own key</strong> (Anthropic, OpenAI or OpenRouter): requests go straight from your browser to that provider, under its terms. They never pass through us.</li>
 <li><strong>A model on your computer</strong>: nothing leaves your device.</li>
-<li><strong>HushGlance AI</strong> (hosted): requests pass through our server to OpenRouter, which routes them to the model's provider. Every request requires zero data retention, so only providers that keep nothing are used. We don't store or log the content of requests or answers.</li>
+<li><strong>HushGlance AI</strong> (hosted, with an account or, if you turn it on, without one): requests pass through our server to OpenRouter, which routes them to the model's provider. Every request requires zero data retention, so only providers that keep nothing are used. We don't store or log the content of requests or answers.</li>
 </ul>
 
 <h2>What we keep</h2>
 <ul>
 <li><strong>Your account</strong>: email address, display name, and how you sign in. Our account service also keeps sign-in records (IP address and time) to protect your account.</li>
 <li><strong>Usage of HushGlance AI</strong>: for each request, the model, token counts, cost, status and time, never its content. We use this for your allowance, to prevent abuse and to run the service.</li>
+<li><strong>Free questions without an account</strong>: to count them per day, a scrambled code made from your IP address with a secret key (a keyed hash; we never store the address itself), for 2 days. After that the code is deleted, and the usage above stays with nothing linking it to you. Supabase, which runs our server, sees your IP address as it does for any request.</li>
 <li><strong>Your subscription</strong>: plan, status, renewal dates, your Dodo Payments customer and subscription IDs, and the IDs of your payments (so a refund ends the plan). We never see your card details. Dodo Payments, as merchant of record, keeps payment records as the law requires.</li>
 <li><strong>Your encrypted workspace</strong>: as above, readable only with your passphrase or recovery key, until you delete it.</li>
 <li><strong>Dashboards you share</strong>: their layout, titles, queries and results, readable by the people you share them with, until you stop sharing or delete them.</li>

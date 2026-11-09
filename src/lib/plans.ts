@@ -40,11 +40,23 @@ export const CatalogSchema = z.object({
 })
 export type Catalog = z.infer<typeof CatalogSchema>
 
+/**
+ * Guests (D125, F-PLAN-06): HushGlance AI without an account, this many questions a day per IP
+ * address, as supabase/migrations/…_guests.sql seeds guest_limits (plans.test.ts checks). The
+ * real number comes from the server once a guest turns it on; this is only for the offer.
+ */
+export const GUEST_DAILY_QUESTIONS = 3
+
+/** Whose questions a quota counts: a plan's, or a guest's (no account, per address). */
+export const QuotaPlanSchema = z.enum(['guest', ...PlanIdSchema.options])
+export type QuotaPlan = z.infer<typeof QuotaPlanSchema>
+
 export const QuotaSchema = z.object({
-  plan: PlanIdSchema,
+  plan: QuotaPlanSchema,
   label: z.string(),
   questions: z.number(),
-  period: z.enum(['lifetime', 'month']),
+  /** 'day': a guest's, any 24 hours. */
+  period: z.enum(['lifetime', 'month', 'day']),
   used: z.number(),
   remaining: z.number(),
   tiers: z.array(TierSchema),
@@ -83,18 +95,20 @@ export function summaryModelFor(catalog: Catalog, planner: HostedModel): string 
   return (fast.find((model) => model.maker === planner.maker) ?? fast[0] ?? planner).id
 }
 
-/** "2 free questions left", "40 left this month": the ask bar's meter. */
+/** "2 free questions left", "1 free question left today", "40 left this month": the meter. */
 export function remainingLabel(quota: Pick<Quota, 'remaining' | 'period' | 'plan'>): string {
   const count = quota.remaining
   const noun = count === 1 ? 'question' : 'questions'
+  if (quota.plan === 'guest')
+    return count === 0 ? 'No free questions left today' : `${count} free ${noun} left today`
   if (quota.plan === 'free')
     return count === 0 ? 'No free questions left' : `${count} free ${noun} left`
   return `${count} ${noun} left this month`
 }
 
-/** Whether the meter shows: always on free, on Pro only when under a fifth is left. */
+/** Whether the meter shows: always for guests and on free, on Pro only when under a fifth is left. */
 export function meterVisible(quota: Pick<Quota, 'remaining' | 'questions' | 'plan'>): boolean {
-  return quota.plan === 'free' || quota.remaining < quota.questions / 5
+  return quota.plan === 'guest' || quota.plan === 'free' || quota.remaining < quota.questions / 5
 }
 
 export type PaidPlanId = Exclude<PlanId, 'free'>
@@ -104,7 +118,9 @@ export type BillingInterval = 'month' | 'year'
  * The plans someone on `current` can move up to, cheapest first: Starter and Pro from free, Pro
  * from Starter, none from Pro.
  */
-export function upgradesFrom(catalog: Catalog, current: PlanId): (Plan & { id: PaidPlanId })[] {
+export function upgradesFrom(catalog: Catalog, current: QuotaPlan): (Plan & { id: PaidPlanId })[] {
+  // A guest needs an account before a plan.
+  if (current === 'guest') return []
   const rank = (plan: Pick<Plan, 'price_monthly_usd'>) => plan.price_monthly_usd ?? 0
   const now = catalog.plans.find((plan) => plan.id === current)
   return catalog.plans

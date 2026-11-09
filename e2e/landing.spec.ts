@@ -50,7 +50,7 @@ test('renders the page without errors and links to the app', async ({ page }) =>
   for (const word of ['DuckDB', 'WebAssembly', 'p95', 'GROUP BY', 'BYOK', 'Pyodide']) {
     expect(business).not.toContain(word)
   }
-  // The app asks for an account where accounts are on (D115); the mocked service turns them on.
+  // The nav's sign-in link goes to the app's sign-in page; the mocked service turns accounts on.
   await mockSupabase(page)
   await page
     .getByRole('navigation', { name: 'Main' })

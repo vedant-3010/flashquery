@@ -409,8 +409,16 @@ describe('function settings', () => {
       upstreamUrl: 'https://openrouter.ai/api/v1/chat/completions',
       appOrigins: ['https://hushglance.app', 'http://localhost:5173'],
       dailyBudgetUsd: 25,
+      guestKeySecret: null,
     })
     expect(() => readAiConfig(() => undefined)).toThrow(/OPENROUTER_API_KEY/)
+    // Guests (D125): off without the secret; a short one would make the hashes guessable.
+    const secretOf = (value: string | undefined) =>
+      readAiConfig((name) => ({ ...env, GUEST_KEY_SECRET: value })[name]).guestKeySecret
+    expect(secretOf(undefined)).toBeNull()
+    expect(secretOf(' '.repeat(3))).toBeNull()
+    expect(secretOf('a'.repeat(64))).toBe('a'.repeat(64))
+    expect(() => secretOf('too-short')).toThrow(/GUEST_KEY_SECRET/)
     // 0 is the kill switch (pause now), not "no limit"; unset or nonsense means no limit.
     const budgetOf = (value: string | undefined) =>
       readAiConfig((name) => ({ ...env, AI_DAILY_BUDGET_USD: value })[name]).dailyBudgetUsd

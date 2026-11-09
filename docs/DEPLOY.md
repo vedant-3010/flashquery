@@ -130,6 +130,7 @@ npx supabase secrets set \
   OPENROUTER_API_KEY=sk-or-… \
   APP_ORIGINS=https://<your-domain> \
   AI_DAILY_BUDGET_USD=20 \
+  GUEST_KEY_SECRET=$(openssl rand -hex 32) \
   DODO_API_BASE=https://test.dodopayments.com \
   DODO_API_KEY=… \
   DODO_WEBHOOK_SECRET=whsec_… \
@@ -141,12 +142,18 @@ npx supabase db push            # the plans migration
 npx supabase functions deploy ai billing
 ```
 
-`ai` keeps the platform's JWT check (`verify_jwt = true` in `config.toml`); `billing` turns it off
-for Dodo's webhook and checks the user itself for checkout and the portal. `AI_DAILY_BUDGET_USD`
-pauses hosted AI for everyone once the last 24 hours cost that much.
+Both functions turn the platform's JWT check off (`verify_jwt = false` in `config.toml`): `ai`
+because guests call it without one (D125; it checks a session itself with Auth's `/user`), and
+`billing` for Dodo's webhook (it checks the user itself for checkout and the portal).
+`AI_DAILY_BUDGET_USD` pauses hosted AI for everyone once the last 24 hours cost that much.
+`GUEST_KEY_SECRET` turns on HushGlance AI for guests (3 questions a day per IP address,
+`guest_limits`); leave it unset to keep hosted AI for accounts only. Changing it starts every
+guest's day afresh.
 
 **Check it:**
 - Sign in on the deployment without a key: the ask bar shows "3 free questions left".
+- Signed out, in a new project: "try HushGlance AI free" turns it on; the ask bar shows "3 free
+  questions left today". The spoof check in `docs/RELEASE.md` §6 must pass.
 - Ask once; Supabase → Edge Functions → `ai` → Logs shows `ai 200 anthropic/claude-sonnet-5 …ms`
   and nothing else (never a prompt).
 - Upgrade with a Dodo test card; back on Plan and billing, Pro arrives within seconds (the

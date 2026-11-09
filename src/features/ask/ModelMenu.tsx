@@ -1,4 +1,12 @@
-import { ChevronDown, Cpu, FlaskConical, KeyRound, Lock, Settings2 } from 'lucide-react'
+import {
+  ChevronDown,
+  Cpu,
+  FlaskConical,
+  KeyRound,
+  Lock,
+  Settings2,
+  ShieldCheck,
+} from 'lucide-react'
 import { localBaseUrl } from '@/ai/localServer'
 import {
   findModel,
@@ -20,9 +28,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { allowedOn, plannerModels, remainingLabel, tiersOf } from '@/lib/plans'
-import { useAiMode } from '@/stores/aiMode'
-import { useAuthStore } from '@/stores/auth'
+import {
+  allowedOn,
+  GUEST_DAILY_QUESTIONS,
+  plannerModels,
+  remainingLabel,
+  tiersOf,
+} from '@/lib/plans'
+import { useAiMode, useGuestAiOffer, useHostedOffered } from '@/stores/aiMode'
 import { hostedPlanner, usePlanStore } from '@/stores/plan'
 import { activeApiKey, useSettingsStore } from '@/stores/settings'
 import { useUiStore } from '@/stores/ui'
@@ -31,21 +44,22 @@ const CLOUD: ProviderId[] = ['anthropic', 'openai']
 
 /**
  * The model questions go to (F-ASK-16), in the ask bar: HushGlance AI's models for a signed-in user
- * (F-PLAN-01; premium ones need Pro), then the providers the user has keys for. Picking a model
- * switches who answers too. Keys, custom model IDs and the local server live in Settings.
+ * or a guest who turned it on (F-PLAN-01, D125; premium ones need Pro), then the providers the user
+ * has keys for. Picking a model switches who answers too. Keys, custom model IDs and the local
+ * server live in Settings.
  */
 export function ModelMenu() {
   const settings = useSettingsStore()
   const { provider, models, setProvider, setModel, setAiSource, setHostedModel } = settings
   const mode = useAiMode()
   const demo = mode === 'demo'
-  const signedIn = useAuthStore((state) => state.status === 'signed-in')
-  const catalogStatus = usePlanStore((state) => state.catalogStatus)
+  const hostedOffered = useHostedOffered()
+  const guestOffer = useGuestAiOffer()
+  const setGuestAi = settings.setGuestAi
   const catalog = usePlanStore((state) => state.catalog)
   const quota = usePlanStore((state) => state.quota)
   const openUpgrade = usePlanStore((state) => state.openUpgrade)
   const openSettings = useUiStore((state) => state.setSettingsOpen)
-  const hostedOffered = signedIn && catalogStatus !== 'unavailable'
   const planner = mode === 'hosted' && catalog ? hostedPlanner(catalog, quota) : null
   const current = models[provider]
 
@@ -106,6 +120,22 @@ export function ModelMenu() {
         className="max-h-(--radix-dropdown-menu-content-available-height) w-80 overflow-y-auto"
       >
         <DropdownMenuRadioGroup value={selected} onValueChange={pick}>
+          {guestOffer && (
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>HushGlance AI</DropdownMenuLabel>
+              <DropdownMenuItem onSelect={() => setGuestAi(true)}>
+                <ShieldCheck aria-hidden />
+                <span className="grid">
+                  <span>Try it free, no account</span>
+                  <span className="text-xs text-muted-foreground">
+                    {GUEST_DAILY_QUESTIONS} questions a day. Every request demands zero data
+                    retention.
+                  </span>
+                </span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+            </DropdownMenuGroup>
+          )}
           {hostedOffered && (
             <DropdownMenuGroup>
               <DropdownMenuLabel className="flex items-baseline justify-between gap-2">

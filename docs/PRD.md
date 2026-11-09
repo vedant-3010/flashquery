@@ -152,6 +152,12 @@ laptop → "Unlock your workspace" → the passphrase (or the recovery key and a
 project is on Home → he opens it: the file downloads, decrypts and loads, the questions and the
 dashboard are there. A payroll project he marked "Keep on this device only" never left the work
 laptop.
+- **J13 A guest asks about their own file (v2, D125)**: the app's Home, no sign-up → new project →
+drops an export → demo mode offers "try HushGlance AI free (3 questions a day, no
+account)" → one click; a note says what goes through our server and how the free questions are
+counted (a scrambled code from the internet address, kept 2 days) → asks 3 questions, the meter
+reads "No free questions left today" → the 4th offers a free account (or their own key), and says
+when the next free question is back.
 
 ---
 
@@ -433,7 +439,9 @@ Format: `ID (priority) Title: description. AC: acceptance criteria.`
 - [x] **F-SEC-08 (P1) Account service in the CSP** (v2): `connect-src` adds exactly the project's
   `https://` and `wss://` Supabase host (from `VITE_SUPABASE_URL` at build), never a wildcard (D104).
 - [x] **F-SEC-09 (P1) Guest isolation** (v2): guests and the demo load no Supabase code and make no
-  request to it. AC: `e2e/privacy.spec.ts` asserts it (G9).
+  request to it. A guest who turns on HushGlance AI (D125) reaches only the public model list and
+  the `ai` function, still without supabase-js or a session. AC: `e2e/privacy.spec.ts` asserts it
+  (G9); `e2e/hosted.spec.ts` (J13) for a guest's HushGlance AI.
 
 
 
@@ -574,6 +582,19 @@ refresh from a connected device.
 - [x] **F-PLAN-04 (P1) Plan and billing**: `/app/account/billing` shows the plan, the period's
   questions and the renewal; "Manage subscription" opens Dodo's portal; back from checkout it waits
   for Pro. The upgrade dialog opens when the questions run out or for a premium model.
+- [x] **F-PLAN-06 (P1) Guests: HushGlance AI without an account** (D125): Home, new projects and
+  projects work without an account (local only; `VITE_SIGN_IN_REQUIRED=true` asks for one again,
+  D115). A guest turns HushGlance AI on themselves (the demo note, the model menu or Settings);
+  until then their browser makes no request to the account service. Then 3 questions a day per IP
+  address (an IPv6 address by its /64), counted by a keyed hash of it (HMAC-SHA256 with the
+  `GUEST_KEY_SECRET` function secret: the address is never stored), forgotten after 2 days; the same
+  per-question limits as accounts, standard models only, $0.25 a day per address and $5 a day for
+  all guests together, all in `guest_limits`; guests' spend counts towards the global breaker. A
+  guest's calls carry no session and load no supabase-js. In a browser whose workspace is linked to
+  an account, a guest sees the account's projects hidden (as D124 does for another account). AC:
+  pgTAP (`supabase/tests/guests.test.sql`); `src/test/edge/guest.test.ts` and `aiProxy.test.ts` (the
+  hash, spoofed headers, no address in any call or log); `e2e/hosted.spec.ts` (J13, turning it off
+  again); `e2e/accounts.spec.ts` and `e2e/privacy.spec.ts`.
 - [x] **F-PLAN-05 (P2) Pricing and legal pages**: a pricing section on the landing page (figures
   checked against the plans table in `data.test.ts`); drafts of Terms, Privacy and Refunds at
   `/terms.html`, `/privacy.html` and `/refunds.html` (to fill in and review before going live).
@@ -1812,6 +1833,34 @@ named "Voice input (unavailable)" where on-device recognition is missing, and pr
     - the prompts ship in the browser bundle and the repo is public: they hold no secret, and the
       inspector shows every request by design;
     - CAPTCHA stays off at launch (a third-party script), to turn on if free accounts are farmed.
+- **D125** Guests use the app, and get HushGlance AI limited per IP address (user request,
+  2026-11-09: "for the time being remove the login flow or give a guest login flow where users can
+  just try out my website and the credits are limited based on the IP address"; F-PLAN-06).
+  - **The sign-in gate (D115) is off by default**: guests use Home, new projects and projects on
+    this device. `VITE_SIGN_IN_REQUIRED=true` (build time) restores it. Dashboards shared with you
+    still need the account. Accounts stay for the encrypted workspace, sharing and plans.
+  - **Guests opt in to HushGlance AI**, rather than getting it by default, so F-SEC-09 still holds
+    until they choose it (settings v9, `guestAi`). Choosing "Your own key" in Settings turns it off.
+  - **3 questions a day per IP address** (user's choice among 3 or 5 or 10 a day, or 3 per 30
+    days): a rolling 24 hours, so a shared office or campus address isn't shut out for long, and
+    the address hash need only be kept 2 days.
+  - **Which address**: Cloudflare's `cf-connecting-ip` (Supabase's edge sets it; a client can't),
+    else the last `x-forwarded-for` entry, never the first (clients can prepend to it). If that
+    ever named a proxy, guests would share one allowance: too strict, never too loose. IPv6 counts
+    by its /64. Checked in production by the spoof test in `docs/RELEASE.md`.
+  - **Hashed, not stored**: HMAC-SHA256 with `GUEST_KEY_SECRET` (a function secret, ≥ 32
+    characters), so a copy of the database doesn't give addresses back; rotating it starts every
+    guest's day afresh. Hashes older than 2 days are cleared hourly (Supabase Cron, `pg_cron`) and
+    before each guest call; costs stay, anonymous, for the spend breaker.
+  - **Spend**: guests' calls go in `ai_usage` (a hash in place of a person), so the global breaker
+    counts them; plus $0.25 a day per address and $5 a day for all guests (`guest_limits`), so
+    address rotation can't run up more than that.
+  - **`verify_jwt = false` for `ai`**: guests have no JWT; the function already checked sessions
+    with Auth's `/user`. An invalid session is refused, never treated as a guest.
+  - **A linked browser keeps the account's projects hidden from guests** (as D124 does for
+    another account), and the project menu doesn't list their names.
+  - **Not done, on purpose**: no CAPTCHA (a third-party script; D124 keeps it for later). If guest
+    questions are farmed, add Turnstile or lower `guest_limits`.
 - **D12** Shared hooks live in `src/hooks/` and shared app components in `src/components/` (outside the
 generated `ui/`), matching the shadcn aliases in `components.json`.
 

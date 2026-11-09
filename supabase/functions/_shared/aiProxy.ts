@@ -1,10 +1,13 @@
-import { bearer, corsHeaders, errorResponse, isRecord, readBody } from './http.ts'
+import { guestKey } from './guest.ts'
+import { bearer, corsHeaders, errorResponse, isRecord, jsonResponse, readBody } from './http.ts'
 import type { Rest } from './rest.ts'
 
 // The hosted AI proxy (F-PLAN-01, PRD D119). A signed-in user's chat-completions request goes to
 // OpenRouter with HushGlance's key, after the quota check (ai_begin), with zero data retention
 // forced whatever the client sent. Nothing a user sent or a model wrote is stored or logged: only
 // token counts and cost (ai_finish), and status codes in the log.
+// A request without a session is a guest's (D125, F-PLAN-06): counted per keyed hash of their IP
+// address (guest.ts, guest_begin), never the address itself; `GET …/v1/guest` says what's left.
 
 export const MAX_BODY_BYTES = 256 * 1024
 export const MAX_OUTPUT_TOKENS = 16_000
@@ -61,6 +64,34 @@ const REFUSALS: Record<string, { status: number; message: string }> = {
     status: 429,
     message: 'You’ve reached today’s HushGlance AI limit. Try again tomorrow, or use your own key.',
   },
+  // Guests (D125).
+  guests_off: {
+    status: 403,
+    message: 'HushGlance AI needs an account here. Sign in, or use your own AI key.',
+  },
+  guests_paused: {
+    status: 503,
+    message:
+      'Free questions without an account are paused for today. Sign in, or use your own key.',
+  },
+}
+
+/** A guest's refusals say what an account (or tomorrow) changes. */
+const GUEST_REFUSALS: Record<string, { status: number; message: string }> = {
+  quota_reached: {
+    status: 402,
+    message:
+      'You’ve used today’s free questions. Create a free account for more, or use your own AI key.',
+  },
+  daily_limit: {
+    status: 429,
+    message:
+      'You’ve reached today’s limit without an account. Sign in, try again tomorrow, or use your own key.',
+  },
+  model_not_in_plan: {
+    status: 403,
+    message: 'That model is part of Pro. Pick another model, or create an account.',
+  },
 }
 
 export interface AiConfig {
@@ -70,6 +101,8 @@ export interface AiConfig {
   appOrigins: string[]
   /** The spend breaker: hosted AI pauses once the last 24 hours cost this much. */
   dailyBudgetUsd: number | null
+  /** Keys guests' address hashes (D125); null: no HushGlance AI without an account. */
+  guestKeySecret: string | null
 }
 
 export interface AiDeps {
@@ -217,23 +250,74 @@ function asBegin(value: unknown): Begin {
   }
 }
 
+/** Who is asking: a signed-in person, or a guest known by their address's keyed hash. */
+type Caller = { kind: 'user'; id: string } | { kind: 'guest'; key: string }
+
+/**
+ * A session's owner; without a session, a guest (when guests are on). An expired or forged
+ * session is refused, never treated as a guest: it would charge the wrong allowance.
+ */
+async function callerOf(
+  request: Request,
+  deps: AiDeps,
+  cors: Record<string, string>,
+): Promise<Caller | Response> {
+  const token = bearer(request)
+  if (token) {
+    const user = await deps.rest.user(token)
+    return user
+      ? { kind: 'user', id: user.id }
+      : errorResponse(401, 'not_signed_in', 'Sign in to use HushGlance AI.', cors)
+  }
+  const secret = deps.config.guestKeySecret
+  if (!secret) return errorResponse(401, 'not_signed_in', 'Sign in to use HushGlance AI.', cors)
+  const key = await guestKey(request.headers, secret)
+  if (!key) {
+    deps.log('ai guest without an address')
+    const refusal = REFUSALS.guests_off ?? { status: 403, message: 'Not allowed.' }
+    return errorResponse(refusal.status, 'guests_off', refusal.message, cors)
+  }
+  return { kind: 'guest', key }
+}
+
+/** `GET …/v1/guest`: a guest's allowance, in ai_quota's shape (the ask bar's meter). */
+async function guestAllowance(
+  request: Request,
+  deps: AiDeps,
+  cors: Record<string, string>,
+): Promise<Response> {
+  const secret = deps.config.guestKeySecret
+  const key = secret ? await guestKey(request.headers, secret) : null
+  if (!key) {
+    const refusal = REFUSALS.guests_off ?? { status: 403, message: 'Not allowed.' }
+    return errorResponse(refusal.status, 'guests_off', refusal.message, cors)
+  }
+  const quota = await deps.rest.rpc('guest_quota', { visitor: key })
+  return jsonResponse(200, quota, { ...cors, 'cache-control': 'no-store' })
+}
+
 export async function handleAi(request: Request, deps: AiDeps): Promise<Response> {
   const { config, rest, log } = deps
-  const cors = corsHeaders(request.headers.get('origin'), config.appOrigins, AI_ALLOW_HEADERS)
+  const cors = corsHeaders(
+    request.headers.get('origin'),
+    config.appOrigins,
+    AI_ALLOW_HEADERS,
+    'GET, POST, OPTIONS',
+  )
   if (request.method === 'OPTIONS') {
     return new Response(null, { status: cors ? 204 : 403, headers: cors ?? {} })
   }
   if (!cors) return errorResponse(403, 'origin_not_allowed', 'Not allowed from this origin.')
-  if (
-    request.method !== 'POST' ||
-    !new URL(request.url).pathname.endsWith('/v1/chat/completions')
-  ) {
+  const path = new URL(request.url).pathname
+  if (request.method === 'GET' && path.endsWith('/v1/guest')) {
+    return guestAllowance(request, deps, cors)
+  }
+  if (request.method !== 'POST' || !path.endsWith('/v1/chat/completions')) {
     return errorResponse(404, 'not_found', 'Not found.', cors)
   }
 
-  const token = bearer(request)
-  const user = token ? await rest.user(token) : null
-  if (!user) return errorResponse(401, 'not_signed_in', 'Sign in to use HushGlance AI.', cors)
+  const caller = await callerOf(request, deps, cors)
+  if (caller instanceof Response) return caller
 
   const question = request.headers.get('x-fq-question') ?? ''
   if (!QUESTION_ID.test(question)) {
@@ -253,19 +337,29 @@ export async function handleAi(request: Request, deps: AiDeps): Promise<Response
   const checked = checkChatRequest(parsed)
   if (!checked.ok) return errorResponse(400, checked.code, checked.message, cors)
 
+  const guest = caller.kind === 'guest'
   const begin = asBegin(
-    await rest.rpc('ai_begin', {
-      person: user.id,
-      question,
-      kind,
-      model: checked.model,
-      daily_budget: config.dailyBudgetUsd,
-    }),
+    guest
+      ? await rest.rpc('guest_begin', {
+          visitor: caller.key,
+          question,
+          kind,
+          model: checked.model,
+          daily_budget: config.dailyBudgetUsd,
+        })
+      : await rest.rpc('ai_begin', {
+          person: caller.id,
+          question,
+          kind,
+          model: checked.model,
+          daily_budget: config.dailyBudgetUsd,
+        }),
   )
   const remaining = { 'x-fq-remaining': String(begin.remaining) }
   if (!begin.allowed || begin.usage_id === undefined) {
-    const refusal = REFUSALS[begin.reason] ?? { status: 403, message: 'Not allowed.' }
-    log(`ai refused ${begin.reason}`)
+    const refusal = (guest ? GUEST_REFUSALS[begin.reason] : undefined) ??
+      REFUSALS[begin.reason] ?? { status: 403, message: 'Not allowed.' }
+    log(`ai refused ${begin.reason}${guest ? ' guest' : ''}`)
     return errorResponse(
       refusal.status,
       begin.reason,
@@ -287,7 +381,10 @@ export async function handleAi(request: Request, deps: AiDeps): Promise<Response
         'content-type': 'application/json',
         'x-title': 'HushGlance',
       },
-      body: JSON.stringify({ ...checked.body, user: await pseudonym(user.id) }),
+      body: JSON.stringify({
+        ...checked.body,
+        user: await pseudonym(guest ? `guest:${caller.key}` : caller.id),
+      }),
       signal: request.signal,
     })
     status = upstream.status
@@ -315,7 +412,7 @@ export async function handleAi(request: Request, deps: AiDeps): Promise<Response
   } catch {
     log('ai_finish failed')
   }
-  log(`ai ${status} ${checked.model} ${Date.now() - started}ms`)
+  log(`ai ${status} ${checked.model} ${Date.now() - started}ms${guest ? ' guest' : ''}`)
   // Our key, credits or OpenRouter itself failing isn't the user's doing: say so plainly (a 401 or
   // 402 passed through would read as the user's key, or as their quota). A failed first call gives
   // the question back (ai_finish).

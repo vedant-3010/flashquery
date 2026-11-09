@@ -1,6 +1,8 @@
+import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import {
   allowedOn,
+  GUEST_DAILY_QUESTIONS,
   meterVisible,
   pickHostedModel,
   plannerModels,
@@ -142,5 +144,24 @@ describe('plans', () => {
       '12 questions left this month',
     )
     expect(meterVisible({ plan: 'starter', questions: 100, remaining: 19 })).toBe(true)
+  })
+
+  it('words a guest’s day, and offers no plan before an account (D125)', () => {
+    expect(remainingLabel({ plan: 'guest', period: 'day', remaining: 2 })).toBe(
+      '2 free questions left today',
+    )
+    expect(remainingLabel({ plan: 'guest', period: 'day', remaining: 1 })).toBe(
+      '1 free question left today',
+    )
+    expect(remainingLabel({ plan: 'guest', period: 'day', remaining: 0 })).toBe(
+      'No free questions left today',
+    )
+    expect(meterVisible({ plan: 'guest', questions: 3, remaining: 3 })).toBe(true)
+    expect(upgradesFrom(catalog, 'guest')).toEqual([])
+  })
+
+  it('offers guests the number guest_limits gives them', () => {
+    const sql = readFileSync('supabase/migrations/20261109000000_guests.sql', 'utf8')
+    expect(sql).toContain(`values (${GUEST_DAILY_QUESTIONS}, array['standard']`)
   })
 })

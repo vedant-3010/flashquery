@@ -6,11 +6,12 @@ export function corsHeaders(
   origin: string | null,
   allowed: readonly string[],
   allowHeaders: string,
+  methods = 'POST, OPTIONS',
 ): Record<string, string> | null {
   if (!origin || !allowed.includes(origin)) return null
   return {
     'access-control-allow-origin': origin,
-    'access-control-allow-methods': 'POST, OPTIONS',
+    'access-control-allow-methods': methods,
     'access-control-allow-headers': allowHeaders,
     'access-control-expose-headers': 'x-fq-remaining',
     'access-control-max-age': '600',

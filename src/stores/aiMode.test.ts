@@ -13,6 +13,7 @@ const base = {
     local: '',
   },
   apiKeys: { anthropic: null, openai: null, openrouter: null, local: null },
+  guestAi: false,
 }
 const keyed = { ...base, apiKeys: { ...base.apiKeys, anthropic: 'sk-ant-key-123456' } }
 
@@ -30,5 +31,17 @@ describe('aiModeOf', () => {
     // Not offered here (no hosted models, or offline): as before M16.
     expect(aiModeOf({ ...base, aiSource: 'hosted' }, 'signed-in', false)).toBe('demo')
     expect(aiModeOf({ ...keyed, aiSource: 'hosted' }, 'signed-in', false)).toBe('own')
+  })
+})
+
+describe('aiModeOf for guests (D125)', () => {
+  it('hosts a guest only once they turned HushGlance AI on', () => {
+    const on = { ...base, guestAi: true }
+    expect(aiModeOf({ ...on, aiSource: 'hosted' }, 'guest', true)).toBe('hosted')
+    expect(aiModeOf({ ...on, aiSource: 'own' }, 'guest', true)).toBe('demo')
+    expect(aiModeOf({ ...on, aiSource: 'hosted' }, 'guest', false)).toBe('demo')
+    // No account service here, or still checking a saved session: never hosted.
+    expect(aiModeOf({ ...on, aiSource: 'hosted' }, 'off', true)).toBe('demo')
+    expect(aiModeOf({ ...on, aiSource: 'hosted' }, 'checking', true)).toBe('demo')
   })
 })

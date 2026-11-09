@@ -1,11 +1,12 @@
 import { expect, test, type Page } from '@playwright/test'
 import { chooseBalanced, signIn } from './app.ts'
 import { mockHosted } from './hosted.ts'
-import { mockSupabase } from './supabase.ts'
+import { mockSupabase, SUPABASE_KEY, SUPABASE_URL } from './supabase.ts'
 
 // HushGlance AI (F-PLAN-01…05, M16): a signed-in user asks without a key, through our proxy
 // (mocked: the quota rules are pgTAP-tested, the proxy unit-tested), runs out, upgrades through
 // Dodo's hosted checkout; Pro, premium models, Strict mode, and the user's own OpenRouter account.
+// Guests (D125): HushGlance AI without an account, a few questions a day, turned on by the guest.
 
 const composer = (page: Page) => page.getByRole('textbox', { name: 'Ask a question' })
 
@@ -296,11 +297,106 @@ test('your own OpenRouter account: connect without copying a key, any model, ZDR
   expect(hosted.calls).toEqual([])
 })
 
-test('guests are offered 3 free questions next to the demo', async ({ page }) => {
+test('J13: a guest turns on HushGlance AI: 3 free questions a day, then an account (D125)', async ({
+  page,
+}) => {
+  test.setTimeout(120_000)
   await mockSupabase(page)
-  await page.goto('/app/try')
-  await expect(page.getByRole('link', { name: 'sign in for 3 free questions' })).toHaveAttribute(
+  const hosted = await mockHosted(page, { guest: true })
+  const urls: string[] = []
+  page.on('request', (request) => urls.push(request.url()))
+  // No sign-in: a new project, as a guest, in demo mode. Nothing has contacted the service.
+  await openSales(page)
+  await expect(page.getByRole('button', { name: 'Demo mode', exact: true })).toBeVisible()
+  expect(urls.filter((url) => url.startsWith(SUPABASE_URL))).toEqual([])
+
+  await page
+    .getByRole('button', { name: 'try HushGlance AI free (3 questions a day, no account)' })
+    .click()
+  const meter = page.getByLabel('Hosted questions left')
+  await expect(meter).toHaveText('3 free questions left today.')
+  await expect(page.getByRole('button', { name: 'Model: Claude Sonnet 5' })).toBeVisible()
+  // The note says how a guest's questions are counted.
+  const notice = page.getByRole('complementary', { name: 'About HushGlance AI' })
+  await expect(notice).toContainText('internet address')
+  await expect(notice).toContainText('zero data retention')
+  await notice.getByRole('button', { name: 'Got it' }).click()
+
+  const first = await ask(page, 'Revenue by region')
+  await expect(first.getByRole('img', { name: /^Bar chart/ })).toBeVisible({ timeout: 30_000 })
+  await expect(meter).toHaveText('2 free questions left today.')
+  // No session: the publishable key and the meter; zero data retention, as for everyone.
+  const [plan] = hosted.calls
+  expect(plan?.headers.authorization).toBeUndefined()
+  expect(plan?.headers.apikey).toBe(SUPABASE_KEY)
+  expect(plan?.body.provider).toEqual({
+    zdr: true,
+    data_collection: 'deny',
+    require_parameters: true,
+  })
+
+  for (const [question, left] of [
+    ['Which region sells the most?', '1 free question left today.'],
+    ['Total revenue per region', 'No free questions left today.'],
+  ] as const) {
+    const answer = await ask(page, question)
+    await expect(answer.getByRole('img', { name: /^Bar chart/ })).toBeVisible({ timeout: 30_000 })
+    await expect(meter).toHaveText(left)
+  }
+
+  // The fourth: refused, and an account is offered (plans need one), or the guest's own key.
+  await ask(page, 'And by channel?')
+  const dialog = page.getByRole('dialog', { name: 'You’ve used today’s free questions' })
+  await expect(dialog).toBeVisible()
+  await expect(dialog).toContainText('Your next free question is back at')
+  await expect(dialog.getByRole('link', { name: 'Create a free account' })).toHaveAttribute(
     'href',
-    '/app/login',
+    /^\/app\/register\?next=%2Fp%2F/,
   )
+  await expect(dialog.getByRole('button', { name: /^Choose / })).toHaveCount(0)
+  await expect(dialog.getByRole('button', { name: 'Use your own key' })).toBeVisible()
+
+  // A guest's AI reached only the public model list and the ai function, and never loaded
+  // supabase-js (F-SEC-09): no session to keep.
+  const reached = new Set(
+    urls.filter((url) => url.startsWith(SUPABASE_URL)).map((url) => new URL(url).pathname),
+  )
+  expect([...reached].sort()).toEqual([
+    '/functions/v1/ai/v1/chat/completions',
+    '/functions/v1/ai/v1/guest',
+    '/rest/v1/ai_models',
+    '/rest/v1/plans',
+  ])
+  expect(urls.filter((url) => /supabase/i.test(new URL(url).pathname))).toEqual([])
+})
+
+test('a guest who leaves HushGlance AI in Settings stops contacting the service', async ({
+  page,
+}) => {
+  await mockSupabase(page)
+  await mockHosted(page, { guest: true })
+  await openSales(page)
+  await page.getByRole('button', { name: 'Model: Demo' }).click()
+  await page.getByRole('menuitem', { name: /Try it free, no account/ }).click()
+  await expect(page.getByLabel('Hosted questions left')).toHaveText('3 free questions left today.')
+
+  await page.getByRole('button', { name: 'Model: Claude Sonnet 5' }).click()
+  await page.getByRole('menuitem', { name: /^Keys, OpenRouter models/ }).click()
+  const settings = page.getByRole('dialog', { name: 'Settings' })
+  await expect(settings.getByRole('radio', { name: 'HushGlance AI, no account' })).toBeChecked()
+  await settings.getByRole('radio', { name: 'Your own key' }).click()
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('button', { name: 'Demo mode', exact: true })).toBeVisible()
+
+  const urls: string[] = []
+  page.on('request', (request) => urls.push(request.url()))
+  await page.reload()
+  await expect(page.getByRole('button', { name: 'Demo mode', exact: true })).toBeVisible()
+  // The sample again (files aren't kept here): the offer is back, and nothing was asked.
+  await page.getByRole('button', { name: 'Try sample data', exact: true }).click()
+  await page.getByRole('menuitem', { name: 'Global Sales · 10k rows' }).click()
+  await expect(page.getByRole('button', { name: /^try HushGlance AI free/ })).toBeVisible({
+    timeout: 60_000,
+  })
+  expect(urls.filter((url) => url.startsWith(SUPABASE_URL))).toEqual([])
 })

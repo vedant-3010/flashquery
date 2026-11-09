@@ -71,7 +71,8 @@ const paper = <div className="paper-scope min-h-dvh" />
 // link, the benchmark, the account pages (F-ACCT, M13) and shared dashboards (F-SHARE, M14). A
 // project's own data loads when it opens (stores/projectSession.ts); settings and eval cases are
 // global. Accounts are optional: guests never load the account service (F-SEC-09), except to open
-// a view-only link someone gave them.
+// a view-only link someone gave them; a guest who turns on HushGlance AI (D125) calls only the
+// model list and the `ai` function, without supabase-js.
 
 /** v1 links (`/app/#/bench`, `/app/#/try`) go to their routes. */
 function LegacyHashRedirect() {
@@ -97,7 +98,8 @@ export function App() {
     void useFeedbackStore.getState().hydrate()
     // Restores a saved session; guests and the demo load nothing for it.
     useAuthStore.getState().start()
-    // Signed in: HushGlance AI's models and the user's questions (F-PLAN-01); guests load nothing.
+    // HushGlance AI's models and what's left of the questions (F-PLAN-01): signed in, or a guest
+    // who turned it on (D125); other guests load nothing.
     startPlans()
     // Signed in: the encrypted workspace on every device (M17); guests load nothing for it.
     startSync()
@@ -111,13 +113,14 @@ export function App() {
         <Router base={APP_BASE}>
           <LegacyHashRedirect />
           <Switch>
+            {/* Guests use Home and projects on this device (D125); see RequireAccount. */}
             <Route path="/">
-              <RequireAccount>
+              <RequireAccount openToGuests>
                 <HomePage />
               </RequireAccount>
             </Route>
             <Route path="/new">
-              <RequireAccount>
+              <RequireAccount openToGuests>
                 <NewProjectRoute />
               </RequireAccount>
             </Route>
@@ -129,13 +132,13 @@ export function App() {
                 </Suspense>
               </PanelErrorBoundary>
             </Route>
-            {/* The try projects stay open to guests; every other project needs the account. */}
+            {/* The try projects are always open; others too, unless the build asks for sign-in. */}
             <Route path="/p/:id/:view?">
               {(params) =>
                 isTryProject(params.id) ? (
                   <ProjectRoute />
                 ) : (
-                  <RequireAccount>
+                  <RequireAccount openToGuests>
                     <ProjectRoute />
                   </RequireAccount>
                 )

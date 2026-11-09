@@ -59,6 +59,16 @@
             "name": "@/platform/hostedAi",
             "message": "Only src/platform/ talks to Supabase, as a lazy chunk guests never load (D114): use src/stores/plan.ts, or a type-only import.",
             "allowTypeImports": true
+          },
+          {
+            "name": "@/platform/guestAi",
+            "message": "Only src/platform/ talks to Supabase, and a guest only once they turned HushGlance AI on (D125): use src/stores/plan.ts, or a type-only import.",
+            "allowTypeImports": true
+          },
+          {
+            "name": "@/platform/meteredFetch",
+            "message": "Only src/platform/ talks to Supabase (D114): use src/stores/plan.ts, or a type-only import.",
+            "allowTypeImports": true
           }
         ]
       }

@@ -184,6 +184,7 @@ Details: HOSTED_AI_SETUP A7 and B3.
   OPENROUTER_API_KEY=sk-or-v1-…
   APP_ORIGINS=https://hushglance.com,https://www.hushglance.com
   AI_DAILY_BUDGET_USD=10
+  GUEST_KEY_SECRET=<openssl rand -hex 32>   # guests' free questions (D125); unset turns them off
   DODO_API_BASE=https://test.dodopayments.com
   DODO_API_KEY=<Dodo test key>
   DODO_WEBHOOK_SECRET=whsec_…
@@ -201,8 +202,21 @@ Details: HOSTED_AI_SETUP A7 and B3.
   npx supabase functions deploy billing
   ```
 
-- [ ] In Dashboard → Edge Functions, check that `billing` shows **Verify JWT: off** and `ai` shows
-      **on**.
+- [ ] In Dashboard → Edge Functions, check that `billing` and `ai` both show **Verify JWT: off**
+      (`ai` checks sessions itself; guests have none, D125).
+- [ ] **Guests can't fake their address** (D125). Signed out, ask one HushGlance AI question in the
+      app, then read the allowance twice, once claiming other addresses:
+
+  ```sh
+  F=https://<project>.supabase.co/functions/v1/ai/v1/guest
+  curl -s -H 'origin: https://hushglance.com' "$F"
+  curl -s -H 'origin: https://hushglance.com' -H 'x-forwarded-for: 203.0.113.9' \
+    -H 'cf-connecting-ip: 203.0.113.9' -H 'x-real-ip: 203.0.113.9' "$F"
+  ```
+
+  Run them from the same network as the browser. Both must show the same `remaining` (2). If the
+  second shows 3, a header the client sent was trusted: set `guest_limits.questions = 0` and fix
+  `clientAddress` (`supabase/functions/_shared/guest.ts`) before going live.
 
 ## 7. Vercel (the website)
 
@@ -366,6 +380,7 @@ The release review (PRD D124) fixed what code can; these are settings only you c
 |---|---|
 | Spend runs away | `npx supabase secrets set AI_DAILY_BUDGET_USD=0` (hosted AI pauses; own keys keep working) |
 | One model misbehaves | `update public.ai_models set enabled = false where id = '…';` |
+| Guests' free questions are farmed | `update public.guest_limits set questions = 0;` (or lower `total_daily_usd`); accounts keep theirs |
 | Sign-up abuse | Supabase → Authentication → Providers → Email → turn off new sign-ups |
 | An OpenRouter or Dodo key leaks | Revoke it in their dashboard, make a new one, `npx supabase secrets set …` |
 
@@ -400,6 +415,7 @@ The release review (PRD D124) fixed what code can; these are settings only you c
 | Resend API key | Resend → API Keys | Supabase → Auth → SMTP password | Yes |
 | `OPENROUTER_API_KEY` | OpenRouter → Keys | Function secrets | Yes |
 | `APP_ORIGINS`, `AI_DAILY_BUDGET_USD` | You choose | Function secrets | No |
+| `GUEST_KEY_SECRET` | `openssl rand -hex 32` | Function secrets | Yes |
 | `DODO_API_KEY`, `DODO_WEBHOOK_SECRET` | Dodo → Developer | Function secrets | Yes |
 | `DODO_API_BASE`, `DODO_PRODUCT_…` (×4) | Dodo | Function secrets | No |
 | DNS records | Vercel, Resend, email forwarding | Your registrar | No |

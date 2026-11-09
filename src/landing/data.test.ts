@@ -71,6 +71,9 @@ describe('landing pricing (F-PLAN-05)', () => {
         new RegExp(`'${label}'[^)]*'premium', ${PRICING.premiumWeight},[^)]*true`),
       )
     }
+    // Guests (D125): free questions a day without an account.
+    const guests = readFileSync('supabase/migrations/20261109000000_guests.sql', 'utf8')
+    expect(guests).toContain(`values (${PRICING.guestQuestions}, array['standard']`)
     // Storage (M17): the vault migration sets each plan's room in bytes.
     const vault = readFileSync('supabase/migrations/20261016000000_vault.sql', 'utf8')
     for (const [plan, gb] of [

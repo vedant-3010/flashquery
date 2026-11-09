@@ -11,7 +11,7 @@ export function DemoChip() {
     <Badge asChild variant="secondary">
       <button
         type="button"
-        title="Demo answers are example answers about the sample data, worked out live on your device. Add an AI key, or sign in for 3 free questions, to ask anything."
+        title="Demo answers are example answers about the sample data, worked out live on your device. Add an AI key, or try HushGlance AI free, to ask anything."
         onClick={() => openSettings(true)}
       >
         Demo<span className="max-lg:sr-only"> mode</span>

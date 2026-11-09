@@ -7,7 +7,6 @@ import type { RequestEffort } from '@/ai/schemas'
 import { getDb } from '@/engine/duckdb'
 import { closeResult, type PagedResult } from '@/engine/paging'
 import { useAiLogStore } from '@/stores/aiLog'
-import { useAuthStore } from '@/stores/auth'
 import { hostedAvailable, hostedProvider, newMeter, type Meter } from '@/stores/plan'
 import { activeApiKey, useSettingsStore } from '@/stores/settings'
 
@@ -28,18 +27,15 @@ export function meterFor(answerId: string): Meter {
 }
 
 /**
- * The provider that answers (aiMode.ts): HushGlance AI for a signed-in user who chose it, else
- * their own key, else demo fixtures (F-AI-03). `chosen`: the effort Auto picked for this question
+ * The provider that answers (aiMode.ts): HushGlance AI for a signed-in user who chose it (or a
+ * guest who turned it on, D125), else their own key, else demo fixtures (F-AI-03). `chosen`: the effort Auto picked for this question
  * (F-ASK-18), in place of the setting. `meter`: the hosted question these calls belong to (a new
  * one when left out); own keys and the demo ignore it.
  */
 export async function currentProvider(chosen?: RequestEffort, meter?: Meter): Promise<LLMProvider> {
   const settings = useSettingsStore.getState()
-  if (
-    useAuthStore.getState().status === 'signed-in' &&
-    settings.aiSource === 'hosted' &&
-    (await hostedAvailable())
-  ) {
+  // hostedAvailable() checks who may use it: signed in, or a guest who turned it on.
+  if (settings.aiSource === 'hosted' && (await hostedAvailable())) {
     return hostedProvider(chosen ?? settings.effort, meter ?? newMeter('ask'))
   }
   const apiKey = activeApiKey(settings)

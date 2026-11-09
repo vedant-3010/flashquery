@@ -13,6 +13,8 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { RenameProjectDialog } from '@/features/home/RenameProjectDialog'
 import { KeepLocalDialog, KeepLocalMenuItem } from '@/features/sync/KeepLocal'
+import { isTryProject } from '@/app/tryDemo'
+import { useOtherAccount } from '@/features/sync/useOtherAccount'
 import { useProjectsStore } from '@/stores/projects'
 
 const MAX_LISTED = 8
@@ -24,13 +26,15 @@ export function ProjectMenu() {
   const projects = useProjectsStore((state) => state.projects)
   const [dialog, setDialog] = useState<'rename' | 'local' | null>(null)
   const project = projects.find((p) => p.id === openId)
+  // Projects an account keeps hidden here (D124, D125) aren't listed by name either.
+  const hidden = useOtherAccount()
   const others = useMemo(
     () =>
       projects
-        .filter((p) => p.id !== openId)
+        .filter((p) => p.id !== openId && (!hidden || isTryProject(p.id)))
         .sort((a, b) => b.lastOpenedAt - a.lastOpenedAt)
         .slice(0, MAX_LISTED),
-    [projects, openId],
+    [projects, openId, hidden],
   )
   if (!project) return null
 

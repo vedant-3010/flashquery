@@ -11,7 +11,13 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { ProviderSettings } from '@/features/settings/ProviderSettings'
-import { allowedOn, plannerModels, remainingLabel, tiersOf } from '@/lib/plans'
+import {
+  allowedOn,
+  GUEST_DAILY_QUESTIONS,
+  plannerModels,
+  remainingLabel,
+  tiersOf,
+} from '@/lib/plans'
 import { useAuthStore } from '@/stores/auth'
 import { hostedPlanner, usePlanStore } from '@/stores/plan'
 import { AiSourceSchema, useSettingsStore } from '@/stores/settings'
@@ -28,44 +34,75 @@ const SOURCES = {
   },
 } as const
 
-/** Who answers (F-PLAN-01, F-AI-01): HushGlance AI for a signed-in user, or their own key. */
+/** For a guest (D125): HushGlance AI without an account, and what that means. */
+const GUEST_SOURCES = {
+  hosted: {
+    label: 'HushGlance AI, no account',
+    text: `${GUEST_DAILY_QUESTIONS} free questions a day on this connection. To count them, our server keeps a scrambled code made from your internet address (never the address) for 2 days. Every request demands zero data retention.`,
+  },
+  own: SOURCES.own,
+} as const
+
+/**
+ * Who answers (F-PLAN-01, F-AI-01): HushGlance AI for a signed-in user, or for a guest who turns
+ * it on (D125), or their own key.
+ */
 export function AiSettings() {
   const status = useAuthStore((state) => state.status)
   const catalogStatus = usePlanStore((state) => state.catalogStatus)
   const aiSource = useSettingsStore((state) => state.aiSource)
   const setAiSource = useSettingsStore((state) => state.setAiSource)
-  const offered = status === 'signed-in' && catalogStatus !== 'unavailable'
+  const guestAi = useSettingsStore((state) => state.guestAi)
+  const setGuestAi = useSettingsStore((state) => state.setGuestAi)
+  const guest = status === 'guest'
+  const missing = catalogStatus === 'unavailable'
+  // A guest always sees the choice: picking HushGlance AI is what turns it on.
+  const choosing = status === 'signed-in' ? !missing : guest
+  const offered = (status === 'signed-in' || (guest && guestAi)) && !missing
+  const chosen = guest && !guestAi ? 'own' : aiSource
+  const sources = guest ? GUEST_SOURCES : SOURCES
+
+  const choose = (value: string) => {
+    const source = AiSourceSchema.parse(value)
+    if (!guest) return setAiSource(source)
+    // A guest who leaves HushGlance AI turns it off: their browser stops contacting our service.
+    if (source === 'hosted') setGuestAi(true)
+    else {
+      setGuestAi(false)
+      setAiSource('own')
+    }
+  }
 
   return (
     <div className="grid gap-4">
-      {status === 'guest' && (
-        <p className="rounded-lg border bg-muted/40 p-3 text-xs text-muted-foreground">
-          No key?{' '}
-          <Link href={paths.login} className="font-medium text-foreground underline">
-            Sign in
-          </Link>{' '}
-          for 3 free questions with HushGlance AI, on any device.
-        </p>
-      )}
-      {offered && (
+      {choosing && (
         <RadioGroup
           aria-label="Who answers"
-          value={aiSource}
-          onValueChange={(value) => setAiSource(AiSourceSchema.parse(value))}
+          value={chosen}
+          onValueChange={choose}
           className="grid gap-2"
         >
           {AiSourceSchema.options.map((source) => (
             <div key={source} className="flex items-start gap-2 rounded-lg border p-3">
               <RadioGroupItem value={source} id={`ai-source-${source}`} className="mt-0.5" />
               <div className="grid gap-0.5">
-                <Label htmlFor={`ai-source-${source}`}>{SOURCES[source].label}</Label>
-                <p className="text-xs text-muted-foreground">{SOURCES[source].text}</p>
+                <Label htmlFor={`ai-source-${source}`}>{sources[source].label}</Label>
+                <p className="text-xs text-muted-foreground">{sources[source].text}</p>
               </div>
             </div>
           ))}
         </RadioGroup>
       )}
-      {offered && aiSource === 'hosted' ? <HostedSettings /> : <ProviderSettings />}
+      {guest && guestAi && missing && (
+        <p className="rounded-lg border bg-muted/40 p-3 text-xs text-muted-foreground">
+          HushGlance AI without an account isn’t available here right now.{' '}
+          <Link href={paths.login} className="font-medium text-foreground underline">
+            Sign in
+          </Link>{' '}
+          for 3 free questions, or add your own key.
+        </p>
+      )}
+      {offered && chosen === 'hosted' ? <HostedSettings /> : <ProviderSettings />}
     </div>
   )
 }
@@ -76,6 +113,7 @@ function HostedSettings() {
   const hostedModel = useSettingsStore((state) => state.hostedModel)
   const setHostedModel = useSettingsStore((state) => state.setHostedModel)
   const closeSettings = useUiStore((state) => state.setSettingsOpen)
+  const guest = usePlanStore((state) => state.audience === 'guest')
   if (!catalog) return <p className="text-xs text-muted-foreground">Loading your plan…</p>
   const tiers = quota?.tiers ?? tiersOf(catalog, 'free')
   const planner = hostedPlanner(catalog, quota)
@@ -106,11 +144,15 @@ function HostedSettings() {
       </div>
       <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
         <span>
-          {quota ? `${quota.label} plan · ${remainingLabel(quota)}` : 'Checking your plan…'}
+          {quota
+            ? guest
+              ? `No account · ${remainingLabel(quota)}`
+              : `${quota.label} plan · ${remainingLabel(quota)}`
+            : 'Checking your plan…'}
         </span>
         <Button asChild size="xs" variant="link" className="h-auto px-0">
-          <Link href={paths.billing} onClick={() => closeSettings(false)}>
-            Plan and billing
+          <Link href={guest ? paths.register : paths.billing} onClick={() => closeSettings(false)}>
+            {guest ? 'Create a free account' : 'Plan and billing'}
           </Link>
         </Button>
       </div>

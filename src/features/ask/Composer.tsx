@@ -20,7 +20,8 @@ import { useAskStore } from '@/stores/ask'
 import { useAuthStore } from '@/stores/auth'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { useDatasetsStore } from '@/stores/datasets'
-import { useAiMode } from '@/stores/aiMode'
+import { GUEST_DAILY_QUESTIONS } from '@/lib/plans'
+import { useAiMode, useGuestAiOffer } from '@/stores/aiMode'
 import { useSettingsStore } from '@/stores/settings'
 import { useSuggestionsStore } from '@/stores/suggestions'
 import { useUiStore } from '@/stores/ui'
@@ -40,6 +41,9 @@ export function Composer({ inputRef }: { inputRef?: Ref<HTMLTextAreaElement> }) 
   const aiMode = useAiMode()
   const demo = aiMode === 'demo'
   const guest = useAuthStore((state) => state.status === 'guest')
+  // A guest can turn on a few free hosted questions a day, no account (D125).
+  const guestOffer = useGuestAiOffer()
+  const turnOnGuestAi = useSettingsStore((state) => state.setGuestAi)
   const openSettings = useUiStore((state) => state.setSettingsOpen)
   const scope = useAskStore((state) => state.scope)
   const balanced = useSettingsStore((state) => state.privacyMode === 'balanced')
@@ -275,13 +279,27 @@ export function Composer({ inputRef }: { inputRef?: Ref<HTMLTextAreaElement> }) 
                 <KeyRound aria-hidden />
                 Add an AI key to ask anything
               </Button>
-              {guest && (
+              {guestOffer ? (
                 <>
                   or
-                  <Button asChild size="xs" variant="link" className="h-auto px-0">
-                    <Link href={paths.login}>sign in for 3 free questions</Link>
+                  <Button
+                    size="xs"
+                    variant="link"
+                    className="h-auto px-0"
+                    onClick={() => turnOnGuestAi(true)}
+                  >
+                    try HushGlance AI free ({GUEST_DAILY_QUESTIONS} questions a day, no account)
                   </Button>
                 </>
+              ) : (
+                guest && (
+                  <>
+                    or
+                    <Button asChild size="xs" variant="link" className="h-auto px-0">
+                      <Link href={paths.login}>sign in for 3 free questions</Link>
+                    </Button>
+                  </>
+                )
               )}
             </span>
           ) : aiMode === 'hosted' ? (

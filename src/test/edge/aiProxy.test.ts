@@ -53,8 +53,11 @@ function setup({
       { status: 200, headers: { 'content-type': 'application/json' } },
     ),
   user = USER as typeof USER | null,
+  guestSecret = GUEST_SECRET as string | null,
 } = {}) {
-  const rpc = vi.fn(async (name: string) => (name === 'ai_begin' ? begin : null))
+  const rpc = vi.fn(async (name: string, _args: Record<string, unknown>) =>
+    name === 'ai_begin' || name === 'guest_begin' ? begin : name === 'guest_quota' ? QUOTA : null,
+  )
   const rest: Rest = { user: vi.fn(async () => user), rpc, selectOne: vi.fn(async () => null) }
   const fetch = vi.fn(async () => upstream())
   const logs: string[] = []
@@ -64,6 +67,7 @@ function setup({
       upstreamUrl: 'https://openrouter.ai/api/v1/chat/completions',
       appOrigins: [ORIGIN],
       dailyBudgetUsd: 20,
+      guestKeySecret: guestSecret,
     },
     rest,
     fetch: fetch as unknown as typeof globalThis.fetch,
@@ -84,6 +88,37 @@ const request = (body: unknown, headers: Record<string, string> = {}) =>
       ...headers,
     },
     body: typeof body === 'string' ? body : JSON.stringify(body),
+  })
+
+const GUEST_SECRET = 'guest-secret-for-tests-0123456789abcdef'
+const GUEST_ADDRESS = '203.0.113.7'
+const QUOTA = {
+  plan: 'guest',
+  label: 'Guest',
+  questions: 3,
+  period: 'day',
+  used: 1,
+  remaining: 2,
+  tiers: ['standard'],
+  renews_at: '2026-11-10T09:00:00+00:00',
+  status: null,
+  has_customer: false,
+}
+
+/** A guest's request: no session, only the publishable key; the edge names the address. */
+const guestRequest = (body: unknown, headers: Record<string, string> = {}) =>
+  new Request('https://x.supabase.co/functions/v1/ai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      origin: ORIGIN,
+      apikey: 'sb_publishable_x',
+      'content-type': 'application/json',
+      'x-fq-question': 'q-0123456789',
+      'x-fq-kind': 'ask',
+      'cf-connecting-ip': GUEST_ADDRESS,
+      ...headers,
+    },
+    body: JSON.stringify(body),
   })
 
 const sentBody = (fetch: ReturnType<typeof setup>['fetch']) => {
@@ -285,5 +320,98 @@ describe('handleAi', () => {
     expect(all).not.toContain('sk-or-')
     expect(all).not.toContain(USER.id)
     expect(logs).toEqual([expect.stringMatching(/^ai 200 anthropic\/claude-sonnet-5 \d+ms$/)])
+  })
+})
+
+describe('handleAi for guests (D125)', () => {
+  it('counts a request without a session by a keyed hash of the address, never the address', async () => {
+    const { deps, rpc, fetch, logs } = setup({ begin: { ...ALLOWED, plan: 'guest' } })
+    const response = await handleAi(guestRequest(chat()), deps)
+    expect(response.status).toBe(200)
+    expect(deps.rest.user).not.toHaveBeenCalled()
+    expect(rpc.mock.calls[0]?.[0]).toBe('guest_begin')
+    const args = rpc.mock.calls[0]?.[1] ?? {}
+    expect(args).toEqual({
+      visitor: expect.stringMatching(/^[0-9a-f]{64}$/),
+      question: 'q-0123456789',
+      kind: 'ask',
+      model: 'anthropic/claude-sonnet-5',
+      daily_budget: 20,
+    })
+    // OpenRouter gets a pseudonym of the hash; nothing anywhere carries the address.
+    const sent = sentBody(fetch)
+    expect(sent.user).toMatch(/^[0-9a-f]{32}$/)
+    expect(sent.user).not.toBe(args.visitor)
+    expect(sent.provider).toEqual(FORCED_PROVIDER)
+    const everything = JSON.stringify([rpc.mock.calls, fetch.mock.calls, logs])
+    expect(everything).not.toContain(GUEST_ADDRESS)
+    expect(logs.at(-1)).toMatch(/^ai 200 anthropic\/claude-sonnet-5 \d+ms guest$/)
+    expect(rpc).toHaveBeenCalledWith('ai_finish', expect.objectContaining({ usage: 41 }))
+  })
+
+  it('is off without the secret: a request without a session is refused, as before', async () => {
+    const { deps, rpc, fetch } = setup({ guestSecret: null })
+    const response = await handleAi(guestRequest(chat()), deps)
+    expect(response.status).toBe(401)
+    expect(rpc).not.toHaveBeenCalled()
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
+  it('never treats a session that doesn’t check out as a guest', async () => {
+    const { deps, rpc } = setup({ user: null })
+    const response = await handleAi(guestRequest(chat(), { authorization: 'Bearer expired' }), deps)
+    expect(response.status).toBe(401)
+    expect(rpc).not.toHaveBeenCalled()
+  })
+
+  it('refuses a guest it can’t place (no address)', async () => {
+    const { deps, rpc } = setup()
+    const response = await handleAi(guestRequest(chat(), { 'cf-connecting-ip': '' }), deps)
+    expect(response.status).toBe(403)
+    expect(await response.json()).toMatchObject({ error: { code: 'guests_off' } })
+    expect(rpc).not.toHaveBeenCalled()
+  })
+
+  it('says what an account changes when a guest’s questions run out', async () => {
+    const { deps, fetch } = setup({
+      begin: { allowed: false, reason: 'quota_reached', plan: 'guest', remaining: 0 },
+    })
+    const response = await handleAi(guestRequest(chat()), deps)
+    expect(response.status).toBe(402)
+    expect(response.headers.get('x-fq-remaining')).toBe('0')
+    const body = (await response.json()) as { error: { code: string; message: string } }
+    expect(body.error.code).toBe('quota_reached')
+    expect(body.error.message).toContain('free account')
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
+  it('answers GET …/v1/guest with the allowance, and allows GET from the app', async () => {
+    const { deps, rpc } = setup()
+    const response = await handleAi(
+      new Request('https://x.supabase.co/functions/v1/ai/v1/guest', {
+        headers: { origin: ORIGIN, 'cf-connecting-ip': GUEST_ADDRESS },
+      }),
+      deps,
+    )
+    expect(response.status).toBe(200)
+    expect(response.headers.get('cache-control')).toBe('no-store')
+    expect(await response.json()).toEqual(QUOTA)
+    expect(rpc).toHaveBeenCalledWith('guest_quota', {
+      visitor: expect.stringMatching(/^[0-9a-f]{64}$/),
+    })
+    const preflight = await handleAi(
+      new Request('https://x/ai/v1/guest', { method: 'OPTIONS', headers: { origin: ORIGIN } }),
+      deps,
+    )
+    expect(preflight.headers.get('access-control-allow-methods')).toContain('GET')
+    const off = setup({ guestSecret: null })
+    const refused = await handleAi(
+      new Request('https://x.supabase.co/functions/v1/ai/v1/guest', {
+        headers: { origin: ORIGIN, 'cf-connecting-ip': GUEST_ADDRESS },
+      }),
+      off.deps,
+    )
+    expect(refused.status).toBe(403)
+    expect(off.rpc).not.toHaveBeenCalled()
   })
 })

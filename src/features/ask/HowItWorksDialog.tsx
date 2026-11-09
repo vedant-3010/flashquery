@@ -71,9 +71,9 @@ export function HowItWorksDialog({ inspector = true }: { inspector?: boolean }) 
         <DialogHeader>
           <DialogTitle>How HushGlance works</DialogTitle>
           <DialogDescription>
-            Ask with HushGlance AI (sign in: 3 free questions, then Pro), or your own AI key
-            (Anthropic, OpenAI, OpenRouter, or a model on your computer). Without either, demo mode
-            answers example questions about the samples.
+            Ask with HushGlance AI (a few free questions a day without an account, more with one,
+            then Starter or Pro), or your own AI key (Anthropic, OpenAI, OpenRouter, or a model on
+            your computer). Without either, demo mode answers example questions about the samples.
           </DialogDescription>
         </DialogHeader>
         <ol className="grid gap-3 text-sm">

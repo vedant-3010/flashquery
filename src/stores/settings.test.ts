@@ -5,7 +5,8 @@ import { activeApiKey, SETTINGS_RECORD } from './settings'
 
 // Settings v5 (F-AI-06): a local OpenAI-compatible server needs a localhost URL and a model, no key.
 // Settings v6 (F-ASK-16): the planner's effort, chosen in the ask bar. v7 (F-VIZ-12): chart colors.
-// v8 (F-PLAN-01): OpenRouter, and hosted AI for signed-in users who didn't save a key.
+// v8 (F-PLAN-01): OpenRouter, and hosted AI for signed-in users who didn't save a key. v9 (D125):
+// HushGlance AI for guests, off until they turn it on.
 
 const keys = { anthropic: null, openai: null, openrouter: null, local: null }
 const models = {
@@ -18,6 +19,7 @@ const HOSTED = {
   aiSource: 'hosted',
   hostedModel: 'anthropic/claude-sonnet-5',
   hostedNoticeSeen: false,
+  guestAi: false,
 }
 
 describe('settings', () => {
@@ -76,6 +78,30 @@ describe('settings', () => {
       chartPalette: 'hushglance',
       ...HOSTED,
     })
+  })
+
+  it('migrates v8 settings to v9 with HushGlance AI off for guests', async () => {
+    const { guestAi: _off, ...v8Hosted } = HOSTED
+    const v8 = {
+      provider: 'anthropic',
+      models,
+      baseUrl: 'http://localhost:11434/v1',
+      privacyMode: 'strict',
+      dateDisplay: 'iso',
+      rememberKey: false,
+      apiKeys: keys,
+      numberLocale: null,
+      currency: null,
+      autoRunPython: false,
+      tourDone: true,
+      persistFiles: false,
+      effort: 'medium',
+      chartPalette: 'hushglance',
+      ...v8Hosted,
+      hostedNoticeSeen: true,
+    }
+    const store = memoryStore({ settings: { version: 8, savedAt: 0, data: v8 } })
+    expect(await loadRecord(SETTINGS_RECORD, { store })).toEqual({ ...v8, guestAi: false })
   })
 
   it('treats a local server as ready with a localhost URL and a model', () => {

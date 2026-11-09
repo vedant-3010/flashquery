@@ -41,8 +41,13 @@ const SavedSettingsSchema = z.object({
     openrouter: z.string(),
     local: z.string(),
   }),
-  /** Signed in: HushGlance AI or the user's own key (F-PLAN-01). Guests always use their own. */
+  /** HushGlance AI or the user's own key (F-PLAN-01); a guest's only once guestAi is on. */
   aiSource: AiSourceSchema,
+  /**
+   * A guest turned on HushGlance AI without an account (D125, F-PLAN-06). Until then a guest's
+   * browser never contacts the account service; signed in, it doesn't matter.
+   */
+  guestAi: z.boolean(),
   /** The hosted model (an OpenRouter slug from the ai_models table). */
   hostedModel: z.string(),
   /** The one-time note on what goes through HushGlance's server was read (F-PLAN-01). */
@@ -75,7 +80,7 @@ const NO_KEYS: Keys = { anthropic: null, openai: null, openrouter: null, local: 
 
 export const SETTINGS_RECORD: RecordSpec<SavedSettings> = {
   key: 'settings',
-  version: 8,
+  version: 9,
   schema: SavedSettingsSchema,
   migrations: {
     // v2 (M4): number format and currency.
@@ -112,11 +117,14 @@ export const SETTINGS_RECORD: RecordSpec<SavedSettings> = {
         hostedNoticeSeen: false,
       }
     },
+    // v9 (D125): HushGlance AI for guests, off until they turn it on.
+    8: (data) => ({ ...(data as object), guestAi: false }),
   },
   fallback: () => ({
     provider: 'anthropic',
     models: { ...DEFAULT_MODEL },
     aiSource: 'hosted',
+    guestAi: false,
     hostedModel: HOSTED_DEFAULT_MODEL,
     hostedNoticeSeen: false,
     effort: 'medium',
@@ -149,6 +157,7 @@ interface SettingsState {
   provider: ProviderId
   models: Record<ProviderId, string>
   aiSource: AiSource
+  guestAi: boolean
   hostedModel: string
   hostedNoticeSeen: boolean
   effort: Effort
@@ -165,6 +174,8 @@ interface SettingsState {
   setProvider: (provider: ProviderId) => void
   setModel: (provider: ProviderId, model: string) => void
   setAiSource: (source: AiSource) => void
+  /** A guest's choice of HushGlance AI (D125): on also picks it to answer. */
+  setGuestAi: (on: boolean) => void
   setHostedModel: (model: string) => void
   setHostedNoticeSeen: (seen: boolean) => void
   setEffort: (effort: Effort) => void
@@ -194,6 +205,7 @@ export const useSettingsStore = create<SettingsState>()((set, get) => ({
   provider: 'anthropic',
   models: { ...DEFAULT_MODEL },
   aiSource: 'hosted',
+  guestAi: false,
   hostedModel: HOSTED_DEFAULT_MODEL,
   hostedNoticeSeen: false,
   effort: 'medium',
@@ -211,6 +223,9 @@ export const useSettingsStore = create<SettingsState>()((set, get) => ({
   setProvider: (provider) => set({ provider }),
   setModel: (provider, model) => set({ models: { ...get().models, [provider]: model.trim() } }),
   setAiSource: (aiSource) => set({ aiSource }),
+  // Turning it on shows the note on what goes through our server again: a guest's says more.
+  setGuestAi: (guestAi) =>
+    set(guestAi ? { guestAi, aiSource: 'hosted', hostedNoticeSeen: false } : { guestAi }),
   setHostedModel: (hostedModel) => set({ hostedModel }),
   setHostedNoticeSeen: (hostedNoticeSeen) => set({ hostedNoticeSeen }),
   setEffort: (effort) => set({ effort }),
@@ -252,6 +267,7 @@ async function persist(state: SettingsState) {
     provider: state.provider,
     models: state.models,
     aiSource: state.aiSource,
+    guestAi: state.guestAi,
     hostedModel: state.hostedModel,
     hostedNoticeSeen: state.hostedNoticeSeen,
     effort: state.effort,

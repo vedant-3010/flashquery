@@ -194,6 +194,8 @@ export const BENCH_URL = '/app/bench'
 // supabase/migrations/20261012000000_plans.sql; data.test.ts checks the two agree.
 
 export const PRICING = {
+  /** HushGlance AI without an account, per day (guest_limits, D125). */
+  guestQuestions: 3,
   freeQuestions: 3,
   starterQuestions: 100,
   starterMonthlyUsd: 5,

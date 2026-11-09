@@ -1,4 +1,4 @@
-import { ArrowRight, MailCheck } from 'lucide-react'
+import { MailCheck } from 'lucide-react'
 import { useState } from 'react'
 import { Link, Redirect, useSearch } from 'wouter'
 import { nextPath, paths } from '@/app/paths'
@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import { AccountsOff } from '@/features/account/AccountsOff'
 import { AuthLayout } from '@/features/account/AuthLayout'
 import { FormError } from '@/features/account/FormError'
+import { GuestLink } from '@/features/account/GuestLink'
 import { GitHubIcon, GoogleIcon } from '@/features/account/ProviderIcons'
 import { FIELD, PILL, PILL_OUTLINE, TEXT_LINK } from '@/features/account/styles'
 import { useAuthAction } from '@/features/account/useAuthAction'
@@ -15,7 +16,7 @@ import { useAuthStore } from '@/stores/auth'
 
 /**
  * `/app/login` (F-ACCT-01, D115): Google, GitHub, email and password, or an email link; then back
- * to the page that asked (`?next=`), else Home. The try link needs no account.
+ * to the page that asked (`?next=`), else Home. Guests can carry on without one (D125).
  */
 export function LoginPage() {
   const status = useAuthStore((state) => state.status)
@@ -71,15 +72,7 @@ export function LoginPage() {
               Create an account
             </Link>
           </p>
-          <p>
-            <Link href={paths.try} className="group inline-flex items-center gap-1 hover:text-ink">
-              Or try it free with sample data, no account needed
-              <ArrowRight
-                className="size-3.5 transition-transform group-hover:translate-x-0.5"
-                aria-hidden
-              />
-            </Link>
-          </p>
+          <GuestLink />
         </>
       }
     >

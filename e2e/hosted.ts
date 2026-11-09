@@ -4,7 +4,8 @@ import { SUPABASE_URL } from './supabase.ts'
 // HushGlance AI for e2e (F-PLAN, M16): the hosted model list, the plans, ai_quota, the `ai` proxy
 // (OpenAI chat-completions shape, as OpenRouter answers) and the billing function, with the quota
 // rules of supabase/migrations/…_plans.sql in miniature (the real ones are tested in Postgres).
-// Register after signIn(): Playwright tries the last route first.
+// Register after signIn(): Playwright tries the last route first. `guest: true` (D125): a guest's
+// day instead (guest_limits: 3 a day), with `GET …/ai/v1/guest`, and calls carry no session.
 
 const CORS = {
   'access-control-allow-origin': '*',
@@ -154,7 +155,7 @@ function completion(model: string, content: unknown) {
 
 export async function mockHosted(
   page: Page,
-  { plan = 'free', used = 0 }: { plan?: Plan; used?: number } = {},
+  { plan = 'free', used = 0, guest = false }: { plan?: Plan; used?: number; guest?: boolean } = {},
 ): Promise<MockHosted> {
   const state: MockHosted = {
     plan,
@@ -166,7 +167,7 @@ export async function mockHosted(
   }
   const LIMITS: Record<Plan, number> = { free: 3, starter: 100, pro: 300 }
   const LABELS: Record<Plan, string> = { free: 'Free', starter: 'Starter', pro: 'Pro' }
-  const limit = () => LIMITS[state.plan]
+  const limit = () => (guest ? 3 : LIMITS[state.plan])
   const paid = () => state.plan !== 'free'
   const usedUnits = () => [...state.questions.values()].reduce((sum, units) => sum + units, 0)
   const remaining = () => Math.max(limit() - usedUnits(), 0)
@@ -181,6 +182,18 @@ export async function mockHosted(
       headers: { ...CORS, ...headers, 'content-type': 'application/json' },
       body: JSON.stringify(body),
     })
+  const guestQuota = () => ({
+    plan: 'guest',
+    label: 'Guest',
+    questions: limit(),
+    period: 'day',
+    used: usedUnits(),
+    remaining: remaining(),
+    tiers: ['standard'],
+    renews_at: usedUnits() > 0 ? '2026-11-10T09:00:00+00:00' : null,
+    status: null,
+    has_customer: false,
+  })
   const quota = () => ({
     plan: state.plan,
     label: LABELS[state.plan],
@@ -205,6 +218,11 @@ export async function mockHosted(
   await page.route(`${SUPABASE_URL}/functions/v1/ai/**`, async (route) => {
     const request = route.request()
     if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: CORS })
+    if (request.method() === 'GET' && request.url().endsWith('/ai/v1/guest')) {
+      return guest
+        ? json(route, 200, guestQuota())
+        : json(route, 403, { error: { code: 'guests_off', message: 'Sign in.' } })
+    }
     const headers = request.headers()
     const body = JSON.parse(request.postData() ?? '{}') as HostedCall['body']
     const question = headers['x-fq-question'] ?? ''

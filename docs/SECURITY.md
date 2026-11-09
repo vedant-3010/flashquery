@@ -2,7 +2,7 @@
 
 What HushGlance protects, from whom, and where the limits are. Decisions behind it are in
 `docs/PRD.md` §12 (D66 CSP, D100–D104 accounts, D116 sharing, D119–D122 hosted AI and Strict,
-D123 the encrypted workspace).
+D123 the encrypted workspace, D125 guests).
 
 ## The promises
 
@@ -16,7 +16,7 @@ D123 the encrypted workspace).
    with a key only the user's passphrase or recovery key opens.
 3. **Nothing uploads by surprise.** Sharing a dashboard (plaintext results, by design) happens only
    after a consent dialog lists what goes. Guests and the demo make no request to the account
-   service at all.
+   service at all, until a guest turns on HushGlance AI themselves (D125).
 
 ## The encrypted workspace (M17)
 
@@ -110,6 +110,30 @@ Limits that keep one account from running up costs for everyone, checked on the 
   charging can't be deleted (cancel first); a subscription waiting on a payment goes to the portal,
   not a second checkout.
 
+## Guests and HushGlance AI (D125)
+
+Guests use Home and projects in their browser without an account. HushGlance AI is off for them
+until they turn it on; then they get 3 questions a day per IP address
+(`supabase/migrations/…_guests.sql`, tested in `supabase/tests/guests.test.sql`):
+
+- **Which address:** Cloudflare's `cf-connecting-ip`, which Supabase's edge sets (a client can't),
+  else the last `x-forwarded-for` entry. Never the first: a client can prepend anything to it. If
+  the fallback ever named a proxy, guests would share one allowance (too strict, never too loose).
+  An IPv6 address counts by its /64, so rotating through one connection's block buys nothing.
+- **Never stored:** the `ai` function turns the address into HMAC-SHA256 with `GUEST_KEY_SECRET`
+  (a function secret, at least 32 characters), and only that reaches the database, logs and
+  OpenRouter (which gets a pseudonym of it). A copy of the database doesn't give the addresses
+  back without the secret. Hashes older than 2 days are cleared every hour (Supabase Cron) and
+  before each guest call; the calls' costs stay, linked to no one. Supabase itself sees the
+  address, as for any request.
+- **Limits:** the same per-question limits as an account, standard models only, $0.25 a day per
+  address and $5 a day for all guests together (`guest_limits`), and guests' spend counts towards
+  the global breaker. So rotating addresses can cost at most the all-guests budget a day.
+- **No session, no supabase-js:** a guest's calls carry only the publishable key and the question
+  id (`src/platform/guestAi.ts`). An expired or forged session is refused, never treated as a guest.
+- **Shared computers:** in a browser whose workspace is linked to an account, its projects stay
+  hidden from a guest, as from another account (D124).
+
 ## About the prompts
 
 The prompts are part of the app, which runs in the browser, so they ship with its JavaScript, and
@@ -122,7 +146,7 @@ prevent.
 - SQL from a model runs only after `src/engine/sqlGuard.ts` (one read-only statement, known tables,
   allow-listed table functions); Python runs only on the user's approval, with the network locked.
 - Hosted AI: the `ai` Edge Function forces zero data retention on every OpenRouter request and never
-  stores or logs a body; plans and quotas change only on the server; payments only through Dodo's
+  stores or logs a body (or a guest's address); plans and quotas change only on the server; payments only through Dodo's
   hosted pages and the signed webhook.
 - Users' own API keys stay in memory unless "Remember on this device" is ticked; they're never
   logged or exported.

@@ -393,11 +393,12 @@ deno_version = 2
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 
-# Edge Functions (M16, PRD D119–D120). ai: signed-in users only, so the platform checks the JWT
-# first; the function then checks the quota. billing: Dodo's webhook carries no JWT (the function
-# verifies its signature), and checkout and portal verify the user themselves.
+# Edge Functions (M16, PRD D119–D120). ai: guests call it without a JWT (D125), so the function
+# checks a session itself (Auth's /user) and counts a guest by their address's keyed hash; then the
+# quota. billing: Dodo's webhook carries no JWT (the function verifies its signature), and
+# checkout and portal verify the user themselves.
 [functions.ai]
-verify_jwt = true
+verify_jwt = false
 
 [functions.billing]
 verify_jwt = false

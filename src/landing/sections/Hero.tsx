@@ -2,7 +2,7 @@ import { m } from 'motion/react'
 import { CountUp } from '@/landing/CountUp'
 import { CtaLink, TextLink } from '@/landing/CtaLink'
 import { EYEBROW, EyebrowRule } from '@/landing/Eyebrow'
-import { BENCH, REGISTER_URL, TRY_URL } from '@/landing/data'
+import { BENCH, PRICING, REGISTER_URL, TRY_URL } from '@/landing/data'
 import { FileDrop } from '@/landing/FileDrop'
 import { HeroFilm } from '@/landing/film/HeroFilm'
 import { reveal, stagger } from '@/landing/motion'
@@ -75,7 +75,8 @@ export function Hero() {
             </CtaLink>
           </m.div>
           <m.p variants={reveal} className="mt-4 text-[13px] text-ink-faint">
-            The demo needs no sign-up. A free account asks about your own files, no AI key needed.{' '}
+            No sign-up: try the demo, or ask about your own file, {PRICING.guestQuestions} questions
+            a day free.{' '}
             <TextLink href="#how" className="text-ink-muted hover:text-ink">
               How it works
             </TextLink>

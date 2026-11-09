@@ -7,6 +7,8 @@ interface ImportMetaEnv {
   readonly VITE_SUPABASE_PUBLISHABLE_KEY?: string
   /** The site's public address (https://hushglance.com), for link previews (vite.config.ts). */
   readonly VITE_SITE_URL?: string
+  /** "true" asks for an account before Home and projects again (D115); unset, guests use them (D125). */
+  readonly VITE_SIGN_IN_REQUIRED?: string
 }
 
 interface ImportMeta {

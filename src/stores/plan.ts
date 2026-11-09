@@ -17,14 +17,27 @@ import type { Meter } from '@/platform/hostedAi'
 import { useAuthStore } from '@/stores/auth'
 import { useSettingsStore } from '@/stores/settings'
 
-// HushGlance AI's plan (F-PLAN-01…04): the hosted models, what's left of the signed-in user's
-// questions, and the upgrade dialog. The calls live in src/platform/ (a lazy chunk, D114): this
-// module is the only way in (lint enforces it), and it loads them only for a signed-in user.
+// HushGlance AI's plan (F-PLAN-01…04): the hosted models, what's left of the questions, and the
+// upgrade dialog. The calls live in src/platform/ (a lazy chunk, D114): this module is the only way
+// in (lint enforces it), and it loads them only for a signed-in user, or for a guest who turned
+// HushGlance AI on (D125, F-PLAN-06: guestAi.ts, no supabase-js).
 
 const plans = () => import('@/platform/plans')
 const hosted = () => import('@/platform/hostedAi')
+const guests = () => import('@/platform/guestAi')
 
 export type { Meter }
+
+/** Whose questions these are: a signed-in user's plan, or a guest's day (counted per address). */
+export type Audience = 'account' | 'guest'
+
+/** Who HushGlance AI is for right now, or null (signed out without it, checking, or accounts off). */
+function audienceNow(): Audience | null {
+  const status = useAuthStore.getState().status
+  if (status === 'signed-in') return 'account'
+  if (status === 'guest' && useSettingsStore.getState().guestAi) return 'guest'
+  return null
+}
 
 /** Why the upgrade dialog opened. */
 export type UpgradeReason = 'quota_reached' | 'model_not_in_plan' | 'chosen'
@@ -33,11 +46,13 @@ export type UpgradeReason = 'quota_reached' | 'model_not_in_plan' | 'chosen'
 type CatalogStatus = 'idle' | 'loading' | 'ready' | 'unavailable'
 
 interface PlanState {
+  /** Whose plan is loaded (or loading); null before anything is. */
+  audience: Audience | null
   catalogStatus: CatalogStatus
   catalog: Catalog | null
   quota: Quota | null
   upgrade: UpgradeReason | null
-  /** The model list and the user's quota; once per sign-in (later calls wait for the same load). */
+  /** The model list and the quota, for the current audience; once (later calls wait for it). */
   load: () => Promise<void>
   refreshQuota: () => Promise<void>
   /** From the proxy's x-fq-remaining header after each hosted call. */
@@ -47,33 +62,60 @@ interface PlanState {
   reset: () => void
 }
 
-let loading: Promise<void> | null = null
+/** The load in progress or done, and for whom: a newer one (or a reset) makes it stale. */
+let loading: { audience: Audience; promise: Promise<void> } | null = null
+
+/** The catalog and quota for one audience: an account's plan, or a guest's day. */
+async function fetchPlan(audience: Audience): Promise<[Catalog, Quota]> {
+  if (audience === 'guest') {
+    const api = await guests()
+    return Promise.all([api.loadGuestCatalog(), api.loadGuestQuota()])
+  }
+  const api = await plans()
+  return Promise.all([api.loadCatalog(), api.loadQuota()])
+}
 
 export const usePlanStore = create<PlanState>()((set, get) => ({
+  audience: null,
   catalogStatus: 'idle',
   catalog: null,
   quota: null,
   upgrade: null,
   load: () => {
-    loading ??= (async () => {
-      set({ catalogStatus: 'loading' })
+    const audience = audienceNow()
+    if (!audience) return Promise.resolve()
+    if (loading?.audience === audience) return loading.promise
+    const entry: { audience: Audience; promise: Promise<void> } = {
+      audience,
+      promise: Promise.resolve(),
+    }
+    loading = entry
+    set({ audience, catalogStatus: 'loading', catalog: null, quota: null })
+    entry.promise = (async () => {
       try {
-        const api = await plans()
-        const [catalog, quota] = await Promise.all([api.loadCatalog(), api.loadQuota()])
+        const [catalog, quota] = await fetchPlan(audience)
+        if (loading !== entry) return
         const listed = catalog.models.some((model) => model.tier !== 'fast')
         set({ catalog, quota, catalogStatus: listed ? 'ready' : 'unavailable' })
       } catch (error) {
-        // No hosted AI here (not deployed, or offline): own keys and the demo work as before.
+        if (loading !== entry) return
+        // No hosted AI here (not deployed, guests off, or offline): own keys and the demo work
+        // as before.
         console.warn('HushGlance: hosted AI is unavailable', toAppError(error).message)
         set({ catalogStatus: 'unavailable' })
       }
     })()
-    return loading
+    return entry.promise
   },
   refreshQuota: async () => {
-    if (useAuthStore.getState().status !== 'signed-in') return
+    const audience = get().audience
+    if (!audience || audience !== audienceNow()) return
     try {
-      set({ quota: await (await plans()).loadQuota() })
+      const quota =
+        audience === 'guest'
+          ? await (await guests()).loadGuestQuota()
+          : await (await plans()).loadQuota()
+      if (get().audience === audience) set({ quota })
     } catch (error) {
       console.warn('HushGlance: could not refresh the plan', toAppError(error).message)
     }
@@ -87,31 +129,49 @@ export const usePlanStore = create<PlanState>()((set, get) => ({
   closeUpgrade: () => set({ upgrade: null }),
   reset: () => {
     loading = null
-    set({ catalogStatus: 'idle', catalog: null, quota: null, upgrade: null })
+    set({ audience: null, catalogStatus: 'idle', catalog: null, quota: null, upgrade: null })
   },
 }))
 
 let started = false
 
-/** Follows the account (once, at app start): loads the plan on sign-in, forgets it on sign-out. */
+/**
+ * Follows the account and a guest's choice (once, at app start): loads the plan on sign-in or
+ * when a guest turns HushGlance AI on, forgets it on sign-out or when they turn it off.
+ */
 export function startPlans(): void {
   if (started) return
   started = true
-  const follow = (status: string) => {
-    if (status === 'signed-in') void usePlanStore.getState().load()
-    else if (status === 'guest' || status === 'off') usePlanStore.getState().reset()
+  const follow = () => {
+    if (useAuthStore.getState().status === 'checking') return
+    const audience = audienceNow()
+    const store = usePlanStore.getState()
+    if (audience === null) {
+      if (store.audience !== null || store.catalogStatus !== 'idle') store.reset()
+    } else if (store.audience !== audience) {
+      store.reset()
+      void usePlanStore.getState().load()
+    }
   }
-  follow(useAuthStore.getState().status)
+  follow()
   useAuthStore.subscribe((state, previous) => {
-    if (state.status !== previous.status) follow(state.status)
+    if (state.status !== previous.status) follow()
+  })
+  useSettingsStore.subscribe((state, previous) => {
+    if (state.guestAi !== previous.guestAi) follow()
   })
 }
 
-/** Whether hosted AI is on offer to this user right now (signed in, and models are listed). */
+/**
+ * Whether hosted AI is on offer to this person right now: signed in, or a guest who turned it on,
+ * and models are listed.
+ */
 export async function hostedAvailable(): Promise<boolean> {
-  if (useAuthStore.getState().status !== 'signed-in') return false
+  const audience = audienceNow()
+  if (!audience) return false
   await usePlanStore.getState().load()
-  return usePlanStore.getState().catalogStatus === 'ready'
+  const state = usePlanStore.getState()
+  return state.audience === audience && state.catalogStatus === 'ready'
 }
 
 /** The planner a hosted question will use (the chosen model, if the plan allows it). */
@@ -127,11 +187,15 @@ export function newMeter(kind: Meter['kind']): Meter {
 
 /** The hosted provider for one question (callers check hostedAvailable() first). */
 export async function hostedProvider(effort: Effort, meter: Meter): Promise<LLMProvider> {
-  const { catalog, quota } = usePlanStore.getState()
+  const { catalog, quota, audience } = usePlanStore.getState()
   const planner = catalog ? hostedPlanner(catalog, quota) : null
   if (!catalog || !planner) throw new Error('No hosted model is available.')
-  const { createHostedProvider } = await hosted()
-  return createHostedProvider({
+  // A guest's questions go without a session, and supabase-js never loads for them.
+  const create =
+    audience === 'guest'
+      ? (await guests()).createGuestProvider
+      : (await hosted()).createHostedProvider
+  return create({
     model: planner.id,
     summaryModel: summaryModelFor(catalog, planner),
     effort,
@@ -139,6 +203,8 @@ export async function hostedProvider(effort: Effort, meter: Meter): Promise<LLMP
     onRemaining: (remaining) => usePlanStore.getState().setRemaining(remaining),
     onRefusal: (code) => {
       if (code === 'quota_reached' || code === 'model_not_in_plan') {
+        // The dialog says when questions come back (renews_at): read it fresh.
+        if (code === 'quota_reached') void usePlanStore.getState().refreshQuota()
         usePlanStore.getState().openUpgrade(code)
       }
     },
@@ -165,7 +231,9 @@ export async function subscribe(
     if (usePlanStore.getState().quota?.plan === plan) break
     await new Promise((resolve) => setTimeout(resolve, 2_000))
   }
-  return usePlanStore.getState().quota?.plan ?? null
+  const now = usePlanStore.getState().quota?.plan
+  // Checkout is for accounts: a guest's quota is never a plan.
+  return now === undefined || now === 'guest' ? null : now
 }
 
 /** Sends the browser to Dodo's customer portal (payment method, invoices, cancelling). */
