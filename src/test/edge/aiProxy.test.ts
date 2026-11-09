@@ -238,6 +238,9 @@ describe('handleAi', () => {
     ['rate_limited', 429],
     ['call_cap', 429],
     ['hosted_paused', 503],
+    ['model_not_paid', 403],
+    ['question_budget', 429],
+    ['daily_limit', 429],
   ])('turns a %s refusal into %i, without calling the model', async (reason, status) => {
     const { deps, fetch } = setup({ begin: { allowed: false, reason, remaining: 0 } })
     const response = await handleAi(request(chat()), deps)

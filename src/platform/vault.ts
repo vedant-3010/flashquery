@@ -302,7 +302,7 @@ export async function listFiles(): Promise<
     }))
 }
 
-/** Deletes a file's chunks, then its reservation (so its space is free again). */
+/** Deletes a file's chunks, then releases its reservation (so its space is free again). */
 export async function deleteFile(userId: string, fileId: string, chunks: number): Promise<void> {
   const paths = Array.from({ length: chunks }, (_, index) => chunkPath(userId, fileId, index))
   for (let i = 0; i < paths.length; i += 1000) {
@@ -311,7 +311,8 @@ export async function deleteFile(userId: string, fileId: string, chunks: number)
       .remove(paths.slice(i, i + 1000))
     if (error) throw accountError(error)
   }
-  const { error } = await client().from('vault_files').delete().eq('file_id', fileId)
+  // Released only once its chunks are gone (vault_release checks): the space is free again.
+  const { error } = await client().rpc('vault_release', { file: fileId })
   if (error) throw vaultError(error)
 }
 

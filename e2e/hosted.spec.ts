@@ -136,6 +136,22 @@ test('Plan and billing: back from checkout Pro arrives; the portal manages it', 
   expect(hosted.portals).toBe(1)
 })
 
+test('an account with a plan still charging can’t be deleted: cancel first (D124)', async ({
+  page,
+}) => {
+  const service = await signIn(page)
+  await mockHosted(page, { plan: 'pro' })
+  await page.goto('/app/account')
+  await page.getByRole('button', { name: 'Delete account…' }).click()
+  await page.getByRole('alertdialog').getByRole('button', { name: 'Delete account' }).click()
+  await expect(page.getByRole('alert')).toContainText('Cancel your plan first')
+  await expect(page.getByRole('link', { name: 'Open Plan and billing' })).toBeVisible()
+  // Nothing was deleted: not the account, and not the encrypted workspace before it.
+  expect(service.calls.some((call) => call.includes('delete_my_account'))).toBe(false)
+  expect(service.calls.some((call) => call.startsWith('DELETE'))).toBe(false)
+  await expect(page).toHaveURL(/\/app\/account$/)
+})
+
 test('premium models are part of Pro', async ({ page }) => {
   test.setTimeout(90_000)
   await signIn(page)

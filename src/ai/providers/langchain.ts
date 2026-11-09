@@ -71,6 +71,9 @@ export const HOSTED_ERROR_CODES = new Set([
   'hosted_paused',
   'hosted_unavailable',
   'not_signed_in',
+  'model_not_paid',
+  'question_budget',
+  'daily_limit',
 ])
 
 /** `{ error: { code, message } }` from the proxy, as the OpenAI SDK keeps it on its APIError. */

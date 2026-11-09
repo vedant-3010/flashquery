@@ -184,6 +184,63 @@ export function subscriptionChange(
   }
 }
 
+/** A payment for one of our subscriptions: remembered, so a refund or dispute finds its person. */
+export interface PaymentRecord {
+  kind: 'payment'
+  payment_id: string
+  user_id: string | null
+  subscription_id: string | null
+}
+
+/** The money went back (a full refund, or a dispute lost): the paid plan ends now. */
+export interface Revocation {
+  kind: 'revoke'
+  payment_id: string
+}
+
+/** Disputes that end with the money returned to the cardholder (Dodo's dispute webhooks). */
+const DISPUTES_LOST = new Set(['dispute.accepted', 'dispute.lost', 'dispute.expired'])
+
+/** A subscription's payment (payment.succeeded), or null for any other event or payment. */
+export function paymentRecord(event: unknown): PaymentRecord | null {
+  if (!isRecord(event) || event.type !== 'payment.succeeded' || !isRecord(event.data)) return null
+  const { data } = event
+  const paymentId = text(data.payment_id)
+  const subscriptionId = text(data.subscription_id)
+  if (!paymentId || !subscriptionId) return null
+  const userId = isRecord(data.metadata) ? data.metadata.user_id : null
+  return {
+    kind: 'payment',
+    payment_id: paymentId,
+    user_id: typeof userId === 'string' && UUID.test(userId) ? userId : null,
+    subscription_id: subscriptionId,
+  }
+}
+
+/**
+ * A full refund (refund.succeeded, not partial: a goodwill partial refund keeps the plan) or a
+ * dispute the money went back on. Both name only the payment.
+ */
+export function revocation(event: unknown): Revocation | null {
+  if (!isRecord(event) || typeof event.type !== 'string' || !isRecord(event.data)) return null
+  const { type, data } = event
+  const paymentId = text(data.payment_id)
+  if (!paymentId) return null
+  if (type === 'refund.succeeded' && data.is_partial !== true) {
+    return { kind: 'revoke', payment_id: paymentId }
+  }
+  if (DISPUTES_LOST.has(type)) return { kind: 'revoke', payment_id: paymentId }
+  return null
+}
+
+/** What billing_apply should do with a verified event, or null for nothing. */
+export function billingChange(
+  event: unknown,
+  products: BillingConfig['products'],
+): SubscriptionChange | PaymentRecord | Revocation | null {
+  return subscriptionChange(event, products) ?? paymentRecord(event) ?? revocation(event)
+}
+
 // ---- The function --------------------------------------------------------------------------
 
 async function webhook(request: Request, deps: BillingDeps): Promise<Response> {
@@ -209,7 +266,7 @@ async function webhook(request: Request, deps: BillingDeps): Promise<Response> {
       webhook: request.headers.get('webhook-id'),
       event_type: type,
       event_time: sentAt,
-      change: subscriptionChange(event, deps.config.products),
+      change: billingChange(event, deps.config.products),
     })
   } catch {
     // Dodo retries a failed delivery (up to 8 times over a day): nothing is lost.
@@ -277,6 +334,15 @@ async function checkout(
     'customer_id,status,plan_id,subscription_id',
   )
   const subscriptionId = text(current?.subscription_id)
+  if (current?.status === 'past_due' || current?.status === 'on_hold') {
+    // A renewal is waiting on a payment: fixing it keeps one subscription, not two.
+    return errorResponse(
+      409,
+      'payment_pending',
+      'Your subscription is waiting on a payment. Update it in Manage subscription.',
+      cors,
+    )
+  }
   if (current?.status === 'active') {
     if (current.plan_id === plan) {
       return errorResponse(409, 'already_on_plan', `You’re already on ${PLAN_LABELS[plan]}.`, cors)

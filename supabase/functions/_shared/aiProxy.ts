@@ -47,6 +47,20 @@ const REFUSALS: Record<string, { status: number; message: string }> = {
     status: 503,
     message: 'HushGlance AI is paused for today. Use your own key, or try again tomorrow.',
   },
+  // Spend limits (D124): a question stays at the price it was charged, and has a budget; so does
+  // each person's day, so one account can't pause hosted AI for everyone.
+  model_not_paid: {
+    status: 403,
+    message: 'This question was asked with a lighter model. Ask it again to use a premium one.',
+  },
+  question_budget: {
+    status: 429,
+    message: 'This question has used its share of AI time. Ask it again as a new question.',
+  },
+  daily_limit: {
+    status: 429,
+    message: 'You’ve reached today’s HushGlance AI limit. Try again tomorrow, or use your own key.',
+  },
 }
 
 export interface AiConfig {

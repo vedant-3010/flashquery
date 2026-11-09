@@ -1,7 +1,10 @@
 // @vitest-environment node
 import { describe, expect, it, vi } from 'vitest'
 import {
+  billingChange,
   handleBilling,
+  paymentRecord,
+  revocation,
   signWebhook,
   subscriptionChange,
   timingSafeEqual,
@@ -149,6 +152,56 @@ describe('subscriptionChange', () => {
   })
 })
 
+describe('payments, refunds and disputes (D124)', () => {
+  const payment = (data: Record<string, unknown> = {}) => ({
+    type: 'payment.succeeded',
+    data: {
+      payment_id: 'pay_1',
+      subscription_id: 'sub_1',
+      metadata: { user_id: USER_ID },
+      ...data,
+    },
+  })
+
+  it('remembers a subscription’s payment with its person', () => {
+    expect(paymentRecord(payment())).toEqual({
+      kind: 'payment',
+      payment_id: 'pay_1',
+      user_id: USER_ID,
+      subscription_id: 'sub_1',
+    })
+    // No HushGlance user in the metadata: billing_apply finds it through the subscription.
+    expect(paymentRecord(payment({ metadata: {} }))?.user_id).toBeNull()
+    // One-off payments aren't ours to track.
+    expect(paymentRecord(payment({ subscription_id: null }))).toBeNull()
+  })
+
+  it('ends the plan on a full refund or a lost dispute, not a partial refund or an open dispute', () => {
+    const on = (type: string, data: Record<string, unknown> = {}) =>
+      revocation({ type, data: { payment_id: 'pay_1', ...data } })
+    expect(on('refund.succeeded')).toEqual({ kind: 'revoke', payment_id: 'pay_1' })
+    expect(on('refund.succeeded', { is_partial: true })).toBeNull()
+    expect(on('refund.failed')).toBeNull()
+    for (const type of ['dispute.accepted', 'dispute.lost', 'dispute.expired']) {
+      expect(on(type)).toEqual({ kind: 'revoke', payment_id: 'pay_1' })
+    }
+    for (const type of ['dispute.opened', 'dispute.challenged', 'dispute.won']) {
+      expect(on(type)).toBeNull()
+    }
+  })
+
+  it('routes each event to the right change', () => {
+    expect(billingChange(event('subscription.active'), PRODUCTS)).toMatchObject({
+      status: 'active',
+    })
+    expect(billingChange(payment(), PRODUCTS)).toMatchObject({ kind: 'payment' })
+    expect(
+      billingChange({ type: 'dispute.lost', data: { payment_id: 'pay_1' } }, PRODUCTS),
+    ).toMatchObject({ kind: 'revoke' })
+    expect(billingChange({ type: 'license_key.created', data: {} }, PRODUCTS)).toBeNull()
+  })
+})
+
 function setup({
   subscription = null as Record<string, unknown> | null,
   dodo = (url: string): Response =>
@@ -275,6 +328,23 @@ describe('handleBilling', () => {
     expect(pro.fetch).not.toHaveBeenCalled()
   })
 
+  it('sends a subscription waiting on a payment to the portal, not a second checkout', async () => {
+    for (const status of ['past_due', 'on_hold']) {
+      const { deps, fetch } = setup({
+        subscription: {
+          customer_id: 'cus_1',
+          status,
+          plan_id: 'starter',
+          subscription_id: 'sub_1',
+        },
+      })
+      const response = await handleBilling(post('checkout', { plan: 'pro' }), deps)
+      expect(response.status).toBe(409)
+      expect(await response.json()).toMatchObject({ error: { code: 'payment_pending' } })
+      expect(fetch).not.toHaveBeenCalled()
+    }
+  })
+
   it('moves Starter to Pro with Dodo’s plan change, prorated, without a second subscription', async () => {
     const { deps, fetch } = setup({
       subscription: {
@@ -350,6 +420,16 @@ describe('function settings', () => {
     expect(() =>
       readBillingConfig((name) => ({ DODO_API_BASE: 'https://evil.example' })[name]),
     ).toThrow()
+    // Plain http only to this computer: a mistyped secret can't send our keys out in clear.
+    const upstreamOf = (value: string) =>
+      readAiConfig((name) => ({ ...env, OPENROUTER_UPSTREAM: value })[name]).upstreamUrl
+    expect(upstreamOf('http://host.docker.internal:8787/v1/chat/completions')).toContain('8787')
+    expect(upstreamOf('http://localhost:8787/v1/chat/completions')).toContain('localhost')
+    expect(() => upstreamOf('http://evil.example/v1/chat/completions')).toThrow()
+    expect(() => upstreamOf('https://evil.example/v1/chat/completions')).toThrow()
+    expect(() =>
+      readBillingConfig((name) => ({ DODO_API_BASE: 'http://dodo.example.com' })[name]),
+    ).toThrow(/DODO_API_BASE/)
   })
 
   it('prefer the new secret key, else the legacy service_role key', () => {

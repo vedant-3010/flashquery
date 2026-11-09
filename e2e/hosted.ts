@@ -197,6 +197,10 @@ export async function mockHosted(
   await page.route(`${SUPABASE_URL}/rest/v1/ai_models*`, (route) => json(route, 200, HOSTED_MODELS))
   await page.route(`${SUPABASE_URL}/rest/v1/plans*`, (route) => json(route, 200, PLANS))
   await page.route(`${SUPABASE_URL}/rest/v1/rpc/ai_quota`, (route) => json(route, 200, quota()))
+  // The person's own subscription row (row-level security: theirs only).
+  await page.route(`${SUPABASE_URL}/rest/v1/subscriptions*`, (route) =>
+    json(route, 200, paid() ? [{ status: 'active' }] : []),
+  )
 
   await page.route(`${SUPABASE_URL}/functions/v1/ai/**`, async (route) => {
     const request = route.request()

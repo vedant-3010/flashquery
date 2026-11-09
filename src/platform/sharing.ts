@@ -36,6 +36,13 @@ function sharingError(error: unknown): AppError {
       detail: String(raw.message),
     })
   }
+  if (raw.code === 'P0001' && String(raw.message).includes('too_many_dashboards')) {
+    return new AppError({
+      code: 'share_limit',
+      message: 'You’ve shared 100 dashboards. Stop sharing one you no longer need, then try again.',
+      detail: String(raw.message),
+    })
+  }
   if (raw.code === '42501') {
     return new AppError({
       code: 'share_forbidden',
